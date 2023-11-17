@@ -158,7 +158,7 @@ If an element that is in either "mounted" or "dismounted" state according to a m
 
 1)  "disconnect" event is dispatched from the mountObserver instance the moment the element is disconnected from the DOM fragment.
 2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where.
-3)  If the element is added outside the rootNode being observed, the mountObserver instance will dispatch event "out-of-scope", and the mountObserver instance will relinquish any further responsibility for this element.
+3)  If the element is added outside the rootNode being observed, the mountObserver instance will dispatch event "out-of-scope", and the mountObserver instance will relinquish any further responsibility for this element.  Ideally this would also be dispatched when the platform garbage collects the element as well.
 4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the mountObserver instance dispatches event "reconfirmed".
 5)  If the element no longer satisfies the criteria of mountObserver, the mountObserver will dispatch event "dismount" or "mount". 
 
