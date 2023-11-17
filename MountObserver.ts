@@ -1,7 +1,7 @@
-import {MountInit, ImportContext} from './types';
+import {MountInit, MountContext} from './types';
 
 
-export class MountObserver extends EventTarget implements ImportContext{
+export class MountObserver extends EventTarget implements MountContext{
     #refs: Array<WeakRef<Element>> = [];
     //TODO share mutation observers?
     #mutationObserver: MutationObserver;
