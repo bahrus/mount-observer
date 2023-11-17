@@ -10,7 +10,13 @@ Last Update: 2023-11-17
 
 What follows is a more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a rather large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".  The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up other observer api's into one.
 
-This api doesn't pry open some ability developers currently lack, with at least one possible exception.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet). It could also interface better with the browser's garbage collection, which is currently outside the developer's purview.
+## Does this api make the impossible possible?
+
+This api doesn't pry open a huge chasm functionality that is impossible to achieve with out.  
+
+However, there may be two  ability developers currently lack, with at least one possible exception.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet).  The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren' visible. 
+
+This proposal also calls for being aware of when an element falls "out of scope" with no more references, so it can reduce the size of weak references.
  
 Even if the capability t monitor for custom state changes were added to mutation observers, the MountObserver api strives to make it *easy* to achieve what is currently common but difficult to implement functionality.  The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant.  Building it into the platform would potentially:
 
