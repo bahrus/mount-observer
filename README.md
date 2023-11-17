@@ -151,7 +151,7 @@ observer.addEventListener('disconnect', e => {
 
 ## Explanation of all states / events
 
-Normally, an element stays in its place in the DOM tree, but the conditions that the mountObserver is monitoring for can change for the element, based on modifications to the attributes of the element itself, or its custom state, or to other peer elements within the shadowRoot, if any, or window resizing, etc.  As the element moves in and out of such states, the mountObserver will first call the corresponding mount/dismount callback, and then dispatch event "mount" or "dismount" according to whether the criteria are all met or not.
+Normally, an element stays in its place in the DOM tree, but the conditions that the mountObserver is monitoring for can change for the element, based on modifications to the attributes of the element itself, or its custom state, or to other peer elements within the shadowRoot, if any, or window resizing, etc.  As the element meets or doesn't meet all the conditions, the mountObserver will first call the corresponding mount/dismount callback, and then dispatch event "mount" or "dismount" according to whether the criteria are all met or not.
 
 The moment a mountObserver instance's "observe" method is called (passing in a root node), it will inspect every element within its scope, and dispatch "mount" for those elements that match the criteria.  It will *not* dispatch "dismount" for elements that don't.
 
