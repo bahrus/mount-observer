@@ -8,15 +8,19 @@ Last Update: 2023-11-17
 
 ## Benefits of this API
 
-What follows is a more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a rather large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".  The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one.
+What follows is a more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a rather large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".
+
+"Binding from a distance" refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of binding, using these rules to attach behaviors, set property values, etc.
+
+The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one.
 
 ### Does this api make the impossible possible?
 
-There may be two abilities developers currently lack, which this API provides.  
+There may be two abilities developers currently lack completely, which this API would provide, if it were built into the platform.  This functionality seems exceedingly difficult to polyfill reliably:  
 
 1.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet).  The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren't visible.
 
-2.  Knowing when an element previously being monitored for changes passes totally "out-of-scope", so that no more hard references to the element remain, would allow for cleanup of no longer needed weak references without requiring polling.
+2.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
 
 ###  Most significant use cases.
 
@@ -66,7 +70,7 @@ const observer = new MountObserver({
 observer.observe(myRootNode);
 ```
 
-which would work better with current bundlers, I suspect.  Also, we can do interesting things like merge multiple imports into one "module".
+which would work better with current bundlers, I suspect.  Also, we can do interesting things like merge multiple imports into one "module".  But should this API built into the platform, such functions wouldn't be necessary, as bundlers could start to recognize strings that are passed to the MountObserver's constructor.
 
 This proposal would also include support for CSS, JSON, HTML module imports.  
 
