@@ -145,12 +145,12 @@ observer.addEventListener('dismount', e => {
 });
 ```
 
-If an element that has *ever* "mounted" is moved from one parent DOM element to another:
+If an element that is in "mounted" state according to a mountObserver instance is moved from one parent DOM element to another:
 
 1)  "disconnect" event is dispatched from the mountObserver instance the moment the element is disconnected from the DOM fragment.
 2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where.
 3)  If the element is added outside the rootNode being observed, it will dispatch event "out-of-scope", and the mountObserver instance will relinquish any further responsibility for this element.
-4)  If the new place it was added remains within the original rootNode still satisfies all the criteria, no other events are dispatched.
+4)  If the new place it was added remains within the original rootNode and still satisfies all the criteria, no other events are dispatched.
 5)  If the element no longer satisfies the criteria of mountObserver, the mountObserver will dispatch event 'dismount'. 
 
 "mount" occurs the first time (and subsequent times) an element meets all the criteria ("sift.for", "whereSizeOfContainerMatches", etc), "dismount" occurs after an element that previously mounted, no longer matches all the criteria.
