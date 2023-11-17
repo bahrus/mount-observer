@@ -2,9 +2,18 @@
   "name": "mount-observer",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "MountObserver.js",
+  "module": "MountObserver.js", 
+  "devDependencies": {
+    "@playwright/test": "1.39.0",
+    "may-it-serve": "0.0.6"
+  },
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "node node_modules/may-it-serve",
+    "test": "playwright test",
+    "safari": "npx playwright wk http://localhost:3030",
+    "update": "ncu -u && npm install"
   },
   "author": "",
   "license": "MIT"

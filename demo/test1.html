@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id=div>
+        <span id=span></span>
+    </div>
+    <button onclick="modify()">modify</button>
+    <script>
+        const mutationObserverInit = {
+            subtree: true,
+            childList: true,
+            attributes: true
+        }
+
+        const observer = new MutationObserver((arr) => {
+            console.log(arr, "callback that runs when observer is triggered");
+        });
+        observer.observe(div, mutationObserverInit);
+
+        function modify(){
+            span.setAttribute('test', 'hello');
+        }
+    </script>
+</body>
+</html>
