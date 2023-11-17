@@ -181,7 +181,6 @@ So for this we add option:
 ```JavaScript
 const observer = mount({
    match: 'my-element',
-   within: document.body,
    loading: 'eager',
    import: './my-element.js',
    do:{
@@ -190,17 +189,6 @@ const observer = mount({
 })
 ```
 
-The value of "loading" is 'lazy' by default.
+So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
 
-## InstanceOf checks
-
-```JavaScript
-const observer = mount({
-   match: '*',
-   within: document.body,
-   ifInstanceOf: [HTMLMarqueeElement],
-   import: './my-marquee-element-enhancement.js',
-   callback: (matchingElement, {module}) => customEnhancements.define('myMarqueeElementEnhancement', module.MyMarqueeElementEnhancement)
-})
-```
 
