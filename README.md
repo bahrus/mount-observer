@@ -8,11 +8,11 @@ Last Update: 2023-11-17
 
 ## Benefits of this API
 
-What follows is a more ambitious alternative to [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the mountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or sharing some common element settings, resulting in lower bandwidth.  The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. 
+What follows is a more ambitious alternative to [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or sharing some common element settings, resulting in lower bandwidth.  The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up other observer api's into one.
 
 This api doesn't pry open some ability developers currently lack, with at least one possible exception.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet). 
  
-Even if that capability were added to mutation observers, the mountObserver api strives to make it *easy* to achieve what is currently common but difficult to implement functionality.  The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant.  Building it into the platform would potentially:
+Even if that capability were added to mutation observers, the MountObserver api strives to make it *easy* to achieve what is currently common but difficult to implement functionality.  The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant.  Building it into the platform would potentially:
 
 1.  Give the developer a strong signal to do the right thing, by 
     1.  Making lazy loading easy, to the benefit of users with expensive networks.
@@ -34,7 +34,7 @@ const observer = new MountObserver({
    do: {
       onMount: ({localName}, {module}) => {
         if(!customElements.get(localName)) {
-            customElements.define(localName, module.MyElement);
+            customElements.define(localName, module.default);
         }
       }
    }
@@ -145,10 +145,13 @@ observer.addEventListener('dismount', e => {
 });
 ```
 
-If an element is moved from one parent DOM element to another:
+If an element that has *ever* "mounted" is moved from one parent DOM element to another:
 
-1)  dismount and disconnect events are both dispatched (order TBD).
-2)  When the element is added, if it is added within the rootNode being observed, it will dispatch event "connect".
+1)  disconnect event is dispatched.
+2)  When the element is added somewhere else in the DOM tree, it will dispatch event "reconnect".
+3)  If the element is added outside the rootNode being observed, it will dispatch event "out-of-scope".
+3)  If the new place it was added within the original rootNode still satisfies all the criteria, no other events are dispatched.
+4)  If the element no longer satisfies the criteria of MountObserver, 
 
 "mount" occurs the first time (and subsequent times) an element meets all the criteria ("sift.for", "whereSizeOfContainerMatches", etc), "dismount" occurs after an element that previously mounted, no longer matches all the criteria.
 
