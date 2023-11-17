@@ -1,15 +1,17 @@
 export interface MountInit{
-    match: CSSMatch,
-    whereElementIntersectsWith: IntersectionObserverInit,
-    whereMediaMatches: MediaQuery,
-    import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
-    do: PipelineProcessor | ActionPipeline,
-    intersectionObserverInit?: IntersectionObserverInit,
-    containerQuery?: MediaQuery,
-    actsOn: {
-        instanceOf?: Array<typeof Node>, //[TODO] What's the best way to type this?,
-        cssMatch?: string,
-    },
+    readonly match: CSSMatch,
+    readonly whereElementIntersectsWith: IntersectionObserverInit,
+    readonly whereMediaMatches: MediaQuery,
+    readonly whereInstanceOf?: Array<typeof Node>, //[TODO] What's the best way to type this?,
+    readonly whereSatisfies: PipelineProcessor<boolean>,
+    readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
+    readonly do: {
+        readonly onMount: PipelineProcessor,
+        readonly onDismount: PipelineProcessor,
+        readonly onDisconnect: PipelineProcessor,
+        readonly onReconfirmed: PipelineProcessor,
+        readonly onOutsideRootNode: PipelineProcessor,
+    }
     
 }
 type CSSMatch = string;
@@ -17,19 +19,14 @@ type ImportString = string;
 type MediaQuery = string;
 
 export interface MountContext {
-    mountInit: MountInit,
-    refs:  readonly WeakRef<Element>[],
+    readonly mountInit: MountInit,
+    readonly mountedRefs:  WeakRef<Element>[],
+    readonly dismountedRefs: WeakRef<Element>[],
     observe(within: Node): void;
-    unobserve(within: Node): void;
+    unobserve(): void;
 
 } 
-export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, ctx: MountContext) => Promise<ReturnType>;
-export interface ActionPipeline{
-    mountIf: PipelineProcessor<boolean>,
-    onMount: PipelineProcessor,
-    onDismount: PipelineProcessor,
-    onDisconnect: PipelineProcessor,
-}
-export interface MountOptions{
-    once?: boolean,
-}
+
+type PipelineStage = 'PreImport' | 'PostImport'
+export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, ctx: MountContext, stage: PipelineStage) => Promise<ReturnType>;
+
