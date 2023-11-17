@@ -120,16 +120,6 @@ const observer = new MountObserver({
 Subscribing can be done via:
 
 ```JavaScript
-observer.addEventListener('reconnect', e => {
-    ...
-});
-observer.addEventListener('disconnect', e => {
-  console.log({
-      matchingElement: e.matchingElement, 
-      module: e.module
-   });
-});
-
 observer.addEventListener('mount', e => {
   console.log({
       matchingElement: e.matchingElement, 
@@ -143,17 +133,31 @@ observer.addEventListener('dismount', e => {
       module: e.module
    });
 });
+
+observer.addEventListener('reconnect', e => {
+    ...
+});
+observer.addEventListener('disconnect', e => {
+  console.log({
+      matchingElement: e.matchingElement, 
+      module: e.module
+   });
+});
 ```
 
-If an element that is in "mounted" state according to a mountObserver instance is moved from one parent DOM element to another:
+## Explanation of all states / events
+
+Normally, an element stays in its place in the DOM tree, but the conditions that the mountObserver is monitoring for can change for the element, based on modifications to the attributes of the element itself, or its custom state, or to other peer elements within the shadowRoot, if any, or window resizing, etc.  As the element moves in and out of such states, the mountObserver will first call the corresponding mount/dismount callback, and then dispatch event "mount" or "dismount" according to whether the criteria are all met or not.
+
+If an element that is in either "mounted" or "dismounted" state according to a mountObserver instance is moved from one parent DOM element to another:
 
 1)  "disconnect" event is dispatched from the mountObserver instance the moment the element is disconnected from the DOM fragment.
 2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where.
-3)  If the element is added outside the rootNode being observed, it will dispatch event "out-of-scope", and the mountObserver instance will relinquish any further responsibility for this element.
-4)  If the new place it was added remains within the original rootNode and still satisfies all the criteria, no other events are dispatched.
-5)  If the element no longer satisfies the criteria of mountObserver, the mountObserver will dispatch event 'dismount'. 
+3)  If the element is added outside the rootNode being observed, the mountObserver instance will dispatch event "out-of-scope", and the mountObserver instance will relinquish any further responsibility for this element.
+4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the mountObserver instance dispatches event "reconfirmed".
+5)  If the element no longer satisfies the criteria of mountObserver, the mountObserver will dispatch event "dismount" or "mount". 
 
-"mount" occurs the first time (and subsequent times) an element meets all the criteria ("sift.for", "whereSizeOfContainerMatches", etc), "dismount" occurs after an element that previously mounted, no longer matches all the criteria.
+
 
 ## Preemptive downloading
 
