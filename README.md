@@ -169,8 +169,6 @@ If an element that is in either "mounted" or "dismounted" state according to a M
 4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the MountObserver instance dispatches event "reconfirmed".
 5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  The same is done in reverse for moved elements that started out in a "dismounted" state. 
 
-
-
 ## Preemptive downloading
 
 There are two significant steps to imports, each of which imposes a cost:  
@@ -185,7 +183,7 @@ The link rel=modulepreload option provides an already existing platform support 
 So for this we add option:
 
 ```JavaScript
-const observer = mount({
+const observer = new MountObserver({
    match: 'my-element',
    loading: 'eager',
    import: './my-element.js',
