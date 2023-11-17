@@ -42,20 +42,18 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-If no import is specified, it would go straight to do.*.
-
-Why "mount"?  It is shorter than "orchestrate" and is used quite a bit in current frameworks (whereas orchestrate isn't).
-
-The word mount has multiple meanings, but the one that we are leveraging is "to organize and initiate (a campaign or other significant course of action)" which is precisely what we want to do with this api.
+If no import is specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
 This only searches for elements matching 'my-element' outside any shadow DOM.
+
+But the observe method can accept a shadowRoot, or a node inside a shadowRoot as well.
 
 The import can also be a function:
 
 ```JavaScript
 const observer = new MountObserver({
    match: 'my-element',
-   import: async (matchingElement, {module}) => await import('./my-element.js')
+   import: async (matchingElement, {module}) => await import('./my-element.js');
 });
 observer.observe(myRootNode);
 ```
