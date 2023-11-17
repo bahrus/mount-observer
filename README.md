@@ -17,6 +17,7 @@ Even if that capability were added to mutation observers, the MountObserver api 
 1.  Give the developer a strong signal to do the right thing, by 
     1.  Making lazy loading easy, to the benefit of users with expensive networks.
     2.  Supporting "binding from a distance" which can allow SSR to provide common, shared data using the "DRY" philosophy, similar to how CSS can reduce the amount of repetitive styling instructions found inline within the HTML Markup.
+    3.  Supprting "progressive enhancement."
 2.  Allow numerous components / libraries to leverage this common functionality, which could potentially significantly reduce bandwidth.
 3.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.  
 
