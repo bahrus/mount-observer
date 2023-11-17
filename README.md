@@ -10,7 +10,7 @@ Last Update: 2023-11-17
 
 What follows is a more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a rather large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".
 
-"Binding from a distance" refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of binding, using these rules to attach behaviors, set property values, etc.
+"Binding from a distance" refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc.
 
 The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one.
 
