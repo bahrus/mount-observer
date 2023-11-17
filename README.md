@@ -1,4 +1,4 @@
-# mountObserver
+# The MountObserver api.
 
 Author:  Bruce B. Anderson
 
