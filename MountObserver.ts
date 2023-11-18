@@ -43,7 +43,7 @@ export class MountObserver extends EventTarget implements MountContext{
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, target} = mutationRecord;
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element) as Array<Element>;
-                elsToInspect.concat(addedElements);
+                addedElements.forEach(x => elsToInspect.push(x));
             }
             this.#filterAndMount(elsToInspect, true);
         }, {signal: this.#abortController.signal});

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id=div>
+    </div>
+    <div id=target></div>
+    <script type=module>
+        import {MountObserver} from '../MountObserver.js';
+        const mo = new MountObserver({
+            match: '#span',
+            do:{
+                onMount: (el, ctx) => {
+                    console.log({el, ctx});
+                    target.setAttribute('mark', 'good');
+                }
+            }
+        });
+        mo.addEventListener('mount', e => {
+            console.log(e);
+        });
+        mo.observe(div);
+        setTimeout(() => {
+            const span = document.createElement('span');
+            span.id = 'span';
+            div.appendChild(span);
+        }, 500);
+    </script>
+</body>
+</html>
