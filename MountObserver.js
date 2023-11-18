@@ -5,6 +5,8 @@ export class MountObserver extends EventTarget {
     #rootMutObs;
     #abortController;
     #mounted;
+    #mountedList;
+    //#unmounted: WeakSet<Element>;
     #isComplex;
     constructor(init) {
         super();
@@ -15,6 +17,7 @@ export class MountObserver extends EventTarget {
         this.#mountInit = init;
         this.#abortController = new AbortController();
         this.#mounted = new WeakSet();
+        //this.#unmounted = new WeakSet();
     }
     async observe(within) {
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
@@ -23,6 +26,20 @@ export class MountObserver extends EventTarget {
         }
         const rootMutObs = mutationObserverLookup.get(within);
         rootMutObs.addEventListener('mutation-event', (e) => {
+            //TODO:  disconnected
+            if (this.#isComplex) {
+                this.#inspectWithin(within);
+                return;
+            }
+            const { mutationRecords } = e;
+            const elsToInspect = [];
+            const elsToDisconnect = [];
+            for (const mutationRecord of mutationRecords) {
+                const { addedNodes, target } = mutationRecord;
+                const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
+                elsToInspect.concat(addedElements);
+            }
+            this.#filterAndMount(elsToInspect, true);
         }, { signal: this.#abortController.signal });
         await this.#inspectWithin(within);
     }
@@ -34,24 +51,74 @@ export class MountObserver extends EventTarget {
         return false;
     }
     async #mount(matching) {
+        //first unmount non matching
+        const alreadyMounted = this.#filterAndDismount();
         const onMount = this.#mountInit.do?.onMount;
-        const ;
+        const imp = this.#mountInit.import;
+        for (const match of matching) {
+            if (alreadyMounted.has(match))
+                continue;
+            this.#mounted.add(match);
+            if (imp !== undefined) {
+                switch (typeof imp) {
+                    case 'string':
+                        this.module = await import(imp);
+                        break;
+                    case 'object':
+                        if (Array.isArray(imp)) {
+                            this.module = await import(imp[0], imp[1]);
+                        }
+                        break;
+                    case 'function':
+                        this.module = await imp(match, this, 'Import');
+                        break;
+                }
+            }
+            if (onMount !== undefined)
+                onMount(match, this, 'PostImport');
+            this.dispatchEvent(new MountEvent(match));
+            this.#mountedList?.push(new WeakRef(match));
+            //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
+        }
     }
-    import = this.#m;
-    for(, match, of, matching) {
-        this.#mounted.add(match);
-        if (onMount !== undefined)
-            onMount(match, this, '');
-        this.dispatchEvent(new MountEvent(match));
+    async #dismount(unmatching) {
+        const onDismount = this.#mountInit.do?.onDismount;
+        for (const unmatch of unmatching) {
+            if (onDismount !== undefined) {
+                onDismount(unmatch, this);
+            }
+            this.dispatchEvent(new DismountEvent(unmatch));
+        }
     }
-}
-async;
-#inspectWithin(within, Node);
-{
-    if ('querySelectorAll' in within) {
+    #filterAndDismount() {
+        const returnSet = new Set();
+        if (this.#mountedList !== undefined) {
+            const previouslyMounted = this.#mountedList.map(x => x.deref());
+            const { match, whereSatisfies, whereInstanceOf } = this.#mountInit;
+            const elsToUnMount = previouslyMounted.filter(x => {
+                if (x === undefined)
+                    return false;
+                if (!x.matches(match))
+                    return true;
+                if (whereSatisfies !== undefined) {
+                    if (!whereSatisfies(x, this, 'Inspecting'))
+                        return true;
+                }
+                returnSet.add(x);
+                return false;
+            });
+            this.#dismount(elsToUnMount);
+        }
+        this.#mountedList = Array.from(returnSet).map(x => new WeakRef(x));
+        return returnSet;
+    }
+    async #filterAndMount(els, checkMatch) {
         const { match, whereSatisfies, whereInstanceOf } = this.#mountInit;
-        const els = Array.from(within.querySelectorAll(match))
-            .filter(x => {
+        const elsToMount = els.filter(x => {
+            if (checkMatch) {
+                if (!x.matches(match))
+                    return false;
+            }
             if (whereSatisfies !== undefined) {
                 if (!whereSatisfies(x, this, 'Inspecting'))
                     return false;
@@ -62,12 +129,18 @@ async;
             }
             return true;
         });
+        this.#mount(elsToMount);
+    }
+    async #inspectWithin(within) {
+        const { match } = this.#mountInit;
+        const els = Array.from(within.querySelectorAll(match));
+        this.#filterAndMount(els, false);
+    }
+    unobserve() {
+        throw 'NI';
     }
 }
-unobserve();
-{
-    throw 'NI';
-}
+// https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
  * We can document it here.
@@ -78,5 +151,13 @@ export class MountEvent extends Event {
     constructor(mountedElement) {
         super(MountEvent.eventName);
         this.mountedElement = mountedElement;
+    }
+}
+export class DismountEvent extends Event {
+    dismountedElement;
+    static eventName = 'dismount';
+    constructor(dismountedElement) {
+        super(DismountEvent.eventName);
+        this.dismountedElement = dismountedElement;
     }
 }

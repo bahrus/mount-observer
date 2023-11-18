@@ -9,22 +9,20 @@
     <div id=div>
         <span id=span></span>
     </div>
-    <button onclick="modify()">modify</button>
-    <script>
-        const mutationObserverInit = {
-            subtree: true,
-            childList: true,
-            attributes: true
-        }
-
-        const observer = new MutationObserver((arr) => {
-            console.log(arr, "callback that runs when observer is triggered");
+    <script type=module>
+        import {MountObserver} from '../MountObserver.js';
+        const mo = new MountObserver({
+            match: '#span',
+            do:{
+                onMount: (el, ctx) => {
+                    console.log({el, ctx});
+                }
+            }
         });
-        observer.observe(div, mutationObserverInit);
-
-        function modify(){
-            span.setAttribute('test', 'hello');
-        }
+        mo.addEventListener('mount', e => {
+            console.log(e);
+        });
+        mo.observe(div);
     </script>
 </body>
 </html>

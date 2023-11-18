@@ -39,6 +39,7 @@ export class MountObserver extends EventTarget implements MountContext{
             }
             const {mutationRecords} = e;
             const elsToInspect: Array<Element> = [];
+            const elsToDisconnect: Array<Element> = [];
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, target} = mutationRecord;
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element) as Array<Element>;
@@ -134,11 +135,9 @@ export class MountObserver extends EventTarget implements MountContext{
     }
 
     async #inspectWithin(within: Node){
-        if('querySelectorAll' in within){
-            const {match} = this.#mountInit;
-            const els = Array.from((within as Element).querySelectorAll(match));
-            this.#filterAndMount(els, false);
-        }
+        const {match} = this.#mountInit;
+        const els = Array.from((within as Element).querySelectorAll(match));
+        this.#filterAndMount(els, false);
     }
 
     unobserve(){
