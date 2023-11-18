@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id=div>
+        <span id=span></span>
+    </div>
+    <div id=target></div>
+    <script type=module>
+        import {MountObserver} from '../MountObserver.js';
+        const mo = new MountObserver({
+            match: '#span',
+            do:{
+                onDisconnect: (el, ctx) => {
+                    console.log({el, ctx});
+                    
+                }
+            }
+        });
+        mo.addEventListener('disconnect', e => {
+            console.log(e);
+            target.setAttribute('mark', 'good');
+        });
+        mo.observe(div);
+        setTimeout(() => {
+            span.remove();
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -43,7 +43,8 @@ export class MountObserver extends EventTarget implements MountContext{
             }
             const {mutationRecords} = e;
             const elsToInspect: Array<Element> = [];
-            const elsToDisconnect: Array<Element> = [];
+            //const elsToDisconnect: Array<Element> = [];
+            const doDisconnect = this.#mountInit.do?.onDisconnect;
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, type, removedNodes} = mutationRecord;
                 //console.log({target, mutationRecord});
@@ -59,6 +60,9 @@ export class MountObserver extends EventTarget implements MountContext{
                     // this.#mounted.delete(deletedElement);
                     // this.#mountedList = this.#mountedList?.filter(x => x.deref() !== deletedElement);
                     this.#disconnected.add(deletedElement);
+                    if(doDisconnect !== undefined){
+                        doDisconnect(deletedElement, this);
+                    }
                     this.dispatchEvent(new DisconnectEvent(deletedElement));
                 }
 
