@@ -12,6 +12,7 @@ export class RootMutObs extends EventTarget {
     }
     #mutationObserver;
 }
+// https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
  * We can document it here.

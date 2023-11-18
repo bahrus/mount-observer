@@ -1,3 +1,5 @@
+import {mutationEventName, AddMutationEventListener} from './types';
+
 export class RootMutObs extends EventTarget{
     constructor(rootNode: Node ){
         super();
@@ -13,25 +15,22 @@ export class RootMutObs extends EventTarget{
     #mutationObserver: MutationObserver;
 }
 
+
+
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
-export type mutationEventName = 'mutation-event';
+
 /**
  * The `mutation-event` event represents something that happened.
  * We can document it here.
  */
-export class MutationEvent extends Event {
+export class MutationEvent extends Event implements MutationEvent {
     static eventName: mutationEventName = 'mutation-event';
   
     constructor(public mutationRecords: Array<MutationRecord>) {
       // Since these are hard-coded, dispatchers can't get them wrong
       super(MutationEvent.eventName);
-      
     }
 }
 
-export type eventHandler = (e: MutationEvent) => void;
 
-export interface AddEventListener {
-    addEventListener(eventName: mutationEventName, handler: eventHandler, options?: AddEventListenerOptions): void;
-}
 
