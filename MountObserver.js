@@ -35,9 +35,15 @@ export class MountObserver extends EventTarget {
             const elsToInspect = [];
             const elsToDisconnect = [];
             for (const mutationRecord of mutationRecords) {
-                const { addedNodes, target } = mutationRecord;
+                const { addedNodes, type } = mutationRecord;
+                //console.log({target, mutationRecord});
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
                 addedElements.forEach(x => elsToInspect.push(x));
+                if (type === 'attributes') {
+                    const { target } = mutationRecord;
+                    elsToInspect.push(target);
+                }
+                //if(target !== undefined)
             }
             this.#filterAndMount(elsToInspect, true);
         }, { signal: this.#abortController.signal });
