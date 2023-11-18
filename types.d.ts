@@ -19,9 +19,9 @@ type ImportString = string;
 type MediaQuery = string;
 
 export interface MountContext {
-    readonly mountInit: MountInit,
-    readonly mountedRefs:  WeakRef<Element>[],
-    readonly dismountedRefs: WeakRef<Element>[],
+    // readonly mountInit: MountInit,
+    // readonly mountedRefs:  WeakRef<Element>[],
+    // readonly dismountedRefs: WeakRef<Element>[],
     observe(within: Node): void;
     unobserve(): void;
 
