@@ -27,6 +27,6 @@ export interface MountContext {
 
 } 
 
-type PipelineStage = 'PreImport' | 'PostImport'
+type PipelineStage = 'Inspecting' | 'PreImport' | 'PostImport'
 export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, ctx: MountContext, stage: PipelineStage) => Promise<ReturnType>;
 

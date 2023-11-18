@@ -4,11 +4,11 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2023-11-17
+Last Update: 2023-11-18
 
 ## Benefits of this API
 
-What follows is a more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are larger, and less focused on registering custom elements.  In fact, this proposal is trying to address a rather large number of use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".
+What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are more encompassing, and less focused on registering custom elements.  In fact, this proposal addresses numerous use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".
 
 "Binding from a distance" refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc.
 
@@ -16,11 +16,13 @@ The underlying theme is this api is meant to make it easy for the developer to d
 
 ### Does this api make the impossible possible?
 
-There may be two abilities developers currently lack completely, which this API would provide, if it were built into the platform.  This functionality seems exceedingly difficult to polyfill reliably:  
+There is quite a bit of functionality this proposal would open up, that is exceedingly difficult to polyfill reliably:  
 
 1.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet).  The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren't visible, or during template instantiation.
 
-2.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
+2.  For simple css matches, like "my-element", or "[name='hello']" it is enough to use a mutation observer, and only observe the elements within the specified DOM region (more on that below).  But as CSS has evolved, it is quite easy to think of numerous css selectors that would require us to expand our mutation observer to need to scan the entire Shadow DOM realm, or the entire DOM tree outside any Shadow DOM, for any and all mutations (including attribute changes), and re-evaluate every single element within the specified DOM region for new matches or old matches that no longer match.  Things like child selectors, :has, and so on. All this is done, miraculously, by the browser in a performant way.  Reproducing this in userland using JavaScript alone seems impossible.
+
+3.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
 
 ###  Most significant use cases.
 
@@ -123,7 +125,12 @@ const observer = new MountObserver({
    do: {
       onMount: ({localName}, {module}) => {
         ...
-      }
+      },
+      onDismount: ...,
+      onDisconnect: ...,
+      onReconnect: ...,
+      onReconfirm: ...
+      onOutOfScope: ...,
    }
 })
 ```
@@ -143,20 +150,20 @@ observer.addEventListener('mount', e => {
 });
 
 observer.addEventListener('dismount', e => {
-  console.log({
-      matchingElement: e.matchingElement, 
-      module: e.module
-   });
+  ...
 });
 
 observer.addEventListener('reconnect', e => {
-    ...
+  ...
 });
 observer.addEventListener('disconnect', e => {
-  console.log({
-      matchingElement: e.matchingElement, 
-      module: e.module
-   });
+  ...
+});
+observer.addEventListener('reconfirm', e => {
+  ...
+});
+observer.addEventListener('out-of-scope', e => {
+  ...
 });
 ```
 
@@ -164,7 +171,7 @@ observer.addEventListener('disconnect', e => {
 
 Normally, an element stays in its place in the DOM tree, but the conditions that the MountObserver instance is monitoring for can change for the element, based on modifications to the attributes of the element itself, or its custom state, or to other peer elements within the shadowRoot, if any, or window resizing, etc.  As the element meets or doesn't meet all the conditions, the mountObserver will first call the corresponding mount/dismount callback, and then dispatch event "mount" or "dismount" according to whether the criteria are all met or not.
 
-The moment a MountObserver instance's "observe" method is called (passing in a root node), it will inspect every element within its subtree (not counting ShadowRoots), and calls the "mount" callback, and dispatches event "mount" for those elements that match the criteria.  It will *not* dispatch "dismount" for elements that don't.
+The moment a MountObserver instance's "observe" method is called (passing in a root node), it will inspect every element within its subtree (not counting ShadowRoots), and then call the "mount" callback, and dispatch event "mount" for those elements that match the criteria.  It will *not* dispatch "dismount" for elements that don't.
 
 If an element that is in either "mounted" or "dismounted" state according to a MountObserver instance is moved from one parent DOM element to another:
 
