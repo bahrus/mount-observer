@@ -11,11 +11,12 @@ export class MountObserver extends EventTarget implements MountContext{
     
     #mountInit: MountInit;
     #rootMutObs: RootMutObs | undefined;
-    #abortController: AbortController | undefined;
+    #abortController: AbortController;
 
     constructor(init: MountInit){
         super();
         this.#mountInit = init;
+        this.#abortController = new AbortController();
     }
 
     observe(within: Node){
@@ -26,7 +27,7 @@ export class MountObserver extends EventTarget implements MountContext{
         const rootMutObs = mutationObserverLookup.get(root)!;
         (rootMutObs as AddEventListener).addEventListener('mutation-event', (e: MutationEvent) => {
 
-        })
+        }, {signal: this.#abortController.signal})
     }
 
     unobserve(){

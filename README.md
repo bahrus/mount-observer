@@ -31,7 +31,8 @@ The amount of code necessary to accomplish these common tasks designed to improv
     2.  Supporting "binding from a distance" that can allow SSR to provide common, shared data using the "DRY" philosophy, similar to how CSS can reduce the amount of repetitive styling instructions found inline within the HTML Markup.
     3.  Supporting "progressive enhancement."
 2.  Allow numerous components / libraries to leverage this common functionality, which could potentially significantly reduce bandwidth.
-3.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.  
+3.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.
+4.  To do the job right, polyfills really need to reexamine all the elements within the observed element for matches anytime any element within the Shadow Root so much as sneezes (modifies attribute, changes custom state, etc), due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
 

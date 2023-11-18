@@ -32,6 +32,6 @@ export class MutationEvent extends Event {
 export type eventHandler = (e: MutationEvent) => void;
 
 export interface AddEventListener {
-    addEventListener(eventName: mutationEventName, handler: eventHandler, options?: EventListenerOptions): void;
+    addEventListener(eventName: mutationEventName, handler: eventHandler, options?: AddEventListenerOptions): void;
 }
 
