@@ -173,10 +173,10 @@ Normally, an element stays in its place in the DOM tree, but the conditions that
 
 The moment a MountObserver instance's "observe" method is called (passing in a root node), it will inspect every element within its subtree (not counting ShadowRoots), and then call the "mount" callback, and dispatch event "mount" for those elements that match the criteria.  It will *not* dispatch "dismount" for elements that don't.
 
-If an element that is in either "mounted" or "dismounted" state according to a MountObserver instance is moved from one parent DOM element to another:
+If an element that is in "mounted" state according to a MountObserver instance is moved from one parent DOM element to another:
 
 1)  "disconnect" event is dispatched from the MountObserver instance the moment the element is disconnected from the DOM fragment.
-2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where.
+2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where. [Note:  can't polyfill this very easily]
 3)  If the element is added outside the rootNode being observed, the mountObserver instance will dispatch event "outside-root-node", and the MountObserver instance will relinquish any further responsibility for this element.  Ideally this would also be dispatched when the platform garbage collects the element as well after all hard references are relinquished.
 4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the MountObserver instance dispatches event "reconfirmed".
 5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  The same is done in reverse for moved elements that started out in a "dismounted" state. 

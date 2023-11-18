@@ -1,5 +1,7 @@
 import {MountInit, MountContext, AddMutationEventListener, 
-    MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent} from './types';
+    MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
+    disconnectedEventName, IDisconnectEvent
+} from './types';
 import {RootMutObs} from './RootMutObs.js';
 
 
@@ -11,6 +13,7 @@ export class MountObserver extends EventTarget implements MountContext{
     #abortController: AbortController;
     #mounted: WeakSet<Element>;
     #mountedList: Array<WeakRef<Element>> | undefined;
+    #disconnected: WeakSet<Element>;
     //#unmounted: WeakSet<Element>;
     #isComplex: boolean;
 
@@ -22,6 +25,7 @@ export class MountObserver extends EventTarget implements MountContext{
         this.#mountInit = init;
         this.#abortController = new AbortController();
         this.#mounted = new WeakSet();
+        this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
 
@@ -41,7 +45,7 @@ export class MountObserver extends EventTarget implements MountContext{
             const elsToInspect: Array<Element> = [];
             const elsToDisconnect: Array<Element> = [];
             for(const mutationRecord of mutationRecords){
-                const {addedNodes, type} = mutationRecord;
+                const {addedNodes, type, removedNodes} = mutationRecord;
                 //console.log({target, mutationRecord});
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element) as Array<Element>;
                 addedElements.forEach(x => elsToInspect.push(x));
@@ -49,7 +53,14 @@ export class MountObserver extends EventTarget implements MountContext{
                     const {target} = mutationRecord;
                     elsToInspect.push(target as Element);
                 }
-                //if(target !== undefined)
+                const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element) as Array<Element>;
+                for(const deletedElement of deletedElements){
+                    // if(!this.#mounted.has(deletedElement)) continue;
+                    // this.#mounted.delete(deletedElement);
+                    // this.#mountedList = this.#mountedList?.filter(x => x.deref() !== deletedElement);
+                    this.#disconnected.add(deletedElement);
+                    this.dispatchEvent(new DisconnectEvent(deletedElement));
+                }
 
             }
             this.#filterAndMount(elsToInspect, true);
@@ -174,6 +185,14 @@ export class DismountEvent extends Event implements IDismountEvent{
 
     constructor(public dismountedElement: Element){
         super(DismountEvent.eventName)
+    }
+}
+
+export class DisconnectEvent extends Event implements IDisconnectEvent{
+    static eventName: disconnectedEventName = 'disconnect';
+
+    constructor(public disconnectedElement: Element){
+        super(DisconnectEvent.eventName);
     }
 }
 

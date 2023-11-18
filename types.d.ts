@@ -67,3 +67,16 @@ export interface AddDismountEventListener {
 }
 //#endregion
 
+//#region disconnected event
+export type disconnectedEventName = 'disconnect';
+export interface IDisconnectEvent {
+    disconnectedElement: Element
+}
+
+export type disconnectedEventHandler = (e: IDisconnectEvent) => void;
+
+export interface AddDisconnectEventListener {
+    addEventListener(eventName: disconnectedEventName, handler: disconnectedEventHandler, options?: AddEventListenerOptions): void;
+}
+//endregion
+

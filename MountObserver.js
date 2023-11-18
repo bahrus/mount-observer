@@ -6,6 +6,7 @@ export class MountObserver extends EventTarget {
     #abortController;
     #mounted;
     #mountedList;
+    #disconnected;
     //#unmounted: WeakSet<Element>;
     #isComplex;
     constructor(init) {
@@ -17,6 +18,7 @@ export class MountObserver extends EventTarget {
         this.#mountInit = init;
         this.#abortController = new AbortController();
         this.#mounted = new WeakSet();
+        this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
     async observe(within) {
@@ -35,7 +37,7 @@ export class MountObserver extends EventTarget {
             const elsToInspect = [];
             const elsToDisconnect = [];
             for (const mutationRecord of mutationRecords) {
-                const { addedNodes, type } = mutationRecord;
+                const { addedNodes, type, removedNodes } = mutationRecord;
                 //console.log({target, mutationRecord});
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
                 addedElements.forEach(x => elsToInspect.push(x));
@@ -43,7 +45,14 @@ export class MountObserver extends EventTarget {
                     const { target } = mutationRecord;
                     elsToInspect.push(target);
                 }
-                //if(target !== undefined)
+                const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element);
+                for (const deletedElement of deletedElements) {
+                    // if(!this.#mounted.has(deletedElement)) continue;
+                    // this.#mounted.delete(deletedElement);
+                    // this.#mountedList = this.#mountedList?.filter(x => x.deref() !== deletedElement);
+                    this.#disconnected.add(deletedElement);
+                    this.dispatchEvent(new DisconnectEvent(deletedElement));
+                }
             }
             this.#filterAndMount(elsToInspect, true);
         }, { signal: this.#abortController.signal });
@@ -165,5 +174,13 @@ export class DismountEvent extends Event {
     constructor(dismountedElement) {
         super(DismountEvent.eventName);
         this.dismountedElement = dismountedElement;
+    }
+}
+export class DisconnectEvent extends Event {
+    disconnectedElement;
+    static eventName = 'disconnect';
+    constructor(disconnectedElement) {
+        super(DisconnectEvent.eventName);
+        this.disconnectedElement = disconnectedElement;
     }
 }
