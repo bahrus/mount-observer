@@ -29,17 +29,21 @@ export class MountObserver extends EventTarget implements MountContext{
         //this.#unmounted = new WeakSet();
     }
 
+    #calculatedSelector: string | undefined;
     get #selector(){
+        if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
         const {match, attribMatches} = this.#mountInit;
-        const base = match || '*'
+        const base = match || '*';
         if(attribMatches === undefined) return base;
-        const matches = [];
-        return attribMatches.forEach(x => {
+        const matches: Array<string> = [];
+        attribMatches.forEach(x => {
             const {names} = x;
             names.forEach(y => {
-                matches.push(`${base}[]`)
-            })
-        })
+                matches.push(`${base}[${y}]`)
+            });
+        });
+        this.#calculatedSelector = matches.join(',');
+        return this.#calculatedSelector;
     }
 
     async observe(within: Node){
@@ -136,7 +140,8 @@ export class MountObserver extends EventTarget implements MountContext{
         const returnSet = new Set<Element>();
         if(this.#mountedList !== undefined){
             const previouslyMounted = this.#mountedList.map(x => x.deref());
-            const {match, whereSatisfies, whereInstanceOf} = this.#mountInit;
+            const {whereSatisfies, whereInstanceOf} = this.#mountInit;
+            const match = this.#selector;
             const elsToUnMount = previouslyMounted.filter(x => {
                 if(x === undefined) return false;
                 if(!x.matches(match)) return true;
@@ -153,7 +158,8 @@ export class MountObserver extends EventTarget implements MountContext{
     }
 
     async #filterAndMount(els: Array<Element>, checkMatch: boolean){
-        const {match, whereSatisfies, whereInstanceOf} = this.#mountInit;
+        const {whereSatisfies, whereInstanceOf} = this.#mountInit;
+        const match = this.#selector;
         const elsToMount = els.filter(x => {
             if(checkMatch){
                 if(!x.matches(match)) return false;
@@ -170,8 +176,7 @@ export class MountObserver extends EventTarget implements MountContext{
     }
 
     async #inspectWithin(within: Node){
-        const {match} = this.#mountInit;
-        const els = Array.from((within as Element).querySelectorAll(match));
+        const els = Array.from((within as Element).querySelectorAll(this.#selector));
         this.#filterAndMount(els, false);
     }
 

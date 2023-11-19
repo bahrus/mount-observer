@@ -21,18 +21,23 @@ export class MountObserver extends EventTarget {
         this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
+    #calculatedSelector;
     get #selector() {
+        if (this.#calculatedSelector !== undefined)
+            return this.#calculatedSelector;
         const { match, attribMatches } = this.#mountInit;
         const base = match || '*';
         if (attribMatches === undefined)
             return base;
         const matches = [];
-        return attribMatches.forEach(x => {
+        attribMatches.forEach(x => {
             const { names } = x;
             names.forEach(y => {
-                matches.push(`${base}[]`);
+                matches.push(`${base}[${y}]`);
             });
         });
+        this.#calculatedSelector = matches.join(',');
+        return this.#calculatedSelector;
     }
     async observe(within) {
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
@@ -126,7 +131,8 @@ export class MountObserver extends EventTarget {
         const returnSet = new Set();
         if (this.#mountedList !== undefined) {
             const previouslyMounted = this.#mountedList.map(x => x.deref());
-            const { match, whereSatisfies, whereInstanceOf } = this.#mountInit;
+            const { whereSatisfies, whereInstanceOf } = this.#mountInit;
+            const match = this.#selector;
             const elsToUnMount = previouslyMounted.filter(x => {
                 if (x === undefined)
                     return false;
@@ -145,7 +151,8 @@ export class MountObserver extends EventTarget {
         return returnSet;
     }
     async #filterAndMount(els, checkMatch) {
-        const { match, whereSatisfies, whereInstanceOf } = this.#mountInit;
+        const { whereSatisfies, whereInstanceOf } = this.#mountInit;
+        const match = this.#selector;
         const elsToMount = els.filter(x => {
             if (checkMatch) {
                 if (!x.matches(match))
@@ -164,8 +171,7 @@ export class MountObserver extends EventTarget {
         this.#mount(elsToMount);
     }
     async #inspectWithin(within) {
-        const { match } = this.#mountInit;
-        const els = Array.from(within.querySelectorAll(match));
+        const els = Array.from(within.querySelectorAll(this.#selector));
         this.#filterAndMount(els, false);
     }
     unobserve() {
