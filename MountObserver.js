@@ -119,7 +119,7 @@ export class MountObserver extends EventTarget {
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
         const onMount = this.#mountInit.do?.onMount;
-        const imp = this.#mountInit.import;
+        const { import: imp, attribMatches } = this.#mountInit;
         for (const match of matching) {
             if (alreadyMounted.has(match))
                 continue;
@@ -142,6 +142,8 @@ export class MountObserver extends EventTarget {
             if (onMount !== undefined)
                 onMount(match, this, 'PostImport');
             this.dispatchEvent(new MountEvent(match));
+            if (attribMatches !== undefined) {
+            }
             this.#mountedList?.push(new WeakRef(match));
             //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
         }
