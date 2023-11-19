@@ -62,7 +62,6 @@ interface AttrChangeInfo{
 export type mountEventName = 'mount';
 export interface IMountEvent{
     mountedElement: Element,
-    attrChangeInfo?: AttrChangeInfo,
 }
 export type mountEventHandler = (e: IMountEvent) => void;
 
@@ -96,4 +95,15 @@ export interface AddDisconnectEventListener {
     addEventListener(eventName: disconnectedEventName, handler: disconnectedEventHandler, options?: AddEventListenerOptions): void;
 }
 //endregion
+
+//#region attribute change event
+export type attrChangeEventName = 'attr-change';
+export interface IAttrChangeEvent extends IMountEvent {
+    attrChangeInfo: AttrChangeInfo,
+}
+export type attrChangeEventHander = (e: IAttrChangeEvent) => void;
+export interface AddAttrChangeEventistener{
+    addEventListener(eventName: attrChangeEventName, handler: attrChangeEventHander, options?: AddEventListenerOptions): void;
+}
+//#endregion
 

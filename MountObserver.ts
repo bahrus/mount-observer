@@ -1,6 +1,6 @@
 import {MountInit, MountContext, AddMutationEventListener, 
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
-    disconnectedEventName, IDisconnectEvent
+    disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo
 } from './types';
 import {RootMutObs} from './RootMutObs.js';
 
@@ -64,7 +64,7 @@ export class MountObserver extends EventTarget implements MountContext{
             const doDisconnect = this.#mountInit.do?.onDisconnect;
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, type, removedNodes} = mutationRecord;
-                //console.log({target, mutationRecord});
+                console.log(mutationRecord);
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element) as Array<Element>;
                 addedElements.forEach(x => elsToInspect.push(x));
                 if(type === 'attributes'){
@@ -215,6 +215,13 @@ export class DisconnectEvent extends Event implements IDisconnectEvent{
 
     constructor(public disconnectedElement: Element){
         super(DisconnectEvent.eventName);
+    }
+}
+
+export class AttrChangeEvent extends Event implements IAttrChangeEvent{
+    static eventName: attrChangeEventName = 'attr-change';
+    constructor(public mountedElement: Element, public attrChangeInfo: AttrChangeInfo){
+        super(AttrChangeEvent.eventName);
     }
 }
 

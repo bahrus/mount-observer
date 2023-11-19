@@ -57,7 +57,7 @@ export class MountObserver extends EventTarget {
             const doDisconnect = this.#mountInit.do?.onDisconnect;
             for (const mutationRecord of mutationRecords) {
                 const { addedNodes, type, removedNodes } = mutationRecord;
-                //console.log({target, mutationRecord});
+                console.log(mutationRecord);
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
                 addedElements.forEach(x => elsToInspect.push(x));
                 if (type === 'attributes') {
@@ -205,5 +205,15 @@ export class DisconnectEvent extends Event {
     constructor(disconnectedElement) {
         super(DisconnectEvent.eventName);
         this.disconnectedElement = disconnectedElement;
+    }
+}
+export class AttrChangeEvent extends Event {
+    mountedElement;
+    attrChangeInfo;
+    static eventName = 'attr-change';
+    constructor(mountedElement, attrChangeInfo) {
+        super(AttrChangeEvent.eventName);
+        this.mountedElement = mountedElement;
+        this.attrChangeInfo = attrChangeInfo;
     }
 }
