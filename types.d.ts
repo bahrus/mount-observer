@@ -22,9 +22,9 @@ type MediaQuery = string;
 export interface AttribMatch{
     names: string[],
     //for boolean, support true/false/mixed
-    type?: 'number' | 'string' | 'date' | 'json-object' | 'boolean',
-    valConverter?: (s: string) => any,
-    validator?: (v: any) => boolean;
+    // type?: 'number' | 'string' | 'date' | 'json-object' | 'boolean',
+    // valConverter?: (s: string) => any,
+    // validator?: (v: any) => boolean;
 }
 
 export interface MountContext {
@@ -55,7 +55,8 @@ interface AttrChangeInfo{
     name: string,
     oldValue: string | null,
     newValue: string | null,
-    parsedNewValue?: any,
+    idx: number,
+    //parsedNewValue?: any,
 }
 
 //#region mount event

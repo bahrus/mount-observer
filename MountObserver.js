@@ -45,6 +45,7 @@ export class MountObserver extends EventTarget {
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
         }
         const rootMutObs = mutationObserverLookup.get(within);
+        const { attribMatches } = this.#mountInit;
         rootMutObs.addEventListener('mutation-event', (e) => {
             //TODO:  disconnected
             if (this.#isComplex) {
@@ -61,7 +62,34 @@ export class MountObserver extends EventTarget {
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
                 addedElements.forEach(x => elsToInspect.push(x));
                 if (type === 'attributes') {
-                    const { target } = mutationRecord;
+                    const { target, attributeName, oldValue } = mutationRecord;
+                    if (target instanceof Element && attributeName !== null && attribMatches !== undefined && this.#mounted.has(target)) {
+                        let idx = 0;
+                        for (const attrMatch of attribMatches) {
+                            const { names } = attrMatch;
+                            if (names.includes(attributeName)) {
+                                const newValue = target.getAttribute(attributeName);
+                                // let parsedNewValue = undefined;
+                                // switch(type){
+                                //     case 'boolean':
+                                //         parsedNewValue = newValue === 'true' ? true : newValue === 'false' ? false : null;
+                                //         break;
+                                //     case 'date':
+                                //         parsedNewValue = newValue === null ? null : new Date(newValue);
+                                //         break;
+                                //     case ''
+                                // }
+                                const attrChangeInfo = {
+                                    name: attributeName,
+                                    oldValue,
+                                    newValue,
+                                    idx
+                                };
+                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                            }
+                            idx++;
+                        }
+                    }
                     elsToInspect.push(target);
                 }
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element);
