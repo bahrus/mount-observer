@@ -135,8 +135,6 @@ const observer = new MountObserver({
 })
 ```
 
-
-
 ## Subscribing
 
 Subscribing can be done via:
@@ -180,6 +178,10 @@ If an element that is in "mounted" state according to a MountObserver instance i
 3)  If the element is added outside the rootNode being observed, the mountObserver instance will dispatch event "outside-root-node", and the MountObserver instance will relinquish any further responsibility for this element.  Ideally this would also be dispatched when the platform garbage collects the element as well after all hard references are relinquished.
 4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the MountObserver instance dispatches event "reconfirmed".
 5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  The same is done in reverse for moved elements that started out in a "dismounted" state. 
+
+## Special support for attributes
+
+Extra support is provided for monitoring attributes.
 
 ## Preemptive downloading
 
