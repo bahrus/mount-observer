@@ -1,9 +1,10 @@
 export interface MountInit{
-    readonly match: CSSMatch,
-    readonly whereElementIntersectsWith: IntersectionObserverInit,
-    readonly whereMediaMatches: MediaQuery,
+    readonly match?: CSSMatch,
+    readonly attribMatches?: Array<AttribMatch>,  
+    readonly whereElementIntersectsWith?: IntersectionObserverInit,
+    readonly whereMediaMatches?: MediaQuery,
     readonly whereInstanceOf?: Array<typeof Node>, //[TODO] What's the best way to type this?,
-    readonly whereSatisfies: PipelineProcessor<boolean>,
+    readonly whereSatisfies?: PipelineProcessor<boolean>,
     readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
     readonly do?: {
         readonly onMount: PipelineProcessor,
@@ -17,6 +18,13 @@ export interface MountInit{
 type CSSMatch = string;
 type ImportString = string;
 type MediaQuery = string;
+
+export interface AttribMatch{
+    names: string[],
+    //for boolean, support true/false/mixed
+    type?: 'number' | 'string' | 'date' | 'json-object' | 'boolean',
+    valConverter?: (s: string) => any,
+}
 
 export interface MountContext {
     // readonly mountInit: MountInit,

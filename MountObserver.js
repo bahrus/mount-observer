@@ -21,6 +21,19 @@ export class MountObserver extends EventTarget {
         this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
+    get #selector() {
+        const { match, attribMatches } = this.#mountInit;
+        const base = match || '*';
+        if (attribMatches === undefined)
+            return base;
+        const matches = [];
+        return attribMatches.forEach(x => {
+            const { names } = x;
+            names.forEach(y => {
+                matches.push(`${base}[]`);
+            });
+        });
+    }
     async observe(within) {
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
