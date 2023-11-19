@@ -143,6 +143,26 @@ export class MountObserver extends EventTarget {
                 onMount(match, this, 'PostImport');
             this.dispatchEvent(new MountEvent(match));
             if (attribMatches !== undefined) {
+                let idx = 0;
+                for (const attribMatch of attribMatches) {
+                    let newValue = null;
+                    const { names } = attribMatch;
+                    let nonNullName = names[0];
+                    for (const name of names) {
+                        const attrVal = match.getAttribute(name);
+                        if (attrVal !== null)
+                            nonNullName = name;
+                        newValue = newValue || attrVal;
+                    }
+                    const attribInfo = {
+                        oldValue: null,
+                        newValue,
+                        idx,
+                        name: nonNullName
+                    };
+                    this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
+                    idx++;
+                }
             }
             this.#mountedList?.push(new WeakRef(match));
             //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
