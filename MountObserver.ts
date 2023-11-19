@@ -20,7 +20,7 @@ export class MountObserver extends EventTarget implements MountContext{
     constructor(init: MountInit){
         super();
         const {match, whereElementIntersectsWith, whereMediaMatches} = init;
-        this.#isComplex = match.includes(' ') || match.includes(':')
+        this.#isComplex = match !== undefined && (match.includes(' ') || match.includes(':'));
         if(whereElementIntersectsWith || whereMediaMatches) throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();

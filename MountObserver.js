@@ -12,7 +12,7 @@ export class MountObserver extends EventTarget {
     constructor(init) {
         super();
         const { match, whereElementIntersectsWith, whereMediaMatches } = init;
-        this.#isComplex = match.includes(' ') || match.includes(':');
+        this.#isComplex = match !== undefined && (match.includes(' ') || match.includes(':'));
         if (whereElementIntersectsWith || whereMediaMatches)
             throw 'NI'; //not implemented
         this.#mountInit = init;
