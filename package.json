@@ -1,14 +1,13 @@
 {
   "name": "mount-observer",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "MountObserver.js",
-  "module": "MountObserver.js", 
+  "module": "MountObserver.js",
   "devDependencies": {
     "@playwright/test": "1.39.0",
     "may-it-serve": "0.0.6"
   },
-
   "scripts": {
     "serve": "node node_modules/may-it-serve",
     "test": "playwright test",
