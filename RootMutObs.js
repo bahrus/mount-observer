@@ -8,6 +8,7 @@ export class RootMutObs extends EventTarget {
             subtree: true,
             childList: true,
             attributes: true,
+            attributeOldValue: true,
         });
     }
     #mutationObserver;

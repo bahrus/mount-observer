@@ -24,6 +24,7 @@ export interface AttribMatch{
     //for boolean, support true/false/mixed
     type?: 'number' | 'string' | 'date' | 'json-object' | 'boolean',
     valConverter?: (s: string) => any,
+    validator?: (v: any) => boolean;
 }
 
 export interface MountContext {
@@ -50,10 +51,18 @@ export interface AddMutationEventListener {
 }
 //#endregion
 
+interface AttrChangeInfo{
+    name: string,
+    oldValue: string | null,
+    newValue: string | null,
+    parsedNewValue?: any,
+}
+
 //#region mount event
 export type mountEventName = 'mount';
 export interface IMountEvent{
-    mountedElement: Element
+    mountedElement: Element,
+    attrChangeInfo?: AttrChangeInfo,
 }
 export type mountEventHandler = (e: IMountEvent) => void;
 
