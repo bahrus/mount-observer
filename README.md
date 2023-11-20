@@ -183,6 +183,34 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 Extra support is provided for monitoring attributes.
 
+Example:
+
+```html
+<div id=div>
+   <span id=span></span>
+</div>
+<script type=module>
+   import {MountObserver} from '../MountObserver.js';
+   const mo = new MountObserver({
+      match: '#span',
+      attribMatches:[
+         {
+            names: ['test-1']
+         }
+      ]
+   });
+   mo.addEventListener('attr-change', e => {
+      console.log(e);
+   });
+   mo.observe(div);
+   setTimeout(() => {
+      span.setAttribute('test-1', 'hello')
+   }, 1000);
+</script>
+```
+
+
+
 ## Preemptive downloading
 
 There are two significant steps to imports, each of which imposes a cost:  

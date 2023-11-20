@@ -70,7 +70,7 @@ export class MountObserver extends EventTarget implements MountContext{
             const doDisconnect = this.#mountInit.do?.onDisconnect;
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, type, removedNodes} = mutationRecord;
-                console.log(mutationRecord);
+                //console.log(mutationRecord);
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element) as Array<Element>;
                 addedElements.forEach(x => elsToInspect.push(x));
                 if(type === 'attributes'){

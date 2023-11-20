@@ -18,13 +18,7 @@
                 {
                     names: ['test-1']
                 }
-            ],
-            do:{
-                onDisconnect: (el, ctx) => {
-                    console.log({el, ctx});
-                    
-                }
-            }
+            ]
         });
         mo.addEventListener('attr-change', e => {
             console.log(e);
