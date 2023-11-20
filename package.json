@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
