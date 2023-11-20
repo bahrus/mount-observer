@@ -184,7 +184,7 @@ If an element that is in "mounted" state according to a MountObserver instance i
 4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the MountObserver instance dispatches event "reconfirmed".
 5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  The same is done in reverse for moved elements that started out in a "dismounted" state. 
 
-## Special support for attributes
+## Special support for observable attributes
 
 Extra support is provided for monitoring attributes.
 
