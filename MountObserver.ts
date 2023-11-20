@@ -145,7 +145,8 @@ export class MountObserver extends EventTarget implements MountContext{
                         break;
                     case 'object':
                         if(Array.isArray(imp)){
-                            this.module = await import(imp[0], imp[1]);
+                            throw 'NI: Firefox'
+                            //this.module = await import(imp[0], imp[1]);
                         }
                         break;
                     case 'function':
