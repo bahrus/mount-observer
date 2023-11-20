@@ -1,13 +1,22 @@
 {
   "name": "mount-observer",
   "version": "0.0.3",
-  "description": "",
+  "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "devDependencies": {
     "@playwright/test": "1.39.0",
     "may-it-serve": "0.0.6"
   },
+  "exports": {
+    ".": "./MountObserver.js",
+    "./MountObserver.js": "./MountObserver.js"
+  },
+  "files": [
+    "*.js",
+    "types.d.ts"
+  ],
+  "types": "types.d.ts",
   "scripts": {
     "serve": "node node_modules/may-it-serve",
     "test": "playwright test",
