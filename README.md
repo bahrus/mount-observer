@@ -134,7 +134,7 @@ const observer = new MountObserver({
       onDismount: ...,
       onDisconnect: ...,
       onReconnect: ...,
-      onReconfirm: ...
+      onReconfirm: ...,
       onOutOfScope: ...,
    }
 })
