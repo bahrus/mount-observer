@@ -9,7 +9,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2023-11-18
+Last Update: 2023-11-23
 
 ## Benefits of this API
 
@@ -206,6 +206,14 @@ Example:
    });
    mo.addEventListener('attr-change', e => {
       console.log(e);
+      // {
+      //    attrChangeInfo:{
+      //       name: 'test-1',
+      //       oldValue: null,
+      //       newValue: 'hello'
+      //       idx: 0,
+      //    }
+      // }
    });
    mo.observe(div);
    setTimeout(() => {
