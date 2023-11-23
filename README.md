@@ -3,6 +3,7 @@
 [![How big is this package in your project?](https://img.shields.io/bundlephobia/minzip/mount-observer?style=for-the-badge)](https://bundlephobia.com/result?p=mount-observer)
 <img src="http://img.badgesize.io/https://cdn.jsdelivr.net/npm/mount-observer?compression=gzip">
 
+
 # The MountObserver api.
 
 Author:  Bruce B. Anderson
@@ -133,12 +134,15 @@ const observer = new MountObserver({
       },
       onDismount: ...,
       onDisconnect: ...,
+      onOutsideRootNode: ...,
       onReconnect: ...,
       onReconfirm: ...,
       onOutOfScope: ...,
    }
 })
 ```
+
+Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  However, since these rules may be of interest to multiple parties, it is usesful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
 
 ## Subscribing
 
@@ -178,11 +182,11 @@ The moment a MountObserver instance's "observe" method is called (passing in a r
 
 If an element that is in "mounted" state according to a MountObserver instance is moved from one parent DOM element to another:
 
-1)  "disconnect" event is dispatched from the MountObserver instance the moment the element is disconnected from the DOM fragment.
+1)  "disconnect" event is dispatched from the MountObserver instance the moment the mounted element is disconnected from the DOM fragment.
 2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where. [Note:  can't polyfill this very easily]
-3)  If the element is added outside the rootNode being observed, the mountObserver instance will dispatch event "outside-root-node", and the MountObserver instance will relinquish any further responsibility for this element.  Ideally this would also be dispatched when the platform garbage collects the element as well after all hard references are relinquished.
-4)  If the new place it was added remains within the original rootNode and remains either dismounted or mounted, the MountObserver instance dispatches event "reconfirmed".
-5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  The same is done in reverse for moved elements that started out in a "dismounted" state. 
+3)  If the mounted element is added outside the rootNode being observed, the mountObserver instance will dispatch event "outside-root-node", and the MountObserver instance will relinquish any further responsibility for this element.  Ideally this would also be dispatched when the platform garbage collects the element as well after all hard references are relinquished.
+4)  If the new place it was added remains within the original rootNode and remains mounted, the MountObserver instance dispatches event "reconfirmed".
+5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  
 
 ## Special support for observable attributes
 
