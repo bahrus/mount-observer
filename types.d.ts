@@ -7,11 +7,11 @@ export interface MountInit{
     readonly whereSatisfies?: PipelineProcessor<boolean>,
     readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
     readonly do?: {
-        readonly onMount: PipelineProcessor,
-        readonly onDismount: PipelineProcessor,
-        readonly onDisconnect: PipelineProcessor,
-        readonly onReconfirmed: PipelineProcessor,
-        readonly onOutsideRootNode: PipelineProcessor,
+        readonly onMount?: PipelineProcessor,
+        readonly onDismount?: PipelineProcessor,
+        readonly onDisconnect?: PipelineProcessor,
+        readonly onReconfirmed?: PipelineProcessor,
+        readonly onOutsideRootNode?: PipelineProcessor,
     }
     
 }
