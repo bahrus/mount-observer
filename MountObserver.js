@@ -230,8 +230,8 @@ export class MountObserver extends EventTarget {
         const els = Array.from(within.querySelectorAll(this.#selector));
         this.#filterAndMount(els, false);
     }
-    unobserve() {
-        throw 'NI';
+    unobserve(within) {
+        //mutationObserverLookup
     }
 }
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080

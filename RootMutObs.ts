@@ -14,6 +14,9 @@ export class RootMutObs extends EventTarget{
         });
     }
     #mutationObserver: MutationObserver;
+    disconnect(){
+        this.#mutationObserver.disconnect();
+    }
 }
 
 

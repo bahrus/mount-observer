@@ -32,7 +32,7 @@ export interface MountContext {
     // readonly mountedRefs:  WeakRef<Element>[],
     // readonly dismountedRefs: WeakRef<Element>[],
     observe(within: Node): void;
-    unobserve(): void;
+    unobserve(within: Node): void;
     module?: any;
 } 
 

@@ -6,6 +6,7 @@ import {RootMutObs} from './RootMutObs.js';
 
 
 const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
+const refCount = new WeakMap<Node, number>();
 export class MountObserver extends EventTarget implements MountContext{
     
     #mountInit: MountInit;
@@ -51,10 +52,42 @@ export class MountObserver extends EventTarget implements MountContext{
         return this.#calculatedSelector;
     }
 
+    unobserve(within: Node){
+        const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
+        const currentCount = refCount.get(nodeToMonitor);
+        if(currentCount !== undefined){
+            if(currentCount <= 1){
+                const observer = mutationObserverLookup.get(nodeToMonitor);
+                if(observer === undefined){
+                    console.warn(refCountErr);
+                }else{
+                    observer.disconnect();
+                    mutationObserverLookup.delete(nodeToMonitor);
+                    refCount.delete(nodeToMonitor);
+                }
+            }else{
+                refCount.set(nodeToMonitor, currentCount + 1);
+            }
+        }else{
+            if(mutationObserverLookup.has(nodeToMonitor)){
+                console.warn(refCountErr);
+            }
+        }
+                
+    }
+
     async observe(within: Node){
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
         if(!mutationObserverLookup.has(nodeToMonitor)){
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
+            refCount.set(nodeToMonitor, 1);
+        }else{
+            const currentCount = refCount.get(nodeToMonitor);
+            if(currentCount === undefined){
+                console.warn(refCountErr);
+            }else{
+                refCount.set(nodeToMonitor, currentCount + 1);
+            }
         }
         const rootMutObs = mutationObserverLookup.get(within)!;
         const {attribMatches} = this.#mountInit;
@@ -236,12 +269,11 @@ export class MountObserver extends EventTarget implements MountContext{
         this.#filterAndMount(els, false);
     }
 
-    unobserve(){
-        throw 'NI';
-    }
+
 
 }
 
+const refCountErr = 'mount-observer ref count mismatch';
 export interface MountObserver extends MountContext{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
