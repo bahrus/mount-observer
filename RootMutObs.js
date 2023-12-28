@@ -12,6 +12,9 @@ export class RootMutObs extends EventTarget {
         });
     }
     #mutationObserver;
+    disconnect() {
+        this.#mutationObserver.disconnect();
+    }
 }
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**

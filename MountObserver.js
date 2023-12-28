@@ -1,5 +1,6 @@
 import { RootMutObs } from './RootMutObs.js';
 const mutationObserverLookup = new WeakMap();
+const refCount = new WeakMap();
 export class MountObserver extends EventTarget {
     #mountInit;
     #rootMutObs;
@@ -44,10 +45,45 @@ export class MountObserver extends EventTarget {
         this.#calculatedSelector = matches.join(',');
         return this.#calculatedSelector;
     }
+    unobserve(within) {
+        const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
+        const currentCount = refCount.get(nodeToMonitor);
+        if (currentCount !== undefined) {
+            if (currentCount <= 1) {
+                const observer = mutationObserverLookup.get(nodeToMonitor);
+                if (observer === undefined) {
+                    console.warn(refCountErr);
+                }
+                else {
+                    observer.disconnect();
+                    mutationObserverLookup.delete(nodeToMonitor);
+                    refCount.delete(nodeToMonitor);
+                }
+            }
+            else {
+                refCount.set(nodeToMonitor, currentCount + 1);
+            }
+        }
+        else {
+            if (mutationObserverLookup.has(nodeToMonitor)) {
+                console.warn(refCountErr);
+            }
+        }
+    }
     async observe(within) {
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
+            refCount.set(nodeToMonitor, 1);
+        }
+        else {
+            const currentCount = refCount.get(nodeToMonitor);
+            if (currentCount === undefined) {
+                console.warn(refCountErr);
+            }
+            else {
+                refCount.set(nodeToMonitor, currentCount + 1);
+            }
         }
         const rootMutObs = mutationObserverLookup.get(within);
         const { attribMatches } = this.#mountInit;
@@ -230,10 +266,8 @@ export class MountObserver extends EventTarget {
         const els = Array.from(within.querySelectorAll(this.#selector));
         this.#filterAndMount(els, false);
     }
-    unobserve(within) {
-        //mutationObserverLookup
-    }
 }
+const refCountErr = 'mount-observer ref count mismatch';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
