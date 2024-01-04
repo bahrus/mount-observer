@@ -13,7 +13,7 @@ export interface MountInit{
         readonly onReconfirmed?: PipelineProcessor,
         readonly onOutsideRootNode?: PipelineProcessor,
     }
-    
+    readonly ignoreInitialMatches?: boolean,
 }
 type CSSMatch = string;
 type ImportString = string;

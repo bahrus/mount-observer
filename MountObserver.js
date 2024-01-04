@@ -86,7 +86,7 @@ export class MountObserver extends EventTarget {
             }
         }
         const rootMutObs = mutationObserverLookup.get(within);
-        const { attribMatches } = this.#mountInit;
+        const { attribMatches, ignoreInitialMatches } = this.#mountInit;
         rootMutObs.addEventListener('mutation-event', (e) => {
             //TODO:  disconnected
             if (this.#isComplex) {
@@ -147,7 +147,9 @@ export class MountObserver extends EventTarget {
             }
             this.#filterAndMount(elsToInspect, true);
         }, { signal: this.#abortController.signal });
-        await this.#inspectWithin(within);
+        if (ignoreInitialMatches !== true) {
+            await this.#inspectWithin(within);
+        }
     }
     #confirmInstanceOf(el, whereInstanceOf) {
         for (const test of whereInstanceOf) {

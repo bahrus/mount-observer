@@ -90,7 +90,7 @@ export class MountObserver extends EventTarget implements MountContext{
             }
         }
         const rootMutObs = mutationObserverLookup.get(within)!;
-        const {attribMatches} = this.#mountInit;
+        const {attribMatches, ignoreInitialMatches} = this.#mountInit;
         (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', (e: MutationEvent) => {
             //TODO:  disconnected
             if(this.#isComplex){
@@ -153,7 +153,10 @@ export class MountObserver extends EventTarget implements MountContext{
             }
             this.#filterAndMount(elsToInspect, true);
         }, {signal: this.#abortController.signal});
-        await this.#inspectWithin(within);
+        if(ignoreInitialMatches !== true){
+            await this.#inspectWithin(within);
+        }
+        
     }
 
     #confirmInstanceOf(el: Element, whereInstanceOf: Array<typeof Node>){
