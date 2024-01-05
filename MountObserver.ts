@@ -153,9 +153,9 @@ export class MountObserver extends EventTarget implements MountContext{
             }
             this.#filterAndMount(elsToInspect, true);
         }, {signal: this.#abortController.signal});
-        if(ignoreInitialMatches !== true){
+        //if(ignoreInitialMatches !== true){
             await this.#inspectWithin(within);
-        }
+        //}
         
     }
 

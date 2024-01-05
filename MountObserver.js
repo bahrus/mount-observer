@@ -147,9 +147,9 @@ export class MountObserver extends EventTarget {
             }
             this.#filterAndMount(elsToInspect, true);
         }, { signal: this.#abortController.signal });
-        if (ignoreInitialMatches !== true) {
-            await this.#inspectWithin(within);
-        }
+        //if(ignoreInitialMatches !== true){
+        await this.#inspectWithin(within);
+        //}
     }
     #confirmInstanceOf(el, whereInstanceOf) {
         for (const test of whereInstanceOf) {
