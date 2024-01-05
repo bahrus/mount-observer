@@ -13,7 +13,11 @@ export interface MountInit{
         readonly onReconfirmed?: PipelineProcessor,
         readonly onOutsideRootNode?: PipelineProcessor,
     }
-    readonly ignoreInitialMatches?: boolean,
+    // /**
+    //  * Purpose -- there are scenarios where we may only want to affect changes that occur after the initial 
+    //  * server rendering, so we only want to mount elements that appear 
+    //  */
+    // readonly ignoreInitialMatches?: boolean,
 }
 type CSSMatch = string;
 type ImportString = string;

@@ -90,7 +90,7 @@ export class MountObserver extends EventTarget implements MountContext{
             }
         }
         const rootMutObs = mutationObserverLookup.get(within)!;
-        const {attribMatches, ignoreInitialMatches} = this.#mountInit;
+        const {attribMatches} = this.#mountInit;
         (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', (e: MutationEvent) => {
             //TODO:  disconnected
             if(this.#isComplex){
