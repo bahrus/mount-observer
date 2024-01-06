@@ -31,7 +31,7 @@ export interface AttribMatch{
     // validator?: (v: any) => boolean;
 }
 
-export interface MountContext {
+export interface IMountObserver {
     // readonly mountInit: MountInit,
     // readonly mountedRefs:  WeakRef<Element>[],
     // readonly dismountedRefs: WeakRef<Element>[],
@@ -40,8 +40,13 @@ export interface MountContext {
     module?: any;
 } 
 
-type PipelineStage = 'Inspecting' | 'PreImport' | 'PostImport' | 'Import'
-export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, ctx: MountContext, stage?: PipelineStage) => Promise<ReturnType>;
+export interface MountContext{
+    stage?: PipelineStage,
+    initializing?: boolean,
+}
+
+type PipelineStage = 'Inspecting' | 'PreImport' | 'PostImport' | 'Import' 
+export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, observer: IMountObserver, ctx: MountContext) => Promise<ReturnType>;
 
 //#region mutation event
 export type mutationEventName = 'mutation-event';

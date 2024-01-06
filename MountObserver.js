@@ -90,7 +90,7 @@ export class MountObserver extends EventTarget {
         rootMutObs.addEventListener('mutation-event', (e) => {
             //TODO:  disconnected
             if (this.#isComplex) {
-                this.#inspectWithin(within);
+                this.#inspectWithin(within, false);
                 return;
             }
             const { mutationRecords } = e;
@@ -145,10 +145,10 @@ export class MountObserver extends EventTarget {
                     this.dispatchEvent(new DisconnectEvent(deletedElement));
                 }
             }
-            this.#filterAndMount(elsToInspect, true);
+            this.#filterAndMount(elsToInspect, true, false);
         }, { signal: this.#abortController.signal });
         //if(ignoreInitialMatches !== true){
-        await this.#inspectWithin(within);
+        await this.#inspectWithin(within, true);
         //}
     }
     #confirmInstanceOf(el, whereInstanceOf) {
@@ -158,7 +158,7 @@ export class MountObserver extends EventTarget {
         }
         return false;
     }
-    async #mount(matching) {
+    async #mount(matching, initializing) {
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
         const onMount = this.#mountInit.do?.onMount;
@@ -179,13 +179,20 @@ export class MountObserver extends EventTarget {
                         }
                         break;
                     case 'function':
-                        this.module = await imp(match, this, 'Import');
+                        this.module = await imp(match, this, {
+                            stage: 'Import',
+                            initializing
+                        });
                         break;
                 }
             }
-            if (onMount !== undefined)
-                onMount(match, this, 'PostImport');
-            this.dispatchEvent(new MountEvent(match));
+            if (onMount !== undefined) {
+                onMount(match, this, {
+                    stage: 'PostImport',
+                    initializing
+                });
+            }
+            this.dispatchEvent(new MountEvent(match, initializing));
             if (attribMatches !== undefined) {
                 let idx = 0;
                 for (const attribMatch of attribMatches) {
@@ -216,7 +223,7 @@ export class MountObserver extends EventTarget {
         const onDismount = this.#mountInit.do?.onDismount;
         for (const unmatch of unmatching) {
             if (onDismount !== undefined) {
-                onDismount(unmatch, this);
+                onDismount(unmatch, this, {});
             }
             this.dispatchEvent(new DismountEvent(unmatch));
         }
@@ -233,7 +240,7 @@ export class MountObserver extends EventTarget {
                 if (!x.matches(match))
                     return true;
                 if (whereSatisfies !== undefined) {
-                    if (!whereSatisfies(x, this, 'Inspecting'))
+                    if (!whereSatisfies(x, this, { stage: 'Inspecting', initializing: false }))
                         return true;
                 }
                 returnSet.add(x);
@@ -244,7 +251,7 @@ export class MountObserver extends EventTarget {
         this.#mountedList = Array.from(returnSet).map(x => new WeakRef(x));
         return returnSet;
     }
-    async #filterAndMount(els, checkMatch) {
+    async #filterAndMount(els, checkMatch, initializing) {
         const { whereSatisfies, whereInstanceOf } = this.#mountInit;
         const match = this.#selector;
         const elsToMount = els.filter(x => {
@@ -253,7 +260,7 @@ export class MountObserver extends EventTarget {
                     return false;
             }
             if (whereSatisfies !== undefined) {
-                if (!whereSatisfies(x, this, 'Inspecting'))
+                if (!whereSatisfies(x, this, { stage: 'Inspecting', initializing }))
                     return false;
             }
             if (whereInstanceOf !== undefined) {
@@ -262,11 +269,11 @@ export class MountObserver extends EventTarget {
             }
             return true;
         });
-        this.#mount(elsToMount);
+        this.#mount(elsToMount, initializing);
     }
-    async #inspectWithin(within) {
+    async #inspectWithin(within, initializing) {
         const els = Array.from(within.querySelectorAll(this.#selector));
-        this.#filterAndMount(els, false);
+        this.#filterAndMount(els, false, initializing);
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
@@ -277,10 +284,12 @@ const refCountErr = 'mount-observer ref count mismatch';
  */
 export class MountEvent extends Event {
     mountedElement;
+    initializing;
     static eventName = 'mount';
-    constructor(mountedElement) {
+    constructor(mountedElement, initializing) {
         super(MountEvent.eventName);
         this.mountedElement = mountedElement;
+        this.initializing = initializing;
     }
 }
 export class DismountEvent extends Event {

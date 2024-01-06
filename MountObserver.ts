@@ -1,4 +1,4 @@
-import {MountInit, MountContext, AddMutationEventListener, 
+import {MountInit, IMountObserver, AddMutationEventListener, 
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo
 } from './types';
@@ -7,7 +7,7 @@ import {RootMutObs} from './RootMutObs.js';
 
 const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
-export class MountObserver extends EventTarget implements MountContext{
+export class MountObserver extends EventTarget implements IMountObserver{
     
     #mountInit: MountInit;
     #rootMutObs: RootMutObs | undefined;
@@ -94,7 +94,7 @@ export class MountObserver extends EventTarget implements MountContext{
         (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', (e: MutationEvent) => {
             //TODO:  disconnected
             if(this.#isComplex){
-                this.#inspectWithin(within);
+                this.#inspectWithin(within, false);
                 return;
             }
             const {mutationRecords} = e;
@@ -151,10 +151,10 @@ export class MountObserver extends EventTarget implements MountContext{
                 }
 
             }
-            this.#filterAndMount(elsToInspect, true);
+            this.#filterAndMount(elsToInspect, true, false);
         }, {signal: this.#abortController.signal});
         //if(ignoreInitialMatches !== true){
-            await this.#inspectWithin(within);
+            await this.#inspectWithin(within, true);
         //}
         
     }
@@ -166,7 +166,7 @@ export class MountObserver extends EventTarget implements MountContext{
         return false;
     }
 
-    async #mount(matching: Array<Element>){
+    async #mount(matching: Array<Element>, initializing: boolean){
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
         const onMount = this.#mountInit.do?.onMount; 
@@ -186,12 +186,20 @@ export class MountObserver extends EventTarget implements MountContext{
                         }
                         break;
                     case 'function':
-                        this.module = await imp(match, this, 'Import');
+                        this.module = await imp(match, this, {
+                            stage: 'Import',
+                            initializing
+                        }); 
                         break;
                 }
             }
-            if(onMount !== undefined) onMount(match, this, 'PostImport');
-            this.dispatchEvent(new MountEvent(match));
+            if(onMount !== undefined) {
+                onMount(match, this, {
+                    stage: 'PostImport',
+                    initializing
+                }) 
+            }
+            this.dispatchEvent(new MountEvent(match, initializing));
             if(attribMatches !== undefined){
                 let idx = 0;
                 for(const attribMatch of attribMatches){
@@ -222,7 +230,7 @@ export class MountObserver extends EventTarget implements MountContext{
         const onDismount = this.#mountInit.do?.onDismount
         for(const unmatch of unmatching){
             if(onDismount !== undefined){
-                onDismount(unmatch, this);
+                onDismount(unmatch, this, {});
             }
             this.dispatchEvent(new DismountEvent(unmatch));
         }
@@ -238,7 +246,7 @@ export class MountObserver extends EventTarget implements MountContext{
                 if(x === undefined) return false;
                 if(!x.matches(match)) return true;
                 if(whereSatisfies !== undefined){
-                    if(!whereSatisfies(x, this, 'Inspecting')) return true;
+                    if(!whereSatisfies(x, this, {stage: 'Inspecting', initializing: false})) return true;
                 }
                 returnSet.add(x);
                 return false;
@@ -249,7 +257,7 @@ export class MountObserver extends EventTarget implements MountContext{
         return returnSet;
     }
 
-    async #filterAndMount(els: Array<Element>, checkMatch: boolean){
+    async #filterAndMount(els: Array<Element>, checkMatch: boolean, initializing: boolean){
         const {whereSatisfies, whereInstanceOf} = this.#mountInit;
         const match = this.#selector;
         const elsToMount = els.filter(x => {
@@ -257,19 +265,19 @@ export class MountObserver extends EventTarget implements MountContext{
                 if(!x.matches(match)) return false;
             }
             if(whereSatisfies !== undefined){
-                if(!whereSatisfies(x, this, 'Inspecting')) return false;
+                if(!whereSatisfies(x, this, {stage: 'Inspecting', initializing})) return false;
             }
             if(whereInstanceOf !== undefined){
                 if(!this.#confirmInstanceOf(x, whereInstanceOf)) return false;
             }
             return true;
         });
-        this.#mount(elsToMount);
+        this.#mount(elsToMount, initializing);
     }
 
-    async #inspectWithin(within: Node){
+    async #inspectWithin(within: Node, initializing: boolean){
         const els = Array.from((within as Element).querySelectorAll(this.#selector));
-        this.#filterAndMount(els, false);
+        this.#filterAndMount(els, false, initializing);
     }
 
 
@@ -277,7 +285,7 @@ export class MountObserver extends EventTarget implements MountContext{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
-export interface MountObserver extends MountContext{}
+export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
@@ -287,9 +295,8 @@ export interface MountObserver extends MountContext{}
 export class MountEvent extends Event implements IMountEvent {
     static eventName: mountEventName = 'mount';
   
-    constructor(public mountedElement: Element) {
+    constructor(public mountedElement: Element, public initializing: boolean) {
       super(MountEvent.eventName);
-      
     }
 }
 
