@@ -140,7 +140,7 @@ export class MountObserver extends EventTarget {
                     // this.#mountedList = this.#mountedList?.filter(x => x.deref() !== deletedElement);
                     this.#disconnected.add(deletedElement);
                     if (doDisconnect !== undefined) {
-                        doDisconnect(deletedElement, this);
+                        doDisconnect(deletedElement, this, {});
                     }
                     this.dispatchEvent(new DisconnectEvent(deletedElement));
                 }
