@@ -10,7 +10,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2023-11-23
+Last Update: 2024-1-24
 
 ## Benefits of this API
 
@@ -40,7 +40,7 @@ The amount of code necessary to accomplish these common tasks designed to improv
     3.  Supporting "progressive enhancement."
 2.  Allow numerous components / libraries to leverage this common functionality, which could potentially significantly reduce bandwidth.
 3.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.
-4.  To do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
+4.  As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
 
@@ -79,7 +79,7 @@ const observer = new MountObserver({
 observer.observe(myRootNode);
 ```
 
-which would work better with current bundlers, I suspect.  Also, we can do interesting things like merge multiple imports into one "module".  But should this API built into the platform, such functions wouldn't be necessary, as bundlers could start to recognize strings that are passed to the MountObserver's constructor.
+which would work better with current bundlers, I suspect.  Also, we can do interesting things like merge multiple imports into one "module".  But should this API be built into the platform, such functions wouldn't be necessary, as bundlers could start to recognize strings that are passed to the MountObserver's constructor.
 
 This proposal would also include support for CSS, JSON, HTML module imports.  
 
@@ -127,6 +127,7 @@ const observer = new MountObserver({
    whereSizeOfContainerMatches: '(min-width: 700px)',
    whereInstanceOf: [HTMLMarqueeElement],
    whereSatisfies: async (matchingElement, context) => true,
+   whereLangIn: ['en-GB'],
    import: ['./my-element-small.css', {type: 'css'}],
    do: {
       onMount: ({localName}, {module}) => {
@@ -142,7 +143,7 @@ const observer = new MountObserver({
 })
 ```
 
-Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  However, since these rules may be of interest to multiple parties, it is usesful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
+Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
 
 ## Subscribing
 
