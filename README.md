@@ -10,7 +10,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-1-24
+Last Update: 2024-2-9
 
 ## Benefits of this API
 
@@ -55,7 +55,7 @@ const observer = new MountObserver({
    do: {
       onMount: ({localName}, {module}) => {
         if(!customElements.get(localName)) {
-            customElements.define(localName, module.default);
+            customElements.define(localName, module.MyElement);
         }
       }
    }
@@ -83,7 +83,21 @@ which would work better with current bundlers, I suspect.  Also, we can do inter
 
 This proposal would also include support for CSS, JSON, HTML module imports.  
 
-"match" is a css query, and could include multiple matches using the comma separator, i.e. no limitation on CSS expressions.
+"match" is a css query, and could include multiple matches using the comma separator, i.e. no limitation on CSS expressions.  So something like:
+
+```JavaScript
+const observer = new MountObserver({
+   match:'div > p + p ~ span[class$="name"]',
+   do:{
+      onMount: (matchingElement) => {
+         //attach some behavior or set some property value or add an event listener, etc.
+         matchingElement.textContent = 'hello'
+      }
+   }
+})
+```
+
+This would allow developers to create "stylesheet" like capabilities.
 
 The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
 
@@ -122,7 +136,7 @@ Unlike traditional CSS @import, CSS Modules don't support specifying different i
 
 ```JavaScript
 const observer = new MountObserver({
-   match: 'my-element',
+   match: 'div > p + p ~ span[class$="name"]',
    whereMediaMatches: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
    whereInstanceOf: [HTMLMarqueeElement],
