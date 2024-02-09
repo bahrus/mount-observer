@@ -128,6 +128,9 @@ const observer = new MountObserver({
    whereInstanceOf: [HTMLMarqueeElement],
    whereSatisfies: async (matchingElement, context) => true,
    whereLangIn: ['en-GB'],
+   whereConnection:{
+      effectiveTypeIn: ["slow-2g"]
+   }
    import: ['./my-element-small.css', {type: 'css'}],
    do: {
       onMount: ({localName}, {module}) => {
