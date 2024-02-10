@@ -90,7 +90,7 @@ It is important to note that "on" is a css query with no restrictions.  So somet
 
 ```JavaScript
 const observer = new MountObserver({
-   match:'div > p + p ~ span[class$="name"]',
+   on:'div > p + p ~ span[class$="name"]',
    do:{
       mount: (matchingElement) => {
          //attach some behavior or set some property value or add an event listener, etc.
@@ -144,6 +144,7 @@ const observer = new MountObserver({
       disconnect: ...,
       reconnect: ...,
       reconfirm: ...,
+      exit: ...,
       forget: ...,
    }
 })
@@ -162,18 +163,19 @@ observer.addEventListener('mount', e => {
       module: e.module
    });
 });
-
 observer.addEventListener('dismount', e => {
-  ...
-});
-
-observer.addEventListener('reconnect', e => {
   ...
 });
 observer.addEventListener('disconnect', e => {
   ...
 });
+observer.addEventListener('reconnect', e => {
+  ...
+});
 observer.addEventListener('reconfirm', e => {
+  ...
+});
+observer.addEventListener('exit', e => {
   ...
 });
 observer.addEventListener('forget', e => {
@@ -191,13 +193,14 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 1)  "disconnect" event is dispatched from the MountObserver instance the moment the mounted element is disconnected from the DOM fragment.
 2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where. [Note:  can't polyfill this very easily]
-3)  If the mounted element is added outside the rootNode being observed, the mountObserver instance will dispatch event "outside-root-node", and the MountObserver instance will relinquish any further responsibility for this element.  Ideally this would also be dispatched when the platform garbage collects the element as well after all hard references are relinquished.
-4)  If the new place it was added remains within the original rootNode and remains mounted, the MountObserver instance dispatches event "reconfirmed".
-5)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  
+3)  If the mounted element is added outside the rootNode being observed, the mountObserver instance will dispatch event "exit", and the MountObserver instance will relinquish any further responsibility for this element.  
+4)  Ideally event "forget" would be dispatched just before the platform garbage collects an element the MountObserver instance is still monitoring, after all hard references are relinquished (or is that self-contradictory?).
+5)  If the new place it was added remains within the original rootNode and remains mounted, the MountObserver instance dispatches event "reconfirmed".
+6)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  
 
-## Special support for observable attributes
+## A tribute to attributes
 
-Extra support is provided for monitoring attributes.
+Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) need to carefully work with sets of "owned" attributes, and the API we've described above falls short of providing the needed support for these important use cases.
 
 Example:
 
