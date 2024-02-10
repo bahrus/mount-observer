@@ -254,11 +254,11 @@ So for this we add option:
 
 ```JavaScript
 const observer = new MountObserver({
-   match: 'my-element',
+   on: 'my-element',
    loading: 'eager',
    import: './my-element.js',
    do:{
-      onMount: (matchingElement, {module}) => customElements.define(module.MyElement)
+      mount: (matchingElement, {module}) => customElements.define(module.MyElement)
    }
 })
 ```
