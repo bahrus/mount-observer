@@ -211,17 +211,14 @@ Example:
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
    const mo = new MountObserver({
-      match: '#span',
-      attribMatches:[
-         {
-            names: ['test-1']
-         }
-      ]
+      on: 'my-custom-element',
+      whereInstanceOf: [MyCustomElement],
+      observedAttributes: MyCustomElement.observedAttributes
    });
-   mo.addEventListener('attr-change', e => {
+   mo.addEventListener('mount', e => {
       console.log(e);
       // {
-      //    attrChangeInfo:{
+      //    initialState:{
       //       name: 'test-1',
       //       oldValue: null,
       //       newValue: 'hello'
