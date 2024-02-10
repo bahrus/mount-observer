@@ -10,13 +10,13 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-9
+Last Update: 2024-2-10
 
 ## Benefits of this API
 
-What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are more encompassing, and less focused on registering custom elements.  In fact, this proposal addresses numerous use cases in one api.  It is basically mapping common filtering conditions in the DOM, to common actions, like importing a resource, or progressively enhancing an element, or "binding from a distance".
+What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are more encompassing, and less focused on registering custom elements.  In fact, this proposal addresses numerous use cases in one api.  It is basically mapping common filtering conditions in the DOM, to mounting a "campaign" of some sort, like importing a resource, and/or progressively enhancing an element, and/or "binding from a distance".
 
-"Binding from a distance" refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc.
+["Binding from a distance"](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc, to the HTML as it streams in.  Libraries that take this approach include [Corset](https://corset.dev/) and [trans-render](https://github.com/bahrus/trans-render).  The concept has been promoted by a [number](https://bkardell.com/blog/CSSLike.html) [of](https://www.w3.org/TR/NOTE-AS)  prominent voices in the community. 
 
 The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one.
 
@@ -36,11 +36,10 @@ The amount of code necessary to accomplish these common tasks designed to improv
 
 1.  Give the developer a strong signal to do the right thing, by 
     1.  Making lazy loading of resource dependencies easy, to the benefit of users with expensive networks.
-    2.  Supporting "binding from a distance" that can allow SSR to provide common, shared data using the "DRY" philosophy, similar to how CSS can reduce the amount of repetitive styling instructions found inline within the HTML Markup.
-    3.  Supporting "progressive enhancement."
-2.  Allow numerous components / libraries to leverage this common functionality, which could potentially significantly reduce bandwidth.
-3.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.
-4.  As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
+    2.  Supporting "binding from a distance" that can set property values of elements in bulk as the HTML streams in.  For example, say a web page is streaming in HTML with thousands of input elements (say a long tax form).  We want to have some indication in the head tag of the HTML (for example) to make all the input elements read only as they stream through the page. With css, we could do similar things, for example set the background to red of all input elements. Why can't we do something similar with setting properties like readOnly, disabled, etc?  With this api, giving developers the "keys" to css filtering, so they can "mount a campaign" to apply common settings on them all feels like something that almost every web developer has mentally screamed to themselves "why can't I do that?", doesn't it? 
+    3.  Supporting "progressive enhancement" more effectively.
+2.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.  This is done by passing into the API substantial number of conditions, which can all be evaluated at a lower level, before surfacing up the developer "found one!".
+3.  As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
 
@@ -50,10 +49,10 @@ To specify the equivalent of what the alternative proposal linked to above would
 
 ```JavaScript
 const observer = new MountObserver({
-   match:'my-element',
+   on:'my-element',
    import: './my-element.js',
    do: {
-      onMount: ({localName}, {module}) => {
+      mount: ({localName}, {module}) => {
         if(!customElements.get(localName)) {
             customElements.define(localName, module.MyElement);
         }
@@ -67,13 +66,13 @@ If no import is specified, it would go straight to do.* (if any such callbacks a
 
 This only searches for elements matching 'my-element' outside any shadow DOM.
 
-But the observe method can accept a shadowRoot, or a node inside a shadowRoot as well.
+But the observe method can accept a node within the document, or a shadowRoot, or a node inside a shadowRoot as well.
 
 The import can also be a function:
 
 ```JavaScript
 const observer = new MountObserver({
-   match: 'my-element',
+   on: 'my-element',
    import: async (matchingElement, {module}) => await import('./my-element.js');
 });
 observer.observe(myRootNode);
@@ -81,36 +80,27 @@ observer.observe(myRootNode);
 
 which would work better with current bundlers, I suspect.  Also, we can do interesting things like merge multiple imports into one "module".  But should this API be built into the platform, such functions wouldn't be necessary, as bundlers could start to recognize strings that are passed to the MountObserver's constructor.
 
-This proposal would also include support for CSS, JSON, HTML module imports.  
+This proposal would also include support for CSS, JSON, HTML module imports. 
 
-"match" is a css query, and could include multiple matches using the comma separator, i.e. no limitation on CSS expressions.  So something like:
+The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
+
+## Binding from a distance
+
+It is important to note that "on" is a css query with no restrictions.  So something like:
 
 ```JavaScript
 const observer = new MountObserver({
    match:'div > p + p ~ span[class$="name"]',
    do:{
-      onMount: (matchingElement) => {
+      mount: (matchingElement) => {
          //attach some behavior or set some property value or add an event listener, etc.
-         matchingElement.textContent = 'hello'
+         matchingElement.textContent = 'hello';
       }
    }
 })
 ```
 
 This would allow developers to create "stylesheet" like capabilities.
-
-The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
-
-<!-- As matches are found (for example, right away if matching elements are immediately found), the imports object would maintain a read-only array of weak references, along with the imported module:
-
-```TypeScript
-interface MountContext {
-    weakReferences:  readonly WeakRef<Element>[];
-    module: any;
-}
-```
-
-This allows code that comes into being after the matching elements were found, to "get caught up" on all the matches. -->
 
 
 ##  Extra lazy loading
@@ -121,7 +111,7 @@ However, we could make the loading even more lazy by specifying intersection opt
 
 ```JavaScript
 const observer = new MountObserver({
-   match: 'my-element',
+   on: 'my-element',
    whereElementIntersectsWith:{
       rootMargin: "0px",
       threshold: 1.0,
@@ -136,26 +126,25 @@ Unlike traditional CSS @import, CSS Modules don't support specifying different i
 
 ```JavaScript
 const observer = new MountObserver({
-   match: 'div > p + p ~ span[class$="name"]',
+   on: 'div > p + p ~ span[class$="name"]',
    whereMediaMatches: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
    whereInstanceOf: [HTMLMarqueeElement],
    whereSatisfies: async (matchingElement, context) => true,
    whereLangIn: ['en-GB'],
    whereConnection:{
-      effectiveTypeIn: ["slow-2g"]
+      effectiveTypeIn: ["slow-2g"],
    }
    import: ['./my-element-small.css', {type: 'css'}],
    do: {
-      onMount: ({localName}, {module}) => {
+      mount: ({localName}, {module}) => {
         ...
       },
-      onDismount: ...,
-      onDisconnect: ...,
-      onOutsideRootNode: ...,
-      onReconnect: ...,
-      onReconfirm: ...,
-      onOutOfScope: ...,
+      dismount: ...,
+      disconnect: ...,
+      reconnect: ...,
+      reconfirm: ...,
+      forget: ...,
    }
 })
 ```
@@ -187,7 +176,7 @@ observer.addEventListener('disconnect', e => {
 observer.addEventListener('reconfirm', e => {
   ...
 });
-observer.addEventListener('out-of-scope', e => {
+observer.addEventListener('forget', e => {
   ...
 });
 ```
