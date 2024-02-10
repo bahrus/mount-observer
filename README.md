@@ -200,7 +200,7 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 ## A tribute to attributes
 
-Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) need to carefully work with sets of "owned" attributes, and the API we've described above falls short of providing the needed support for these important use cases.
+Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) need to carefully work with sets of "owned" [parsed](https://github.com/WICG/webcomponents/issues/1045) attributes, and the API we've described above falls short of providing the needed support for these important use cases.
 
 Example:
 
@@ -212,12 +212,11 @@ Example:
    import {MountObserver} from '../MountObserver.js';
    const mo = new MountObserver({
       on: 'my-custom-element',
-      whereInstanceOf: [MyCustomElement],
-      observedAttributes: MyCustomElement.observedAttributes
+      whereInstanceOf: [MyCustomElement]
    });
    mo.addEventListener('mount', e => {
-      const {initialState} = e;
-      console.log({initialState});
+      const {parsedObservedAttributes} = e;
+      console.log({parsedObservedAttributes});
       // {
       //    initialState:{
       //       "my-first-observed-attribute": "hello",
@@ -226,10 +225,14 @@ Example:
       //    }
       // }
    });
+   mo.addEventListener('parsed-obj-changed', e => {
+      const {matchingElement, modifiedObjectFieldValues, preModifiedFieldValues} = e;
+      console.log({matchingElement, modifiedObjectFieldValues, preModifiedFieldValues});
+   });
    mo.observe(div);
    setTimeout(() => {
       const myCustomElement = document.querySelector('my-custom-element');
-      span.setAttribute('test-1', 'hello');
+      myCustomElement.setAttribute('my-first-observed-attribute', 'good-bye');
    }, 1000);
 </script>
 ```
