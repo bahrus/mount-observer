@@ -206,7 +206,7 @@ Example:
 
 ```html
 <div id=div>
-   <span id=span></span>
+   <my-custom-element my-first-observed-attribute="hello"></my-custom-element>
 </div>
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
@@ -216,19 +216,20 @@ Example:
       observedAttributes: MyCustomElement.observedAttributes
    });
    mo.addEventListener('mount', e => {
-      console.log(e);
+      const {initialState} = e;
+      console.log({initialState});
       // {
       //    initialState:{
-      //       name: 'test-1',
-      //       oldValue: null,
-      //       newValue: 'hello'
-      //       idx: 0,
+      //       "my-first-observed-attribute": "hello",
+      //       "my-second-observed-attribute": null
+      //       
       //    }
       // }
    });
    mo.observe(div);
    setTimeout(() => {
-      span.setAttribute('test-1', 'hello')
+      const myCustomElement = document.querySelector('my-custom-element');
+      span.setAttribute('test-1', 'hello');
    }, 1000);
 </script>
 ```
