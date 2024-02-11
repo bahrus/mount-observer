@@ -1,6 +1,10 @@
 export interface MountInit{
     readonly on?: CSSMatch,
-    readonly attribMatches?: Array<AttribMatch>,  
+    readonly attribMatches?: Array<AttribMatch>,
+    readonly whereAttr?: {
+        matches
+        withOptionalPrefixIn?: Array<string>
+    },  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
     readonly whereInstanceOf?: Array<typeof Node>, //[TODO] What's the best way to type this?,

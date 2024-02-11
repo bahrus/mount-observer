@@ -234,7 +234,7 @@ Example:
 
 ### Scenario 2 -- Custom Enhancements in userland
 
-Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead:
+Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead, what would seem to provide the most help for providing for custom enhancements in userland, and for any other kind of progressive enhancement based on attributes:
 
 ```html
 <div id=div>
@@ -245,16 +245,12 @@ Based on [the proposal as it currently stands](https://github.com/WICG/webcompon
    const mo = new MountObserver({
       on: '*',
       whereAttr:{
-         matches:[
-            'my-legacy-attr-1',
-            {
-               name: 'my-modern-attr',
-               mapsTo: 'myModernProp',
-               instanceOf: Date,
-               customParser: null
-            }
+         hasPrefixesIn: ['enh-', 'data-enh-'],
+         hasSuffixesIn:[
+            'my-first-enhancement-attr',
+            'my-second-enhancement-attr'
          ],
-         withOptionalPrefixIn: ['enh-', 'data-enh-']
+         
       }
    });
    mo.addEventListener('observed-attr-change', e => {
@@ -263,7 +259,7 @@ Based on [the proposal as it currently stands](https://github.com/WICG/webcompon
       //    matchingElement,
       //    attrChangeInfo:{
       //       fullName: 'data-enh-my-first-enhancement-attr',
-      //       name: 'my-first-enhancement-attr'
+      //       suffix: 'my-first-enhancement-attr',
       //       oldValue: null,
       //       newValue: 'hello'
       //       idx: 0,
