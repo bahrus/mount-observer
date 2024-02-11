@@ -202,7 +202,7 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) need to carefully work with sets of "owned" [parsed](https://github.com/WICG/webcomponents/issues/1045) attributes, and the API we've described above falls short of providing the needed support for these important use cases.
 
-### Scenario 1 -- Custom Element
+### Scenario 1 -- Custom Element [WIP]
 
 Example:
 
@@ -213,7 +213,7 @@ Example:
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
    const mo = new MountObserver({
-      on: 'my-custom-element',
+      on: '*',
       whereInstanceOf: [MyCustomElement]
    });
    mo.addEventListener('parsed-attrs-changed', e => {
@@ -230,7 +230,7 @@ Example:
 
 
 
-### Scenario 2 -- Custom Enhancement
+### Scenario 2 -- Custom Enhancement in userland
 
 Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead:
 
@@ -241,8 +241,14 @@ Based on [the proposal as it currently stands](https://github.com/WICG/webcompon
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
    const mo = new MountObserver({
-      on: 'section.hello',
-      whereInstanceOf: [MyFirstEnhancement]
+      on: '*',
+      havingAttrsIn:[
+         'my-first-enhancement-attr',
+         {
+            name: 'my-second-enhancement-attr',
+            mapsTo: mySecondProp
+         }
+      ]
    });
    mo.addEventListener('parsed-attrs-changed', e => {
       const {matchingElement, modifiedObjectFieldValues, preModifiedFieldValues} = e;
