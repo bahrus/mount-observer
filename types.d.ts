@@ -2,8 +2,8 @@ export interface MountInit{
     readonly on?: CSSMatch,
     readonly attribMatches?: Array<AttribMatch>,
     readonly whereAttr?: {
-        matches
-        withOptionalPrefixIn?: Array<string>
+        hasPrefixesIn?: Array<string>,
+        hasSuffixesIn?: Array<string>
     },  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
