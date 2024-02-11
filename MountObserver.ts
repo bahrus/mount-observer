@@ -20,7 +20,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     constructor(init: MountInit){
         super();
-        const {match, whereElementIntersectsWith, whereMediaMatches} = init;
+        const {on: match, whereElementIntersectsWith, whereMediaMatches} = init;
         let isComplex = false;
         if(match !== undefined){
             const reducedMatch = match.replaceAll(':not(', '');
@@ -38,7 +38,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #calculatedSelector: string | undefined;
     get #selector(){
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
-        const {match, attribMatches} = this.#mountInit;
+        const {on: match, attribMatches} = this.#mountInit;
         const base = match || '*';
         if(attribMatches === undefined) return base;
         const matches: Array<string> = [];
@@ -100,7 +100,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             const {mutationRecords} = e;
             const elsToInspect: Array<Element> = [];
             //const elsToDisconnect: Array<Element> = [];
-            const doDisconnect = this.#mountInit.do?.onDisconnect;
+            const doDisconnect = this.#mountInit.do?.disconnect;
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, type, removedNodes} = mutationRecord;
                 //console.log(mutationRecord);
@@ -169,7 +169,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     async #mount(matching: Array<Element>, initializing: boolean){
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
-        const onMount = this.#mountInit.do?.onMount; 
+        const onMount = this.#mountInit.do?.mount; 
         const {import: imp, attribMatches} = this.#mountInit;
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
@@ -227,7 +227,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #dismount(unmatching: Array<Element>){
-        const onDismount = this.#mountInit.do?.onDismount
+        const onDismount = this.#mountInit.do?.dismount
         for(const unmatch of unmatching){
             if(onDismount !== undefined){
                 onDismount(unmatch, this, {});

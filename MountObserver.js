@@ -12,7 +12,7 @@ export class MountObserver extends EventTarget {
     #isComplex;
     constructor(init) {
         super();
-        const { match, whereElementIntersectsWith, whereMediaMatches } = init;
+        const { on: match, whereElementIntersectsWith, whereMediaMatches } = init;
         let isComplex = false;
         if (match !== undefined) {
             const reducedMatch = match.replaceAll(':not(', '');
@@ -31,7 +31,7 @@ export class MountObserver extends EventTarget {
     get #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
-        const { match, attribMatches } = this.#mountInit;
+        const { on: match, attribMatches } = this.#mountInit;
         const base = match || '*';
         if (attribMatches === undefined)
             return base;
@@ -96,7 +96,7 @@ export class MountObserver extends EventTarget {
             const { mutationRecords } = e;
             const elsToInspect = [];
             //const elsToDisconnect: Array<Element> = [];
-            const doDisconnect = this.#mountInit.do?.onDisconnect;
+            const doDisconnect = this.#mountInit.do?.disconnect;
             for (const mutationRecord of mutationRecords) {
                 const { addedNodes, type, removedNodes } = mutationRecord;
                 //console.log(mutationRecord);
@@ -161,7 +161,7 @@ export class MountObserver extends EventTarget {
     async #mount(matching, initializing) {
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
-        const onMount = this.#mountInit.do?.onMount;
+        const onMount = this.#mountInit.do?.mount;
         const { import: imp, attribMatches } = this.#mountInit;
         for (const match of matching) {
             if (alreadyMounted.has(match))
@@ -220,7 +220,7 @@ export class MountObserver extends EventTarget {
         }
     }
     async #dismount(unmatching) {
-        const onDismount = this.#mountInit.do?.onDismount;
+        const onDismount = this.#mountInit.do?.dismount;
         for (const unmatch of unmatching) {
             if (onDismount !== undefined) {
                 onDismount(unmatch, this, {});

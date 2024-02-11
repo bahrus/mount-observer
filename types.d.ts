@@ -1,5 +1,5 @@
 export interface MountInit{
-    readonly match?: CSSMatch,
+    readonly on?: CSSMatch,
     readonly attribMatches?: Array<AttribMatch>,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
@@ -7,11 +7,11 @@ export interface MountInit{
     readonly whereSatisfies?: PipelineProcessor<boolean>,
     readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
     readonly do?: {
-        readonly onMount?: PipelineProcessor,
-        readonly onDismount?: PipelineProcessor,
-        readonly onDisconnect?: PipelineProcessor,
-        readonly onReconfirmed?: PipelineProcessor,
-        readonly onOutsideRootNode?: PipelineProcessor,
+        readonly mount?: PipelineProcessor,
+        readonly dismount?: PipelineProcessor,
+        readonly disconnect?: PipelineProcessor,
+        readonly reconfirmed?: PipelineProcessor,
+        readonly exit?: PipelineProcessor,
     }
     // /**
     //  * Purpose -- there are scenarios where we may only want to affect changes that occur after the initial 
