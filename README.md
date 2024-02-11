@@ -200,7 +200,7 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 ## A tribute to attributes
 
-Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) need to carefully work with sets of "owned" [parsed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better namespacing management.
+Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [parsed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management.
 
 The API we've described above falls short of providing the needed support for these important use cases.
 
@@ -236,7 +236,60 @@ Example:
 
 ### Scenario 2 -- Custom Enhancements in userland
 
-Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead, what would seem to provide the most help for providing for custom enhancements in userland, and for any other kind of progressive enhancement based on attributes going forward:
+Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead, what would seem to provide the most help for providing for custom enhancements in userland, and for any other kind of progressive enhancement based on attributes going forward.
+
+Suppose we have a progressive enhancement that we want to apply based on the presence of 1 or more attributes.
+
+To make this discussion concrete, let's suppose the "canonica" names of those attriutes are:
+
+```html
+<div id=div>
+   <section class=hello my-enhancement-first-attr="hello" my-enhancement-second-attr="goodbye"></section>
+</div>
+```
+
+Now suppose we are worried about namespace clashes, plus we want to serve environments where HTML5 compliance is a must.
+
+So we also want to recognize additional attributes that should map to these canonical attributes:
+
+We want to also support:
+
+```html
+<div id=div>
+   <section class=hello data-my-enhancement-first-attr="hello" data-my-enhancement-second-attr="goodbye"></section>
+</div>
+```
+
+Based on the current unspoken rules, these no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
+
+But now when we consider applying to this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-attr.  (Okay, this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
+
+So let's say we want insist that on custom elements, we must have the data- prefix?
+
+Here's what the api provides:
+
+## Option 1 -- The carpal syndrome syntax
+
+```JavaScript
+import {MountObserver} from '../MountObserver.js';
+const mo = new MountObserver({
+   on: '*',
+   whereAttr:{
+      isIn: [
+         'data-my-enhancement-first-attr', 'data-my-enhancement-second-attr',
+         {
+            name: 'my-enhancement-first-attr',
+            whereAdornedElementIsBuiltIn: true
+         },
+         {
+            name: 'my-enhancement-second-attr',
+            whereAdornedElementIsBuiltIn: true
+         }
+      ]
+      
+   }
+});
+```
 
 ```html
 <div id=div>
