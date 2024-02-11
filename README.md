@@ -244,7 +244,11 @@ To make this discussion concrete, let's suppose the "canonica" names of those at
 
 ```html
 <div id=div>
-   <section class=hello my-enhancement-first-attr="hello" my-enhancement-second-attr="goodbye"></section>
+   <section 
+      my-enhancement=greetings 
+      my-enhancement-first-aspect=hello 
+      my-enhancement-second-aspect=goodbye
+   ></section>
 </div>
 ```
 
@@ -256,15 +260,19 @@ We want to also support:
 
 ```html
 <div id=div>
-   <section class=hello data-my-enhancement-first-attr="hello" data-my-enhancement-second-attr="goodbye"></section>
+   <section class=hello 
+      data-my-enhancement=greetings 
+      data-my-enhancement-first-aspect=hello 
+      data-my-enhancement-second-aspect=goodbye
+   ></section>
 </div>
 ```
 
-Based on the current unspoken rules, these no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
+Based on the current unspoken rules, no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
 
-But now when we consider applying to this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-attr.  (Okay, this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
+But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-aspect?  (Okay, with this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
 
-So let's say we want insist that on custom elements, we must have the data- prefix?
+So let's say we want to insist that on custom elements, we must have the data- prefix?
 
 Here's what the api provides:
 
@@ -276,13 +284,44 @@ const mo = new MountObserver({
    on: '*',
    whereAttr:{
       isIn: [
-         'data-my-enhancement-first-attr', 'data-my-enhancement-second-attr',
+         'data-my-enhancement',
+         'data-my-enhancement-first-aspect', 
+         'data-my-enhancement-second-aspect',
+         {
+            name: 'my-enhancement',
+            whereAdornedElementIsBuiltIn: true
+         },
          {
             name: 'my-enhancement-first-attr',
             whereAdornedElementIsBuiltIn: true
          },
          {
-            name: 'my-enhancement-second-attr',
+            name: 'my-enhancement-second-aspect',
+            whereAdornedElementIsBuiltIn: true
+         }
+      ]
+      
+   }
+});
+```
+
+## Option 2 -- The DRY Way
+
+```JavaScript
+import {MountObserver} from '../MountObserver.js';
+const mo = new MountObserver({
+   on: '*',
+   whereAttr:{
+      hasCanonicalPrefix: 'my-enhancement'
+      endsWith: ['first-attr', 'second-attr', '']
+      isIn: [
+         'data-my-enhancement-first-attr', 'data-my-enhancement-second-aspect',
+         {
+            name: 'my-enhancement-first-attr',
+            whereAdornedElementIsBuiltIn: true
+         },
+         {
+            name: 'my-enhancement-second-aspect',
             whereAdornedElementIsBuiltIn: true
          }
       ]
@@ -303,7 +342,7 @@ const mo = new MountObserver({
          hasPrefixesIn: ['enh-', 'data-enh-'],
          hasSuffixesIn:[
             'my-enhancement-first-attr',
-            'my-enhancement-second-attr'
+            'my-enhancement-second-aspect'
          ],
          
       }
