@@ -200,9 +200,11 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 ## A tribute to attributes
 
-Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [parsed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management.
+Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attribute with ths API:
 
-The API we've described above falls short of providing the needed support for these important use cases.
+Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management.
+
+We want to be alerted by the presence of these attributes, but then continue to be alerted by changes of values, and we can't enumerated which values we are interested in, so we must subscribe to all values as they change.
 
 
 
@@ -240,7 +242,7 @@ Based on [the proposal as it currently stands](https://github.com/WICG/webcompon
 
 Suppose we have a progressive enhancement that we want to apply based on the presence of 1 or more attributes.
 
-To make this discussion concrete, let's suppose the "canonica" names of those attriutes are:
+To make this discussion concrete, let's suppose the "canonical" names of those attriutes are:
 
 ```html
 <div id=div>
@@ -268,11 +270,15 @@ We want to also support:
 </div>
 ```
 
+
+
 Based on the current unspoken rules, no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
 
 But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-aspect?  (Okay, with this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
 
 So let's say we want to insist that on custom elements, we must have the data- prefix?
+
+And we want to support an alternative prefix to data, called enh-*, based on [this proposal](https://github.com/WICG/webcomponents/issues/1000).
 
 Here's what the api provides:
 
@@ -287,17 +293,20 @@ const mo = new MountObserver({
          'data-my-enhancement',
          'data-my-enhancement-first-aspect', 
          'data-my-enhancement-second-aspect',
+         'enh-my-enhancement',
+         'enh-my-enhancement-first-aspect', 
+         'enh-my-enhancement-second-aspect',
          {
             name: 'my-enhancement',
-            whereAdornedElementIsBuiltIn: true
+            builtIn: true
          },
          {
             name: 'my-enhancement-first-attr',
-            whereAdornedElementIsBuiltIn: true
+            builtIn: true
          },
          {
             name: 'my-enhancement-second-aspect',
-            whereAdornedElementIsBuiltIn: true
+            builtIn: true
          }
       ]
       
@@ -313,22 +322,14 @@ const mo = new MountObserver({
    on: '*',
    whereAttr:{
       hasCanonicalPrefix: 'my-enhancement'
-      endsWith: ['first-attr', 'second-attr', '']
-      isIn: [
-         'data-my-enhancement-first-attr', 'data-my-enhancement-second-aspect',
-         {
-            name: 'my-enhancement-first-attr',
-            whereAdornedElementIsBuiltIn: true
-         },
-         {
-            name: 'my-enhancement-second-aspect',
-            whereAdornedElementIsBuiltIn: true
-         }
-      ]
-      
+      endsWith: ['first-attr', 'second-attr', ''],
+      builtInPrefixes: ['data', 'enh', ''],
+      customElementPrefixes: ['data', 'enh']
    }
 });
 ```
+
+MountObserver supports both.  The builtInPrefixes and customElementPrefixes are defaulted to the values shown, so they don't need to be specified
 
 ```html
 <div id=div>
