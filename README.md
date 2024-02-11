@@ -228,10 +228,33 @@ Example:
 </script>
 ```
 
-I don't yet have a solid use case for this, but I wanted to list this, because it feels like it would be useful.  Until a good use case is found, definitely we should not implement it.
 
 
+### Scenario 2 -- Custom Enhancement
 
+Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead:
+
+```html
+<div id=div>
+   <section class=hello my-first-enhancement-attr="hello"></section>
+</div>
+<script type=module>
+   import {MountObserver} from '../MountObserver.js';
+   const mo = new MountObserver({
+      on: 'section.hello',
+      whereInstanceOf: [MyFirstEnhancement]
+   });
+   mo.addEventListener('parsed-attrs-changed', e => {
+      const {matchingElement, modifiedObjectFieldValues, preModifiedFieldValues} = e;
+      console.log({matchingElement, modifiedObjectFieldValues, preModifiedFieldValues});
+   });
+   mo.observe(div);
+   setTimeout(() => {
+      const myCustomElement = document.querySelector('my-custom-element');
+      myCustomElement.setAttribute('my-first-observed-attribute', 'good-bye');
+   }, 1000);
+</script>
+```
 
 ## Preemptive downloading
 
