@@ -202,6 +202,8 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 Extra support is provided for monitoring attributes.  The reason being that both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) need to carefully work with sets of "owned" [parsed](https://github.com/WICG/webcomponents/issues/1045) attributes, and the API we've described above falls short of providing the needed support for these important use cases.
 
+### Scenario 1 -- Custom Element
+
 Example:
 
 ```html
@@ -214,18 +216,7 @@ Example:
       on: 'my-custom-element',
       whereInstanceOf: [MyCustomElement]
    });
-   mo.addEventListener('mount', e => {
-      const {parsedObservedAttributes} = e;
-      console.log({parsedObservedAttributes});
-      // {
-      //    initialState:{
-      //       "my-first-observed-attribute": "hello",
-      //       "my-second-observed-attribute": null
-      //       
-      //    }
-      // }
-   });
-   mo.addEventListener('parsed-obj-changed', e => {
+   mo.addEventListener('parsed-attrs-changed', e => {
       const {matchingElement, modifiedObjectFieldValues, preModifiedFieldValues} = e;
       console.log({matchingElement, modifiedObjectFieldValues, preModifiedFieldValues});
    });
@@ -236,6 +227,9 @@ Example:
    }, 1000);
 </script>
 ```
+
+I don't yet have a solid use case for this, but I wanted to list this, because it feels like it would be useful.  Until a good use case is found, definitely we should not implement it.
+
 
 
 
