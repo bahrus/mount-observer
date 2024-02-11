@@ -13,9 +13,9 @@
     <script type=module>
         import {MountObserver} from '../MountObserver.js';
         const mo = new MountObserver({
-            match: '#span',
+            on: '#span',
             do:{
-                onMount: (el, ctx) => {
+                mount: (el, ctx) => {
                     console.log({el, ctx});
                     
                 }
