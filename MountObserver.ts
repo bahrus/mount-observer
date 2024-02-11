@@ -20,10 +20,10 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     constructor(init: MountInit){
         super();
-        const {on: match, whereElementIntersectsWith, whereMediaMatches} = init;
+        const {on, whereElementIntersectsWith, whereMediaMatches} = init;
         let isComplex = false;
-        if(match !== undefined){
-            const reducedMatch = match.replaceAll(':not(', '');
+        if(on !== undefined){
+            const reducedMatch = on.replaceAll(':not(', '');
             isComplex = reducedMatch.includes(' ') || reducedMatch.includes(':');
         }
         this.#isComplex = isComplex;
@@ -38,8 +38,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #calculatedSelector: string | undefined;
     get #selector(){
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
-        const {on: match, attribMatches} = this.#mountInit;
-        const base = match || '*';
+        const {on, attribMatches} = this.#mountInit;
+        const base = on || '*';
         if(attribMatches === undefined) return base;
         const matches: Array<string> = [];
         attribMatches.forEach(x => {
@@ -169,7 +169,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     async #mount(matching: Array<Element>, initializing: boolean){
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
-        const onMount = this.#mountInit.do?.mount; 
+        const mount = this.#mountInit.do?.mount; 
         const {import: imp, attribMatches} = this.#mountInit;
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
@@ -193,8 +193,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
                         break;
                 }
             }
-            if(onMount !== undefined) {
-                onMount(match, this, {
+            if(mount !== undefined) {
+                mount(match, this, {
                     stage: 'PostImport',
                     initializing
                 }) 

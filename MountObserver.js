@@ -12,10 +12,10 @@ export class MountObserver extends EventTarget {
     #isComplex;
     constructor(init) {
         super();
-        const { on: match, whereElementIntersectsWith, whereMediaMatches } = init;
+        const { on, whereElementIntersectsWith, whereMediaMatches } = init;
         let isComplex = false;
-        if (match !== undefined) {
-            const reducedMatch = match.replaceAll(':not(', '');
+        if (on !== undefined) {
+            const reducedMatch = on.replaceAll(':not(', '');
             isComplex = reducedMatch.includes(' ') || reducedMatch.includes(':');
         }
         this.#isComplex = isComplex;
@@ -31,8 +31,8 @@ export class MountObserver extends EventTarget {
     get #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
-        const { on: match, attribMatches } = this.#mountInit;
-        const base = match || '*';
+        const { on, attribMatches } = this.#mountInit;
+        const base = on || '*';
         if (attribMatches === undefined)
             return base;
         const matches = [];
@@ -161,7 +161,7 @@ export class MountObserver extends EventTarget {
     async #mount(matching, initializing) {
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
-        const onMount = this.#mountInit.do?.mount;
+        const mount = this.#mountInit.do?.mount;
         const { import: imp, attribMatches } = this.#mountInit;
         for (const match of matching) {
             if (alreadyMounted.has(match))
@@ -186,8 +186,8 @@ export class MountObserver extends EventTarget {
                         break;
                 }
             }
-            if (onMount !== undefined) {
-                onMount(match, this, {
+            if (mount !== undefined) {
+                mount(match, this, {
                     stage: 'PostImport',
                     initializing
                 });
