@@ -204,9 +204,7 @@ Extra support is provided for monitoring attributes.  There are two primary reas
 
 Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management.
 
-We want to be alerted by the presence of these attributes, but then continue to be alerted by changes of values, and we can't enumerated which values we are interested in, so we must subscribe to all values as they change.
-
-
+We want to be alerted by the presence of these attributes, but then continue to be alerted by changes of those values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
 ### Scenario 1 -- Custom Element integration with ObserveObservableAttributes API [WIP]
 
