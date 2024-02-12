@@ -134,7 +134,7 @@ const observer = new MountObserver({
    whereLangIn: ['en-GB'],
    whereConnection:{
       effectiveTypeIn: ["slow-2g"],
-   }
+   },
    import: ['./my-element-small.css', {type: 'css'}],
    do: {
       mount: ({localName}, {module}) => {
@@ -240,7 +240,7 @@ Based on [the proposal as it currently stands](https://github.com/WICG/webcompon
 
 Suppose we have a progressive enhancement that we want to apply based on the presence of 1 or more attributes.
 
-To make this discussion concrete, let's suppose the "canonical" names of those attriutes are:
+To make this discussion concrete, let's suppose the "canonical" names of those attributes are:
 
 ```html
 <div id=div>
@@ -268,15 +268,13 @@ We want to also support:
 </div>
 ```
 
-
-
 Based on the current unspoken rules, no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
 
 But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-aspect?  (Okay, with this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
 
-So let's say we want to insist that on custom elements, we must have the data- prefix?
+So let's say we want to insist that on custom elements, we must have the dat- prefix?
 
-And we want to support an alternative prefix to data, called enh-*, based on [this proposal](https://github.com/WICG/webcomponents/issues/1000).
+And we want to support an alternative prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
 
 Here's what the api provides:
 
@@ -319,15 +317,15 @@ import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
    on: '*',
    whereAttr:{
-      hasCanonicalPrefix: 'my-enhancement'
-      endsWith: ['first-attr', 'second-attr', ''],
-      builtInPrefixes: ['data', 'enh', ''],
-      customElementPrefixes: ['data', 'enh']
+      hasCommonPrefix: 'my-enhancement'
+      endingWith: ['first-attr', 'second-attr', ''],
+      supportedBuiltInPrefixes: ['data', 'enh', ''],
+      supportedCEPrefixes: ['data', 'enh']
    }
 });
 ```
 
-MountObserver supports both.  The builtInPrefixes and customElementPrefixes are defaulted to the values shown, so they don't need to be specified
+MountObserver supports both.  The supportedBuiltInPrefixes and supportedCEPrefixes are defaulted to the values shown, so they don't need to be specified, so the savings are fairly significant compared to the previous example.
 
 ```html
 <div id=div>
