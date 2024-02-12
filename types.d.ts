@@ -2,10 +2,12 @@ export interface MountInit{
     readonly on?: CSSMatch,
     readonly attribMatches?: Array<AttribMatch>,
     readonly whereAttr?: {
-        hasPrimeNameOf: string,
-        withAspects?: Array<string>,
-        withStems?: Array<string>,
-        stemRequiredForBuiltIn?: boolean,
+        withFirstName: string,
+        andQualifiers?: Array<string>,
+        withStemsIn?: Array<string | {
+            stem: string,
+            context: 'BuiltIn' | 'CustomElement'
+        }>,
     },  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,

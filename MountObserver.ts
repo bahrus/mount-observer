@@ -41,7 +41,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const {on, whereAttr} = this.#mountInit;
         const base = on || '*';
         if(whereAttr === undefined) return base;
-        const {hasPrimeNameOf, withAspects, withStems, stemRequiredForBuiltIn} = whereAttr
+        const {withFirstName, withAspects, withStems, stemRequiredForBuiltIn} = whereAttr
         const matches: Array<string> = [];
         const aspects= withAspects || [''];
         const prefixes = 

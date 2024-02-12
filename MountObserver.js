@@ -35,7 +35,7 @@ export class MountObserver extends EventTarget {
         const base = on || '*';
         if (whereAttr === undefined)
             return base;
-        const { hasPrimeNameOf, withAspects, withStems, stemRequiredForBuiltIn } = whereAttr;
+        const { withFirstName, withAspects, withStems, stemRequiredForBuiltIn } = whereAttr;
         const matches = [];
         const aspects = withAspects || [''];
         const prefixes = attribMatches.forEach(x => {
