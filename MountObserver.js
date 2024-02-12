@@ -35,15 +35,17 @@ export class MountObserver extends EventTarget {
         const base = on || '*';
         if (whereAttr === undefined)
             return base;
-        const { withFirstName, withAspects, withStems, stemRequiredForBuiltIn } = whereAttr;
+        const { withFirstName, andQualifiers, withStemsIn } = whereAttr;
         const matches = [];
-        const aspects = withAspects || [''];
-        const prefixes = attribMatches.forEach(x => {
-            const { names } = x;
-            names.forEach(y => {
-                matches.push(`${base}[${y}]`);
-            });
-        });
+        const prefixLessMatches = andQualifiers === undefined ? [withFirstName]
+            : andQualifiers.map(x => `${withFirstName}-${x}`);
+        const stems = withStemsIn || ['data', 'enh', 'data-enh'];
+        for (const stem of stems) {
+            const prefix = typeof stem === 'string' ? stem : stem.stem;
+            for (const prefixLessMatch of prefixLessMatches) {
+                matches.push(`${prefix}-${prefixLessMatch}`);
+            }
+        }
         this.#calculatedSelector = matches.join(',');
         return this.#calculatedSelector;
     }
