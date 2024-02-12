@@ -16,7 +16,7 @@ export interface MountInit{
         readonly mount?: PipelineProcessor,
         readonly dismount?: PipelineProcessor,
         readonly disconnect?: PipelineProcessor,
-        readonly reconfirmed?: PipelineProcessor,
+        readonly reconfirm?: PipelineProcessor,
         readonly exit?: PipelineProcessor,
     }
     // /**
