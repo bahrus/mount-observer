@@ -38,10 +38,13 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #calculatedSelector: string | undefined;
     get #selector(){
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
-        const {on, attribMatches} = this.#mountInit;
+        const {on, whereAttr} = this.#mountInit;
         const base = on || '*';
-        if(attribMatches === undefined) return base;
+        if(whereAttr === undefined) return base;
+        const {hasPrimeNameOf, withAspects, withStems, stemRequiredForBuiltIn} = whereAttr
         const matches: Array<string> = [];
+        const aspects= withAspects || [''];
+        const prefixes = 
         attribMatches.forEach(x => {
             const {names} = x;
             names.forEach(y => {

@@ -316,9 +316,9 @@ import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
    on: '*',
    whereAttr:{
-      hasPrimeNameOf: 'my-enhancement'
-      withAspects: ['first-attr', 'second-attr', ''],
-      withStems: ['data', 'enh', 'data-enh'],
+      withFirstName: 'my-enhancement'
+      andQualifiers: ['first-attr', 'second-attr', ''],
+      withStemsIn: ['data', 'enh', 'data-enh'],
       stemRequiredForBuiltIn: false
    }
 });

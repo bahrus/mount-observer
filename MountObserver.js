@@ -31,12 +31,14 @@ export class MountObserver extends EventTarget {
     get #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
-        const { on, attribMatches } = this.#mountInit;
+        const { on, whereAttr } = this.#mountInit;
         const base = on || '*';
-        if (attribMatches === undefined)
+        if (whereAttr === undefined)
             return base;
+        const { hasPrimeNameOf, withAspects, withStems, stemRequiredForBuiltIn } = whereAttr;
         const matches = [];
-        attribMatches.forEach(x => {
+        const aspects = withAspects || [''];
+        const prefixes = attribMatches.forEach(x => {
             const { names } = x;
             names.forEach(y => {
                 matches.push(`${base}[${y}]`);
