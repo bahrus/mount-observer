@@ -2,7 +2,7 @@ export interface MountInit{
     readonly on?: CSSMatch,
     readonly attribMatches?: Array<AttribMatch>,
     readonly whereAttr?: {
-        hasPrimePrefix: string,
+        hasPrimeNameOf: string,
         withAspects?: Array<string>,
         withStems?: Array<string>,
         stemRequiredForBuiltIn?: boolean,

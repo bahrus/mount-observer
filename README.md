@@ -316,7 +316,7 @@ import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
    on: '*',
    whereAttr:{
-      hasPrimePrefix: 'my-enhancement'
+      hasPrimeNameOf: 'my-enhancement'
       withAspects: ['first-attr', 'second-attr', ''],
       withStems: ['data', 'enh', 'data-enh'],
       stemRequiredForBuiltIn: false
@@ -324,7 +324,7 @@ const mo = new MountObserver({
 });
 ```
 
-MountObserver supports both.  The supportedBuiltInPrefixes and supportedCEPrefixes are defaulted to the values shown, so they don't need to be specified, so the savings are fairly significant compared to the previous example.
+MountObserver supports both approaches
 
 ```html
 <div id=div>
