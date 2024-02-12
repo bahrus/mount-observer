@@ -200,11 +200,11 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 ## A tribute to attributes
 
-Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attribute with ths API:
+Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attributes with this API:
 
-Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management.
+Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management, creating the most effective css query becomes challenging.
 
-We want to be alerted by the presence of these attributes, but then continue to be alerted by changes of those values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
+We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
 ### Scenario 1 -- Custom Element integration with ObserveObservableAttributes API [WIP]
 
@@ -316,10 +316,10 @@ import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
    on: '*',
    whereAttr:{
-      hasCommonPrefix: 'my-enhancement'
-      endingWith: ['first-attr', 'second-attr', ''],
-      supportedBuiltInPrefixes: ['data', 'enh', ''],
-      supportedCEPrefixes: ['data', 'enh']
+      hasPrimePrefix: 'my-enhancement'
+      withAspects: ['first-attr', 'second-attr', ''],
+      withStems: ['data', 'enh', 'data-enh'],
+      stemRequiredForBuiltIn: false
    }
 });
 ```
