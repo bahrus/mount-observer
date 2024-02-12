@@ -233,7 +233,6 @@ Example:
 ```
 
 
-
 ### Scenario 2 -- Custom Enhancements in userland
 
 Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead, what would seem to provide the most help for providing for custom enhancements in userland, and for any other kind of progressive enhancement based on attributes going forward.
