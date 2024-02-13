@@ -28,6 +28,7 @@ export class MountObserver extends EventTarget {
         //this.#unmounted = new WeakSet();
     }
     #calculatedSelector;
+    #fullListOfAttrs;
     get #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
@@ -36,17 +37,19 @@ export class MountObserver extends EventTarget {
         if (whereAttr === undefined)
             return base;
         const { withFirstName, andQualifiers, withStemsIn } = whereAttr;
-        const matches = [];
+        const fullListOfAttrs = [];
         const prefixLessMatches = andQualifiers === undefined ? [withFirstName]
             : andQualifiers.map(x => `${withFirstName}-${x}`);
         const stems = withStemsIn || ['data', 'enh', 'data-enh'];
         for (const stem of stems) {
             const prefix = typeof stem === 'string' ? stem : stem.stem;
             for (const prefixLessMatch of prefixLessMatches) {
-                matches.push(`${prefix}-${prefixLessMatch}`);
+                fullListOfAttrs.push(`${prefix}-${prefixLessMatch}`);
             }
         }
-        this.#calculatedSelector = matches.join(',');
+        this.#fullListOfAttrs = fullListOfAttrs;
+        const listOfSelectors = fullListOfAttrs.map(s => `${base}[${s}]`);
+        this.#calculatedSelector = listOfSelectors.join(',');
         return this.#calculatedSelector;
     }
     unobserve(within) {
@@ -90,7 +93,8 @@ export class MountObserver extends EventTarget {
             }
         }
         const rootMutObs = mutationObserverLookup.get(within);
-        const { attribMatches } = this.#mountInit;
+        //const {whereAttr} = this.#mountInit;
+        const fullListOfAttrs = this.#fullListOfAttrs;
         rootMutObs.addEventListener('mutation-event', (e) => {
             //TODO:  disconnected
             if (this.#isComplex) {
@@ -108,29 +112,21 @@ export class MountObserver extends EventTarget {
                 addedElements.forEach(x => elsToInspect.push(x));
                 if (type === 'attributes') {
                     const { target, attributeName, oldValue } = mutationRecord;
-                    if (target instanceof Element && attributeName !== null && attribMatches !== undefined && this.#mounted.has(target)) {
+                    if (target instanceof Element && attributeName !== null && fullListOfAttrs !== undefined && this.#mounted.has(target)) {
                         let idx = 0;
-                        for (const attrMatch of attribMatches) {
+                        if (fullListOfAttrs.includes(attributeName)) {
+                            const newValue = target.getAttribute(attributeName);
+                            const attrChangeInfo = {
+                                name: attributeName,
+                                oldValue,
+                                newValue,
+                                idx
+                            };
+                            this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                        }
+                        for (const attrMatch of fullListOfAttrs) {
                             const { names } = attrMatch;
                             if (names.includes(attributeName)) {
-                                const newValue = target.getAttribute(attributeName);
-                                // let parsedNewValue = undefined;
-                                // switch(type){
-                                //     case 'boolean':
-                                //         parsedNewValue = newValue === 'true' ? true : newValue === 'false' ? false : null;
-                                //         break;
-                                //     case 'date':
-                                //         parsedNewValue = newValue === null ? null : new Date(newValue);
-                                //         break;
-                                //     case ''
-                                // }
-                                const attrChangeInfo = {
-                                    name: attributeName,
-                                    oldValue,
-                                    newValue,
-                                    idx
-                                };
-                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
                             }
                             idx++;
                         }

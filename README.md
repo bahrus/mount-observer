@@ -271,7 +271,7 @@ Based on the current unspoken rules, no one will raise an eyebrow with these att
 
 But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-aspect?  (Okay, with this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
 
-So let's say we want to insist that on custom elements, we must have the dat- prefix?
+So let's say we want to insist that on custom elements, we must have the data- prefix?
 
 And we want to support an alternative prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
 
@@ -316,9 +316,10 @@ import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
    on: '*',
    whereAttr:{
-      withFirstName: 'my-enhancement',
-      andQualifiers: ['first-attr', 'second-attr', ''],
-      withStemsIn: ['data', 'enh', 'data-enh'],
+      withRootIn: ['data', 'enh', 'data-enh'],
+      withBase: 'my-enhancement',
+      withBranchesIn: ['first-attr', 'second-attr', ''],
+      withLeavesIn: ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
    }
 });
 ```

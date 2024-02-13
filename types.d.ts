@@ -1,6 +1,6 @@
 export interface MountInit{
     readonly on?: CSSMatch,
-    readonly attribMatches?: Array<AttribMatch>,
+    //readonly attribMatches?: Array<AttribMatch>,
     readonly whereAttr?: {
         withFirstName: string,
         andQualifiers?: Array<string>,

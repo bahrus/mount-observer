@@ -36,25 +36,29 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     #calculatedSelector: string | undefined;
+    #fullListOfAttrs: Array<string> | undefined;
+    get #attrVals
     get #selector(){
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
         const {on, whereAttr} = this.#mountInit;
         const base = on || '*';
         if(whereAttr === undefined) return base;
         const {withFirstName, andQualifiers, withStemsIn} = whereAttr;
-        const matches: Array<string> = [];
+        const fullListOfAttrs: Array<string> = [];
         const prefixLessMatches: Array<string> = andQualifiers === undefined ? [withFirstName]
             : andQualifiers.map(x => `${withFirstName}-${x}`);
         
-        const stems = withStemsIn || ['data', 'enh', 'data-enh'];
+        const stems = withStemsIn || withStemsInDefault;
         for(const stem of stems){
             const prefix = typeof stem === 'string' ? stem : stem.stem;
             for(const prefixLessMatch of prefixLessMatches){
-                matches.push(`${prefix}-${prefixLessMatch}`);
+                fullListOfAttrs.push(`${prefix}-${prefixLessMatch}`);
             }
             
         }
-        this.#calculatedSelector = matches.join(',');
+        this.#fullListOfAttrs = fullListOfAttrs;
+        const listOfSelectors = fullListOfAttrs.map(s => `${base}[${s}]`);
+        this.#calculatedSelector = listOfSelectors.join(',');
         return this.#calculatedSelector;
     }
 
@@ -96,7 +100,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         const rootMutObs = mutationObserverLookup.get(within)!;
-        const {attribMatches} = this.#mountInit;
+        //const {whereAttr} = this.#mountInit;
+        const fullListOfAttrs = this.#fullListOfAttrs;
         (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', (e: MutationEvent) => {
             //TODO:  disconnected
             if(this.#isComplex){
@@ -114,32 +119,17 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 addedElements.forEach(x => elsToInspect.push(x));
                 if(type === 'attributes'){
                     const {target, attributeName, oldValue} = mutationRecord;
-                    if(target instanceof Element && attributeName !== null &&  attribMatches !== undefined && this.#mounted.has(target)){
-                        let idx = 0;
-                        for(const attrMatch of attribMatches){
-                            const {names} = attrMatch;
-                            if(names.includes(attributeName)){
-                                const newValue = target.getAttribute(attributeName);
-                                // let parsedNewValue = undefined;
-                                // switch(type){
-                                //     case 'boolean':
-                                //         parsedNewValue = newValue === 'true' ? true : newValue === 'false' ? false : null;
-                                //         break;
-                                //     case 'date':
-                                //         parsedNewValue = newValue === null ? null : new Date(newValue);
-                                //         break;
-                                //     case ''
-
-                                // }
-                                const attrChangeInfo: AttrChangeInfo = {
-                                    name: attributeName,
-                                    oldValue,
-                                    newValue,
-                                    idx
-                                };
-                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
-                            }
-                            idx++;
+                    if(target instanceof Element && attributeName !== null &&  fullListOfAttrs !== undefined && this.#mounted.has(target)){
+                        const idx = fullListOfAttrs.indexOf(attributeName);
+                        if(idx > -1){
+                            const newValue = target.getAttribute(attributeName);
+                            const attrChangeInfo: AttrChangeInfo = {
+                                name: attributeName,
+                                oldValue,
+                                newValue,
+                                idx
+                            };
+                            this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
                         }
                     }
                     elsToInspect.push(target as Element);
@@ -176,7 +166,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount; 
-        const {import: imp, attribMatches} = this.#mountInit;
+        const {import: imp} = this.#mountInit;
+        const fullListOfAttrs = this.#fullListOfAttrs;
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
             this.#mounted.add(match);
@@ -206,26 +197,33 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }) 
             }
             this.dispatchEvent(new MountEvent(match, initializing));
-            if(attribMatches !== undefined){
-                let idx = 0;
-                for(const attribMatch of attribMatches){
-                    let newValue = null;
-                    const {names} = attribMatch;
-                    let nonNullName = names[0];
-                    for(const name of names){
-                        const attrVal = match.getAttribute(name);
-                        if(attrVal !== null) nonNullName = name;
-                        newValue = newValue || attrVal;
-                    }
-                    const attribInfo: AttrChangeInfo = {
-                        oldValue: null,
-                        newValue,
-                        idx,
-                        name: nonNullName
-                    };
-                    this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
-                    idx++;
+            if(fullListOfAttrs !== undefined){
+                const {whereAttr} = this.#mountInit;
+                if(whereAttr !== undefined){
+                    const {withFirstName, andQualifiers, withStemsIn} = whereAttr;
                 }
+                for(const name of fullListOfAttrs){
+
+                }
+                // let idx = 0;
+                // for(const attribMatch of attribMatches){
+                //     let newValue = null;
+                //     const {names} = attribMatch;
+                //     let nonNullName = names[0];
+                //     for(const name of names){
+                //         const attrVal = match.getAttribute(name);
+                //         if(attrVal !== null) nonNullName = name;
+                //         newValue = newValue || attrVal;
+                //     }
+                //     const attribInfo: AttrChangeInfo = {
+                //         oldValue: null,
+                //         newValue,
+                //         idx,
+                //         name: nonNullName
+                //     };
+                //     this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
+                //     idx++;
+                // }
             }
             this.#mountedList?.push(new WeakRef(match));
             //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
@@ -328,4 +326,6 @@ export class AttrChangeEvent extends Event implements IAttrChangeEvent{
         super(AttrChangeEvent.eventName);
     }
 }
+
+const withStemsInDefault =  ['data', 'enh', 'data-enh']
 
