@@ -247,6 +247,8 @@ To make this discussion concrete, let's suppose the "canonical" names of those a
       my-enhancement=greetings 
       my-enhancement-first-aspect=hello 
       my-enhancement-second-aspect=goodbye
+      my-enhancement-first-aspect-wow-this-is-deep
+      my-enhancement-first-aspect-have-you-considered-using-json-for-this=just-saying
    ></section>
 </div>
 ```
