@@ -293,6 +293,7 @@ const mo = new MountObserver({
          'enh-my-enhancement',
          'enh-my-enhancement-first-aspect', 
          'enh-my-enhancement-second-aspect',
+         ...
          {
             name: 'my-enhancement',
             builtIn: true
@@ -304,7 +305,8 @@ const mo = new MountObserver({
          {
             name: 'my-enhancement-second-aspect',
             builtIn: true
-         }
+         },
+         ...
       ]
       
    }
@@ -321,7 +323,9 @@ const mo = new MountObserver({
       withRootIn: ['data', 'enh', 'data-enh'],
       withBase: 'my-enhancement',
       withBranchesIn: ['first-attr', 'second-attr', ''],
-      withLeavesIn: ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
+      withLeavesIn: {
+         'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
+      }
    }
 });
 ```
