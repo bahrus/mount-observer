@@ -45,7 +45,7 @@ export class MountObserver extends EventTarget {
         for (const stem of stems) {
             const prefix = typeof stem === 'string' ? stem : stem.path;
             for (const prefixLessMatch of prefixLessMatches) {
-                fullListOfAttrs.push(`${prefix}-${prefixLessMatch}`);
+                fullListOfAttrs.push(prefix.length === 0 ? prefixLessMatch : `${prefix}-${prefixLessMatch}`);
             }
         }
         this.#fullListOfAttrs = fullListOfAttrs;
