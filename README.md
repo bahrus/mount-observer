@@ -3,6 +3,7 @@
 [![How big is this package in your project?](https://img.shields.io/bundlephobia/minzip/mount-observer?style=for-the-badge)](https://bundlephobia.com/result?p=mount-observer)
 <img src="http://img.badgesize.io/https://cdn.jsdelivr.net/npm/mount-observer?compression=gzip">
 
+Note that much of what is described below has not yet been polyfilled.
 
 # The MountObserver api.
 
@@ -10,7 +11,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-11
+Last Update: 2024-2-14
 
 ## Benefits of this API
 
@@ -265,17 +266,19 @@ We want to also support:
       data-my-enhancement=greetings 
       data-my-enhancement-first-aspect=hello 
       data-my-enhancement-second-aspect=goodbye
+      data-my-enhancement-first-aspect-wow-this-is-deep
+      data-my-enhancement-first-aspect-have-you-considered-using-json-for-this=just-saying
    ></section>
 </div>
 ```
 
 Based on the current unspoken rules, no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
 
-But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement-first-aspect?  (Okay, with this particular example, the names are so long and generic it's unlikely, but who would ever use such a long, generic name in practice?)
+But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement?
 
 So let's say we want to insist that on custom elements, we must have the data- prefix?
 
-And we want to support an alternative prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
+And we want to support an alternative, more semantic sounding prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
 
 Here's what the api provides:
 
@@ -293,7 +296,7 @@ const mo = new MountObserver({
          'enh-my-enhancement',
          'enh-my-enhancement-first-aspect', 
          'enh-my-enhancement-second-aspect',
-         ...
+         //...some ten more combinations not listed
          {
             name: 'my-enhancement',
             builtIn: true
@@ -322,15 +325,15 @@ const mo = new MountObserver({
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: 'my-enhancement',
-      hasBranchesIn: ['first-attr', 'second-attr', ''],
-      hasLeavesIn: {
+      hasBranchIn: ['first-attr', 'second-attr', ''],
+      hasLeafIn: {
          'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
       }
    }
 });
 ```
 
-MountObserver supports both approaches
+MountObserver provides a breakdown of the matching attribute when encountered:
 
 ```html
 <div id=div>
@@ -343,8 +346,8 @@ MountObserver supports both approaches
       whereAttr:{
          hasRootIn: ['data', 'enh', 'data-enh'],
          hasBase: 'my-enhancement',
-         hasBranchesIn: ['first-attr', 'second-attr', ''],
-         hasLeavesIn: {
+         hasBranchIn: ['first-attr', 'second-attr', ''],
+         hasLeafIn: {
             'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
          }
       }
@@ -360,7 +363,7 @@ MountObserver supports both approaches
       //       branch: 'first-attr',
       //       leaf: 'wow-this-is-deep',
       //       oldValue: null,
-      //       newValue: 'hello'
+      //       newValue: 'good-bye'
       //       idx: 0,
       //    }
       // }

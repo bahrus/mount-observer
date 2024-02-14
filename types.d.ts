@@ -1,14 +1,7 @@
 export interface MountInit{
     readonly on?: CSSMatch,
     //readonly attribMatches?: Array<AttribMatch>,
-    readonly whereAttr?: {
-        hasBase: string,
-        hasBranchesIn?: Array<string>,
-        hasRootIn?: Array<string | {
-            path: string,
-            context: 'BuiltIn' | 'CustomElement' | 'Both'
-        }>,
-    },  
+    readonly whereAttr?: WhereAttr,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
     readonly whereInstanceOf?: Array<typeof Node>, //[TODO] What's the best way to type this?,
@@ -26,6 +19,14 @@ export interface MountInit{
     //  * server rendering, so we only want to mount elements that appear 
     //  */
     // readonly ignoreInitialMatches?: boolean,
+}
+export interface WhereAttr{
+    hasBase: string,
+    hasBranchIn?: Array<string>,
+    hasRootIn?: Array<string | {
+        path: string,
+        context: 'BuiltIn' | 'CustomElement' | 'Both'
+    }>,
 }
 type CSSMatch = string;
 type ImportString = string;
@@ -70,6 +71,10 @@ export interface AddMutationEventListener {
 
 interface AttrChangeInfo{
     name: string,
+    root?: string,
+    base?: string,
+    branch?: string,
+    leaf?: string, //TODO
     oldValue: string | null,
     newValue: string | null,
     idx: number,

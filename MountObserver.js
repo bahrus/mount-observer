@@ -37,11 +37,11 @@ export class MountObserver extends EventTarget {
         const base = on || '*';
         if (whereAttr === undefined)
             return base;
-        const { hasBase, hasBranchesIn, hasRootIn } = whereAttr;
+        const { hasBase, hasBranchIn, hasRootIn } = whereAttr;
         const fullListOfAttrs = [];
-        const prefixLessMatches = hasBranchesIn === undefined ? [hasBase]
-            : hasBranchesIn.map(x => `${hasBase}-${x}`);
-        const stems = hasRootIn || hasRootInDefault;
+        const prefixLessMatches = hasBranchIn === undefined ? [hasBase]
+            : hasBranchIn.map(x => `${hasBase}-${x}`);
+        const stems = hasRootIn || [''];
         for (const stem of stems) {
             const prefix = typeof stem === 'string' ? stem : stem.path;
             for (const prefixLessMatch of prefixLessMatches) {
@@ -96,7 +96,7 @@ export class MountObserver extends EventTarget {
         const rootMutObs = mutationObserverLookup.get(within);
         //const {whereAttr} = this.#mountInit;
         const fullListOfAttrs = this.#fullListOfAttrs;
-        rootMutObs.addEventListener('mutation-event', (e) => {
+        rootMutObs.addEventListener('mutation-event', async (e) => {
             //TODO:  disconnected
             if (this.#isComplex) {
                 this.#inspectWithin(within, false);
@@ -113,17 +113,26 @@ export class MountObserver extends EventTarget {
                 addedElements.forEach(x => elsToInspect.push(x));
                 if (type === 'attributes') {
                     const { target, attributeName, oldValue } = mutationRecord;
-                    if (target instanceof Element && attributeName !== null && fullListOfAttrs !== undefined && this.#mounted.has(target)) {
-                        const idx = fullListOfAttrs.indexOf(attributeName);
-                        if (idx > -1) {
-                            const newValue = target.getAttribute(attributeName);
-                            const attrChangeInfo = {
-                                name: attributeName,
-                                oldValue,
-                                newValue,
-                                idx
-                            };
-                            this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                    if (target instanceof Element && attributeName !== null && this.#mounted.has(target)) {
+                        if (fullListOfAttrs !== undefined) {
+                            const idx = fullListOfAttrs.indexOf(attributeName);
+                            if (idx > -1) {
+                                const newValue = target.getAttribute(attributeName);
+                                const attrChangeInfo = {
+                                    name: attributeName,
+                                    oldValue,
+                                    newValue,
+                                    idx
+                                };
+                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                            }
+                        }
+                        else {
+                            const { whereAttr } = this.#mountInit;
+                            if (whereAttr !== undefined) {
+                                const { doWhereAttr } = await import('./doWhereAttr.js');
+                                doWhereAttr(whereAttr, attributeName, target, oldValue, this);
+                            }
                         }
                     }
                     elsToInspect.push(target);
@@ -191,10 +200,11 @@ export class MountObserver extends EventTarget {
             this.dispatchEvent(new MountEvent(match, initializing));
             if (fullListOfAttrs !== undefined) {
                 const { whereAttr } = this.#mountInit;
-                if (whereAttr !== undefined) {
-                    const { hasBase, hasBranchesIn, hasRootIn } = whereAttr;
-                }
                 for (const name of fullListOfAttrs) {
+                    if (whereAttr !== undefined) {
+                        const { doWhereAttr } = await import('./doWhereAttr.js');
+                        doWhereAttr(whereAttr, name, match, null, this);
+                    }
                 }
                 // let idx = 0;
                 // for(const attribMatch of attribMatches){
@@ -319,4 +329,4 @@ export class AttrChangeEvent extends Event {
         this.attrChangeInfo = attrChangeInfo;
     }
 }
-const hasRootInDefault = ['data', 'enh', 'data-enh'];
+//const hasRootInDefault =  ['data', 'enh', 'data-enh']

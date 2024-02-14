@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Test 6</title>
 </head>
 <body>
     <div id=div>
@@ -14,11 +14,9 @@
         import {MountObserver} from '../MountObserver.js';
         const mo = new MountObserver({
             on: '#span',
-            attribMatches:[
-                {
-                    names: ['test-1']
-                }
-            ]
+            whereAttr:{
+                hasBase: 'test-1'
+            }
         });
         mo.addEventListener('attr-change', e => {
             console.log(e);

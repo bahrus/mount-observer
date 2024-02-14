@@ -43,12 +43,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const {on, whereAttr} = this.#mountInit;
         const base = on || '*';
         if(whereAttr === undefined) return base;
-        const {hasBase, hasBranchesIn, hasRootIn} = whereAttr;
+        const {hasBase, hasBranchIn, hasRootIn} = whereAttr;
         const fullListOfAttrs: Array<string> = [];
-        const prefixLessMatches: Array<string> = hasBranchesIn === undefined ? [hasBase]
-            : hasBranchesIn.map(x => `${hasBase}-${x}`);
+        const prefixLessMatches: Array<string> = hasBranchIn === undefined ? [hasBase]
+            : hasBranchIn.map(x => `${hasBase}-${x}`);
         
-        const stems = hasRootIn || hasRootInDefault;
+        const stems = hasRootIn || [''];
         for(const stem of stems){
             const prefix = typeof stem === 'string' ? stem : stem.path;
             for(const prefixLessMatch of prefixLessMatches){
@@ -102,7 +102,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const rootMutObs = mutationObserverLookup.get(within)!;
         //const {whereAttr} = this.#mountInit;
         const fullListOfAttrs = this.#fullListOfAttrs;
-        (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', (e: MutationEvent) => {
+        (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', async (e: MutationEvent) => {
             //TODO:  disconnected
             if(this.#isComplex){
                 this.#inspectWithin(within, false);
@@ -119,19 +119,30 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 addedElements.forEach(x => elsToInspect.push(x));
                 if(type === 'attributes'){
                     const {target, attributeName, oldValue} = mutationRecord;
-                    if(target instanceof Element && attributeName !== null &&  fullListOfAttrs !== undefined && this.#mounted.has(target)){
-                        const idx = fullListOfAttrs.indexOf(attributeName);
-                        if(idx > -1){
-                            const newValue = target.getAttribute(attributeName);
-                            const attrChangeInfo: AttrChangeInfo = {
-                                name: attributeName,
-                                oldValue,
-                                newValue,
-                                idx
-                            };
-                            this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                    if(target instanceof Element && attributeName !== null && this.#mounted.has(target)){
+                        if(fullListOfAttrs !== undefined){
+                            const idx = fullListOfAttrs.indexOf(attributeName);
+                            if(idx > -1){
+                                const newValue = target.getAttribute(attributeName);
+                                const attrChangeInfo: AttrChangeInfo = {
+                                    name: attributeName,
+                                    oldValue,
+                                    newValue,
+                                    idx
+                                };
+                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                            }
+                        }
+                        else{
+                            const {whereAttr} = this.#mountInit;
+                            if(whereAttr !== undefined){
+                                const {doWhereAttr} = await import('./doWhereAttr.js');
+                                doWhereAttr(whereAttr, attributeName, target, oldValue, this);
+                            }
                         }
                     }
+
+
                     elsToInspect.push(target as Element);
                 }
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element) as Array<Element>;
@@ -199,11 +210,11 @@ export class MountObserver extends EventTarget implements IMountObserver{
             this.dispatchEvent(new MountEvent(match, initializing));
             if(fullListOfAttrs !== undefined){
                 const {whereAttr} = this.#mountInit;
-                if(whereAttr !== undefined){
-                    const {hasBase, hasBranchesIn, hasRootIn} = whereAttr;
-                }
                 for(const name of fullListOfAttrs){
-
+                    if(whereAttr !== undefined){
+                        const {doWhereAttr} = await import('./doWhereAttr.js');
+                        doWhereAttr(whereAttr, name, match, null, this);
+                    }
                 }
                 // let idx = 0;
                 // for(const attribMatch of attribMatches){
@@ -327,5 +338,5 @@ export class AttrChangeEvent extends Event implements IAttrChangeEvent{
     }
 }
 
-const hasRootInDefault =  ['data', 'enh', 'data-enh']
+//const hasRootInDefault =  ['data', 'enh', 'data-enh']
 
