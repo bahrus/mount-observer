@@ -304,7 +304,7 @@ const mo = new MountObserver({
             builtIn: true
          },
          {
-            name: 'my-enhancement-first-attr',
+            name: 'my-enhancement-first-aspect',
             builtIn: true
          },
          {
@@ -339,7 +339,7 @@ MountObserver provides a breakdown of the matching attribute when encountered:
 
 ```html
 <div id=div>
-   <section class=hello my-enhancement-first-attr-wow-this-is-deep="hello"></section>
+   <section class=hello my-enhancement-first-aspect-wow-this-is-deep="hello"></section>
 </div>
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
@@ -348,9 +348,9 @@ MountObserver provides a breakdown of the matching attribute when encountered:
       whereAttr:{
          hasRootIn: ['data', 'enh', 'data-enh'],
          hasBase: 'my-enhancement',
-         hasBranchIn: ['first-attr', 'second-attr', ''],
+         hasBranchIn: ['first-aspect', 'second-aspect', ''],
          hasLeafIn: {
-            'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
+            'first-aspect': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
          }
       }
    });
@@ -362,7 +362,7 @@ MountObserver provides a breakdown of the matching attribute when encountered:
       //       name: 'data-my-enhancement-first-aspect-wow-this-is-deep'
       //       root: 'data',
       //       base: 'my-enhancement',
-      //       branch: 'first-attr',
+      //       branch: 'first-aspect',
       //       leaf: 'wow-this-is-deep',
       //       oldValue: null,
       //       newValue: 'good-bye'
@@ -395,7 +395,7 @@ Possibly some libraries may prefer to mix it up a bit:
 </div>
 ```
 
-To support, specify the delimiter thusly:
+To support such syntax, specify the delimiter thusly:
 
 ```JavaScript
 const mo = new MountObserver({
@@ -403,9 +403,9 @@ const mo = new MountObserver({
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: ['-', 'my-enhancement'],
-      hasBranchIn: [':', ['first-attr', 'second-attr', '']],
+      hasBranchIn: [':', ['first-aspect', 'second-aspect', '']],
       hasLeafIn: {
-         'first-attr': ['--', ['wow-this-is-deep', 'have-you-considered-using-json-for-this']],
+         'first-aspect': ['--', ['wow-this-is-deep', 'have-you-considered-using-json-for-this']],
       }
    }
 });
