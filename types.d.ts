@@ -5,7 +5,7 @@ export interface MountInit{
         hasBase: string,
         hasBranchesIn?: Array<string>,
         hasRootIn?: Array<string | {
-            stem: string,
+            path: string,
             context: 'BuiltIn' | 'CustomElement' | 'Both'
         }>,
     },  

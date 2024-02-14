@@ -50,7 +50,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         
         const stems = hasRootIn || hasRootInDefault;
         for(const stem of stems){
-            const prefix = typeof stem === 'string' ? stem : stem.stem;
+            const prefix = typeof stem === 'string' ? stem : stem.path;
             for(const prefixLessMatch of prefixLessMatches){
                 fullListOfAttrs.push(`${prefix}-${prefixLessMatch}`);
             }
