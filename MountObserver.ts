@@ -38,7 +38,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #calculatedSelector: string | undefined;
     #fullListOfAttrs: Array<string> | undefined;
     //get #attrVals
-    get #selector(){
+    async #selector() : Promise<string>{
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
         const {on, whereAttr} = this.#mountInit;
         const withoutAttrs = on || '*';
@@ -272,7 +272,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         if(this.#mountedList !== undefined){
             const previouslyMounted = this.#mountedList.map(x => x.deref());
             const {whereSatisfies, whereInstanceOf} = this.#mountInit;
-            const match = this.#selector;
+            const match = await this.#selector();
             const elsToUnMount = previouslyMounted.filter(x => {
                 if(x === undefined) return false;
                 if(!x.matches(match)) return true;
@@ -290,7 +290,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     async #filterAndMount(els: Array<Element>, checkMatch: boolean, initializing: boolean){
         const {whereSatisfies, whereInstanceOf} = this.#mountInit;
-        const match = this.#selector;
+        const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if(checkMatch){
                 if(!x.matches(match)) return false;
@@ -307,7 +307,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        const els = Array.from((within as Element).querySelectorAll(this.#selector));
+        const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
 

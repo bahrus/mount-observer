@@ -30,7 +30,7 @@ export class MountObserver extends EventTarget {
     #calculatedSelector;
     #fullListOfAttrs;
     //get #attrVals
-    get #selector() {
+    async #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
         const { on, whereAttr } = this.#mountInit;
@@ -260,7 +260,7 @@ export class MountObserver extends EventTarget {
         if (this.#mountedList !== undefined) {
             const previouslyMounted = this.#mountedList.map(x => x.deref());
             const { whereSatisfies, whereInstanceOf } = this.#mountInit;
-            const match = this.#selector;
+            const match = await this.#selector();
             const elsToUnMount = previouslyMounted.filter(x => {
                 if (x === undefined)
                     return false;
@@ -280,7 +280,7 @@ export class MountObserver extends EventTarget {
     }
     async #filterAndMount(els, checkMatch, initializing) {
         const { whereSatisfies, whereInstanceOf } = this.#mountInit;
-        const match = this.#selector;
+        const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if (checkMatch) {
                 if (!x.matches(match))
@@ -299,7 +299,7 @@ export class MountObserver extends EventTarget {
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
-        const els = Array.from(within.querySelectorAll(this.#selector));
+        const els = Array.from(within.querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
 }
