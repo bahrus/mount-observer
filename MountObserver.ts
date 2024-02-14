@@ -43,12 +43,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const {on, whereAttr} = this.#mountInit;
         const base = on || '*';
         if(whereAttr === undefined) return base;
-        const {withFirstName, andQualifiers, withStemsIn} = whereAttr;
+        const {hasBase, hasBranchesIn, hasRootIn} = whereAttr;
         const fullListOfAttrs: Array<string> = [];
-        const prefixLessMatches: Array<string> = andQualifiers === undefined ? [withFirstName]
-            : andQualifiers.map(x => `${withFirstName}-${x}`);
+        const prefixLessMatches: Array<string> = hasBranchesIn === undefined ? [hasBase]
+            : hasBranchesIn.map(x => `${hasBase}-${x}`);
         
-        const stems = withStemsIn || withStemsInDefault;
+        const stems = hasRootIn || hasRootInDefault;
         for(const stem of stems){
             const prefix = typeof stem === 'string' ? stem : stem.stem;
             for(const prefixLessMatch of prefixLessMatches){
@@ -200,7 +200,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             if(fullListOfAttrs !== undefined){
                 const {whereAttr} = this.#mountInit;
                 if(whereAttr !== undefined){
-                    const {withFirstName, andQualifiers, withStemsIn} = whereAttr;
+                    const {hasBase, hasBranchesIn, hasRootIn} = whereAttr;
                 }
                 for(const name of fullListOfAttrs){
 
@@ -327,5 +327,5 @@ export class AttrChangeEvent extends Event implements IAttrChangeEvent{
     }
 }
 
-const withStemsInDefault =  ['data', 'enh', 'data-enh']
+const hasRootInDefault =  ['data', 'enh', 'data-enh']
 

@@ -29,6 +29,7 @@ export class MountObserver extends EventTarget {
     }
     #calculatedSelector;
     #fullListOfAttrs;
+    //get #attrVals
     get #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
@@ -36,11 +37,11 @@ export class MountObserver extends EventTarget {
         const base = on || '*';
         if (whereAttr === undefined)
             return base;
-        const { withFirstName, andQualifiers, withStemsIn } = whereAttr;
+        const { hasBase, hasBranchesIn, hasRootIn } = whereAttr;
         const fullListOfAttrs = [];
-        const prefixLessMatches = andQualifiers === undefined ? [withFirstName]
-            : andQualifiers.map(x => `${withFirstName}-${x}`);
-        const stems = withStemsIn || ['data', 'enh', 'data-enh'];
+        const prefixLessMatches = hasBranchesIn === undefined ? [hasBase]
+            : hasBranchesIn.map(x => `${hasBase}-${x}`);
+        const stems = hasRootIn || hasRootInDefault;
         for (const stem of stems) {
             const prefix = typeof stem === 'string' ? stem : stem.stem;
             for (const prefixLessMatch of prefixLessMatches) {
@@ -113,8 +114,8 @@ export class MountObserver extends EventTarget {
                 if (type === 'attributes') {
                     const { target, attributeName, oldValue } = mutationRecord;
                     if (target instanceof Element && attributeName !== null && fullListOfAttrs !== undefined && this.#mounted.has(target)) {
-                        let idx = 0;
-                        if (fullListOfAttrs.includes(attributeName)) {
+                        const idx = fullListOfAttrs.indexOf(attributeName);
+                        if (idx > -1) {
                             const newValue = target.getAttribute(attributeName);
                             const attrChangeInfo = {
                                 name: attributeName,
@@ -123,12 +124,6 @@ export class MountObserver extends EventTarget {
                                 idx
                             };
                             this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
-                        }
-                        for (const attrMatch of fullListOfAttrs) {
-                            const { names } = attrMatch;
-                            if (names.includes(attributeName)) {
-                            }
-                            idx++;
                         }
                     }
                     elsToInspect.push(target);
@@ -162,7 +157,8 @@ export class MountObserver extends EventTarget {
         //first unmount non matching
         const alreadyMounted = this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount;
-        const { import: imp, attribMatches } = this.#mountInit;
+        const { import: imp } = this.#mountInit;
+        const fullListOfAttrs = this.#fullListOfAttrs;
         for (const match of matching) {
             if (alreadyMounted.has(match))
                 continue;
@@ -193,27 +189,32 @@ export class MountObserver extends EventTarget {
                 });
             }
             this.dispatchEvent(new MountEvent(match, initializing));
-            if (attribMatches !== undefined) {
-                let idx = 0;
-                for (const attribMatch of attribMatches) {
-                    let newValue = null;
-                    const { names } = attribMatch;
-                    let nonNullName = names[0];
-                    for (const name of names) {
-                        const attrVal = match.getAttribute(name);
-                        if (attrVal !== null)
-                            nonNullName = name;
-                        newValue = newValue || attrVal;
-                    }
-                    const attribInfo = {
-                        oldValue: null,
-                        newValue,
-                        idx,
-                        name: nonNullName
-                    };
-                    this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
-                    idx++;
+            if (fullListOfAttrs !== undefined) {
+                const { whereAttr } = this.#mountInit;
+                if (whereAttr !== undefined) {
+                    const { hasBase, hasBranchesIn, hasRootIn } = whereAttr;
                 }
+                for (const name of fullListOfAttrs) {
+                }
+                // let idx = 0;
+                // for(const attribMatch of attribMatches){
+                //     let newValue = null;
+                //     const {names} = attribMatch;
+                //     let nonNullName = names[0];
+                //     for(const name of names){
+                //         const attrVal = match.getAttribute(name);
+                //         if(attrVal !== null) nonNullName = name;
+                //         newValue = newValue || attrVal;
+                //     }
+                //     const attribInfo: AttrChangeInfo = {
+                //         oldValue: null,
+                //         newValue,
+                //         idx,
+                //         name: nonNullName
+                //     };
+                //     this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
+                //     idx++;
+                // }
             }
             this.#mountedList?.push(new WeakRef(match));
             //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
@@ -318,3 +319,4 @@ export class AttrChangeEvent extends Event {
         this.attrChangeInfo = attrChangeInfo;
     }
 }
+const hasRootInDefault = ['data', 'enh', 'data-enh'];

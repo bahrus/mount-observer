@@ -2,11 +2,11 @@ export interface MountInit{
     readonly on?: CSSMatch,
     //readonly attribMatches?: Array<AttribMatch>,
     readonly whereAttr?: {
-        withFirstName: string,
-        andQualifiers?: Array<string>,
-        withStemsIn?: Array<string | {
+        hasBase: string,
+        hasBranchesIn?: Array<string>,
+        hasRootIn?: Array<string | {
             stem: string,
-            context: 'BuiltIn' | 'CustomElement'
+            context: 'BuiltIn' | 'CustomElement' | 'Both'
         }>,
     },  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
