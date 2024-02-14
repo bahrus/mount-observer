@@ -21,8 +21,8 @@ export interface MountInit{
     // readonly ignoreInitialMatches?: boolean,
 }
 export interface WhereAttr{
-    hasBase: string,
-    hasBranchIn?: Array<string>,
+    hasBase: string | [string, string],
+    hasBranchIn?: Array<string> | [string, Array<string>],
     hasRootIn?: Array<string | {
         path: string,
         context: 'BuiltIn' | 'CustomElement' | 'Both'

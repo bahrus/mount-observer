@@ -101,6 +101,8 @@ const observer = new MountObserver({
 })
 ```
 
+... would work.
+
 This would allow developers to create "stylesheet" like capabilities.
 
 

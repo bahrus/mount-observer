@@ -14,16 +14,20 @@ export function doWhereAttr(
     let root: string | undefined;
     let branch: string | undefined;
     let idx = 0;
+    const hasBaseIsString = typeof hasBase === 'string';
+    const baseSelector = hasBaseIsString ? hasBase : hasBase[1];
+    const rootToBaseDelimiter = hasBaseIsString ? '-' : hasBase[0];
     if(hasRootIn !== undefined){
         for(const rootTest in hasRootIn){
             if(restOfName.startsWith(rootTest)){
                 root = rootTest;
-                restOfName = restOfName.substring(root.length);
+                restOfName = restOfName.substring(root.length + rootToBaseDelimiter.length);
                 break;
             }
         }
     }
-    if(!restOfName.startsWith(hasBase)) return;
+    
+    if(!restOfName.startsWith(baseSelector)) return;
     restOfName = restOfName.substring(hasBase.length);
     if(hasBranchIn){
         for(const branchTest in hasBranchIn){
@@ -37,7 +41,7 @@ export function doWhereAttr(
     const attrChangeInfo: AttrChangeInfo = {
         name,
         root,
-        base: hasBase,
+        base: baseSelector,
         branch,
         oldValue,
         newValue,

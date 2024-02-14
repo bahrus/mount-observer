@@ -6,16 +6,19 @@ export function doWhereAttr(whereAttr, attributeName, target, oldValue, mo) {
     let root;
     let branch;
     let idx = 0;
+    const hasBaseIsString = typeof hasBase === 'string';
+    const baseSelector = hasBaseIsString ? hasBase : hasBase[1];
+    const rootToBaseDelimiter = hasBaseIsString ? '-' : hasBase[0];
     if (hasRootIn !== undefined) {
         for (const rootTest in hasRootIn) {
             if (restOfName.startsWith(rootTest)) {
                 root = rootTest;
-                restOfName = restOfName.substring(root.length);
+                restOfName = restOfName.substring(root.length + rootToBaseDelimiter.length);
                 break;
             }
         }
     }
-    if (!restOfName.startsWith(hasBase))
+    if (!restOfName.startsWith(baseSelector))
         return;
     restOfName = restOfName.substring(hasBase.length);
     if (hasBranchIn) {
@@ -30,7 +33,7 @@ export function doWhereAttr(whereAttr, attributeName, target, oldValue, mo) {
     const attrChangeInfo = {
         name,
         root,
-        base: hasBase,
+        base: baseSelector,
         branch,
         oldValue,
         newValue,
