@@ -354,6 +354,7 @@ MountObserver supports both approaches
       // {
       //    matchingElement,
       //    attrChangeInfo:{
+      //       name: 'data-my-enhancement-first-aspect-wow-this-is-deep'
       //       root: 'data',
       //       base: 'my-enhancement',
       //       branch: 'first-attr',
