@@ -325,9 +325,9 @@ const mo = new MountObserver({
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: 'my-enhancement',
-      hasBranchIn: ['first-attr', 'second-attr', ''],
+      hasBranchIn: ['first-aspect', 'second-aspect', ''],
       hasLeafIn: {
-         'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
+         'first-aspect': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
       }
    }
 });
@@ -376,6 +376,12 @@ MountObserver provides a breakdown of the matching attribute when encountered:
 </script>
 ```
 
+Some libraries prefer to use the colon (:) rather than a dash to separate these levels of settings:
+
+Possible some libraries may prefer to mix it up a bit:
+
+
+
 ## Preemptive downloading
 
 There are two significant steps to imports, each of which imposes a cost:  
@@ -403,3 +409,30 @@ const observer = new MountObserver({
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
 
 
+```html
+<div id=div>
+   <section class=hello 
+      data-my-enhancement=greetings 
+      data-my-enhancement:first-aspect=hello 
+      data-my-enhancement:second-aspect=goodbye
+      data-my-enhancement:first-aspect--wow-this-is-deep
+      data-my-enhancement:first-aspect--have-you-considered-using-json-for-this=just-saying
+   ></section>
+</div>
+```
+
+To support, specify the delimiter thusly:
+
+```JavaScript
+const mo = new MountObserver({
+   on: '*',
+   whereAttr:{
+      hasRootIn: ['data', 'enh', 'data-enh'],
+      hasBase: ['-', 'my-enhancement'],
+      hasBranchIn: [':', ['first-attr', 'second-attr', '']],
+      hasLeafIn: {
+         'first-attr': ['--', ['wow-this-is-deep', 'have-you-considered-using-json-for-this']],
+      }
+   }
+});
+```
