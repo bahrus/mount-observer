@@ -320,10 +320,10 @@ import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
    on: '*',
    whereAttr:{
-      withRootIn: ['data', 'enh', 'data-enh'],
-      withBase: 'my-enhancement',
-      withBranchesIn: ['first-attr', 'second-attr', ''],
-      withLeavesIn: {
+      hasRootIn: ['data', 'enh', 'data-enh'],
+      hasBase: 'my-enhancement',
+      hasBranchesIn: ['first-attr', 'second-attr', ''],
+      hasLeavesIn: {
          'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
       }
    }
@@ -334,19 +334,19 @@ MountObserver supports both approaches
 
 ```html
 <div id=div>
-   <section class=hello my-enhancement-first-attr="hello"></section>
+   <section class=hello my-enhancement-first-attr-wow-this-is-deep="hello"></section>
 </div>
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
    const mo = new MountObserver({
       on: '*',
       whereAttr:{
-         hasPrefixesIn: ['enh-', 'data-enh-'],
-         hasSuffixesIn:[
-            'my-enhancement-first-attr',
-            'my-enhancement-second-aspect'
-         ],
-         
+         hasRootIn: ['data', 'enh', 'data-enh'],
+         hasBase: 'my-enhancement',
+         hasBranchesIn: ['first-attr', 'second-attr', ''],
+         hasLeavesIn: {
+            'first-attr': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
+         }
       }
    });
    mo.addEventListener('observed-attr-change', e => {
@@ -354,8 +354,10 @@ MountObserver supports both approaches
       // {
       //    matchingElement,
       //    attrChangeInfo:{
-      //       fullName: 'data-enh-my-first-enhancement-attr',
-      //       suffix: 'my-first-enhancement-attr',
+      //       root: 'data',
+      //       base: 'my-enhancement',
+      //       branch: 'first-attr',
+      //       leaf: 'wow-this-is-deep',
       //       oldValue: null,
       //       newValue: 'hello'
       //       idx: 0,
@@ -365,7 +367,7 @@ MountObserver supports both approaches
    mo.observe(div);
    setTimeout(() => {
       const myCustomElement = document.querySelector('my-custom-element');
-      myCustomElement.setAttribute('my-first-observed-attribute', 'good-bye');
+      myCustomElement.setAttribute('data-my-enhancement-first-aspect-wow-this-is-deep', 'good-bye');
    }, 1000);
 </script>
 ```

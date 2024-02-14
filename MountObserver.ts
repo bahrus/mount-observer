@@ -37,7 +37,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     #calculatedSelector: string | undefined;
     #fullListOfAttrs: Array<string> | undefined;
-    get #attrVals
+    //get #attrVals
     get #selector(){
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
         const {on, whereAttr} = this.#mountInit;
