@@ -191,7 +191,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     async #mount(matching: Array<Element>, initializing: boolean){
         //first unmount non matching
-        const alreadyMounted = this.#filterAndDismount();
+        const alreadyMounted = await this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount; 
         const {import: imp} = this.#mountInit;
         const fullListOfAttrs = this.#fullListOfAttrs;
@@ -267,7 +267,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         }
     }
 
-    #filterAndDismount(): Set<Element>{
+    async #filterAndDismount(): Promise<Set<Element>>{
         const returnSet = new Set<Element>();
         if(this.#mountedList !== undefined){
             const previouslyMounted = this.#mountedList.map(x => x.deref());

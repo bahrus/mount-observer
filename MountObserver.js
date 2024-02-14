@@ -180,7 +180,7 @@ export class MountObserver extends EventTarget {
     }
     async #mount(matching, initializing) {
         //first unmount non matching
-        const alreadyMounted = this.#filterAndDismount();
+        const alreadyMounted = await this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount;
         const { import: imp } = this.#mountInit;
         const fullListOfAttrs = this.#fullListOfAttrs;
@@ -255,7 +255,7 @@ export class MountObserver extends EventTarget {
             this.dispatchEvent(new DismountEvent(unmatch));
         }
     }
-    #filterAndDismount() {
+    async #filterAndDismount() {
         const returnSet = new Set();
         if (this.#mountedList !== undefined) {
             const previouslyMounted = this.#mountedList.map(x => x.deref());
