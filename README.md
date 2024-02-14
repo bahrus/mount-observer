@@ -207,7 +207,7 @@ Being that for both custom elements, as well as (hopefully) [custom enhancements
 
 We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
-### Scenario 1 -- Custom Element integration with ObserveObservableAttributes API [WIP]
+### Scenario 1 -- Custom Element integration with ObserveObservedAttributes API [WIP]
 
 Example:
 
@@ -378,35 +378,7 @@ MountObserver provides a breakdown of the matching attribute when encountered:
 
 Some libraries prefer to use the colon (:) rather than a dash to separate these levels of settings:
 
-Possible some libraries may prefer to mix it up a bit:
-
-
-
-## Preemptive downloading
-
-There are two significant steps to imports, each of which imposes a cost:  
-
-1.  Downloading the resource.
-2.  Loading the resource into memory.
-
-What if we want to download the resource ahead of time, but only load into memory when needed?
-
-The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
-
-So for this we add option:
-
-```JavaScript
-const observer = new MountObserver({
-   on: 'my-element',
-   loading: 'eager',
-   import: './my-element.js',
-   do:{
-      mount: (matchingElement, {module}) => customElements.define(module.MyElement)
-   }
-})
-```
-
-So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
+Possibly some libraries may prefer to mix it up a bit:
 
 
 ```html
@@ -436,3 +408,30 @@ const mo = new MountObserver({
    }
 });
 ```
+
+## Preemptive downloading
+
+There are two significant steps to imports, each of which imposes a cost:  
+
+1.  Downloading the resource.
+2.  Loading the resource into memory.
+
+What if we want to download the resource ahead of time, but only load into memory when needed?
+
+The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
+
+So for this we add option:
+
+```JavaScript
+const observer = new MountObserver({
+   on: 'my-element',
+   loading: 'eager',
+   import: './my-element.js',
+   do:{
+      mount: (matchingElement, {module}) => customElements.define(module.MyElement)
+   }
+})
+```
+
+So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
+
