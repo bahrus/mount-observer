@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-14
+Last Update: 2024-2-15
 
 ## Benefits of this API
 
@@ -153,7 +153,9 @@ const observer = new MountObserver({
 })
 ```
 
-Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
+Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance.  
+
+However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
 
 ## Subscribing
 
