@@ -441,7 +441,7 @@ So what this does is only check for the presence of an element with tag name "my
 
 ## Birtual Inclusions
 
-This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  A kind of "extremely poor man's" bare bones custom element.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide the "first point of content" for such functionality, the efficient argument seemingly "screams out" for this feature.
+This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  A kind of "extremely poor man's" bare bones custom element.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide the "first point of content" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
 The mount-observer is always on the lookout for a special tag that takes the form:
 
