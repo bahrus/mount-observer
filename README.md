@@ -439,3 +439,42 @@ const observer = new MountObserver({
 
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
 
+## Birtual Inclusions
+
+This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  A kind of "extremely poor man's" bare bones custom element.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide the "first point of content" for such functionality, the efficient argument seemingly "screams out" for this feature.
+
+The mount-observer is always on the lookout for a special tag that takes the form:
+
+```html
+<div>Some prior stuff</div>
+<b-i href=#my-kinda-sorta-custom-element>
+   <div slot=slot1>hello</div>
+   <div slot=slot2>goodbye<div>
+</b-i>
+<div>Some additional stuff</div>
+```
+
+"b-i" stands for "birtual inclusion" where birtual is a made up word that is a portmanteau of birth and virtual.
+
+When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=myID (and caches them as it finds them). 
+
+Let's say the template looks as follows:
+
+```html
+<template id=my-kinda-sorta-custom-element>
+   This is an example of a snippet of HTML that appears repeatedly.
+   <slot name=slot1></slot>
+   <slot name=slot2></slot>
+</template>
+```
+
+What we would end up with is:
+
+
+```html
+<div>Some prior stuff</div>
+This is an example of a snippet of HTML that appears repeatedly.
+<div>hello</div>
+<div>goodbye</div>
+<div>Some additional stuff</div>
+```
