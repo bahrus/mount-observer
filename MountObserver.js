@@ -3,13 +3,14 @@ const mutationObserverLookup = new WeakMap();
 const refCount = new WeakMap();
 export class MountObserver extends EventTarget {
     #mountInit;
-    #rootMutObs;
+    //#rootMutObs: RootMutObs | undefined;
     #abortController;
     #mounted;
     #mountedList;
     #disconnected;
     //#unmounted: WeakSet<Element>;
     #isComplex;
+    #observe;
     constructor(init) {
         super();
         const { on, whereElementIntersectsWith, whereMediaMatches } = init;
@@ -44,6 +45,46 @@ export class MountObserver extends EventTarget {
         this.#calculatedSelector = calculatedSelector;
         return this.#calculatedSelector;
     }
+    async #birtualizeFragment(fragment) {
+        const bis = Array.from(fragment.querySelectorAll(biQry));
+        for (const bi of bis) {
+            await this.#birtalizeMatch(bi);
+        }
+    }
+    async #birtalizeMatch(el) {
+        const href = el.getAttribute('href');
+        el.removeAttribute('href');
+        const templID = href.substring(1);
+        const fragment = this.#observe?.deref();
+        if (fragment === undefined)
+            return;
+        const templ = this.#findByID(templID, fragment);
+        if (!(templ instanceof HTMLTemplateElement))
+            throw 404;
+        const clone = templ.content.cloneNode(true);
+        const slots = el.querySelectorAll(`[slot]`);
+        for (const slot of slots) {
+            const name = slot.getAttribute('slot');
+            const target = clone.querySelector(`slot[name="${name}"]`);
+            if (target !== null) {
+                target.after(slot);
+                target.remove();
+            }
+        }
+        this.#birtualizeFragment(clone);
+    }
+    #findByID(id, fragment) {
+        let templ = fragment.getElementById(id);
+        if (templ !== null)
+            return templ;
+        let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
+        templ = rootToSearchOutwardFrom.getElementById(id);
+        while (templ === null && rootToSearchOutwardFrom !== document) {
+            rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
+            templ = rootToSearchOutwardFrom.getElementById(id);
+        }
+        return templ;
+    }
     unobserve(within) {
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         const currentCount = refCount.get(nodeToMonitor);
@@ -70,6 +111,7 @@ export class MountObserver extends EventTarget {
         }
     }
     async observe(within) {
+        this.#observe = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
@@ -271,14 +313,21 @@ export class MountObserver extends EventTarget {
             }
             return true;
         });
+        for (const elToMount of elsToMount) {
+            if (elToMount.matches(biQry)) {
+                await this.#birtalizeMatch(elToMount);
+            }
+        }
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
+        await this.#birtualizeFragment(within);
         const els = Array.from(within.querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
+const biQry = 'b-i[href^="#"]';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.

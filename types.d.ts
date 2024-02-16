@@ -1,6 +1,7 @@
 export interface MountInit{
     readonly on?: CSSMatch,
     //readonly attribMatches?: Array<AttribMatch>,
+    readonly withTargetShadowRoot?: ShadowRoot, 
     readonly whereAttr?: WhereAttr,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,

@@ -10,13 +10,14 @@ const refCount = new WeakMap<Node, number>();
 export class MountObserver extends EventTarget implements IMountObserver{
     
     #mountInit: MountInit;
-    #rootMutObs: RootMutObs | undefined;
+    //#rootMutObs: RootMutObs | undefined;
     #abortController: AbortController;
     #mounted: WeakSet<Element>;
     #mountedList: Array<WeakRef<Element>> | undefined;
     #disconnected: WeakSet<Element>;
     //#unmounted: WeakSet<Element>;
     #isComplex: boolean;
+    #observe: WeakRef<Node> | undefined;
 
     constructor(init: MountInit){
         super();
@@ -51,6 +52,48 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return this.#calculatedSelector;
     }
 
+    async #birtualizeFragment(fragment: DocumentFragment){
+        const bis = Array.from(fragment.querySelectorAll(biQry));
+        for(const bi of bis){
+            await this.#birtalizeMatch(bi);
+        }
+    }
+
+    async #birtalizeMatch(el: Element){
+        const href = el.getAttribute('href');
+        el.removeAttribute('href');
+        const templID = href!.substring(1);
+        const fragment = this.#observe?.deref() as DocumentFragment;
+        if(fragment === undefined) return;
+        const templ = this.#findByID(templID, fragment);
+        if(!(templ instanceof HTMLTemplateElement)) throw 404;
+        const clone = templ.content.cloneNode(true) as DocumentFragment;
+
+        const slots = el.querySelectorAll(`[slot]`);
+
+        for(const slot of slots){
+            const name = slot.getAttribute('slot')!;
+            const target = clone.querySelector(`slot[name="${name}"]`);
+            if(target !== null){
+                target.after(slot);
+                target.remove();
+            }
+        }
+        this.#birtualizeFragment(clone);
+    }
+
+    #findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
+        let templ = fragment.getElementById(id);
+        if(templ !== null) return templ;
+        let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document) as any;
+        templ = rootToSearchOutwardFrom.getElementById(id);
+        while(templ === null && rootToSearchOutwardFrom !== (document as any as DocumentFragment) ){
+            rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode() as DocumentFragment;
+            templ = rootToSearchOutwardFrom.getElementById(id);
+        }
+        return templ;
+    }
+
     unobserve(within: Node){
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
         const currentCount = refCount.get(nodeToMonitor);
@@ -76,6 +119,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async observe(within: Node){
+        this.#observe = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
         if(!mutationObserverLookup.has(nodeToMonitor)){
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
@@ -276,10 +320,16 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             return true;
         });
+        for(const elToMount of elsToMount){
+            if(elToMount.matches(biQry)){
+                await this.#birtalizeMatch(elToMount)
+            }
+        }
         this.#mount(elsToMount, initializing);
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
+        await this.#birtualizeFragment(within as DocumentFragment);
         const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
@@ -289,6 +339,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
+const biQry = 'b-i[href^="#"]'
 export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
