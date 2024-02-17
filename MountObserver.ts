@@ -84,16 +84,19 @@ export class MountObserver extends EventTarget implements IMountObserver{
         el.before(clone);
         el.remove();
     }
-
+    #templLookUp: Map<string, HTMLElement> = new Map();
     #findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
+        if(this.#templLookUp.has(id)) return this.#templLookUp.get(id)!;
         let templ = fragment.getElementById(id);
-        if(templ !== null) return templ;
-        let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document) as any;
-        templ = rootToSearchOutwardFrom.getElementById(id);
-        while(templ === null && rootToSearchOutwardFrom !== (document as any as DocumentFragment) ){
-            rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode() as DocumentFragment;
+        if(templ === null){
+            let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document) as any;
             templ = rootToSearchOutwardFrom.getElementById(id);
+            while(templ === null && rootToSearchOutwardFrom !== (document as any as DocumentFragment) ){
+                rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode() as DocumentFragment;
+                templ = rootToSearchOutwardFrom.getElementById(id);
+            }
         }
+        if(templ !== null) this.#templLookUp.set(id, templ);
         return templ;
     }
 

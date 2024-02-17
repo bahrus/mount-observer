@@ -76,16 +76,21 @@ export class MountObserver extends EventTarget {
         el.before(clone);
         el.remove();
     }
+    #templLookUp = new Map();
     #findByID(id, fragment) {
+        if (this.#templLookUp.has(id))
+            return this.#templLookUp.get(id);
         let templ = fragment.getElementById(id);
-        if (templ !== null)
-            return templ;
-        let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
-        templ = rootToSearchOutwardFrom.getElementById(id);
-        while (templ === null && rootToSearchOutwardFrom !== document) {
-            rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
+        if (templ === null) {
+            let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
             templ = rootToSearchOutwardFrom.getElementById(id);
+            while (templ === null && rootToSearchOutwardFrom !== document) {
+                rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
+                templ = rootToSearchOutwardFrom.getElementById(id);
+            }
         }
+        if (templ !== null)
+            this.#templLookUp.set(id, templ);
         return templ;
     }
     unobserve(within) {
