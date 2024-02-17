@@ -441,7 +441,7 @@ So what this does is only check for the presence of an element with tag name "my
 
 ## Birtual Inclusions
 
-This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  A kind of "extremely poor man's" bare bones custom element.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
+This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  A kind of "extremely poor man's" bare bones custom element.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
 The mount-observer is always on the lookout for a special tag that takes the form:
 
@@ -478,3 +478,8 @@ This is an example of a snippet of HTML that appears repeatedly.
 <div>goodbye</div>
 <div>Some additional stuff</div>
 ```
+
+Some significant differences with genuine slot support as used with (ShadowDOM'd) custom elements
+
+1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.
+2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These birtual inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.  Really, the best way to describe what birtual inclusions do is "many-to-many" so it isn't quite the opposite.
