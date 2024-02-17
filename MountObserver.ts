@@ -345,7 +345,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
-const biQry = 'b-i[href^="#"]'
+const biQry = 'b-i[href^="#"]:not([disabled])';
 export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080

@@ -335,7 +335,7 @@ export class MountObserver extends EventTarget {
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
-const biQry = 'b-i[href^="#"]';
+const biQry = 'b-i[href^="#"]:not([disabled])';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
