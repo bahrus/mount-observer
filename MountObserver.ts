@@ -73,9 +73,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
         for(const slot of slots){
             const name = slot.getAttribute('slot')!;
-            const target = clone.querySelector(`slot[name="${name}"]`);
-            if(target !== null){
-                target.after(slot);
+            const targets = Array.from(clone.querySelectorAll(`slot[name="${name}"]`));
+            for(const target of targets){
+                target.after(slot.cloneNode(true));
                 target.remove();
             }
         }
