@@ -80,6 +80,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         this.#birtualizeFragment(clone);
+        el.dispatchEvent()
         el.before(clone);
         el.remove();
     }
@@ -379,6 +380,11 @@ export class AttrChangeEvent extends Event implements IAttrChangeEvent{
         super(AttrChangeEvent.eventName);
     }
 }
+
+export class LoadEvent extends Event implements ILoadEvent{
+    static eventName: 
+}
+
 
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']
 

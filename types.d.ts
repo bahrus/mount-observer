@@ -125,9 +125,20 @@ export type attrChangeEventName = 'attr-change';
 export interface IAttrChangeEvent extends IMountEvent {
     attrChangeInfo: AttrChangeInfo,
 }
-export type attrChangeEventHander = (e: IAttrChangeEvent) => void;
-export interface AddAttrChangeEventistener{
-    addEventListener(eventName: attrChangeEventName, handler: attrChangeEventHander, options?: AddEventListenerOptions): void;
+export type attrChangeEventHandler = (e: IAttrChangeEvent) => void;
+export interface AddAttrChangeEventListener{
+    addEventListener(eventName: attrChangeEventName, handler: attrChangeEventHandler, options?: AddEventListenerOptions): void;
+}
+//#endregion
+
+//#region load event
+export type loadEVentName = 'load';
+export interface ILoadEvent {
+    clone: DocumentFragment
+}
+export type loadEventHandler = (e: ILoadEvent) => void;
+export interface AddLoadEventListener{
+    addEventListener(eventName: loadEVentName, handler: loadEventHandler, options?: AddEventListenerOptions): void
 }
 //#endregion
 
