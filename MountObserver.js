@@ -93,6 +93,15 @@ export class MountObserver extends EventTarget {
                                         slot.setAttribute('itemscope', '');
                                         slot.setAttribute('itemprop', slotName);
                                         break;
+                                    case '@':
+                                        slot.setAttribute('name', slotName);
+                                        break;
+                                    case '.':
+                                        slot.classList.add(slotName);
+                                        break;
+                                    case '%':
+                                        slot.part.add(slotName);
+                                        break;
                                 }
                             }
                         }

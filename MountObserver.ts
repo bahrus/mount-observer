@@ -101,7 +101,15 @@ export class MountObserver extends EventTarget implements IMountObserver{
                                         slot.setAttribute('itemscope', '');
                                         slot.setAttribute('itemprop', slotName);
                                         break;
-
+                                    case '@':
+                                        slot.setAttribute('name', slotName);
+                                        break;
+                                    case '.':
+                                        slot.classList.add(slotName);
+                                        break;
+                                    case '%':
+                                        slot.part.add(slotName);
+                                        break;
                                 }
                             }
                         }
@@ -377,6 +385,13 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
 const refCountErr = 'mount-observer ref count mismatch';
 const biQry = 'b-i[href^="#"]:not([disabled])';
+// const attrSym = new Map<string, string>([
+//     ['|', 'itemprop'],
+//     ['$', 'itemprop'],
+//     ['@', 'name'],
+//     ['#', 'id'],
+//     ['.']
+// ])
 export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
