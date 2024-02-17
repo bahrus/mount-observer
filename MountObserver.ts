@@ -80,6 +80,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         this.#birtualizeFragment(clone);
+        el.before(clone);
+        el.remove();
     }
 
     #findByID(id: string, fragment: DocumentFragment): HTMLElement | null{

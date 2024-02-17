@@ -72,6 +72,8 @@ export class MountObserver extends EventTarget {
             }
         }
         this.#birtualizeFragment(clone);
+        el.before(clone);
+        el.remove();
     }
     #findByID(id, fragment) {
         let templ = fragment.getElementById(id);
