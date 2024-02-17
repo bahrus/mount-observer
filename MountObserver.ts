@@ -52,14 +52,14 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return this.#calculatedSelector;
     }
 
-    async #birtualizeFragment(fragment: DocumentFragment){
+    async #birtualizeFragment(fragment: DocumentFragment, level: number){
         const bis = Array.from(fragment.querySelectorAll(biQry));
         for(const bi of bis){
-            await this.#birtalizeMatch(bi);
+            await this.#birtalizeMatch(bi, level);
         }
     }
 
-    async #birtalizeMatch(el: Element){
+    async #birtalizeMatch(el: Element, level: number){
         const href = el.getAttribute('href');
         el.removeAttribute('href');
         const templID = href!.substring(1);
@@ -75,12 +75,17 @@ export class MountObserver extends EventTarget implements IMountObserver{
             const name = slot.getAttribute('slot')!;
             const targets = Array.from(clone.querySelectorAll(`slot[name="${name}"]`));
             for(const target of targets){
-                target.after(slot.cloneNode(true));
+                const slotClone = slot.cloneNode(true) as Element;
+                target.after(slotClone);
                 target.remove();
             }
         }
-        this.#birtualizeFragment(clone);
-        el.dispatchEvent(new LoadEvent(clone));
+        this.#birtualizeFragment(clone, level + 1);
+        if(level === 0){
+            el.dispatchEvent(new LoadEvent(clone));
+            //console.log('dispatched')
+        }
+        
         el.before(clone);
         el.remove();
     }
@@ -328,14 +333,14 @@ export class MountObserver extends EventTarget implements IMountObserver{
         });
         for(const elToMount of elsToMount){
             if(elToMount.matches(biQry)){
-                await this.#birtalizeMatch(elToMount)
+                await this.#birtalizeMatch(elToMount, 0)
             }
         }
         this.#mount(elsToMount, initializing);
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        await this.#birtualizeFragment(within as DocumentFragment);
+        await this.#birtualizeFragment(within as DocumentFragment, 0);
         const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
