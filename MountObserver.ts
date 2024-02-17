@@ -83,6 +83,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         this.#birtualizeFragment(clone, level + 1);
         if(level === 0){
             el.dispatchEvent(new LoadEvent(clone));
+            const slots = clone.querySelectorAll('[slot]').forEach(el => el.removeAttribute('slot'));
             //console.log('dispatched')
         }
         
