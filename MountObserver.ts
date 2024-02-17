@@ -83,7 +83,32 @@ export class MountObserver extends EventTarget implements IMountObserver{
         this.#birtualizeFragment(clone, level + 1);
         if(level === 0){
             el.dispatchEvent(new LoadEvent(clone));
-            const slots = clone.querySelectorAll('[slot]').forEach(el => el.removeAttribute('slot'));
+            const slotMap = el.getAttribute('slotmap');
+            let map = slotMap === null ? undefined : JSON.parse(slotMap);
+            const slots = Array.from(clone.querySelectorAll('[slot]'));
+            for(const slot of slots){
+                if(map !== undefined){
+                    const slotName = slot.slot;
+                    for(const key in map){
+                        if(slot.matches(key)){
+                            const targetAttSymbols = map[key] as string;
+                            for(const sym of targetAttSymbols){
+                                switch(sym){
+                                    case '|':
+                                        slot.setAttribute('itemprop', slotName);
+                                        break;
+                                    case '$':
+                                        slot.setAttribute('itemscope', '');
+                                        slot.setAttribute('itemprop', slotName);
+                                        break;
+
+                                }
+                            }
+                        }
+                    }
+                }
+                slot.removeAttribute('slot');
+            }
             //console.log('dispatched')
         }
         

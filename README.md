@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-15
+Last Update: 2024-2-17
 
 ## Benefits of this API
 
@@ -441,13 +441,13 @@ So what this does is only check for the presence of an element with tag name "my
 
 ## Birtual Inclusions
 
-This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  A kind of "extremely poor man's" bare bones custom element.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
+This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
 The mount-observer is always on the lookout for a special tag that takes the form:
 
 ```html
 <div>Some prior stuff</div>
-<b-i href=#my-kinda-sorta-custom-element>
+<b-i href=#my-snippet-of-html>
    <div slot=slot1>hello</div>
    <div slot=slot2>goodbye<div>
 </b-i>
@@ -461,7 +461,7 @@ When it encounters such a thing, it searches "upwardly" through the chain of Sha
 Let's say the template looks as follows:
 
 ```html
-<template id=my-kinda-sorta-custom-element>
+<template id=my-snippet-of-html>
    This is an example of a snippet of HTML that appears repeatedly.
    <slot name=slot1></slot>
    <slot name=slot2></slot>
