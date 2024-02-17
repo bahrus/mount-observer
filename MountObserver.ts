@@ -1,6 +1,6 @@
 import {MountInit, IMountObserver, AddMutationEventListener, 
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
-    disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo
+    disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent
 } from './types';
 import {RootMutObs} from './RootMutObs.js';
 
@@ -80,7 +80,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         this.#birtualizeFragment(clone);
-        el.dispatchEvent()
+        el.dispatchEvent(new LoadEvent(clone));
         el.before(clone);
         el.remove();
     }
@@ -382,7 +382,10 @@ export class AttrChangeEvent extends Event implements IAttrChangeEvent{
 }
 
 export class LoadEvent extends Event implements ILoadEvent{
-    static eventName: 
+    static eventName: loadEventName = 'load';
+    constructor(public clone: DocumentFragment){
+        super(LoadEvent.eventName);
+    }
 }
 
 

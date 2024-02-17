@@ -132,13 +132,13 @@ export interface AddAttrChangeEventListener{
 //#endregion
 
 //#region load event
-export type loadEVentName = 'load';
+export type loadEventName = 'load';
 export interface ILoadEvent {
     clone: DocumentFragment
 }
 export type loadEventHandler = (e: ILoadEvent) => void;
 export interface AddLoadEventListener{
-    addEventListener(eventName: loadEVentName, handler: loadEventHandler, options?: AddEventListenerOptions): void
+    addEventListener(eventName: loadEventName, handler: loadEventHandler, options?: AddEventListenerOptions): void
 }
 //#endregion
 

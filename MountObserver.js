@@ -72,6 +72,7 @@ export class MountObserver extends EventTarget {
             }
         }
         this.#birtualizeFragment(clone);
+        el.dispatchEvent(new LoadEvent(clone));
         el.before(clone);
         el.remove();
     }
@@ -369,6 +370,14 @@ export class AttrChangeEvent extends Event {
         super(AttrChangeEvent.eventName);
         this.mountedElement = mountedElement;
         this.attrChangeInfo = attrChangeInfo;
+    }
+}
+export class LoadEvent extends Event {
+    clone;
+    static eventName = 'load';
+    constructor(clone) {
+        super(LoadEvent.eventName);
+        this.clone = clone;
     }
 }
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']
