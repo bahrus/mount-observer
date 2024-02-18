@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-17
+Last Update: 2024-2-18
 
 ## Benefits of this API
 
@@ -462,7 +462,7 @@ For example:
 
 When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=id-of-source-template (in this case), and caches them as it finds them. 
 
-Let's say the template looks as follows:
+Let's say the source template looks as follows:
 
 ```html
 <template id=id-of-source-template>
