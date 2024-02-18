@@ -82,7 +82,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         }
         this.#birtualizeFragment(clone, level + 1);
         if(level === 0){
-            el.dispatchEvent(new LoadEvent(clone));
+            
             const slotMap = el.getAttribute('slotmap');
             let map = slotMap === null ? undefined : JSON.parse(slotMap);
             const slots = Array.from(clone.querySelectorAll('[slot]'));
@@ -117,6 +117,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }
                 slot.removeAttribute('slot');
             }
+            el.dispatchEvent(new LoadEvent(clone));
             //console.log('dispatched')
         }
         
