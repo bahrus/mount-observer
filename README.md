@@ -446,8 +446,13 @@ This proposal "sneaks in" one more feature, that perhaps should stand separately
 The mount-observer is always on the lookout for a special tag that takes the form:
 
 ```html
+<b-i href=#id-of-source-template>
+</b-i>
+```
+
+```html
 <div>Some prior stuff</div>
-<b-i href=#my-snippet-of-html>
+<b-i href=#id-of-source-template>
    <div slot=slot1>hello</div>
    <div slot=slot2>goodbye<div>
 </b-i>
@@ -461,7 +466,7 @@ When it encounters such a thing, it searches "upwardly" through the chain of Sha
 Let's say the template looks as follows:
 
 ```html
-<template id=my-snippet-of-html>
+<template id=id-of-source-template>
    This is an example of a snippet of HTML that appears repeatedly.
    <slot name=slot1></slot>
    <slot name=slot2></slot>
@@ -483,3 +488,5 @@ Some significant differences with genuine slot support as used with (ShadowDOM'd
 
 1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.
 2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These birtual inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
+
+One challenge of implementing this feature with 100% confidence in userland is the indecision shown by the platform in [supporting this proposal](https://github.com/WICG/webcomponents/issues/809).
