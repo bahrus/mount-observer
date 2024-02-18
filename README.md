@@ -443,23 +443,22 @@ So what this does is only check for the presence of an element with tag name "my
 
 This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
-The mount-observer is always on the lookout for a special tag that takes the form:
+The mount-observer is always on the lookout for a template tags with an href attribute starting with #:
 
 ```html
-<b-i href=#id-of-source-template>
-</b-i>
+<template href=#id-of-source-template></template>
 ```
+
+For example:
 
 ```html
 <div>Some prior stuff</div>
-<b-i href=#id-of-source-template>
+<template href=#id-of-source-template>
    <div slot=slot1>hello</div>
    <div slot=slot2>goodbye<div>
-</b-i>
+</template>
 <div>Some additional stuff</div>
 ```
-
-"b-i" stands for "birtual inclusion" where birtual is a made up word that is a portmanteau of birth and virtual.
 
 When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=id-of-source-template (in this case), and caches them as it finds them. 
 
@@ -490,3 +489,5 @@ Some significant differences with genuine slot support as used with (ShadowDOM'd
 2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These birtual inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
 
 One challenge of implementing this feature with 100% confidence in userland is the indecision shown by the platform in [supporting this proposal](https://github.com/WICG/webcomponents/issues/809).
+
+To overcome that challenge
