@@ -62,7 +62,7 @@ export class MountObserver extends EventTarget {
         if (!(templ instanceof HTMLTemplateElement))
             throw 404;
         const clone = templ.content.cloneNode(true);
-        const slots = el.querySelectorAll(`[slot]`);
+        const slots = el.content.querySelectorAll(`[slot]`);
         for (const slot of slots) {
             const name = slot.getAttribute('slot');
             const targets = Array.from(clone.querySelectorAll(`slot[name="${name}"]`));
@@ -373,7 +373,7 @@ export class MountObserver extends EventTarget {
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
-const biQry = 'b-i[href^="#"]:not([disabled])';
+const biQry = 'template[href^="#"]:not([hidden])';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.

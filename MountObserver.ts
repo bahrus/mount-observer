@@ -53,13 +53,13 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #birtualizeFragment(fragment: DocumentFragment, level: number){
-        const bis = Array.from(fragment.querySelectorAll(biQry));
+        const bis = Array.from(fragment.querySelectorAll(biQry)) as Array<HTMLTemplateElement>;
         for(const bi of bis){
             await this.#birtalizeMatch(bi, level);
         }
     }
 
-    async #birtalizeMatch(el: Element, level: number){
+    async #birtalizeMatch(el: HTMLTemplateElement, level: number){
         const href = el.getAttribute('href');
         el.removeAttribute('href');
         const templID = href!.substring(1);
@@ -69,7 +69,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         if(!(templ instanceof HTMLTemplateElement)) throw 404;
         const clone = templ.content.cloneNode(true) as DocumentFragment;
 
-        const slots = el.querySelectorAll(`[slot]`);
+        const slots = el.content.querySelectorAll(`[slot]`);
 
         for(const slot of slots){
             const name = slot.getAttribute('slot')!;
@@ -368,7 +368,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         });
         for(const elToMount of elsToMount){
             if(elToMount.matches(biQry)){
-                await this.#birtalizeMatch(elToMount, 0)
+                await this.#birtalizeMatch(elToMount as HTMLTemplateElement, 0)
             }
         }
         this.#mount(elsToMount, initializing);
@@ -385,7 +385,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
-const biQry = 'b-i[href^="#"]:not([disabled])';
+const biQry = 'template[href^="#"]:not([hidden])';
 // const attrSym = new Map<string, string>([
 //     ['|', 'itemprop'],
 //     ['$', 'itemprop'],

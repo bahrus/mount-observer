@@ -487,7 +487,3 @@ Some significant differences with genuine slot support as used with (ShadowDOM'd
 
 1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.
 2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These birtual inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
-
-One challenge of implementing this feature with 100% confidence in userland is the indecision shown by the platform in [supporting this proposal](https://github.com/WICG/webcomponents/issues/809).
-
-To overcome that challenge
