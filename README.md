@@ -461,7 +461,7 @@ The mount-observer is always on the lookout for a special tag that takes the for
 
 "b-i" stands for "birtual inclusion" where birtual is a made up word that is a portmanteau of birth and virtual.
 
-When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=my-kinda-sorta-custom-element (in this case), and caches them as it finds them. 
+When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=id-of-source-template (in this case), and caches them as it finds them. 
 
 Let's say the template looks as follows:
 
