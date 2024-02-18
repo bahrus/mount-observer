@@ -70,7 +70,6 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const clone = templ.content.cloneNode(true) as DocumentFragment;
 
         const slots = el.content.querySelectorAll(`[slot]`);
-
         for(const slot of slots){
             const name = slot.getAttribute('slot')!;
             const targets = Array.from(clone.querySelectorAll(`slot[name="${name}"]`));
@@ -121,8 +120,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
             //console.log('dispatched')
         }
         
-        el.before(clone);
-        el.remove();
+        el.after(clone);
+        if(level !== 0 || slots.length === 0) el.remove();
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
     #findByID(id: string, fragment: DocumentFragment): HTMLElement | null{

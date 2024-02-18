@@ -111,8 +111,9 @@ export class MountObserver extends EventTarget {
             el.dispatchEvent(new LoadEvent(clone));
             //console.log('dispatched')
         }
-        el.before(clone);
-        el.remove();
+        el.after(clone);
+        if (level !== 0 || slots.length === 0)
+            el.remove();
     }
     #templLookUp = new Map();
     #findByID(id, fragment) {
