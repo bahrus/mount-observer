@@ -437,6 +437,10 @@ export class LoadEvent extends Event implements ILoadEvent{
     }
 }
 
+interface HTMLElementEventMap{
+    'load': LoadEvent,
+}
+
 
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']
 
