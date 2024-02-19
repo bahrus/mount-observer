@@ -46,7 +46,7 @@ export class MountObserver extends EventTarget {
         return this.#calculatedSelector;
     }
     async #birtualizeFragment(fragment, level) {
-        const bis = fragment.querySelectorAll(biQry);
+        const bis = fragment.querySelectorAll(inclTemplQry);
         for (const bi of bis) {
             await this.#birtalizeMatch(bi, level);
         }
@@ -65,7 +65,15 @@ export class MountObserver extends EventTarget {
         const slots = el.content.querySelectorAll(`[slot]`);
         for (const slot of slots) {
             const name = slot.getAttribute('slot');
-            const targets = clone.querySelectorAll(`slot[name="${name}"]`);
+            const slotQry = `slot[name="${name}"]`;
+            const targets = Array.from(clone.querySelectorAll(slotQry));
+            const innerTempls = clone.querySelectorAll(inclTemplQry);
+            for (const innerTempl of innerTempls) {
+                const innerSlots = innerTempl.content.querySelectorAll(slotQry);
+                for (const innerSlot of innerSlots) {
+                    targets.push(innerSlot);
+                }
+            }
             for (const target of targets) {
                 const slotClone = slot.cloneNode(true);
                 target.after(slotClone);
@@ -361,7 +369,7 @@ export class MountObserver extends EventTarget {
             return true;
         });
         for (const elToMount of elsToMount) {
-            if (elToMount.matches(biQry)) {
+            if (elToMount.matches(inclTemplQry)) {
                 await this.#birtalizeMatch(elToMount, 0);
             }
         }
@@ -374,7 +382,7 @@ export class MountObserver extends EventTarget {
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
-const biQry = 'template[href^="#"]:not([hidden])';
+const inclTemplQry = 'template[href^="#"]:not([hidden])';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.

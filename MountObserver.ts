@@ -53,7 +53,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #birtualizeFragment(fragment: DocumentFragment, level: number){
-        const bis = fragment.querySelectorAll(biQry) as NodeListOf<HTMLTemplateElement>;
+        const bis = fragment.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
             await this.#birtalizeMatch(bi, level);
         }
@@ -68,11 +68,19 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const templ = this.#findByID(templID, fragment);
         if(!(templ instanceof HTMLTemplateElement)) throw 404;
         const clone = templ.content.cloneNode(true) as DocumentFragment;
-
         const slots = el.content.querySelectorAll(`[slot]`);
+
         for(const slot of slots){
             const name = slot.getAttribute('slot')!;
-            const targets = clone.querySelectorAll(`slot[name="${name}"]`);
+            const slotQry = `slot[name="${name}"]`;
+            const targets = Array.from(clone.querySelectorAll(slotQry));
+            const innerTempls = clone.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
+            for(const innerTempl of innerTempls){
+                const innerSlots = innerTempl.content.querySelectorAll(slotQry);
+                for(const innerSlot of innerSlots){
+                    targets.push(innerSlot);
+                }
+            }
             for(const target of targets){
                 const slotClone = slot.cloneNode(true) as Element;
                 target.after(slotClone);
@@ -366,7 +374,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             return true;
         });
         for(const elToMount of elsToMount){
-            if(elToMount.matches(biQry)){
+            if(elToMount.matches(inclTemplQry)){
                 await this.#birtalizeMatch(elToMount as HTMLTemplateElement, 0)
             }
         }
@@ -384,7 +392,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
-const biQry = 'template[href^="#"]:not([hidden])';
+const inclTemplQry = 'template[href^="#"]:not([hidden])';
 // const attrSym = new Map<string, string>([
 //     ['|', 'itemprop'],
 //     ['$', 'itemprop'],
