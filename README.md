@@ -439,9 +439,11 @@ const observer = new MountObserver({
 
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
 
-## Birtual Inclusions
+## Intra document html imports
 
 This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
+
+Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter?
 
 The mount-observer is always on the lookout for a template tags with an href attribute starting with #:
 
@@ -486,4 +488,48 @@ This is an example of a snippet of HTML that appears repeatedly.
 Some significant differences with genuine slot support as used with (ShadowDOM'd) custom elements
 
 1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.
-2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These birtual inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
+2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
+
+## Intra document html imports with Shadow DOM support
+
+This proposal (and polyfill) also supports the option to utilize ShadowDOM / slot updates:
+
+```html
+<template id=chorus>
+   <template href=#beautiful>
+      <span slot=subjectIs>
+            <slot name=subjectIs1></slot>
+      </span>
+   </template>
+
+   <div>No matter what they say</div>
+   <div prop-pronoun>Words
+      <slot name=verb1></slot> bring
+      <slot name=pronoun1></slot> down</div>
+   <div>Oh no</div>
+   <template href=#beautiful>
+      <span slot=subjectIs>
+            <slot name=subjectIs2></slot>
+      </span>
+   </template>
+   <div>In every single way</div>
+   <div>Yes words
+      <slot name=verb2></slot> bring
+      <slot name=pronoun2></slot> down
+   </div>
+   <div>Oh no</div>
+
+   <template href=#down></template>
+</template>
+
+<div class=chorus>
+   <template href=#chorus loadedShadowRootMode=open></template>
+   <span slot=verb1>can't</span>
+   <span slot=verb2>can't</span>
+   <span slot=pronoun1>me</span>
+   <span slot=pronoun2>me</span>
+   <span slot=subjectIs1>I am</span>
+   <span slot=subjectIs2>I am</span>
+</div>
+```
+
