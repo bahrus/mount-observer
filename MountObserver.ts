@@ -53,7 +53,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #birtualizeFragment(fragment: DocumentFragment, level: number){
-        const bis = Array.from(fragment.querySelectorAll(biQry)) as Array<HTMLTemplateElement>;
+        const bis = fragment.querySelectorAll(biQry) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
             await this.#birtalizeMatch(bi, level);
         }
@@ -72,7 +72,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const slots = el.content.querySelectorAll(`[slot]`);
         for(const slot of slots){
             const name = slot.getAttribute('slot')!;
-            const targets = Array.from(clone.querySelectorAll(`slot[name="${name}"]`));
+            const targets = clone.querySelectorAll(`slot[name="${name}"]`);
             for(const target of targets){
                 const slotClone = slot.cloneNode(true) as Element;
                 target.after(slotClone);
@@ -84,7 +84,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             
             const slotMap = el.getAttribute('slotmap');
             let map = slotMap === null ? undefined : JSON.parse(slotMap);
-            const slots = Array.from(clone.querySelectorAll('[slot]'));
+            const slots = clone.querySelectorAll('[slot]');
             for(const slot of slots){
                 if(map !== undefined){
                     const slotName = slot.slot;
