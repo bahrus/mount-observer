@@ -80,7 +80,7 @@ export class MountObserver extends EventTarget {
                 target.remove();
             }
         }
-        this.#birtualizeFragment(clone, level + 1);
+        await this.#birtualizeFragment(clone, level + 1);
         if (level === 0) {
             const slotMap = el.getAttribute('slotmap');
             let map = slotMap === null ? undefined : JSON.parse(slotMap);

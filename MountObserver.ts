@@ -87,7 +87,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 target.remove();
             }
         }
-        this.#birtualizeFragment(clone, level + 1);
+        await this.#birtualizeFragment(clone, level + 1);
         if(level === 0){
             
             const slotMap = el.getAttribute('slotmap');
