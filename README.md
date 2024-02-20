@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-18
+Last Update: 2024-2-20
 
 ## Benefits of this API
 
@@ -443,9 +443,9 @@ So what this does is only check for the presence of an element with tag name "my
 
 This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
-Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter?
+Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter, i.e. found somewhere [in the document tree structure](https://github.com/tc39/proposal-module-expressions)?
 
-The mount-observer is always on the lookout for a template tags with an href attribute starting with #:
+The mount-observer is always on the lookout for template tags with an href attribute starting with #:
 
 ```html
 <template href=#id-of-source-template></template>
@@ -487,7 +487,7 @@ This is an example of a snippet of HTML that appears repeatedly.
 
 Some significant differences with genuine slot support as used with (ShadowDOM'd) custom elements
 
-1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.
+1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.  It takes the approach of morphing from slots to a JS host object model that binds to where all the slots were "from a distance".
 2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
 
 ## Intra document html imports with Shadow DOM support
