@@ -88,7 +88,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         await this.#birtualizeFragment(clone, level + 1);
-        if(level === 0){
+        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
+        if(shadowRootModeOnLoad === null && level === 0){
             
             const slotMap = el.getAttribute('slotmap');
             let map = slotMap === null ? undefined : JSON.parse(slotMap);
@@ -127,7 +128,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             el.dispatchEvent(new LoadEvent(clone));
             //console.log('dispatched')
         }
-        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
+        
         if(shadowRootModeOnLoad !== null){
             const parent = el.parentElement;
             if(parent === null) throw 404;
