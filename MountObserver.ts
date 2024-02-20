@@ -127,8 +127,16 @@ export class MountObserver extends EventTarget implements IMountObserver{
             el.dispatchEvent(new LoadEvent(clone));
             //console.log('dispatched')
         }
+        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
+        if(shadowRootModeOnLoad !== null){
+            const parent = el.parentElement;
+            if(parent === null) throw 404;
+            if(parent.shadowRoot === null) parent.attachShadow({mode: shadowRootModeOnLoad});
+            parent.shadowRoot?.append(clone);
+        }else{
+            el.after(clone);
+        }
         
-        el.after(clone);
         if(level !== 0 || slots.length === 0) el.remove();
     }
     #templLookUp: Map<string, HTMLElement> = new Map();

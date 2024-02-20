@@ -523,7 +523,7 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 </template>
 
 <div class=chorus>
-   <template href=#chorus loadedShadowRootMode=open></template>
+   <template href=#chorus shadowRootModeOnLoad=open></template>
    <span slot=verb1>can't</span>
    <span slot=verb2>can't</span>
    <span slot=pronoun1>me</span>

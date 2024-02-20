@@ -119,7 +119,18 @@ export class MountObserver extends EventTarget {
             el.dispatchEvent(new LoadEvent(clone));
             //console.log('dispatched')
         }
-        el.after(clone);
+        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad');
+        if (shadowRootModeOnLoad !== null) {
+            const parent = el.parentElement;
+            if (parent === null)
+                throw 404;
+            if (parent.shadowRoot === null)
+                parent.attachShadow({ mode: shadowRootModeOnLoad });
+            parent.shadowRoot?.append(clone);
+        }
+        else {
+            el.after(clone);
+        }
         if (level !== 0 || slots.length === 0)
             el.remove();
     }
