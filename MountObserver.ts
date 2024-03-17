@@ -428,7 +428,7 @@ export class DismountEvent extends Event implements IDismountEvent{
     static eventName: dismountEventName = 'dismount';
 
     constructor(public dismountedElement: Element){
-        super(DismountEvent.eventName)
+        super(DismountEvent.eventName);
     }
 }
 
