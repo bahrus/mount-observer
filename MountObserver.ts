@@ -17,7 +17,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #disconnected: WeakSet<Element>;
     //#unmounted: WeakSet<Element>;
     #isComplex: boolean;
-    #observe: WeakRef<Node> | undefined;
+    objNde: WeakRef<Node> | undefined;
 
     constructor(init: MountInit){
         super();
@@ -52,7 +52,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return this.#calculatedSelector;
     }
 
-    async #birtualizeFragment(fragment: DocumentFragment, level: number){
+    async birtualizeFragment(fragment: DocumentFragment, level: number){
         const bis = fragment.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
             await this.#birtalizeMatch(bi, level);
@@ -60,88 +60,11 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #birtalizeMatch(el: HTMLTemplateElement, level: number){
-        const href = el.getAttribute('href');
-        el.removeAttribute('href');
-        const templID = href!.substring(1);
-        const fragment = this.#observe?.deref() as DocumentFragment;
-        if(fragment === undefined) return;
-        const templ = this.#findByID(templID, fragment);
-        if(!(templ instanceof HTMLTemplateElement)) throw 404;
-        const clone = templ.content.cloneNode(true) as DocumentFragment;
-        const slots = el.content.querySelectorAll(`[slot]`);
-
-        for(const slot of slots){
-            const name = slot.getAttribute('slot')!;
-            const slotQry = `slot[name="${name}"]`;
-            const targets = Array.from(clone.querySelectorAll(slotQry));
-            const innerTempls = clone.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
-            for(const innerTempl of innerTempls){
-                const innerSlots = innerTempl.content.querySelectorAll(slotQry);
-                for(const innerSlot of innerSlots){
-                    targets.push(innerSlot);
-                }
-            }
-            for(const target of targets){
-                const slotClone = slot.cloneNode(true) as Element;
-                target.after(slotClone);
-                target.remove();
-            }
-        }
-        await this.#birtualizeFragment(clone, level + 1);
-        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
-        if(shadowRootModeOnLoad === null && level === 0){
-            
-            const slotMap = el.getAttribute('slotmap');
-            let map = slotMap === null ? undefined : JSON.parse(slotMap);
-            const slots = clone.querySelectorAll('[slot]');
-            for(const slot of slots){
-                if(map !== undefined){
-                    const slotName = slot.slot;
-                    for(const key in map){
-                        if(slot.matches(key)){
-                            const targetAttSymbols = map[key] as string;
-                            for(const sym of targetAttSymbols){
-                                switch(sym){
-                                    case '|':
-                                        slot.setAttribute('itemprop', slotName);
-                                        break;
-                                    case '$':
-                                        slot.setAttribute('itemscope', '');
-                                        slot.setAttribute('itemprop', slotName);
-                                        break;
-                                    case '@':
-                                        slot.setAttribute('name', slotName);
-                                        break;
-                                    case '.':
-                                        slot.classList.add(slotName);
-                                        break;
-                                    case '%':
-                                        slot.part.add(slotName);
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                }
-                slot.removeAttribute('slot');
-            }
-            el.dispatchEvent(new LoadEvent(clone));
-            //console.log('dispatched')
-        }
-        
-        if(shadowRootModeOnLoad !== null){
-            const parent = el.parentElement;
-            if(parent === null) throw 404;
-            if(parent.shadowRoot === null) parent.attachShadow({mode: shadowRootModeOnLoad});
-            parent.shadowRoot?.append(clone);
-        }else{
-            el.after(clone);
-        }
-        
-        if(level !== 0 || slots.length === 0) el.remove();
+        const {birtualizeMatch} = await import('./birtualizeMatch.js');
+        await birtualizeMatch(this, el, level);
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
-    #findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
+    findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
         if(this.#templLookUp.has(id)) return this.#templLookUp.get(id)!;
         let templ = fragment.getElementById(id);
         if(templ === null){
@@ -181,7 +104,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async observe(within: Node){
-        this.#observe = new WeakRef(within);
+        this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
         if(!mutationObserverLookup.has(nodeToMonitor)){
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
@@ -242,9 +165,6 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element) as Array<Element>;
                 for(const deletedElement of deletedElements){
-                    // if(!this.#mounted.has(deletedElement)) continue;
-                    // this.#mounted.delete(deletedElement);
-                    // this.#mountedList = this.#mountedList?.filter(x => x.deref() !== deletedElement);
                     this.#disconnected.add(deletedElement);
                     if(doDisconnect !== undefined){
                         doDisconnect(deletedElement, this, {});
@@ -255,9 +175,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             this.#filterAndMount(elsToInspect, true, false);
         }, {signal: this.#abortController.signal});
-        //if(ignoreInitialMatches !== true){
-            await this.#inspectWithin(within, true);
-        //}
+        await this.#inspectWithin(within, true);
         
     }
 
@@ -285,7 +203,6 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     case 'object':
                         if(Array.isArray(imp)){
                             throw 'NI: Firefox'
-                            //this.module = await import(imp[0], imp[1]);
                         }
                         break;
                     case 'function':
@@ -391,7 +308,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        await this.#birtualizeFragment(within as DocumentFragment, 0);
+        await this.birtualizeFragment(within as DocumentFragment, 0);
         const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
@@ -401,14 +318,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
-const inclTemplQry = 'template[href^="#"]:not([hidden])';
-// const attrSym = new Map<string, string>([
-//     ['|', 'itemprop'],
-//     ['$', 'itemprop'],
-//     ['@', 'name'],
-//     ['#', 'id'],
-//     ['.']
-// ])
+export const inclTemplQry = 'template[href^="#"]:not([hidden])';
 export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
@@ -447,16 +357,7 @@ export class AttrChangeEvent extends Event implements IAttrChangeEvent{
     }
 }
 
-export class LoadEvent extends Event implements ILoadEvent{
-    static eventName: loadEventName = 'load';
-    constructor(public clone: DocumentFragment){
-        super(LoadEvent.eventName);
-    }
-}
 
-interface HTMLElementEventMap{
-    'load': LoadEvent,
-}
 
 
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']

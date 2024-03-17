@@ -10,7 +10,7 @@ export class MountObserver extends EventTarget {
     #disconnected;
     //#unmounted: WeakSet<Element>;
     #isComplex;
-    #observe;
+    objNde;
     constructor(init) {
         super();
         const { on, whereElementIntersectsWith, whereMediaMatches } = init;
@@ -45,97 +45,18 @@ export class MountObserver extends EventTarget {
         this.#calculatedSelector = calculatedSelector;
         return this.#calculatedSelector;
     }
-    async #birtualizeFragment(fragment, level) {
+    async birtualizeFragment(fragment, level) {
         const bis = fragment.querySelectorAll(inclTemplQry);
         for (const bi of bis) {
             await this.#birtalizeMatch(bi, level);
         }
     }
     async #birtalizeMatch(el, level) {
-        const href = el.getAttribute('href');
-        el.removeAttribute('href');
-        const templID = href.substring(1);
-        const fragment = this.#observe?.deref();
-        if (fragment === undefined)
-            return;
-        const templ = this.#findByID(templID, fragment);
-        if (!(templ instanceof HTMLTemplateElement))
-            throw 404;
-        const clone = templ.content.cloneNode(true);
-        const slots = el.content.querySelectorAll(`[slot]`);
-        for (const slot of slots) {
-            const name = slot.getAttribute('slot');
-            const slotQry = `slot[name="${name}"]`;
-            const targets = Array.from(clone.querySelectorAll(slotQry));
-            const innerTempls = clone.querySelectorAll(inclTemplQry);
-            for (const innerTempl of innerTempls) {
-                const innerSlots = innerTempl.content.querySelectorAll(slotQry);
-                for (const innerSlot of innerSlots) {
-                    targets.push(innerSlot);
-                }
-            }
-            for (const target of targets) {
-                const slotClone = slot.cloneNode(true);
-                target.after(slotClone);
-                target.remove();
-            }
-        }
-        await this.#birtualizeFragment(clone, level + 1);
-        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad');
-        if (shadowRootModeOnLoad === null && level === 0) {
-            const slotMap = el.getAttribute('slotmap');
-            let map = slotMap === null ? undefined : JSON.parse(slotMap);
-            const slots = clone.querySelectorAll('[slot]');
-            for (const slot of slots) {
-                if (map !== undefined) {
-                    const slotName = slot.slot;
-                    for (const key in map) {
-                        if (slot.matches(key)) {
-                            const targetAttSymbols = map[key];
-                            for (const sym of targetAttSymbols) {
-                                switch (sym) {
-                                    case '|':
-                                        slot.setAttribute('itemprop', slotName);
-                                        break;
-                                    case '$':
-                                        slot.setAttribute('itemscope', '');
-                                        slot.setAttribute('itemprop', slotName);
-                                        break;
-                                    case '@':
-                                        slot.setAttribute('name', slotName);
-                                        break;
-                                    case '.':
-                                        slot.classList.add(slotName);
-                                        break;
-                                    case '%':
-                                        slot.part.add(slotName);
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                }
-                slot.removeAttribute('slot');
-            }
-            el.dispatchEvent(new LoadEvent(clone));
-            //console.log('dispatched')
-        }
-        if (shadowRootModeOnLoad !== null) {
-            const parent = el.parentElement;
-            if (parent === null)
-                throw 404;
-            if (parent.shadowRoot === null)
-                parent.attachShadow({ mode: shadowRootModeOnLoad });
-            parent.shadowRoot?.append(clone);
-        }
-        else {
-            el.after(clone);
-        }
-        if (level !== 0 || slots.length === 0)
-            el.remove();
+        const { birtualizeMatch } = await import('./birtualizeMatch.js');
+        await birtualizeMatch(this, el, level);
     }
     #templLookUp = new Map();
-    #findByID(id, fragment) {
+    findByID(id, fragment) {
         if (this.#templLookUp.has(id))
             return this.#templLookUp.get(id);
         let templ = fragment.getElementById(id);
@@ -177,7 +98,7 @@ export class MountObserver extends EventTarget {
         }
     }
     async observe(within) {
-        this.#observe = new WeakRef(within);
+        this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
             mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
@@ -238,9 +159,6 @@ export class MountObserver extends EventTarget {
                 }
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element);
                 for (const deletedElement of deletedElements) {
-                    // if(!this.#mounted.has(deletedElement)) continue;
-                    // this.#mounted.delete(deletedElement);
-                    // this.#mountedList = this.#mountedList?.filter(x => x.deref() !== deletedElement);
                     this.#disconnected.add(deletedElement);
                     if (doDisconnect !== undefined) {
                         doDisconnect(deletedElement, this, {});
@@ -250,9 +168,7 @@ export class MountObserver extends EventTarget {
             }
             this.#filterAndMount(elsToInspect, true, false);
         }, { signal: this.#abortController.signal });
-        //if(ignoreInitialMatches !== true){
         await this.#inspectWithin(within, true);
-        //}
     }
     #confirmInstanceOf(el, whereInstanceOf) {
         for (const test of whereInstanceOf) {
@@ -279,7 +195,6 @@ export class MountObserver extends EventTarget {
                     case 'object':
                         if (Array.isArray(imp)) {
                             throw 'NI: Firefox';
-                            //this.module = await import(imp[0], imp[1]);
                         }
                         break;
                     case 'function':
@@ -387,13 +302,13 @@ export class MountObserver extends EventTarget {
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
-        await this.#birtualizeFragment(within, 0);
+        await this.birtualizeFragment(within, 0);
         const els = Array.from(within.querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
-const inclTemplQry = 'template[href^="#"]:not([hidden])';
+export const inclTemplQry = 'template[href^="#"]:not([hidden])';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
@@ -433,14 +348,6 @@ export class AttrChangeEvent extends Event {
         super(AttrChangeEvent.eventName);
         this.mountedElement = mountedElement;
         this.attrChangeInfo = attrChangeInfo;
-    }
-}
-export class LoadEvent extends Event {
-    clone;
-    static eventName = 'load';
-    constructor(clone) {
-        super(LoadEvent.eventName);
-        this.clone = clone;
     }
 }
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']
