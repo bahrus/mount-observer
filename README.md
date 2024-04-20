@@ -284,9 +284,9 @@ So let's say we want to insist that on custom elements, we must have the data- p
 
 And we want to support an alternative, more semantic sounding prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
 
-Here's what the api provides:
+Here's what the api **doesn't** provide:
 
-## Option 1 -- The carpal syndrome syntax
+## Rejected option -- The carpal syndrome syntax
 
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
@@ -320,7 +320,7 @@ const mo = new MountObserver({
 });
 ```
 
-## Option 2 -- The DRY Way
+## Supported -- The DRY Way
 
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
@@ -360,16 +360,18 @@ MountObserver provides a breakdown of the matching attribute when encountered:
       console.log(e);
       // {
       //    matchingElement,
-      //    attrChangeInfo:{
-      //       name: 'data-my-enhancement-first-aspect-wow-this-is-deep'
-      //       root: 'data',
-      //       base: 'my-enhancement',
-      //       branch: 'first-aspect',
-      //       leaf: 'wow-this-is-deep',
-      //       oldValue: null,
-      //       newValue: 'good-bye'
+      //    attrChangeInfo:[{
       //       idx: 0,
-      //    }
+      //       oldValue: null,
+      //       newValue: 'good-bye',
+      //       parts:{
+      //          name: 'data-my-enhancement-first-aspect-wow-this-is-deep'
+      //          root: 'data',
+      //          base: 'my-enhancement',
+      //          branch: 'first-aspect',
+      //          leaf: 'wow-this-is-deep',
+      //       }
+      //    }]
       // }
    });
    mo.observe(div);
