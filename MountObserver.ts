@@ -204,7 +204,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const alreadyMounted = await this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount; 
         const {import: imp} = this.#mountInit;
-        const fullListOfAttrs = this.#fullListOfAttrs;
+        
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
             this.#mounted.add(match);
@@ -233,25 +233,32 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }) 
             }
             this.dispatchEvent(new MountEvent(match, initializing));
-            if(fullListOfAttrs !== undefined){
-                const attrParts = this.#attrParts
-                const attrChangeInfos: Array<AttrChangeInfo> = [];
-                for(let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++){
-                    const name = fullListOfAttrs[idx];
-                    const oldValue = null;
-                    const newValue = match.getAttribute(name);
-                    const parts = attrParts![idx];
-                    attrChangeInfos.push({
-                        idx,
-                        newValue,
-                        oldValue,
-                        parts
-                    })
-                }
-                this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
-
-            }
+            //should we automatically call readAttrs?
+            //the thinking is it might make more sense to call that after mounting
+            
             this.#mountedList?.push(new WeakRef(match));
+        }
+    }
+
+    readAttrs(match: Element){
+        const fullListOfAttrs = this.#fullListOfAttrs;
+        if(fullListOfAttrs !== undefined){
+            const attrParts = this.#attrParts
+            const attrChangeInfos: Array<AttrChangeInfo> = [];
+            for(let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++){
+                const name = fullListOfAttrs[idx];
+                const oldValue = null;
+                const newValue = match.getAttribute(name);
+                const parts = attrParts![idx];
+                attrChangeInfos.push({
+                    idx,
+                    newValue,
+                    oldValue,
+                    parts
+                })
+            }
+            this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
+
         }
     }
 

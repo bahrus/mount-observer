@@ -80,7 +80,9 @@ interface AttrParts{
     root?: string,
     base?: string,
     branch?: string,
+    branchIdx?: number,
     leaf?: string, //TODO
+    leafIdx?: number, //TODO
     rootCnfg?: RootCnfg
 }
 

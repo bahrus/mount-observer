@@ -37,9 +37,11 @@ export function getWhereAttrSelector(whereAttr, withoutAttrs) {
         const { start } = rootCnfg;
         for (const match of prefixLessMatches) {
             const { base, baseToBranchDelimiter, branch, rootToBaseDelimiter } = match;
+            let branchIdx = 0;
             for (const prefixLessMatch of prefixLessMatches) {
                 const { base, baseToBranchDelimiter, branch } = prefixLessMatch;
                 const startAndRootToBaseDelimiter = start ? `${start}${rootToBaseDelimiter}` : '';
+                //TODO:  could probably reduce the size of the code below
                 if (branch) {
                     const name = `${startAndRootToBaseDelimiter}${base}${baseToBranchDelimiter}${branch}`;
                     fullListOfAttrs.push(name);
@@ -48,6 +50,7 @@ export function getWhereAttrSelector(whereAttr, withoutAttrs) {
                         name,
                         base,
                         branch,
+                        branchIdx,
                         rootCnfg
                     });
                 }
@@ -58,9 +61,11 @@ export function getWhereAttrSelector(whereAttr, withoutAttrs) {
                         root: start,
                         name,
                         base,
-                        rootCnfg
+                        rootCnfg,
+                        branchIdx
                     });
                 }
+                branchIdx++;
             }
         }
     }
