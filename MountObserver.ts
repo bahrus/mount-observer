@@ -1,6 +1,7 @@
 import {MountInit, IMountObserver, AddMutationEventListener, 
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
-    disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent
+    disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
+    AttrParts
 } from './types';
 import {RootMutObs} from './RootMutObs.js';
 
@@ -37,6 +38,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     #calculatedSelector: string | undefined;
+    #attrParts: Array<AttrParts> | undefined;
+    
     #fullListOfAttrs: Array<string> | undefined;
     //get #attrVals
     async #selector() : Promise<string>{
@@ -46,8 +49,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
         if(whereAttr === undefined) return withoutAttrs;
         const {getWhereAttrSelector} = await import('./getWhereAttrSelector.js');
         const info = getWhereAttrSelector(whereAttr, withoutAttrs);
-        const {fullListOfAttrs, calculatedSelector} = info;
+        const {fullListOfAttrs, calculatedSelector, partitionedAttrs} = info;
         this.#fullListOfAttrs = fullListOfAttrs;
+        this.#attrParts = partitionedAttrs;
         this.#calculatedSelector = calculatedSelector
         return this.#calculatedSelector;
     }
@@ -118,7 +122,6 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         const rootMutObs = mutationObserverLookup.get(within)!;
-        //const {whereAttr} = this.#mountInit;
         const fullListOfAttrs = this.#fullListOfAttrs;
         (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', async (e: MutationEvent) => {
             //TODO:  disconnected
@@ -130,6 +133,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             const elsToInspect: Array<Element> = [];
             //const elsToDisconnect: Array<Element> = [];
             const doDisconnect = this.#mountInit.do?.disconnect;
+            let attrChangeInfosMap: Map<Element, Array<AttrChangeInfo>> | undefined;
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, type, removedNodes} = mutationRecord;
                 //console.log(mutationRecord);
@@ -137,31 +141,38 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 addedElements.forEach(x => elsToInspect.push(x));
                 if(type === 'attributes'){
                     const {target, attributeName, oldValue} = mutationRecord;
+                    
                     if(target instanceof Element && attributeName !== null && this.#mounted.has(target)){
+                        if(attrChangeInfosMap === undefined) attrChangeInfosMap = new Map();
+                        let attrChangeInfos = attrChangeInfosMap.get(target);
+                        if(attrChangeInfos === undefined){
+                            attrChangeInfos = [];
+                            attrChangeInfosMap.set(target, attrChangeInfos);
+                        }
                         if(fullListOfAttrs !== undefined){
                             const idx = fullListOfAttrs.indexOf(attributeName);
-                            if(idx > -1){
+                            if(idx !== -1){
                                 const newValue = target.getAttribute(attributeName);
+                                const parts = this.#attrParts![idx];
                                 const attrChangeInfo: AttrChangeInfo = {
-                                    name: attributeName,
                                     oldValue,
                                     newValue,
-                                    idx
-                                };
-                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
+                                    idx,
+                                    parts
+                                }
+                                attrChangeInfos.push(attrChangeInfo)
                             }
+ 
+
                         }
-                        else{
-                            const {whereAttr} = this.#mountInit;
-                            if(whereAttr !== undefined){
-                                const {doWhereAttr} = await import('./doWhereAttr.js');
-                                doWhereAttr(whereAttr, attributeName, target, oldValue, this);
-                            }
-                        }
+
                     }
-
-
                     elsToInspect.push(target as Element);
+                }
+                if(attrChangeInfosMap !== undefined){
+                    for(const [key, value] of attrChangeInfosMap){
+                        this.dispatchEvent(new AttrChangeEvent(key, value))
+                    }
                 }
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element) as Array<Element>;
                 for(const deletedElement of deletedElements){
@@ -179,7 +190,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         
     }
 
-    #confirmInstanceOf(el: Element, whereInstanceOf: Array<typeof Node>){
+    #confirmInstanceOf(el: Element, whereInstanceOf: Array<{new(): Element}>){
         for(const test of whereInstanceOf){
             if(el instanceof test) return true;
         }
@@ -221,35 +232,24 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             this.dispatchEvent(new MountEvent(match, initializing));
             if(fullListOfAttrs !== undefined){
-                const {whereAttr} = this.#mountInit;
-                for(const name of fullListOfAttrs){
-                    if(whereAttr !== undefined){
-                        const {doWhereAttr} = await import('./doWhereAttr.js');
-                        doWhereAttr(whereAttr, name, match, null, this);
-                    }
+                const attrParts = this.#attrParts
+                const attrChangeInfos: Array<AttrChangeInfo> = [];
+                for(let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++){
+                    const name = fullListOfAttrs[idx];
+                    const oldValue = null;
+                    const newValue = match.getAttribute(name);
+                    const parts = attrParts![idx];
+                    attrChangeInfos.push({
+                        idx,
+                        newValue,
+                        oldValue,
+                        parts
+                    })
                 }
-                // let idx = 0;
-                // for(const attribMatch of attribMatches){
-                //     let newValue = null;
-                //     const {names} = attribMatch;
-                //     let nonNullName = names[0];
-                //     for(const name of names){
-                //         const attrVal = match.getAttribute(name);
-                //         if(attrVal !== null) nonNullName = name;
-                //         newValue = newValue || attrVal;
-                //     }
-                //     const attribInfo: AttrChangeInfo = {
-                //         oldValue: null,
-                //         newValue,
-                //         idx,
-                //         name: nonNullName
-                //     };
-                //     this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
-                //     idx++;
-                // }
+                this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
+
             }
             this.#mountedList?.push(new WeakRef(match));
-            //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
         }
     }
 
@@ -352,7 +352,7 @@ export class DisconnectEvent extends Event implements IDisconnectEvent{
 
 export class AttrChangeEvent extends Event implements IAttrChangeEvent{
     static eventName: attrChangeEventName = 'attr-change';
-    constructor(public mountedElement: Element, public attrChangeInfo: AttrChangeInfo){
+    constructor(public mountedElement: Element, public attrChangeInfos: Array<AttrChangeInfo>){
         super(AttrChangeEvent.eventName);
     }
 }

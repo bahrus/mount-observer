@@ -22,14 +22,17 @@ export interface MountInit{
     // readonly ignoreInitialMatches?: boolean,
 }
 
-export type RootAttrOptions = Array<string | {
-    path: string,
+export interface RootCnfg{
+    start: string,
     context: 'BuiltIn' | 'CustomElement' | 'Both'
-}>;
+}
+
+//export type RootAttrOptions = Array<string | RootCnfg>;
+export type delimiter = string;
 export interface WhereAttr{
-    hasBase: string | [string, string],
-    hasBranchIn?: Array<string> | [string, Array<string>],
-    hasRootIn?: RootAttrOptions,
+    hasBase: string | [delimiter, string],
+    hasBranchIn?: Array<string> | [delimiter, Array<string>],
+    hasRootIn?: Array<RootCnfg>,
 }
 type CSSMatch = string;
 type ImportString = string;
@@ -72,15 +75,20 @@ export interface AddMutationEventListener {
 }
 //#endregion
 
-interface AttrChangeInfo{
+interface AttrParts{
     name: string,
     root?: string,
     base?: string,
     branch?: string,
     leaf?: string, //TODO
+    rootCnfg?: RootCnfg
+}
+
+interface AttrChangeInfo{
     oldValue: string | null,
     newValue: string | null,
     idx: number,
+    parts: AttrParts,
     //parsedNewValue?: any,
 }
 
@@ -125,7 +133,7 @@ export interface AddDisconnectEventListener {
 //#region attribute change event
 export type attrChangeEventName = 'attr-change';
 export interface IAttrChangeEvent extends IMountEvent {
-    attrChangeInfo: AttrChangeInfo,
+    attrChangeInfos: Array<AttrChangeInfo>,
 }
 export type attrChangeEventHandler = (e: IAttrChangeEvent) => void;
 export interface AddAttrChangeEventListener{
