@@ -1,7 +1,10 @@
-import {AttrParts, WhereAttr} from './types';
+import {AttrParts, RootCnfg, WhereAttr} from './types';
 export function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string){
     const {hasBase, hasBranchIn, hasRootIn} = whereAttr;
-    if(hasRootIn === undefined) throw 400;
+    const hasRootInGuaranteed: Array<RootCnfg> = hasRootIn || [{
+        start: '',
+        context: 'Both'
+    } as RootCnfg]
     const fullListOfAttrs: Array<string> = [];
     const partitionedAttrs: Array<AttrParts> = [];
     let prefixLessMatches: Array<{
@@ -35,14 +38,15 @@ export function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string)
             base: baseSelector,
         })
     }
-    for(const rootCnfg of hasRootIn){
+    for(const rootCnfg of hasRootInGuaranteed){
         const {start} = rootCnfg;
         for(const match of prefixLessMatches){
             const {base, baseToBranchDelimiter, branch, rootToBaseDelimiter} = match;
             for(const prefixLessMatch of prefixLessMatches){
                 const {base, baseToBranchDelimiter, branch} = prefixLessMatch;
+                const startAndRootToBaseDelimiter = start ? `${start}${rootToBaseDelimiter}` : '';
                 if(branch){
-                    const name = `${start}${rootToBaseDelimiter}${base}${baseToBranchDelimiter}${branch}`
+                    const name = `${startAndRootToBaseDelimiter}${base}${baseToBranchDelimiter}${branch}`
                     fullListOfAttrs.push(name);
                     partitionedAttrs.push({
                         root: start,
@@ -52,7 +56,7 @@ export function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string)
                         rootCnfg
                     });
                 }else{
-                    const name = `${start}${rootToBaseDelimiter}${base}`;
+                    const name = `${startAndRootToBaseDelimiter}${base}`;
                     fullListOfAttrs.push(name);
                     partitionedAttrs.push({
                         root: start,

@@ -29,6 +29,7 @@ export class MountObserver extends EventTarget {
         //this.#unmounted = new WeakSet();
     }
     #calculatedSelector;
+    #attrParts;
     #fullListOfAttrs;
     //get #attrVals
     async #selector() {
@@ -40,8 +41,9 @@ export class MountObserver extends EventTarget {
             return withoutAttrs;
         const { getWhereAttrSelector } = await import('./getWhereAttrSelector.js');
         const info = getWhereAttrSelector(whereAttr, withoutAttrs);
-        const { fullListOfAttrs, calculatedSelector } = info;
+        const { fullListOfAttrs, calculatedSelector, partitionedAttrs } = info;
         this.#fullListOfAttrs = fullListOfAttrs;
+        this.#attrParts = partitionedAttrs;
         this.#calculatedSelector = calculatedSelector;
         return this.#calculatedSelector;
     }
@@ -98,6 +100,7 @@ export class MountObserver extends EventTarget {
         }
     }
     async observe(within) {
+        await this.#selector();
         this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
@@ -114,7 +117,6 @@ export class MountObserver extends EventTarget {
             }
         }
         const rootMutObs = mutationObserverLookup.get(within);
-        //const {whereAttr} = this.#mountInit;
         const fullListOfAttrs = this.#fullListOfAttrs;
         rootMutObs.addEventListener('mutation-event', async (e) => {
             //TODO:  disconnected
@@ -126,32 +128,33 @@ export class MountObserver extends EventTarget {
             const elsToInspect = [];
             //const elsToDisconnect: Array<Element> = [];
             const doDisconnect = this.#mountInit.do?.disconnect;
+            let attrChangeInfosMap;
             for (const mutationRecord of mutationRecords) {
                 const { addedNodes, type, removedNodes } = mutationRecord;
-                //console.log(mutationRecord);
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
                 addedElements.forEach(x => elsToInspect.push(x));
                 if (type === 'attributes') {
                     const { target, attributeName, oldValue } = mutationRecord;
-                    if (target instanceof Element && attributeName !== null && this.#mounted.has(target)) {
+                    if (target instanceof Element && attributeName !== null /*&& this.#mounted.has(target)*/) {
                         if (fullListOfAttrs !== undefined) {
                             const idx = fullListOfAttrs.indexOf(attributeName);
-                            if (idx > -1) {
+                            if (idx !== -1) {
+                                if (attrChangeInfosMap === undefined)
+                                    attrChangeInfosMap = new Map();
+                                let attrChangeInfos = attrChangeInfosMap.get(target);
+                                if (attrChangeInfos === undefined) {
+                                    attrChangeInfos = [];
+                                    attrChangeInfosMap.set(target, attrChangeInfos);
+                                }
                                 const newValue = target.getAttribute(attributeName);
+                                const parts = this.#attrParts[idx];
                                 const attrChangeInfo = {
-                                    name: attributeName,
                                     oldValue,
                                     newValue,
-                                    idx
+                                    idx,
+                                    parts
                                 };
-                                this.dispatchEvent(new AttrChangeEvent(target, attrChangeInfo));
-                            }
-                        }
-                        else {
-                            const { whereAttr } = this.#mountInit;
-                            if (whereAttr !== undefined) {
-                                const { doWhereAttr } = await import('./doWhereAttr.js');
-                                doWhereAttr(whereAttr, attributeName, target, oldValue, this);
+                                attrChangeInfos.push(attrChangeInfo);
                             }
                         }
                     }
@@ -164,6 +167,11 @@ export class MountObserver extends EventTarget {
                         doDisconnect(deletedElement, this, {});
                     }
                     this.dispatchEvent(new DisconnectEvent(deletedElement));
+                }
+            }
+            if (attrChangeInfosMap !== undefined) {
+                for (const [key, value] of attrChangeInfosMap) {
+                    this.dispatchEvent(new AttrChangeEvent(key, value));
                 }
             }
             this.#filterAndMount(elsToInspect, true, false);
@@ -213,35 +221,23 @@ export class MountObserver extends EventTarget {
             }
             this.dispatchEvent(new MountEvent(match, initializing));
             if (fullListOfAttrs !== undefined) {
-                const { whereAttr } = this.#mountInit;
-                for (const name of fullListOfAttrs) {
-                    if (whereAttr !== undefined) {
-                        const { doWhereAttr } = await import('./doWhereAttr.js');
-                        doWhereAttr(whereAttr, name, match, null, this);
-                    }
+                const attrParts = this.#attrParts;
+                const attrChangeInfos = [];
+                for (let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++) {
+                    const name = fullListOfAttrs[idx];
+                    const oldValue = null;
+                    const newValue = match.getAttribute(name);
+                    const parts = attrParts[idx];
+                    attrChangeInfos.push({
+                        idx,
+                        newValue,
+                        oldValue,
+                        parts
+                    });
                 }
-                // let idx = 0;
-                // for(const attribMatch of attribMatches){
-                //     let newValue = null;
-                //     const {names} = attribMatch;
-                //     let nonNullName = names[0];
-                //     for(const name of names){
-                //         const attrVal = match.getAttribute(name);
-                //         if(attrVal !== null) nonNullName = name;
-                //         newValue = newValue || attrVal;
-                //     }
-                //     const attribInfo: AttrChangeInfo = {
-                //         oldValue: null,
-                //         newValue,
-                //         idx,
-                //         name: nonNullName
-                //     };
-                //     this.dispatchEvent(new AttrChangeEvent(match, attribInfo));
-                //     idx++;
-                // }
+                this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
             }
             this.#mountedList?.push(new WeakRef(match));
-            //if(this.#unmounted.has(match)) this.#unmounted.delete(match);
         }
     }
     async #dismount(unmatching) {
@@ -342,12 +338,12 @@ export class DisconnectEvent extends Event {
 }
 export class AttrChangeEvent extends Event {
     mountedElement;
-    attrChangeInfo;
+    attrChangeInfos;
     static eventName = 'attr-change';
-    constructor(mountedElement, attrChangeInfo) {
+    constructor(mountedElement, attrChangeInfos) {
         super(AttrChangeEvent.eventName);
         this.mountedElement = mountedElement;
-        this.attrChangeInfo = attrChangeInfo;
+        this.attrChangeInfos = attrChangeInfos;
     }
 }
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']

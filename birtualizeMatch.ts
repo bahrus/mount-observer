@@ -69,7 +69,6 @@ export async function birtualizeMatch(self: MountObserver, el: HTMLTemplateEleme
             slot.removeAttribute('slot');
         }
         el.dispatchEvent(new LoadEvent(clone));
-        //console.log('dispatched')
     }
     
     if(shadowRootModeOnLoad !== null){

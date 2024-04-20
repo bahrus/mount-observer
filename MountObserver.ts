@@ -108,6 +108,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async observe(within: Node){
+        await this.#selector();
         this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
         if(!mutationObserverLookup.has(nodeToMonitor)){
@@ -136,22 +137,21 @@ export class MountObserver extends EventTarget implements IMountObserver{
             let attrChangeInfosMap: Map<Element, Array<AttrChangeInfo>> | undefined;
             for(const mutationRecord of mutationRecords){
                 const {addedNodes, type, removedNodes} = mutationRecord;
-                //console.log(mutationRecord);
                 const addedElements = Array.from(addedNodes).filter(x => x instanceof Element) as Array<Element>;
                 addedElements.forEach(x => elsToInspect.push(x));
                 if(type === 'attributes'){
                     const {target, attributeName, oldValue} = mutationRecord;
-                    
-                    if(target instanceof Element && attributeName !== null && this.#mounted.has(target)){
-                        if(attrChangeInfosMap === undefined) attrChangeInfosMap = new Map();
-                        let attrChangeInfos = attrChangeInfosMap.get(target);
-                        if(attrChangeInfos === undefined){
-                            attrChangeInfos = [];
-                            attrChangeInfosMap.set(target, attrChangeInfos);
-                        }
+                    if(target instanceof Element && attributeName !== null /*&& this.#mounted.has(target)*/){
+                        
                         if(fullListOfAttrs !== undefined){
                             const idx = fullListOfAttrs.indexOf(attributeName);
                             if(idx !== -1){
+                                if(attrChangeInfosMap === undefined) attrChangeInfosMap = new Map();
+                                let attrChangeInfos = attrChangeInfosMap.get(target);
+                                if(attrChangeInfos === undefined){
+                                    attrChangeInfos = [];
+                                    attrChangeInfosMap.set(target, attrChangeInfos);
+                                }
                                 const newValue = target.getAttribute(attributeName);
                                 const parts = this.#attrParts![idx];
                                 const attrChangeInfo: AttrChangeInfo = {
@@ -169,11 +169,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     }
                     elsToInspect.push(target as Element);
                 }
-                if(attrChangeInfosMap !== undefined){
-                    for(const [key, value] of attrChangeInfosMap){
-                        this.dispatchEvent(new AttrChangeEvent(key, value))
-                    }
-                }
+
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element) as Array<Element>;
                 for(const deletedElement of deletedElements){
                     this.#disconnected.add(deletedElement);
@@ -184,8 +180,14 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }
 
             }
+            if(attrChangeInfosMap !== undefined){
+                for(const [key, value] of attrChangeInfosMap){
+                    this.dispatchEvent(new AttrChangeEvent(key, value))
+                }
+            }
             this.#filterAndMount(elsToInspect, true, false);
         }, {signal: this.#abortController.signal});
+        
         await this.#inspectWithin(within, true);
         
     }

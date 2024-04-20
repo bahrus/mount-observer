@@ -66,7 +66,6 @@ export async function birtualizeMatch(self, el, level) {
             slot.removeAttribute('slot');
         }
         el.dispatchEvent(new LoadEvent(clone));
-        //console.log('dispatched')
     }
     if (shadowRootModeOnLoad !== null) {
         const parent = el.parentElement;
