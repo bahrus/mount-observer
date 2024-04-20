@@ -224,16 +224,21 @@ export class MountObserver extends EventTarget {
             this.#mountedList?.push(new WeakRef(match));
         }
     }
-    readAttrs(match) {
+    readAttrs(match, branchIndexes) {
         const fullListOfAttrs = this.#fullListOfAttrs;
         if (fullListOfAttrs !== undefined) {
             const attrParts = this.#attrParts;
             const attrChangeInfos = [];
             for (let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++) {
+                const parts = attrParts[idx];
+                const { branchIdx } = parts;
+                if (branchIndexes !== undefined) {
+                    if (!branchIndexes.has(branchIdx))
+                        continue;
+                }
                 const name = fullListOfAttrs[idx];
                 const oldValue = null;
                 const newValue = match.getAttribute(name);
-                const parts = attrParts[idx];
                 attrChangeInfos.push({
                     idx,
                     newValue,
@@ -241,7 +246,7 @@ export class MountObserver extends EventTarget {
                     parts
                 });
             }
-            this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
+            //this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
         }
     }
     async #dismount(unmatching) {

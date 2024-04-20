@@ -240,16 +240,21 @@ export class MountObserver extends EventTarget implements IMountObserver{
         }
     }
 
-    readAttrs(match: Element){
+    readAttrs(match: Element, branchIndexes?: Set<number>){
         const fullListOfAttrs = this.#fullListOfAttrs;
         if(fullListOfAttrs !== undefined){
             const attrParts = this.#attrParts
             const attrChangeInfos: Array<AttrChangeInfo> = [];
             for(let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++){
+                const parts = attrParts![idx];
+                const {branchIdx} = parts;
+                if(branchIndexes !== undefined){
+                    if(!branchIndexes.has(branchIdx)) continue;
+                }
                 const name = fullListOfAttrs[idx];
                 const oldValue = null;
                 const newValue = match.getAttribute(name);
-                const parts = attrParts![idx];
+                
                 attrChangeInfos.push({
                     idx,
                     newValue,
@@ -257,7 +262,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     parts
                 })
             }
-            this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
+            //this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
 
         }
     }
