@@ -5,7 +5,7 @@ export interface MountInit{
     readonly whereAttr?: WhereAttr,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
-    readonly whereInstanceOf?: Array<typeof Node>, //[TODO] What's the best way to type this?,
+    readonly whereInstanceOf?: Array<{new(): Element}>,
     readonly whereSatisfies?: PipelineProcessor<boolean>,
     readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
     readonly do?: {
@@ -21,13 +21,15 @@ export interface MountInit{
     //  */
     // readonly ignoreInitialMatches?: boolean,
 }
+
+export type RootAttrOptions = Array<string | {
+    path: string,
+    context: 'BuiltIn' | 'CustomElement' | 'Both'
+}>;
 export interface WhereAttr{
     hasBase: string | [string, string],
     hasBranchIn?: Array<string> | [string, Array<string>],
-    hasRootIn?: Array<string | {
-        path: string,
-        context: 'BuiltIn' | 'CustomElement' | 'Both'
-    }>,
+    hasRootIn?: RootAttrOptions,
 }
 type CSSMatch = string;
 type ImportString = string;
