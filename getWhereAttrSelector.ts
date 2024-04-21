@@ -29,7 +29,7 @@ export function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string)
         prefixLessMatches = branches.map(x => ({
             rootToBaseDelimiter,
             base: baseSelector,
-            baseToBranchDelimiter,
+            baseToBranchDelimiter: x ? baseToBranchDelimiter : '',
             branch: x
         }));
     }else{
@@ -48,6 +48,7 @@ export function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string)
                 const startAndRootToBaseDelimiter = start ? `${start}${rootToBaseDelimiter}` : '';
                 //TODO:  could probably reduce the size of the code below
                 if(branch){
+                    //will always have branch?
                     const name = `${startAndRootToBaseDelimiter}${base}${baseToBranchDelimiter}${branch}`
                     fullListOfAttrs.push(name);
                     partitionedAttrs.push({
