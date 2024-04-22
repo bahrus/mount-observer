@@ -33,6 +33,7 @@ export interface WhereAttr{
     hasBase: string | [delimiter, string],
     hasBranchIn?: Array<string> | [delimiter, Array<string>],
     hasRootIn?: Array<RootCnfg>,
+    metadata?: any,
 }
 type CSSMatch = string;
 type ImportString = string;
