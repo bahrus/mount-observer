@@ -415,6 +415,18 @@ const mo = new MountObserver({
 });
 ```
 
+## Resolving ambiguity
+
+Because we want the multiple root values (enh-*, data-enh-*, *) to be treated as equivalent, from a developer point of view, we have a possible ambiguity -- what if more than one root is present for the same base, branch and leaf?  Which value trumps the others?
+
+Tentative rules:
+
+1.  Roots must differ in length.
+2.  If one value is null (attribute not present) and the other a string, the one with the string value trumps.
+3.  If two ore more that have string values, the one with the longer root prevails.
+
+
+
 ## Preemptive downloading
 
 There are two significant steps to imports, each of which imposes a cost:  

@@ -83,7 +83,8 @@ interface AttrParts{
     branchIdx: number,
     leaf?: string, //TODO
     leafIdx?: number, //TODO
-    rootCnfg?: RootCnfg
+    rootCnfg?: RootCnfg,
+    metadata?: any,
 }
 
 interface AttrChangeInfo{
