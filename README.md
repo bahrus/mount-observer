@@ -51,7 +51,7 @@ To specify the equivalent of what the alternative proposal linked to above would
 ```JavaScript
 const observer = new MountObserver({
    on:'my-element',
-   imports: './my-element.js',
+   import: './my-element.js',
    do: {
       mount: ({localName}, {modules}) => {
         if(!customElements.get(localName)) {
@@ -71,14 +71,14 @@ But the observe method can accept a node within the document, or a shadowRoot, o
 
 The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
 
-##  The imports key
+##  The import key
 
 This proposal has been amended to support multiple imports, including of different types:
 
 ```JavaScript
 const observer = new MountObserver({
    on:'my-element',
-   imports: [
+   import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
    ]
@@ -92,6 +92,8 @@ const observer = new MountObserver({
 });
 observer.observe(document);
 ```
+
+Th key can accept either a single import or multiple.
 
 The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 
@@ -135,7 +137,7 @@ const observer = new MountObserver({
       rootMargin: "0px",
       threshold: 1.0,
    },
-   imports: './my-element.js'
+   import: './my-element.js'
 });
 ```
 
@@ -154,7 +156,7 @@ const observer = new MountObserver({
    whereConnection:{
       effectiveTypeIn: ["slow-2g"],
    },
-   imports: ['./my-element-small.css', {type: 'css'}],
+   import: ['./my-element-small.css', {type: 'css'}],
    do: {
       mount: ({localName}, {modules}) => {
         ...
