@@ -449,7 +449,7 @@ Tentative rules:
 
 1.  Roots must differ in length.
 2.  If one value is null (attribute not present) and the other a string, the one with the string value trumps.
-3.  If two ore more that have string values, the one with the longer root prevails.
+3.  If two or more equivalent attributes have string values, the one with the longer root prevails.
 
 The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
 
