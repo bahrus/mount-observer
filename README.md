@@ -171,7 +171,11 @@ const observer = new MountObserver({
 
 Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance. 
 
-[TODO] Need to also (optionally?) pass back which checks failed and which succeeded.
+<!--
+
+[TODO] Maybe should also (optionally?) pass back which checks failed and which succeeded on dismount.  Not sure I really see a use case for it, but leaving the thought here for now 
+
+--> 
 
 However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
 
