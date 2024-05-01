@@ -7,11 +7,11 @@ Note that much of what is described below has not yet been polyfilled.
 
 # The MountObserver api.
 
-Author:  Bruce B. Anderson
+Author:  Bruce B. Anderson (with valuable feedback from [doeixd](https://github.com/doeixd) )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-2-20
+Last Update: 2024-4-28
 
 ## Benefits of this API
 
@@ -51,11 +51,11 @@ To specify the equivalent of what the alternative proposal linked to above would
 ```JavaScript
 const observer = new MountObserver({
    on:'my-element',
-   import: './my-element.js',
+   imports: './my-element.js',
    do: {
-      mount: ({localName}, {module}) => {
+      mount: ({localName}, {modules}) => {
         if(!customElements.get(localName)) {
-            customElements.define(localName, module.MyElement);
+            customElements.define(localName, modules[0].MyElement);
         }
       }
    }
@@ -63,27 +63,43 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-If no import is specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
+If no imports are specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
 This only searches for elements matching 'my-element' outside any shadow DOM.
 
 But the observe method can accept a node within the document, or a shadowRoot, or a node inside a shadowRoot as well.
 
-The import can also be a function:
+The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
+
+##  The imports key
+
+This proposal has been amended to support multiple imports, including of different types:
 
 ```JavaScript
 const observer = new MountObserver({
-   on: 'my-element',
-   import: async (matchingElement, {module}) => await import('./my-element.js');
+   on:'my-element',
+   imports: [
+      ['./my-element-small.css', {type: 'css'}],
+      './my-element.js',
+   ]
+   do: {
+      mount: ({localName}, {modules}) => {
+        if(!customElements.get(localName)) {
+            customElements.define(localName, modules[1].MyElement);
+        }
+      }
+   }
 });
-observer.observe(myRootNode);
+observer.observe(document);
 ```
 
-which would work better with current bundlers, I suspect.  Also, we can do interesting things like merge multiple imports into one "module".  But should this API be built into the platform, such functions wouldn't be necessary, as bundlers could start to recognize strings that are passed to the MountObserver's constructor.
+The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 
-This proposal would also include support for CSS, JSON, HTML module imports. 
+Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could just as effectively be done by the developer in the do methods.
 
-The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
+This proposal would also include support for JSON and HTML module imports. 
+
+
 
 ## Binding from a distance
 
@@ -119,7 +135,7 @@ const observer = new MountObserver({
       rootMargin: "0px",
       threshold: 1.0,
    },
-   import: './my-element.js'
+   imports: './my-element.js'
 });
 ```
 
@@ -138,9 +154,9 @@ const observer = new MountObserver({
    whereConnection:{
       effectiveTypeIn: ["slow-2g"],
    },
-   import: ['./my-element-small.css', {type: 'css'}],
+   imports: ['./my-element-small.css', {type: 'css'}],
    do: {
-      mount: ({localName}, {module}) => {
+      mount: ({localName}, {modules}) => {
         ...
       },
       dismount: ...,
@@ -153,7 +169,9 @@ const observer = new MountObserver({
 })
 ```
 
-Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance.  
+Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance. 
+
+[TODO] Need to also (optionally?) pass back which checks failed and which succeeded.
 
 However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
 
@@ -211,6 +229,7 @@ Being that for both custom elements, as well as (hopefully) [custom enhancements
 
 We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
+<!--
 ### Scenario 1 -- Custom Element integration with ObserveObservedAttributes API [WIP]
 
 Example:
@@ -236,13 +255,16 @@ Example:
    }, 1000);
 </script>
 ```
+-->
 
 
-### Scenario 2 -- Custom Enhancements in userland
+### Custom Enhancements in userland
 
-Based on [the proposal as it currently stands](https://github.com/WICG/webcomponents/issues/1000), in this case the class prototype would *not* have the attributes defined as a static property of the class, so that the constructor arguments in the previous scenario wouldn't be sufficient.  So instead, what would seem to provide the most help for providing for custom enhancements in userland, and for any other kind of progressive enhancement based on attributes going forward.
+[This proposal could take quite a while to see the light of day, if ever](https://github.com/WICG/webcomponents/issues/1000).
 
-Suppose we have a progressive enhancement that we want to apply based on the presence of 1 or more attributes.
+In the meantime, we want to provide the most help for providing for custom enhancements in userland, and for any other kind of (progressive) enhancement based on attributes going forward.
+
+Suppose we have a (progressive) enhancement that we want to apply based on the presence of 1 or more attributes.
 
 To make this discussion concrete, let's suppose the "canonical" names of those attributes are:
 
@@ -284,7 +306,7 @@ So let's say we want to insist that on custom elements, we must have the data- p
 
 And we want to support an alternative, more semantic sounding prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
 
-Here's what the api **doesn't** provide:
+Here's what the api **doesn't** provide (as originally proposed):
 
 ## Rejected option -- The carpal syndrome syntax
 
@@ -425,7 +447,7 @@ Tentative rules:
 2.  If one value is null (attribute not present) and the other a string, the one with the string value trumps.
 3.  If two ore more that have string values, the one with the longer root prevails.
 
-
+The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
 
 ## Preemptive downloading
 
@@ -446,7 +468,7 @@ const observer = new MountObserver({
    loading: 'eager',
    import: './my-element.js',
    do:{
-      mount: (matchingElement, {module}) => customElements.define(module.MyElement)
+      mount: (matchingElement, {modules}) => customElements.define(modules[0].MyElement)
    }
 })
 ```
@@ -468,12 +490,13 @@ The mount-observer is always on the lookout for template tags with an href attri
 For example:
 
 ```html
-<div>Some prior stuff</div>
+<div>Your Mother Should Know</div>
+<div>I Am the Walrus</div>
 <template href=#id-of-source-template>
-   <div slot=slot1>hello</div>
-   <div slot=slot2>goodbye<div>
+   <span slot=slot1>hello</div>
+   <span slot=slot2>goodbye<div>
 </template>
-<div>Some additional stuff</div>
+<div>Strawberry Fields Forever</div>
 ```
 
 When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=id-of-source-template (in this case), and caches them as it finds them. 
@@ -482,9 +505,7 @@ Let's say the source template looks as follows:
 
 ```html
 <template id=id-of-source-template>
-   This is an example of a snippet of HTML that appears repeatedly.
-   <slot name=slot1></slot>
-   <slot name=slot2></slot>
+   I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot>
 </template>
 ```
 
@@ -492,11 +513,10 @@ What we would end up with is:
 
 
 ```html
-<div>Some prior stuff</div>
-This is an example of a snippet of HTML that appears repeatedly.
-<div>hello</div>
-<div>goodbye</div>
-<div>Some additional stuff</div>
+<div>Your Mother Should Know</div>
+<div>I Am the Walrus</div>
+<div>I don't know why you say <span>goodbye</span> I say <span>hello</span></div>
+<div>Strawberry Fields Forever</div>
 ```
 
 Some significant differences with genuine slot support as used with (ShadowDOM'd) custom elements
