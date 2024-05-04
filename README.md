@@ -235,7 +235,11 @@ If an element that is in "mounted" state according to a MountObserver instance i
 3)  If the mounted element is added outside the rootNode being observed, the mountObserver instance will dispatch event "exit", and the MountObserver instance will relinquish any further responsibility for this element.  
 4)  Ideally event "forget" would be dispatched just before the platform garbage collects an element the MountObserver instance is still monitoring, after all hard references are relinquished (or is that self-contradictory?).
 5)  If the new place it was added remains within the original rootNode and remains mounted, the MountObserver instance dispatches event "reconfirmed".
-6)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount".  
+6)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount". 
+
+## Dismounting
+
+In many cases, it will be critical to inform the developer **why** the element no longer satisfies all the criteria.  For example, we may be using an intersection observer, and when we've scrolled away from view, we can "shut down" until the element is (nearly) scrolled back into view.  We may also be displaying things differently depending on the network speed.  How we should respond when one of the original conditions, but not the other, no longer applies, is of paramount importance.
 
 ## A tribute to attributes
 
@@ -497,7 +501,7 @@ This proposal "sneaks in" one more feature, that perhaps should stand separately
 
 Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter, i.e. found somewhere [in the document tree structure](https://github.com/tc39/proposal-module-expressions)?
 
-The mount-observer is always on the lookout for template tags with an href attribute starting with #:
+The mount-observer is always on the lookout for template tags with a src attribute starting with #:
 
 ```html
 <template src=#id-of-source-template></template>
@@ -521,7 +525,7 @@ Let's say the source template looks as follows:
 
 ```html
 <template id=id-of-source-template>
-   I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot>
+   <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
 </template>
 ```
 
