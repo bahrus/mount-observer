@@ -509,8 +509,8 @@ For example:
 <div>Your Mother Should Know</div>
 <div>I Am the Walrus</div>
 <template src=#id-of-source-template>
-   <span slot=slot1>hello</div>
-   <span slot=slot2>goodbye<div>
+   <span slot=slot1>hello</span>
+   <span slot=slot2>goodbye<span>
 </template>
 <div>Strawberry Fields Forever</div>
 ```
