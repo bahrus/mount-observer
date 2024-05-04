@@ -241,6 +241,19 @@ If an element that is in "mounted" state according to a MountObserver instance i
 
 In many cases, it will be critical to inform the developer **why** the element no longer satisfies all the criteria.  For example, we may be using an intersection observer, and when we've scrolled away from view, we can "shut down" until the element is (nearly) scrolled back into view.  We may also be displaying things differently depending on the network speed.  How we should respond when one of the original conditions, but not the other, no longer applies, is of paramount importance.
 
+So the dismount event should provide a "checklist" of all the conditions, and their current value:
+
+```JavaScript
+mediaMatches: true,
+containerMatches: true,
+satisifiesCustomCondition: true,
+whereLangIn: ['en-GB'],
+whereConnection:{
+   effectiveTypeMatches: true
+},
+isIntersecting: false
+```
+
 ## A tribute to attributes
 
 Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attributes with this API:
