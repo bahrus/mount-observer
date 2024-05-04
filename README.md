@@ -7,7 +7,7 @@ Note that much of what is described below has not yet been polyfilled.
 
 # The MountObserver api.
 
-Author:  Bruce B. Anderson (with valuable feedback from [doeixd](https://github.com/doeixd) )
+Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
@@ -71,6 +71,8 @@ observer.observe(document);
 ```
 
 Invoking "disconnect" as shown above causes the observer to emit event "disconnectedCallback".
+
+The argument can also be an array of objects that fit the pattern shown above.
 
 If no imports are specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
@@ -251,8 +253,25 @@ whereLangIn: ['en-GB'],
 whereConnection:{
    effectiveTypeMatches: true
 },
-isIntersecting: false
+isIntersecting: false,
+changedConditions: ['isIntersecting']
 ```
+
+## Get play-by-play updates?
+
+An issue raised by @doeixd, I think, is what if we want to be informed of the status of all the conditions that are applicable to an element being mounted / dismounted?  I can see scenarios where this would be useful, for reasons similar to wanting to know why the element dismounted.
+
+Since this could have a negative impact on performance, I think it should be something we opt-in to:
+
+```JavaScript
+getPlayByPlay: true
+```
+
+Now the question is when should this progress reporting start?  It could either start the moment the element becomes mounted the first time.  Or it could happen the moment any of the conditions are satisfied.  But some of the conditions could be trivially satisfied for the vast majority of elements (e.g. network speed is 4g or greater).
+
+So I believe the prudent thing to do is wait for all the conditions to be satisfied,  before engaging in this kind of commentary, i.e. after the first mount.
+
+The alternative to providing this feature, which I'm leaning towards, is to just ask the developer to create "specialized" mountObserver construction arguments, that turn on and off precisely when the developer needs to know.
 
 ## A tribute to attributes
 
