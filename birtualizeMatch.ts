@@ -3,9 +3,9 @@ import { MountObserver, inclTemplQry } from './MountObserver.js';
 
 export async function birtualizeMatch(self: MountObserver, el: HTMLTemplateElement, level: number){
         
-    const href = el.getAttribute('href');
-    el.removeAttribute('href');
-    const templID = href!.substring(1);
+    const src = el.getAttribute('src');
+    el.removeAttribute('src');
+    const templID = src!.substring(1);
     const fragment = self.objNde?.deref() as DocumentFragment;
     if(fragment === undefined) return;
     const templ = self.findByID(templID, fragment);

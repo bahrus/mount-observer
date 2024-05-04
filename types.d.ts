@@ -56,7 +56,7 @@ export interface IMountObserver {
     // readonly mountedRefs:  WeakRef<Element>[],
     // readonly dismountedRefs: WeakRef<Element>[],
     observe(within: Node): void;
-    unobserve(within: Node): void;
+    disconnect(within: Node): void;
     module?: any;
 } 
 

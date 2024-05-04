@@ -83,7 +83,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return templ;
     }
 
-    unobserve(within: Node){
+    disconnect(within: Node){
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
         const currentCount = refCount.get(nodeToMonitor);
         if(currentCount !== undefined){
@@ -104,6 +104,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 console.warn(refCountErr);
             }
         }
+        this.dispatchEvent(new Event('disconnectedCallback'));
                 
     }
 
@@ -334,7 +335,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 }
 
 const refCountErr = 'mount-observer ref count mismatch';
-export const inclTemplQry = 'template[href^="#"]:not([hidden])';
+export const inclTemplQry = 'template[src^="#"]:not([hidden])';
 export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080

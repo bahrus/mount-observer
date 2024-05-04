@@ -74,7 +74,7 @@ export class MountObserver extends EventTarget {
             this.#templLookUp.set(id, templ);
         return templ;
     }
-    unobserve(within) {
+    disconnect(within) {
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         const currentCount = refCount.get(nodeToMonitor);
         if (currentCount !== undefined) {
@@ -98,6 +98,7 @@ export class MountObserver extends EventTarget {
                 console.warn(refCountErr);
             }
         }
+        this.dispatchEvent(new Event('disconnectedCallback'));
     }
     async observe(within) {
         await this.#selector();
@@ -314,7 +315,7 @@ export class MountObserver extends EventTarget {
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';
-export const inclTemplQry = 'template[href^="#"]:not([hidden])';
+export const inclTemplQry = 'template[src^="#"]:not([hidden])';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
