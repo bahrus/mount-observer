@@ -7,11 +7,11 @@ Note that much of what is described below has not yet been polyfilled.
 
 # The MountObserver api.
 
-Author:  Bruce B. Anderson (with valuable feedback from [doeixd](https://github.com/doeixd) )
+Author:  Bruce B. Anderson (with valuable feedback from @doeixd).
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-4-28
+Last Update: 2024-5-4
 
 ## Benefits of this API
 
