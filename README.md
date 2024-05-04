@@ -19,7 +19,7 @@ What follows is a far more ambitious alternative to the [lazy custom element pro
 
 ["Binding from a distance"](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc, to the HTML as it streams in.  Libraries that take this approach include [Corset](https://corset.dev/) and [trans-render](https://github.com/bahrus/trans-render).  The concept has been promoted by a [number](https://bkardell.com/blog/CSSLike.html) [of](https://www.w3.org/TR/NOTE-AS)  [prominent](https://www.xanthir.com/blog/b4K_0) voices in the community. 
 
-The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one.
+The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including [this one](https://github.com/whatwg/dom/issues/1285).
 
 ### Does this api make the impossible possible?
 
@@ -53,15 +53,18 @@ const observer = new MountObserver({
    on:'my-element',
    import: './my-element.js',
    do: {
-      mount: ({localName}, {modules}) => {
+      mount: ({localName}, {modules, observer}) => {
         if(!customElements.get(localName)) {
             customElements.define(localName, modules[0].MyElement);
         }
+        observer.disconnect();
       }
    }
 });
 observer.observe(document);
 ```
+
+Invoking "disconnect" as shown above causes the observer to emit event "disconnectedCallback".
 
 If no imports are specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
@@ -83,17 +86,18 @@ const observer = new MountObserver({
       './my-element.js',
    ]
    do: {
-      mount: ({localName}, {modules}) => {
+      mount: ({localName}, {modules, observer}) => {
         if(!customElements.get(localName)) {
             customElements.define(localName, modules[1].MyElement);
         }
+        observer.disconnect();
       }
    }
 });
 observer.observe(document);
 ```
 
-Th key can accept either a single import or multiple.
+Th key can accept either a single import or multiple (via an array).
 
 The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 
