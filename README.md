@@ -490,7 +490,7 @@ Also, this proposal is partly focused on better management of importing resource
 The mount-observer is always on the lookout for template tags with an href attribute starting with #:
 
 ```html
-<template href=#id-of-source-template></template>
+<template src=#id-of-source-template></template>
 ```
 
 For example:
@@ -498,7 +498,7 @@ For example:
 ```html
 <div>Your Mother Should Know</div>
 <div>I Am the Walrus</div>
-<template href=#id-of-source-template>
+<template src=#id-of-source-template>
    <span slot=slot1>hello</div>
    <span slot=slot2>goodbye<div>
 </template>
@@ -536,7 +536,7 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 
 ```html
 <template id=chorus>
-   <template href=#beautiful>
+   <template src=#beautiful>
       <span slot=subjectIs>
             <slot name=subjectIs1></slot>
       </span>
@@ -547,7 +547,7 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
       <slot name=verb1></slot> bring
       <slot name=pronoun1></slot> down</div>
    <div>Oh no</div>
-   <template href=#beautiful>
+   <template src=#beautiful>
       <span slot=subjectIs>
             <slot name=subjectIs2></slot>
       </span>
@@ -559,11 +559,11 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
    </div>
    <div>Oh no</div>
 
-   <template href=#down></template>
+   <template src=#down></template>
 </template>
 
 <div class=chorus>
-   <template href=#chorus shadowRootModeOnLoad=open></template>
+   <template src=#chorus shadowRootModeOnLoad=open></template>
    <span slot=verb1>can't</span>
    <span slot=verb2>can't</span>
    <span slot=pronoun1>me</span>
