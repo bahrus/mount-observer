@@ -619,3 +619,13 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 </div>
 ```
 
+> [!NOTE]
+> An intriguing sounding alternative to using the template tag that disappears, as shown above, is to use a new tag for this purpose.  I think something along the lines of what is [proposed here](https://github.com/WICG/webcomponents/issues/1059) has a much better semantic ring to it:
+
+```html
+<compose src="#sharedHeader"></compose>
+<compose src="#productCard"></compose>
+```
+
+The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, as it then support slotted children (behaving similar to the Beatles' example above) or some equivalent, as I believe that could significantly the payload size of some documents.
+
