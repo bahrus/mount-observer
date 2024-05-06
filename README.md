@@ -627,5 +627,5 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 <compose src="#productCard"></compose>
 ```
 
-The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, as it could then support slotted children (behaving similar to the Beatles' example above) or some equivalent, as I believe that could significantly reduce the payload size of some documents.
+The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. or some equivalent.  But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
 
