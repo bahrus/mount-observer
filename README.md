@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-5-4
+Last Update: 2024-5-5
 
 ## Benefits of this API
 
@@ -627,5 +627,5 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 <compose src="#productCard"></compose>
 ```
 
-The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, as it then support slotted children (behaving similar to the Beatles' example above) or some equivalent, as I believe that could significantly the payload size of some documents.
+The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, as it could then support slotted children (behaving similar to the Beatles' example above) or some equivalent, as I believe that could significantly reduce the payload size of some documents.
 
