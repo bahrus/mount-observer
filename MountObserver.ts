@@ -24,9 +24,10 @@ export class MountObserver extends EventTarget implements IMountObserver{
         super();
         const {on, whereElementIntersectsWith, whereMediaMatches} = init;
         let isComplex = false;
+        //TODO:  further this problem further.  Starting to think this is basically not polyfillable
         if(on !== undefined){
             const reducedMatch = on.replaceAll(':not(', '');
-            isComplex = reducedMatch.includes(' ') || reducedMatch.includes(':');
+            isComplex = reducedMatch.includes(' ') || (reducedMatch.includes(':') && reducedMatch.includes('('));
         }
         this.#isComplex = isComplex;
         if(whereElementIntersectsWith || whereMediaMatches) throw 'NI'; //not implemented
