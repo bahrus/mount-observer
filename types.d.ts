@@ -66,7 +66,7 @@ export interface MountContext{
 }
 
 type PipelineStage = 'Inspecting' | 'PreImport' | 'PostImport' | 'Import' 
-export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, observer: IMountObserver, ctx: MountContext) => Promise<ReturnType>;
+export type PipelineProcessor<ReturnType = void> = (matchingElement: Element, observer: IMountObserver, ctx: MountContext) => Promise<ReturnType> | ReturnType;
 
 //#region mutation event
 export type mutationEventName = 'mutation-event';
