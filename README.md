@@ -150,7 +150,7 @@ Inside a shadow root, we can plop an script element with type mountobserver, and
 
 ```html
 #shadowRoot
-<script id=yourMountObserver>
+<script id=yourMountObserver inherits="#myObserver">
 {
    on:'your-element',
 }
