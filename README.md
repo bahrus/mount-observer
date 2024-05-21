@@ -118,7 +118,7 @@ This proposal would also include support for JSON and HTML module imports.
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
 ```html
-<script id=myMountObserver type="mountobserver" onmount="
+<script type="mountobserver" id=myMountObserver  onmount="
    const {matchingElement} = event;
    const {localName} = matchingElement;
    if(!customElements.get(localName)) {
@@ -141,6 +141,8 @@ The objects modules, observer, mountedElements (array of weak refs) would be ava
 ```JavaScript
 const {modules, observer, mountedElements} = myMountObserver;
 ```
+
+The "scope" of the observer would the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
 ## Binding from a distance
 
