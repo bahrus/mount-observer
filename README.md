@@ -144,6 +144,21 @@ const {modules, observer, mountedElements} = myMountObserver;
 
 The "scope" of the observer would the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
+## Shadow Root inheritance
+
+Inside a shadow root, we can plop an script element with type mountobserver, and indicate which mountobserver script element from the parent ShadowRoot it should inherit from:
+
+```html
+#shadowRoot
+<script id=yourMountObserver>
+{
+   on:'your-element',
+}
+</script>
+```
+
+Anything not specified gets inherited from the referenced script element.
+
 ## Binding from a distance
 
 It is important to note that "on" is a css query with no restrictions.  So something like:
