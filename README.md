@@ -113,7 +113,34 @@ Previously, this proposal called for allowing arrow functions as well, thinking 
 
 This proposal would also include support for JSON and HTML module imports. 
 
+## MountObserver script element
 
+Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
+
+```html
+<script id=myMountObserver type="mountobserver" onmount="
+   const {matchingElement} = event;
+   const {localName} = matchingElement;
+   if(!customElements.get(localName)) {
+      customElements.define(localName, modules[1].MyElement);
+   }
+   observer.disconnect();
+">
+{
+   on:'my-element',
+   import: [
+      ['./my-element-small.css', {type: 'css'}],
+      './my-element.js',
+   ]
+}
+</script>
+```
+
+The objects modules, observer, mountedElements (array of weak refs) would be available as properties of the script element:
+
+```JavaScript
+const {modules, observer, mountedElements} = myMountObserver;
+```
 
 ## Binding from a distance
 
