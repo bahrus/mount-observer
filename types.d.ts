@@ -81,7 +81,7 @@ export interface AddMutationEventListener {
 //#endregion
 
 interface AttrParts{
-    name: string,
+    //name: string,
     root?: string,
     base?: string,
     branch?: string,
@@ -96,8 +96,8 @@ interface AttrChangeInfo{
     oldValue: string | null,
     newValue: string | null,
     idx: number,
+    name: string,
     parts: AttrParts,
-    //parsedNewValue?: any,
 }
 
 //#region mount event
@@ -139,7 +139,7 @@ export interface AddDisconnectEventListener {
 //endregion
 
 //#region attribute change event
-export type attrChangeEventName = 'attr-change';
+export type attrChangeEventName = 'attrChange';
 export interface IAttrChangeEvent extends IMountEvent {
     attrChangeInfos: Array<AttrChangeInfo>,
 }

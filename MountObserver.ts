@@ -158,6 +158,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                                 const parts = this.#attrParts![idx];
                                 const attrChangeInfo: AttrChangeInfo = {
                                     oldValue,
+                                    name: attributeName,
                                     newValue,
                                     idx,
                                     parts
@@ -262,6 +263,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     idx,
                     newValue,
                     oldValue,
+                    name,
                     parts
                 })
             }
@@ -369,7 +371,7 @@ export class DisconnectEvent extends Event implements IDisconnectEvent{
 }
 
 export class AttrChangeEvent extends Event implements IAttrChangeEvent{
-    static eventName: attrChangeEventName = 'attr-change';
+    static eventName: attrChangeEventName = 'attrChange';
     constructor(public mountedElement: Element, public attrChangeInfos: Array<AttrChangeInfo>){
         super(AttrChangeEvent.eventName);
     }

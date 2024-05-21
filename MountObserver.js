@@ -152,6 +152,7 @@ export class MountObserver extends EventTarget {
                                 const parts = this.#attrParts[idx];
                                 const attrChangeInfo = {
                                     oldValue,
+                                    name: attributeName,
                                     newValue,
                                     idx,
                                     parts
@@ -245,6 +246,7 @@ export class MountObserver extends EventTarget {
                     idx,
                     newValue,
                     oldValue,
+                    name,
                     parts
                 });
             }
@@ -351,7 +353,7 @@ export class DisconnectEvent extends Event {
 export class AttrChangeEvent extends Event {
     mountedElement;
     attrChangeInfos;
-    static eventName = 'attr-change';
+    static eventName = 'attrChange';
     constructor(mountedElement, attrChangeInfos) {
         super(AttrChangeEvent.eventName);
         this.mountedElement = mountedElement;
