@@ -296,7 +296,7 @@ And in some application environments, adjusting state via attributes may be the 
 We want our api to be able to distinguish between these two, but to be able to combine both types in one mount observer instance.
 
 
-### Attributes that are the "Source of the Data"
+### Attributes that are the "source of truth"
 
 So for the first scenario, we can specify attributes to listen for as follows:
 
@@ -327,7 +327,7 @@ mo.addEventListener('observed-attr-change', e => {
 
 This proposal is likely to evolve going forward, attempting to synthesize separate ideas for declaratively specifying how to interpret the attributes, parsing them so that they may be merged into properties of a class instance. 
 
-But for now, such support is not part of this proposal (though we can see a glimpse of what that support might look lie below)
+But for now, such support is not part of this proposal (though we can see a glimpse of what that support might look lie below).
 
 ### Custom Enhancements in userland
 
