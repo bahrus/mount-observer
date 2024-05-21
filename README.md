@@ -309,7 +309,7 @@ const mo = new MountObserver({
    }
 });
 
-mo.addEventListener('observed-attr-change', e => {
+mo.addEventListener('attrChanged', e => {
    console.log(e);
    // {
    //    matchingElement,
