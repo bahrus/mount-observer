@@ -300,6 +300,19 @@ const mo = new MountObserver({
       isIn: ['lang', 'contenteditable']
    }
 });
+
+mo.addEventListener('observed-attr-change', e => {
+   console.log(e);
+   // {
+   //    matchingElement,
+   //    attrChangeInfo:[{
+   //       idx: 0,
+   //       name: 'lang'
+   //       oldValue: null,
+   //       newValue: 'en-GB',
+   //    }]
+   // }
+});
 ```
 
 ### Custom Enhancements in userland
