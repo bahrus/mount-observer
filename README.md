@@ -287,13 +287,13 @@ I think it is useful to divide [attributes](https://jakearchibald.com/2024/attri
 
 1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth".
 
-Examples are many built-in global attributes, like lang, or contenteditable, or more specialized example such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a round about way). And there are no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  Some attributes of custom elements may fit this category (but maybe a minority of them).
+Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a round about way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  Some attributes of custom elements may fit this category (but maybe a minority of them).
 
 And in some application environments, adjusting state via attributes may be the preferred approach, so we want to support this scenario, even if it doesn't abide by a common view of what constitutes "best practices." Again, the distinguishing feature of the attributes that we would want to monitor in this way is that they are "top-level" and unlikely to differ in name across different Shadow DOM scopes.  
 
-2.  Somewhat fluid, scoped shadow root renamable attributes which add behavior/enhancement capabilities on top of built-in or third party custom elements.
+2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.
 
-We want our api to be able to distinguish between these two, but to be able to combine both types in one mount observer instance.
+We want our api to be able to distinguish between these two, and to be able to combine both types in one mount observer instance.
 
 
 ### Attributes that are the "source of truth"
@@ -309,7 +309,7 @@ const mo = new MountObserver({
    }
 });
 
-mo.addEventListener('attrChanged', e => {
+mo.addEventListener('attrChange', e => {
    console.log(e);
    // {
    //    matchingElement,
@@ -325,15 +325,15 @@ mo.addEventListener('attrChanged', e => {
 
 ### Help with parsing?
 
-This proposal is likely to evolve going forward, attempting to synthesize separate ideas for declaratively specifying how to interpret the attributes, parsing them so that they may be merged into properties of a class instance. 
+This proposal is likely to evolve going forward, attempting to synthesize [separate ideas](https://github.com/WICG/webcomponents/issues/1045) for declaratively specifying how to interpret the attributes, parsing them so that they may be merged into properties of a class instance. 
 
-But for now, such support is not part of this proposal (though we can see a glimpse of what that support might look lie below).
+But for now, such support is not part of this proposal (though we can see a glimpse of what that support might look like below).
 
 ### Custom Enhancements in userland
 
-[This proposal could take quite a while to see the light of day, if ever](https://github.com/WICG/webcomponents/issues/1000).
+[This proposal, support for (progressive) enhancement of built-in or third-party custom elements, could take quite a while to see the light of day, if ever](https://github.com/WICG/webcomponents/issues/1000).
 
-In the meantime, we want to provide the most help for providing for custom enhancements in userland, and for any other kind of (progressive) enhancement based on attributes going forward.
+In the meantime, we want to provide the most help for providing for custom enhancements in userland, and for any other kind of (progressive) enhancement based on (server-rendered) attributes going forward.
 
 Suppose we have a (progressive) enhancement that we want to apply based on the presence of 1 or more attributes.
 
@@ -371,7 +371,7 @@ We want to also support:
 
 Based on the current unspoken rules, no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
 
-But now when we consider applying this enhancement to custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement?
+But now when we consider applying this enhancement to third party custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement?
 
 So let's say we want to insist that on custom elements, we must have the data- prefix?
 
@@ -453,7 +453,7 @@ MountObserver provides a breakdown of the matching attribute when encountered:
          }
       }
    });
-   mo.addEventListener('observed-attr-change', e => {
+   mo.addEventListener('attrChange', e => {
       console.log(e);
       // {
       //    matchingElement,
