@@ -30,7 +30,8 @@ export interface RootCnfg{
 //export type RootAttrOptions = Array<string | RootCnfg>;
 export type delimiter = string;
 export interface WhereAttr{
-    hasBase: string | [delimiter, string],
+    isIn?: Array<string>,
+    hasBase?: string | [delimiter, string],
     hasBranchIn?: Array<string> | [delimiter, Array<string>],
     hasRootIn?: Array<RootCnfg>,
     /**
@@ -81,7 +82,7 @@ export interface AddMutationEventListener {
 //#endregion
 
 interface AttrParts{
-    //name: string,
+    name: string,
     root?: string,
     base?: string,
     branch?: string,
