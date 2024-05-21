@@ -528,7 +528,7 @@ So for this we add option:
 ```JavaScript
 const observer = new MountObserver({
    on: 'my-element',
-   loading: 'eager',
+   loadingEagerness: 'eager',
    import: './my-element.js',
    do:{
       mount: (matchingElement, {modules}) => customElements.define(modules[0].MyElement)
@@ -537,6 +537,9 @@ const observer = new MountObserver({
 ```
 
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
+
+> [!NOTE]
+> As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
 
 ## Intra document html imports
 
