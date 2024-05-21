@@ -281,35 +281,8 @@ Being that for both custom elements, as well as (hopefully) [custom enhancements
 
 We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
-<!--
-### Scenario 1 -- Custom Element integration with ObserveObservedAttributes API [WIP]
 
-Example:
-
-```html
-<div id=div>
-   <my-custom-element my-first-observed-attribute="hello"></my-custom-element>
-</div>
-<script type=module>
-   import {MountObserver} from '../MountObserver.js';
-   const mo = new MountObserver({
-      on: '*',
-      whereInstanceOf: [MyCustomElement]
-   });
-   mo.addEventListener('parsed-attrs-changed', e => {
-      const {matchingElement, modifiedObjectFieldValues, preModifiedFieldValues} = e;
-      console.log({matchingElement, modifiedObjectFieldValues, preModifiedFieldValues});
-   });
-   mo.observe(div);
-   setTimeout(() => {
-      const myCustomElement = document.querySelector('my-custom-element');
-      myCustomElement.setAttribute('my-first-observed-attribute', 'good-bye');
-   }, 1000);
-</script>
-```
--->
-
-### Source of the data attributes
+### Attributes that are the "Source of the Data"
 
 I think it is safe to categorize [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two scenarios:
 
