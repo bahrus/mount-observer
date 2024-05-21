@@ -309,6 +309,25 @@ Example:
 ```
 -->
 
+### Source of the data attributes
+
+I think it is safe to categorize [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two scenarios:
+
+1.  Invariably named, prefix-less attributes that serve as the "source of the data"
+
+Examples are many built-in global attributes, like lang, or contenteditable.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes. And there are no events we can subscribe to in order to know when the property changes. Hijacking the property setter feels hackish, and may not always work. So monitoring the attribute value is the most effective way of observing when the property/attribute state changes.  Some attributes of custom elements may fit this category (but probably not many).
+
+So for this scenario, we can specify attributes to listen for as follows:
+
+```JavaScript
+import {MountObserver} from 'mount-observer/MountObserver.js';
+const mo = new MountObserver({
+   on: '*',
+   whereAttr:{
+      isIn: ['lang', 'contenteditable']
+   }
+});
+```
 
 ### Custom Enhancements in userland
 
@@ -360,7 +379,9 @@ And we want to support an alternative, more semantic sounding prefix to data, sa
 
 Here's what the api **doesn't** provide (as originally proposed):
 
-## Rejected option -- The carpal syndrome syntax
+#### The carpal syndrome syntax
+
+Using the same expression structure as above, we would end up with this avalanche of settings:
 
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
@@ -394,7 +415,9 @@ const mo = new MountObserver({
 });
 ```
 
-## Supported -- The DRY Way
+#### The DRY Way
+
+This seems like a much better approach, and is supported by this proposal:
 
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
@@ -500,6 +523,8 @@ Tentative rules:
 3.  If two or more equivalent attributes have string values, the one with the longer root prevails.
 
 The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
+
+
 
 ## Preemptive downloading
 
