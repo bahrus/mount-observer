@@ -281,16 +281,24 @@ Being that for both custom elements, as well as (hopefully) [custom enhancements
 
 We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
+## A key attribute of attributes
+
+I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two categories:
+
+1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth".
+
+Examples are many built-in global attributes, like lang, or contenteditable, or more specialized example such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a round about way). And there are no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  Some attributes of custom elements may fit this category (but maybe a minority of them).
+
+And in some application environments, adjusting state via attributes may be the preferred approach, so we want to support this scenario, even if it doesn't abide by a common view of what constitutes "best practices." Again, the distinguishing feature of the attributes that we would want to monitor in this way is that they are "top-level" and unlikely to differ in name across different Shadow DOM scopes.  
+
+2.  Somewhat fluid, scoped shadow root renamable attributes which add behavior/enhancement capabilities on top of built-in or third party custom elements.
+
+We want our api to be able to distinguish between these two, but to be able to combine both types in one mount observer instance.
+
 
 ### Attributes that are the "Source of the Data"
 
-I think it is safe to categorize [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two scenarios:
-
-1.  Invariably named, prefix-less attributes that serve as the "source of the data"
-
-Examples are many built-in global attributes, like lang, or contenteditable.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes. And there are no events we can subscribe to in order to know when the property changes. Hijacking the property setter feels hackish, and may not always work. So monitoring the attribute value is the most effective way of observing when the property/attribute state changes.  Some attributes of custom elements may fit this category (but probably not many).
-
-So for this scenario, we can specify attributes to listen for as follows:
+So for the first scenario, we can specify attributes to listen for as follows:
 
 ```JavaScript
 import {MountObserver} from 'mount-observer/MountObserver.js';
@@ -314,6 +322,12 @@ mo.addEventListener('observed-attr-change', e => {
    // }
 });
 ```
+
+### Help with parsing?
+
+This proposal is likely to evolve going forward, attempting to synthesize separate ideas for declaratively specifying how to interpret the attributes, parsing them so that they may be merged into properties of a class instance. 
+
+But for now, such support is not part of this proposal (though we can see a glimpse of what that support might look lie below)
 
 ### Custom Enhancements in userland
 
