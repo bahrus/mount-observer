@@ -127,10 +127,10 @@ Following an approach similar to the [speculation api](https://developer.chrome.
    observer.disconnect();
 ">
 {
-   on:'my-element',
-   import: [
-      ['./my-element-small.css', {type: 'css'}],
-      './my-element.js',
+   "on":"my-element",
+   "import": [
+      ["./my-element-small.css", {type: "css"}],
+      "./my-element.js",
    ]
 }
 </script>
@@ -152,7 +152,7 @@ Inside a shadow root, we can plop an script element with type mountobserver, and
 #shadowRoot
 <script id=yourMountObserver inherits="#myObserver">
 {
-   on:'your-element',
+   "on":"your-element",
 }
 </script>
 ```
