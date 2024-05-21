@@ -1,5 +1,5 @@
 import {AttrParts, RootCnfg, WhereAttr} from './types';
-export function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string){
+export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string){
     const {hasBase, hasBranchIn, hasRootIn, isIn} = whereAttr;
 
     const fullListOfAttrs: Array<string> = isIn !== undefined ? [...isIn] : [];

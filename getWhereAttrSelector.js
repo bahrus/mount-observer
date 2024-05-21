@@ -1,4 +1,4 @@
-export function getWhereAttrSelector(whereAttr, withoutAttrs) {
+export async function getWhereAttrSelector(whereAttr, withoutAttrs) {
     const { hasBase, hasBranchIn, hasRootIn, isIn } = whereAttr;
     const fullListOfAttrs = isIn !== undefined ? [...isIn] : [];
     const partitionedAttrs = [];

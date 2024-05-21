@@ -41,7 +41,7 @@ export class MountObserver extends EventTarget {
         if (whereAttr === undefined)
             return withoutAttrs;
         const { getWhereAttrSelector } = await import('./getWhereAttrSelector.js');
-        const info = getWhereAttrSelector(whereAttr, withoutAttrs);
+        const info = await getWhereAttrSelector(whereAttr, withoutAttrs);
         const { fullListOfAttrs, calculatedSelector, partitionedAttrs } = info;
         this.#fullListOfAttrs = fullListOfAttrs;
         this.#attrParts = partitionedAttrs;
