@@ -142,22 +142,27 @@ The objects modules, observer, mountedElements (array of weak refs) would be ava
 const {modules, observer, mountedElements} = myMountObserver;
 ```
 
-The "scope" of the observer would the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
+The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
+
+No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondimount, etc) event attribute.
 
 ## Shadow Root inheritance
 
-Inside a shadow root, we can plop an script element with type mountobserver, and indicate which mountobserver script element from the parent ShadowRoot it should inherit from:
+Inside a shadow root, we can plop a script element, also with type mountobserver, optionally giving it the same id as above
 
 ```html
 #shadowRoot
-<script id=yourMountObserver inherits="#myObserver">
+<script id=myMountObserver type=mountobserver>
 {
-   "on":"your-element",
+   "on":"your-element"
 }
 </script>
 ```
 
-Anything not specified gets inherited from the referenced script element.
+If no id is found in the parent ShadowRoot (or in the parent window if the shadow root is at the top level), then this becomes a new set of rules to observe.
+
+But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
+
 
 ## Binding from a distance
 
