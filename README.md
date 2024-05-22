@@ -327,11 +327,9 @@ Being that for both custom elements, as well as (hopefully) [custom enhancements
 
 We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
-
-
 ## Attributes of attributes
 
-I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two categories:
+I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we would want to observe into two categories:
 
 1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
 
@@ -365,7 +363,7 @@ Let's focus on the first scenario.  It doesn't make sense to use the word "where
 import {MountObserver} from 'mount-observer/MountObserver.js';
 const mo = new MountObserver({
    on: '*',
-   observeAttrs: ['lang', 'contenteditable']
+   observeMountedAttrs: ['lang', 'contenteditable']
 });
 
 mo.addEventListener('attrChange', e => {
