@@ -338,11 +338,8 @@ I think it is useful to divide [attributes](https://jakearchibald.com/2024/attri
 
 1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
 
-Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a roundabout way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  
-
-As the thorough article link above explains, some attributes of built in elements (like the "open" attribute), as well as most, but not all attributes of custom elements don't really tightly  fit this category.
-
-And in some application environments, adjusting state via attributes may be the preferred approach, so we want to support this scenario, even if it doesn't abide by a common view of what constitutes "best practices" due to concerns about excessive string parsing.   
+Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a roundabout way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
+  
 
 2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes"
 
@@ -355,7 +352,7 @@ We want our api to be able to distinguish between these two, and to be able to c
 
 Does it make sense to even support "Source of Truth" attributes in a "MountObserver" api, if they have no impact on mounted state?  
 
-We think it does, because some Enhancement Attributes will need to work in conjunction with Source of Truth attributes, in order to provide the observer a coherent picture of what is being observed.
+We think it does, because some Enhancement Attributes will need to work in conjunction with Source of Truth attributes, in order to provide the observer a coherent picture of the full state of the element.
 
 This realization (hopefully correct) struck me while trying to implement a [userland implementation](https://github.com/bahrus/be-intl) of [this proposal](https://github.com/whatwg/html/issues/9294). 
 
