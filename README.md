@@ -721,5 +721,10 @@ The discussion there leads to an open question whether a processing instruction 
 
 Often, we will want to define a large number of "mount observers" programmatically, and we need it to be done in a generic way.  This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with.  In particular, we want to publish enhancements that take advantage of this inheritable infrastructure of declarative configuration, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically.
 
+To support this, we propose:
 
+1.  Adding a "serialize" capability to the mounobserver api, only if observing a shadowroot (or the top level document).  This serialized script element would not have to do anything in the realm in which it is created.
+2.  Script element dispatches event from the rootNode when it is added to the realm, so subscribers don't need to add a general mutation observer.
+3.  Need a way to group all these declarative mappings together within a single tag (name?)
+4.  
 
