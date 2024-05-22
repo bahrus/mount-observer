@@ -325,19 +325,24 @@ Being that for both custom elements, as well as (hopefully) [custom enhancements
 
 We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
 
+
+
 ## A key attribute of attributes
 
 I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two categories:
 
-1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth".
+1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth".  We will refer to these attributes as "Source of Truth" attributes.
 
 Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a round about way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  Some attributes of custom elements may fit this category (but maybe a minority of them).
 
 And in some application environments, adjusting state via attributes may be the preferred approach, so we want to support this scenario, even if it doesn't abide by a common view of what constitutes "best practices." Again, the distinguishing feature of the attributes that we would want to monitor in this way is that they are "top-level" and unlikely to differ in name across different Shadow DOM scopes.  
 
-2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.
+2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes"
 
 We want our api to be able to distinguish between these two, and to be able to combine both types in one mount observer instance.
+
+> [!NOTE]
+> The most important reason for pointing out this distinction is this:  "Source of Truth" attributes will only be observed, and will not trigger mount/unmount states. And unlike all the other where conditions this proposal supports, the where clauses for the enhancement attributes are "one-way" -- they trigger a "mount" event / callback, followed by the ability to observe the stream of changes (including removal of the attribute), but never triggers a "dismount". 
 
 
 ### Attributes that are the "source of truth"
