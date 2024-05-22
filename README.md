@@ -163,6 +163,7 @@ If no id is found in the parent ShadowRoot (or in the parent window if the shado
 
 But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
 
+We will come back to some additional features of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
 
 ## Binding from a distance
 
