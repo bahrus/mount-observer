@@ -344,10 +344,18 @@ We want our api to be able to distinguish between these two, and to be able to c
 > [!NOTE]
 > The most important reason for pointing out this distinction is this:  "Source of Truth" attributes will only be observed, and will **not** trigger mount/unmount states unless they are part of the "on" selector string. And unlike all the other where conditions this proposal supports, the where clauses for the "Enhancement Attributes" are "one-way" -- they trigger a "mount" event / callback, followed by the ability to observe the stream of changes (including removal of those attributes), but they never trigger a "dismount". 
 
+### Counterpoint
+
+Does it make sense to even support "Source of Truth" attributes in a "MountObserver" api, if they have no impact on mounted state?  
+
+We think it does, because some Enhancement Attributes will need to work in conjunction with Source of Truth attributes, in order to provide the observer a coherent picture of what is being observed.
+
+This realization (hopefully correct) struck me while trying to implement a [userland implementation](https://github.com/bahrus/be-intl) of [this proposal](https://github.com/whatwg/html/issues/9294). 
+
 
 ### Source of Truth Attributes
 
-So for the first scenario, we can specify attributes to listen for as follows:
+Let's focus on the first scenario.  It doesn't make sense to use the word "where" for these, because we don't want these attributes to affect our mount/dismount state
 
 ```JavaScript
 import {MountObserver} from 'mount-observer/MountObserver.js';
