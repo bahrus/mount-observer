@@ -319,6 +319,8 @@ The alternative to providing this feature, which I'm leaning towards, is to just
 
 ## A tribute to attributes
 
+Attributes of DOM elements are tricky.  They've been around since the get-go, and they've survived multiple generations of the Web where different philosophies have prevailed, so prepare yourself for some subtle discussion in what follows.
+
 Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attributes with this API:
 
 Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management, creating the most effective css query becomes challenging.
