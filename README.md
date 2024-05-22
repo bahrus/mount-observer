@@ -338,15 +338,15 @@ I think it is useful to divide [attributes](https://jakearchibald.com/2024/attri
 
 1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
 
-Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a roundabout way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
+Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  I think in the vast majority of cases, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes.  There are exceptions, especially for non-string attributes like the checked property of the input element / type=checkbox. And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
   
 
-2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes"
+2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes."
 
 We want our api to be able to distinguish between these two, and to be able to combine both types in one mount observer instance.
 
 > [!NOTE]
-> The most important reason for pointing out this distinction is this:  "Source of Truth" attributes will only be observed, and will **not** trigger mount/unmount states unless they are part of the "on" selector string. And unlike all the other where conditions this proposal supports, the where clauses for the "Enhancement Attributes" are "one-way" -- they trigger a "mount" event / callback, followed by the ability to observe the stream of changes (including removal of those attributes), but they never trigger a "dismount". 
+> The most important reason for pointing out this distinction is this:  "Source of Truth" attributes will only be *observed*, and will **not** trigger mount/unmount states unless they are part of the "on" selector string. And unlike all the other "where" conditions this proposal supports, the where clauses for the "Enhancement Attributes" are "one-way" -- they trigger a "mount" event / callback, followed by the ability to observe the stream of changes (including removal of those attributes), but they never trigger a "dismount". 
 
 ### Counterpoint
 
@@ -365,7 +365,7 @@ Let's focus on the first scenario.  It doesn't make sense to use the word "where
 import {MountObserver} from 'mount-observer/MountObserver.js';
 const mo = new MountObserver({
    on: '*',
-   observeMountedAttrs: ['lang', 'contenteditable']
+   observedAttrsWhenMounted: ['lang', 'contenteditable']
 });
 
 mo.addEventListener('attrChange', e => {
