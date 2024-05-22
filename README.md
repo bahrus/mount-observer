@@ -327,13 +327,15 @@ We want to be alerted by the discovery of elements adorned by these attributes, 
 
 
 
-## A key attribute of attributes
+## Attributes of attributes
 
 I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we we would want to observe into two categories:
 
 1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
 
-Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a roundabout way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  Some attributes of custom elements may fit this category (but probably a minority of them, as far as reflecting property changes).
+Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  Often, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (perhaps in a roundabout way). And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  
+
+As the thorough article link above explains, some attributes of built in elements (like the "open" attribute), as well as most, but not all attributes of custom elements don't really tightly  fit this category.
 
 And in some application environments, adjusting state via attributes may be the preferred approach, so we want to support this scenario, even if it doesn't abide by a common view of what constitutes "best practices" due to concerns about excessive string parsing.   
 
@@ -361,9 +363,7 @@ Let's focus on the first scenario.  It doesn't make sense to use the word "where
 import {MountObserver} from 'mount-observer/MountObserver.js';
 const mo = new MountObserver({
    on: '*',
-   whereAttr:{
-      isIn: ['lang', 'contenteditable']
-   }
+   observeAttrs: ['lang', 'contenteditable']
 });
 
 mo.addEventListener('attrChange', e => {
