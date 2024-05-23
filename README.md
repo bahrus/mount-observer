@@ -717,14 +717,40 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 
 The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. or some equivalent.  But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
 
-## MountObserver script element minutae
+## MountObserver script element minutiae
 
 Often, we will want to define a large number of "mount observers" programmatically, and we need it to be done in a generic way.  This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with.  In particular, we want to publish enhancements that take advantage of this inheritable infrastructure of declarative configuration, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically.
 
 To support this, we propose:
 
-1.  Adding a "serialize" capability to the mounobserver api, only if observing a shadowroot (or the top level document).  This serialized script element would not have to do anything in the realm in which it is created.
-2.  Script element dispatches event from the rootNode when it is added to the realm, so subscribers don't need to add a general mutation observer.
-3.  Need a way to group all these declarative mappings together within a single tag (name?)
-4.  
+1.  Adding a "serialize" capability to the mountobserver api, only if observing a shadowroot (or the top level document).  This serialized script element would be able to "absorb" the ongoing suite of observer api's already set in motion as part of the imperative api call before invoking the serialize method. This would provide a way of "publishing" the mount observing "template" which could then be inherited in child Shadow Roots
+2.  Script element dispatches event from the rootNode when it is added to the realm, so subscribers don't need to add a general mutation observer in order to know when parent shadow roots had a mountobserver script tag inserted.
+3.  Need a way to group all these declarative mappings together so can inherit multiple mountobserver script tags with a single 
+
+So we need an attribute added to the script tag that allows us to form a "group" of script tags together, which can be inherited en masse my child shadow roots.  To choose one possible example:
+
+```html
+<script type=mountobserver id=my-enhancement@1.2.9>
+   {
+      ...
+   }
+</script>
+<script type=mountobserver id=your-enhancement@0.1.2>
+   {
+      ...
+   }
+</script>
+<script id=our-framework-of-enhancements type=group>
+   ["my-enhancement@1.2.9", "your-enhancement@0.1.2"]
+</script>
+```
+
+This concept could be used for other script types such as importmaps and speculation rules
+
+Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group:
+
+```html
+<script id=our-framework-of-enhancements type=group>
+</script>
+```
 
