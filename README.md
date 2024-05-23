@@ -146,7 +146,7 @@ No arrays of settings would be supported within a single tag (as this causes iss
 
 ## Shadow Root inheritance
 
-Inside a shadow root, we can plop a script element, also with type mountobserver, optionally giving it the same id as above
+Inside a shadow root, we can plop a script element, also with type mountobserver, optionally giving it the same id as above:
 
 ```html
 #shadowRoot
@@ -723,9 +723,11 @@ To support this, we propose:
 
 1.  Adding a "syndicate" capability to the mountobserver api, only if observing a shadowroot (or the top level document).  This would provide a kind of passage way from the imperative api to the declarative one.
 2.  Script element dispatches event from the rootNode when it is added to the realm, so subscribers don't need to add a general mutation observer in order to know when parent shadow roots had a mountobserver script tag inserted.
-3.  Need a way to group all these declarative mappings together so can inherit multiple mountobserver script tags with a single 
+3.  Need a way to group all these declarative mappings together so can inherit multiple mountobserver script tags with a single tag 
 
-So developers can develop a custom element, used to group families of mountobservers together:
+So developers can develop a custom element, used to group families of mountobservers together.  
+
+If one inspects the DOM, one would see grouped mountobservers, like so:
 
 ```html
 <be-hive>
@@ -742,30 +744,39 @@ So developers can develop a custom element, used to group families of mountobser
 </be-hive>
 ```
 
+But the developer would not need to set these up automatically.
+
+Instead, the developer would define a custom element that inherits from base class that this proposal/polyfill provides.
+
+Let's say the developer creates an extending Web Component with constructor:  BeHive.
+
+Then rather than invoking
+
 rather than:
 
 ```JavaScript
 mountObserver.observe(rootNode);
 ```
 
-we would do:
+we would invoke:
 
 ```JavaScript
-mountObserver.syndicate(rootNode, BeHive)
+mountObserver.syndicate(rootNode, BeHive, callback)
 ```
 
-where BeHive is a constructor of an already defined custom element ('be-hive' in this case).
+This would:
 
-This would search for a be-hive tag inside the root node (with special logic for the "head" element), and place the script tag inside.
+1.  Use [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive').
+2.  Search for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, create it.
+3.  Invoke the callback, which is expected to return a mountObserver script element instance.
+3.  Place the script tag inside.
 
 
-This concept could be used for other script types such as importmaps and speculation rules
-
-Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group:
+Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group via simply:
 
 ```html
 <be-hive></be-hive>
 ```
 
-So part of the mountobserver api proposal would be a custom element base (abstract) class that developers could inherit from.
+
 
