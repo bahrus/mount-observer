@@ -730,18 +730,15 @@ To support this, we propose:
 So we need an attribute added to the script tag that allows us to form a "group" of script tags together, which can be inherited en masse my child shadow roots.  To choose one possible example:
 
 ```html
-<script type=mountobserver id=my-enhancement@1.2.9>
+<script type=mountobserver id=my-enhancement@1.2.9 tag=be-hive>
    {
       ...
    }
 </script>
-<script type=mountobserver id=your-enhancement@0.1.2>
+<script type=mountobserver id=your-enhancement@0.1.2 tag=be-hive>
    {
       ...
    }
-</script>
-<script id=our-framework-of-enhancements type=group>
-   ["my-enhancement@1.2.9", "your-enhancement@0.1.2"]
 </script>
 ```
 
@@ -750,7 +747,6 @@ This concept could be used for other script types such as importmaps and specula
 Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group:
 
 ```html
-<script id=our-framework-of-enhancements type=group>
-</script>
+<be-hive></be-hive>
 ```
 
