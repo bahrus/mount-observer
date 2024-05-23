@@ -723,24 +723,43 @@ Often, we will want to define a large number of "mount observers" programmatical
 
 To support this, we propose:
 
-1.  Adding a "serialize" capability to the mountobserver api, only if observing a shadowroot (or the top level document).  This serialized script element would be able to "absorb" the ongoing suite of observer api's already set in motion as part of the imperative api call before invoking the serialize method. This would provide a way of "publishing" the mount observing "template" which could then be inherited in child Shadow Roots
+1.  Adding a "syndicate" capability to the mountobserver api, only if observing a shadowroot (or the top level document).  This would provide a kind of passage way from the imperative api to the declarative one.
 2.  Script element dispatches event from the rootNode when it is added to the realm, so subscribers don't need to add a general mutation observer in order to know when parent shadow roots had a mountobserver script tag inserted.
 3.  Need a way to group all these declarative mappings together so can inherit multiple mountobserver script tags with a single 
 
-So we need an attribute added to the script tag that allows us to form a "group" of script tags together, which can be inherited en masse my child shadow roots.  To choose one possible example:
+So developers can develop a custom element, used to group families of mountobservers together:
 
 ```html
-<script type=mountobserver id=my-enhancement@1.2.9 tag=be-hive>
-   {
-      ...
-   }
-</script>
-<script type=mountobserver id=your-enhancement@0.1.2 tag=be-hive>
-   {
-      ...
-   }
-</script>
+<be-hive>
+   <script type=mountobserver id=be-searching>
+      {
+         ...
+      }
+   </script>
+   <script type=mountobserver id=be-counted>
+      {
+         ...
+      }
+   </script>
+</be-hive>
 ```
+
+rather than:
+
+```JavaScript
+mountObserver.observe(rootNode);
+```
+
+we would do:
+
+```JavaScript
+mountObserver.syndicate(rootNode, BeHive)
+```
+
+where BeHive is a constructor of an already defined custom element ('be-hive' in this case).
+
+This would search for a be-hive tag inside the root node (with special logic for the "head" element), and place the script tag inside.
+
 
 This concept could be used for other script types such as importmaps and speculation rules
 
@@ -749,4 +768,6 @@ Then in our shadowroot, rather than adding a script type=mountobserver for every
 ```html
 <be-hive></be-hive>
 ```
+
+So part of the mountobserver api proposal would be a custom element base (abstract) class that developers could inherit from.
 
