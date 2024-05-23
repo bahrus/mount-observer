@@ -142,7 +142,7 @@ const {modules, observer, mountedElements} = myMountObserver;
 
 The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
-No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondimount, etc) event attribute.
+No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes).
 
 ## Shadow Root inheritance
 
