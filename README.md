@@ -30,8 +30,6 @@ There is quite a bit of functionality this proposal would open up, that is excee
 
 2.  For simple css matches, like "my-element", or "[name='hello']" it is enough to use a mutation observer, and only observe the elements within the specified DOM region (more on that below).  But as CSS has evolved, it is quite easy to think of numerous css selectors that would require us to expand our mutation observer to need to scan the entire Shadow DOM realm, or the entire DOM tree outside any Shadow DOM, for any and all mutations (including attribute changes), and re-evaluate every single element within the specified DOM region for new matches or old matches that no longer match.  Things like child selectors, :has, and so on. All this is done, miraculously, by the browser in a performant way.  Reproducing this in userland using JavaScript alone, matching the same performance seems impossible.  
 
- 
-
 3.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
 
 ###  Most significant use cases.
@@ -163,7 +161,7 @@ If no id is found in the parent ShadowRoot (or in the parent window if the shado
 
 But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
 
-We will come back to some additional features of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
+We will come back to some [additional features](#mountobserver-script-element-minutiae) of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
 
 ## Binding from a distance
 
