@@ -5,7 +5,7 @@ export class MountObserver extends EventTarget {
     #mountInit;
     //#rootMutObs: RootMutObs | undefined;
     #abortController;
-    #mounted;
+    mountedElements;
     #mountedList;
     #disconnected;
     //#unmounted: WeakSet<Element>;
@@ -25,7 +25,7 @@ export class MountObserver extends EventTarget {
             throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();
-        this.#mounted = new WeakSet();
+        this.mountedElements = new WeakSet();
         this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
@@ -196,7 +196,7 @@ export class MountObserver extends EventTarget {
         for (const match of matching) {
             if (alreadyMounted.has(match))
                 continue;
-            this.#mounted.add(match);
+            this.mountedElements.add(match);
             if (imp !== undefined) {
                 switch (typeof imp) {
                     case 'string':
