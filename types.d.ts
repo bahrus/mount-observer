@@ -1,3 +1,5 @@
+import { MountObserver } from "./MountObserver";
+
 export interface MountInit{
     readonly on?: CSSMatch,
     //readonly attribMatches?: Array<AttribMatch>,
@@ -158,6 +160,14 @@ export interface ILoadEvent {
 export type loadEventHandler = (e: ILoadEvent) => void;
 export interface AddLoadEventListener{
     addEventListener(eventName: loadEventName, handler: loadEventHandler, options?: AddEventListenerOptions): void
+}
+//#endregion
+
+//#region MountObserver Script Element
+export interface IMountObserverScriptElement extends HTMLScriptElement{
+    mountedElements: Array<WeakRef<Element>>;
+    observer: MountObserver;
+    
 }
 //#endregion
 

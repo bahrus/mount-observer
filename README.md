@@ -719,13 +719,13 @@ The discussion there leads to an open question whether a processing instruction 
 
 Often, we will want to define a large number of "mount observers" programmatically, and we need it to be done in a generic way.  This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with.  In particular, we want to publish enhancements that take advantage of this inheritable infrastructure of declarative configuration, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically.
 
-To support this, we propose:
+To support this, we propose these highlights:
 
-1.  Adding a "syndicate" capability to the mountobserver api, only if observing a shadowroot (or the top level document).  This would provide a kind of passage way from the imperative api to the declarative one.
-2.  Script element dispatches event from the rootNode when it is added to the realm, so subscribers don't need to add a general mutation observer in order to know when parent shadow roots had a mountobserver script tag inserted.
-3.  Need a way to group all these declarative mappings together so can inherit multiple mountobserver script tags with a single tag 
+1.  Adding a "synthesize" method to the MountObserver api, only if observing a shadowRoot (or the top level document).  This would provide a kind of passage way from the imperative api to the declarative one.  
+2.  Synthesize method appends a script element of type MountObserver, that dispatches event from the synthesizing custom element it gets appended to, so subscribers don't need to add a general mutation observer in order to know when parent shadow roots had a MountObserver script tag inserted.
 
-So developers can develop a custom element, used to group families of mountobservers together.  
+
+So developers can develop a custom element, used to group families of MountObservers together.  
 
 If one inspects the DOM, one would see grouped mountobservers, like so:
 
