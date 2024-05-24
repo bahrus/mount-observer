@@ -10,18 +10,20 @@ export interface MountInit{
     readonly whereInstanceOf?: Array<{new(): Element}>,
     readonly whereSatisfies?: PipelineProcessor<boolean>,
     readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
-    readonly do?: {
-        readonly mount?: PipelineProcessor,
-        readonly dismount?: PipelineProcessor,
-        readonly disconnect?: PipelineProcessor,
-        readonly reconfirm?: PipelineProcessor,
-        readonly exit?: PipelineProcessor,
-    }
+    readonly do?: MountObserverCallbacks
     // /**
     //  * Purpose -- there are scenarios where we may only want to affect changes that occur after the initial 
     //  * server rendering, so we only want to mount elements that appear 
     //  */
     // readonly ignoreInitialMatches?: boolean,
+}
+
+export interface MountObserverCallbacks{
+    readonly mount?: PipelineProcessor,
+    readonly dismount?: PipelineProcessor,
+    readonly disconnect?: PipelineProcessor,
+    readonly reconfirm?: PipelineProcessor,
+    readonly exit?: PipelineProcessor,
 }
 
 export interface RootCnfg{
@@ -167,7 +169,7 @@ export interface AddLoadEventListener{
 export interface IMountObserverScriptElement extends HTMLScriptElement{
     mountedElements: Array<WeakRef<Element>>;
     observer: MountObserver;
-    
+
 }
 //#endregion
 
