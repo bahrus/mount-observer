@@ -30,7 +30,11 @@ export abstract class Synthesizer extends HTMLElement{
     }
 
     #import(mose: MountObserverScriptElement){
-        const {} = mose;
+        const {init, do: d} = mose;
+        const se = document.createElement('script') as MountObserverScriptElement;
+        se.init = init;
+        se.do = d;
+        
     }
 
     #inherit(){

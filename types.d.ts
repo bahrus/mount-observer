@@ -1,4 +1,4 @@
-import { MountObserver } from "./MountObserver";
+//import { MountObserver } from "./MountObserver";
 
 export interface JSONSerializableMountInit{
     readonly on?: CSSMatch,
@@ -66,6 +66,7 @@ export interface IMountObserver {
     observe(within: Node): void;
     disconnect(within: Node): void;
     module?: any;
+    mountedElements: WeakSet<Element>;
 } 
 
 export interface MountContext{
@@ -171,8 +172,8 @@ export interface AddLoadEventListener{
 //#region MountObserver Script Element
 export interface MountObserverScriptElement extends HTMLScriptElement{
     init: JSONSerializableMountInit;
-    mountedElements: Array<WeakRef<Element>>;
-    observer: MountObserver;
+    //mountedElements: Array<WeakRef<Element>>;
+    observer: IMountObserver;
     do: MountObserverCallbacks;
 }
 //#endregion

@@ -9,5 +9,20 @@
     <iframe></iframe>
     <input>
     <input type="checkbox">
+    <script id=script1></script>
+
+    <script>
+        script1.test = function(){
+            alert('iah');
+        }
+    </script>
+    <button onclick=clone()>clone</button>
+    <script>
+        function clone(){
+            const c = script1.cloneNode(true);
+            console.log(c.test);
+            document.body.appendChild(c);
+        }
+    </script>
 </body>
 </html>

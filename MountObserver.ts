@@ -13,7 +13,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #mountInit: MountInit;
     //#rootMutObs: RootMutObs | undefined;
     #abortController: AbortController;
-    #mounted: WeakSet<Element>;
+    mountedElements: WeakSet<Element>;
     #mountedList: Array<WeakRef<Element>> | undefined;
     #disconnected: WeakSet<Element>;
     //#unmounted: WeakSet<Element>;
@@ -33,7 +33,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         if(whereElementIntersectsWith || whereMediaMatches) throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();
-        this.#mounted = new WeakSet();
+        this.mountedElements = new WeakSet();
         this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
@@ -210,7 +210,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
-            this.#mounted.add(match);
+            this.mountedElements.add(match);
             if(imp !== undefined){
                 switch(typeof imp){
                     case 'string':
