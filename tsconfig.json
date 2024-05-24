@@ -9,6 +9,7 @@
 	},
 	"files": [
 		"MountObserver.ts",
+		"Synthesizer.ts"
 	],
 	"exclude":[
 		"node_modules"

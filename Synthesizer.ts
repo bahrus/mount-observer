@@ -26,7 +26,7 @@ export abstract class Synthesizer extends HTMLElement{
             childList: true
         };
         this.#mutationObserver = new MutationObserver(this.mutationCallback);
-        this.#mutationObserver.observe(this);
+        this.#mutationObserver.observe(this.getRootNode());
         this.#inherit();
     }
 

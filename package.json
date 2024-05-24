@@ -10,7 +10,8 @@
   },
   "exports": {
     ".": "./MountObserver.js",
-    "./MountObserver.js": "./MountObserver.js"
+    "./MountObserver.js": "./MountObserver.js",
+    "./Synthesizer.js": "./Synthesizer.js"
   },
   "files": [
     "*.js",
