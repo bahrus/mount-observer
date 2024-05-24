@@ -1,4 +1,5 @@
-import {MountObserverScriptElement} from './types';
+import {MountInit, MountObserverScriptElement} from './types';
+import {MountObserver} from './MountObserver.js';
 
 export abstract class Synthesizer extends HTMLElement{
     #mutationObserver: MutationObserver | undefined;
@@ -30,10 +31,18 @@ export abstract class Synthesizer extends HTMLElement{
     }
 
     #import(mose: MountObserverScriptElement){
-        const {init, do: d} = mose;
+        const {init, do: d, id} = mose;
         const se = document.createElement('script') as MountObserverScriptElement;
         se.init = init;
+        se.id = id;
         se.do = d;
+        const mi: MountInit = {
+            do: d,
+            ...init
+        };
+        const mo = new MountObserver(mi);
+        se.observer = mo;
+        this.appendChild(se);
         
     }
 
