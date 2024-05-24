@@ -137,7 +137,7 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 The objects modules, observer, mountedElements (array of weak refs) would be available as properties of the script element:
 
 ```JavaScript
-const {modules, observer, mountedElements} = myMountObserver;
+const {modules, observer, mountedElements, mountInit} = myMountObserver;
 ```
 
 The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
@@ -727,32 +727,22 @@ To support this, we propose these highlights:
 
 So developers can develop a custom element, used to group families of MountObservers together.  
 
-If one inspects the DOM, one would see grouped mountobservers, like so:
+If one inspects the DOM, one would see grouped (already "parsed") MountObservers, like so:
 
 ```html
 <be-hive>
-   <script type=mountobserver id=be-searching>
-      {
-         ...
-      }
-   </script>
-   <script type=mountobserver id=be-counted>
-      {
-         ...
-      }
-   </script>
+   <script type=mountobserver id=be-searching></script>
+   <script type=mountobserver id=be-counted></script>
 </be-hive>
 ```
 
 But the developer would not need to set these up automatically.
 
-Instead, the developer would define a custom element that inherits from base class that this proposal/polyfill provides.
+Instead, the framework developer would define a custom element that inherits from base class that this proposal/polyfill provides.
 
-Let's say the developer creates an extending Web Component with constructor:  BeHive.
+Let's say the framework developer creates an extending Web Component with constructor:  BeHive.
 
-Then rather than invoking
-
-rather than:
+Then rather than invoking:
 
 ```JavaScript
 mountObserver.observe(rootNode);
@@ -761,7 +751,7 @@ mountObserver.observe(rootNode);
 we would invoke:
 
 ```JavaScript
-mountObserver.syndicate(rootNode, BeHive, callback)
+mountObserver.synthesize(rootNode, BeHive, callback)
 ```
 
 This would:
