@@ -169,7 +169,7 @@ export interface AddLoadEventListener{
 export interface IMountObserverScriptElement extends HTMLScriptElement{
     mountedElements: Array<WeakRef<Element>>;
     observer: MountObserver;
-
+    do: MountObserverCallbacks;
 }
 //#endregion
 
