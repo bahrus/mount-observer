@@ -1,15 +1,18 @@
 import { MountObserver } from "./MountObserver";
 
-export interface MountInit{
+export interface JSONSerializableMountInit{
     readonly on?: CSSMatch,
-    //readonly attribMatches?: Array<AttribMatch>,
-    readonly withTargetShadowRoot?: ShadowRoot, 
     readonly whereAttr?: WhereAttr,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
+    readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
+
+}
+export interface MountInit extends JSONSerializableMountInit{
+    
+    readonly withTargetShadowRoot?: ShadowRoot, 
     readonly whereInstanceOf?: Array<{new(): Element}>,
     readonly whereSatisfies?: PipelineProcessor<boolean>,
-    readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
     readonly do?: MountObserverCallbacks
     // /**
     //  * Purpose -- there are scenarios where we may only want to affect changes that occur after the initial 
@@ -166,7 +169,8 @@ export interface AddLoadEventListener{
 //#endregion
 
 //#region MountObserver Script Element
-export interface IMountObserverScriptElement extends HTMLScriptElement{
+export interface MountObserverScriptElement extends HTMLScriptElement{
+    init: JSONSerializableMountInit;
     mountedElements: Array<WeakRef<Element>>;
     observer: MountObserver;
     do: MountObserverCallbacks;
