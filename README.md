@@ -756,11 +756,11 @@ The developer of each package defines their MOSE "template", and then syndicates
 mountObserver.synthesize(rootNode, BeHive, mose)
 ```
 
-What this method does is:
+What this method does is it:
 
-1.  Use [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive').
-2.  Search for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, create it.
-3.  Place the mose script element inside.
+1.  Uses [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive').
+2.  Searches for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, create it.
+3.  Places the MOSE script element inside.
 
 
 Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group via simply:
@@ -769,5 +769,15 @@ Then in our shadowroot, rather than adding a script type=mountobserver for every
 <be-hive></be-hive>
 ```
 
+And we can give each inheriting ShadowRoot a personality of its own by customizing the settings within that shadow scope, by (manually?) adding a MOSE with maching id with custom settings:
 
+```html
+<be-hive>
+   <script type=mountobserver id=be-searching>
+      {
+         ...my custom settings
+      }
+   </script>
+</be-hive>
+```
 
