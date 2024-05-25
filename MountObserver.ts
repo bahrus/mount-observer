@@ -1,7 +1,8 @@
 import {MountInit, IMountObserver, AddMutationEventListener, 
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
-    AttrParts
+    AttrParts,
+    MountObserverScriptElement
 } from './types';
 import {RootMutObs} from './RootMutObs.js';
 
@@ -193,6 +194,21 @@ export class MountObserver extends EventTarget implements IMountObserver{
         
         await this.#inspectWithin(within, true);
         
+    }
+
+    synthesize(within: Document | ShadowRoot, customElement: {new(): HTMLElement}, mose: MountObserverScriptElement){
+        const name = customElements.getName(customElement);
+        if(name === null) throw 400;
+        let instance = within.querySelector(name);
+        if(instance === null){
+            instance = new customElement();
+            if(within === document){
+                within.head.appendChild(instance);
+            }else{
+                within.appendChild(instance);
+            }
+        }
+        instance.appendChild(mose);
     }
 
     #confirmInstanceOf(el: Element, whereInstanceOf: Array<{new(): Element}>){

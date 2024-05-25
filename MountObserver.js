@@ -181,6 +181,22 @@ export class MountObserver extends EventTarget {
         }, { signal: this.#abortController.signal });
         await this.#inspectWithin(within, true);
     }
+    synthesize(within, customElement, mose) {
+        const name = customElements.getName(customElement);
+        if (name === null)
+            throw 400;
+        let instance = within.querySelector(name);
+        if (instance === null) {
+            instance = new customElement();
+            if (within === document) {
+                within.head.appendChild(instance);
+            }
+            else {
+                within.appendChild(instance);
+            }
+        }
+        instance.appendChild(mose);
+    }
     #confirmInstanceOf(el, whereInstanceOf) {
         for (const test of whereInstanceOf) {
             if (el instanceof test)
