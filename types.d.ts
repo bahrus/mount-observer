@@ -2,6 +2,7 @@
 
 export interface JSONSerializableMountInit{
     readonly on?: CSSMatch,
+    observedAttrsWhenMounted?: string[],
     readonly whereAttr?: WhereAttr,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
@@ -37,7 +38,7 @@ export interface RootCnfg{
 //export type RootAttrOptions = Array<string | RootCnfg>;
 export type delimiter = string;
 export interface WhereAttr{
-    isIn?: Array<string>,
+    
     hasBase?: string | [delimiter, string],
     hasBranchIn?: Array<string> | [delimiter, Array<string>],
     hasRootIn?: Array<RootCnfg>,
