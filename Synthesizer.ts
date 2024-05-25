@@ -13,7 +13,7 @@ export abstract class Synthesizer extends HTMLElement{
                 if(!(node instanceof HTMLScriptElement)) continue;
                 const mose = node as MountObserverScriptElement;
                 this.mountObserverElements.push(mose);
-                this.import(mose);
+                this.activate(mose);
                 const e = new SynthetizeEvent(mose);
                 this.dispatchEvent(e);
             }
@@ -42,11 +42,12 @@ export abstract class Synthesizer extends HTMLElement{
     }
 
     import(mose: MountObserverScriptElement){
-        const {init, do: d, id} = mose;
+        const {init, do: d, id, synConfig} = mose;
         const se = document.createElement('script') as MountObserverScriptElement;
-        se.init = init;
+        se.init = {...init};
         se.id = id;
-        se.do = d;
+        se.do = {...d};
+        se.synConfig = {...synConfig};
         this.appendChild(se);
     }
 
