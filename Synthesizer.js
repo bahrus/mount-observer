@@ -10,6 +10,7 @@ export class Synthesizer extends HTMLElement {
                     continue;
                 const mose = node;
                 this.mountObserverElements.push(mose);
+                this.#import(mose);
                 const e = new SyntheticEvent(mose);
                 this.dispatchEvent(e);
             }

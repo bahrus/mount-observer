@@ -13,6 +13,7 @@ export abstract class Synthesizer extends HTMLElement{
                 if(!(node instanceof HTMLScriptElement)) continue;
                 const mose = node as MountObserverScriptElement;
                 this.mountObserverElements.push(mose);
+                this.#import(mose);
                 const e = new SyntheticEvent(mose);
                 this.dispatchEvent(e);
             }
