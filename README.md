@@ -72,6 +72,8 @@ Invoking "disconnect" as shown above causes the observer to emit event "disconne
 
 The argument can also be an array of objects that fit the pattern shown above.
 
+In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.
+
 If no imports are specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
 This only searches for elements matching 'my-element' outside any shadow DOM.
