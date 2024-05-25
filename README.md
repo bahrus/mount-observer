@@ -758,7 +758,7 @@ What this method does is:
 
 1.  Use [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive').
 2.  Search for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, create it.
-3.  Place the script element inside.
+3.  Place the mose script element inside.
 
 
 Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group via simply:
