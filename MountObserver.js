@@ -181,7 +181,8 @@ export class MountObserver extends EventTarget {
         }, { signal: this.#abortController.signal });
         await this.#inspectWithin(within, true);
     }
-    synthesize(within, customElement, mose) {
+    static synthesize(within, customElement, mose) {
+        mose.type = 'mountobserver';
         const name = customElements.getName(customElement);
         if (name === null)
             throw 400;

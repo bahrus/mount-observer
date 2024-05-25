@@ -10,7 +10,7 @@ export abstract class Synthesizer extends HTMLElement{
         for (const mutation of mutationList) {
             const {addedNodes} = mutation;
             for(const node of addedNodes){
-                if(!(node instanceof HTMLScriptElement)) continue;
+                if(!(node instanceof HTMLScriptElement) || node.type !== 'mountobserver') continue;
                 const mose = node as MountObserverScriptElement;
                 this.mountObserverElements.push(mose);
                 this.activate(mose);
@@ -31,8 +31,8 @@ export abstract class Synthesizer extends HTMLElement{
             this.mountObserverElements.push(mose);
             this.activate(mose);
         })
-        this.#mutationObserver = new MutationObserver(this.mutationCallback);
-        this.#mutationObserver.observe(this.getRootNode());
+        this.#mutationObserver = new MutationObserver(this.mutationCallback.bind(this));
+        this.#mutationObserver.observe(this, init);
         this.inherit();
     }
 

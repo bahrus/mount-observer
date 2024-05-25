@@ -5,7 +5,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     MountObserverScriptElement
 } from './types';
 import {RootMutObs} from './RootMutObs.js';
-
+export {MountObserverScriptElement} from './types';
 
 const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
@@ -196,7 +196,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
         
     }
 
-    synthesize(within: Document | ShadowRoot, customElement: {new(): HTMLElement}, mose: MountObserverScriptElement){
+    static synthesize(within: Document | ShadowRoot, customElement: {new(): HTMLElement}, mose: MountObserverScriptElement){
+        mose.type = 'mountobserver';
         const name = customElements.getName(customElement);
         if(name === null) throw 400;
         let instance = within.querySelector(name);
