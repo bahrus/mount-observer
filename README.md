@@ -163,7 +163,7 @@ If no id is found in the parent ShadowRoot (or in the parent window if the shado
 
 But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
 
-We will come back to some [additional features](#creating-frameworks-that-revolve-around-mountobserver-script-elements-moses) of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
+We will come back to some [additional features](#creating-frameworks-that-revolve-around-moses) of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
 
 ## Binding from a distance
 
@@ -759,7 +759,7 @@ What this method does is it:
 
 1.  Uses [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive') from the provided constructor.
 2.  Searches for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, creates it.
-3.  Places the MOSE script element inside.
+3.  Places the MOSE inside.
 
 
 Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group via simply:
@@ -768,7 +768,7 @@ Then in our shadowroot, rather than adding a script type=mountobserver for every
 <be-hive></be-hive>
 ```
 
-And we can give each inheriting ShadowRoot a personality of its own by customizing the settings within that shadow scope, by (manually?) adding a MOSE with maching id with custom settings:
+And we can give each inheriting ShadowRoot a personality of its own by customizing the settings within that shadow scope, by (manually?) adding a MOSE with matching id that overrides the inheriting settings with custom settings:
 
 ```html
 <be-hive>
