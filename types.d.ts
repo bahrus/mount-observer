@@ -170,11 +170,12 @@ export interface AddLoadEventListener{
 //#endregion
 
 //#region MountObserver Script Element
-export interface MountObserverScriptElement extends HTMLScriptElement{
+export interface MountObserverScriptElement<TSynConfig=any> extends HTMLScriptElement{
     init: JSONSerializableMountInit;
     //mountedElements: Array<WeakRef<Element>>;
     observer: IMountObserver;
     do: MountObserverCallbacks;
+    synConfig: TSynConfig;
 }
 //#endregion
 
