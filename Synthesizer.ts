@@ -26,6 +26,11 @@ export abstract class Synthesizer extends HTMLElement{
         const init: MutationObserverInit = {
             childList: true
         };
+        this.querySelectorAll('script[type="mountobserver"]').forEach(s => {
+            const mose = s as MountObserverScriptElement;
+            this.mountObserverElements.push(mose);
+            this.activate(mose);
+        })
         this.#mutationObserver = new MutationObserver(this.mutationCallback);
         this.#mutationObserver.observe(this.getRootNode());
         this.inherit();
@@ -39,6 +44,7 @@ export abstract class Synthesizer extends HTMLElement{
         };
         const mo = new MountObserver(mi);
         mose.observer = mo;
+        mo.observe(this.getRootNode());
     }
 
     import(mose: MountObserverScriptElement){
@@ -72,6 +78,9 @@ export abstract class Synthesizer extends HTMLElement{
     disconnectedCallback(){
         if(this.#mutationObserver !== undefined){
             this.#mutationObserver.disconnect();
+        }
+        for(const mose of this.mountObserverElements){
+            mose.observer.disconnect(this.getRootNode());
         }
     }
 }

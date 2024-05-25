@@ -10,8 +10,8 @@ export class Synthesizer extends HTMLElement {
                     continue;
                 const mose = node;
                 this.mountObserverElements.push(mose);
-                this.#import(mose);
-                const e = new SyntheticEvent(mose);
+                this.activate(mose);
+                const e = new SynthetizeEvent(mose);
                 this.dispatchEvent(e);
             }
         }
@@ -21,25 +21,35 @@ export class Synthesizer extends HTMLElement {
         const init = {
             childList: true
         };
+        this.querySelectorAll('script[type="mountobserver"]').forEach(s => {
+            const mose = s;
+            this.mountObserverElements.push(mose);
+            this.activate(mose);
+        });
         this.#mutationObserver = new MutationObserver(this.mutationCallback);
         this.#mutationObserver.observe(this.getRootNode());
-        this.#inherit();
+        this.inherit();
     }
-    #import(mose) {
+    activate(mose) {
         const { init, do: d, id } = mose;
-        const se = document.createElement('script');
-        se.init = init;
-        se.id = id;
-        se.do = d;
         const mi = {
             do: d,
             ...init
         };
         const mo = new MountObserver(mi);
-        se.observer = mo;
+        mose.observer = mo;
+        mo.observe(this.getRootNode());
+    }
+    import(mose) {
+        const { init, do: d, id, synConfig } = mose;
+        const se = document.createElement('script');
+        se.init = { ...init };
+        se.id = id;
+        se.do = { ...d };
+        se.synConfig = { ...synConfig };
         this.appendChild(se);
     }
-    #inherit() {
+    inherit() {
         const rn = this.getRootNode();
         const host = rn.host;
         if (!host)
@@ -49,17 +59,20 @@ export class Synthesizer extends HTMLElement {
         const parentScopeSynthesizer = parentShadowRealm.querySelector(localName);
         const { mountObserverElements } = parentScopeSynthesizer;
         for (const moe of mountObserverElements) {
-            this.#import(moe);
+            this.import(moe);
         }
         if (parentScopeSynthesizer !== null) {
-            parentScopeSynthesizer.addEventListener(SyntheticEvent.eventName, e => {
-                this.#import(e.mountObserverElement);
+            parentScopeSynthesizer.addEventListener(SynthetizeEvent.eventName, e => {
+                this.import(e.mountObserverElement);
             });
         }
     }
     disconnectedCallback() {
         if (this.#mutationObserver !== undefined) {
             this.#mutationObserver.disconnect();
+        }
+        for (const mose of this.mountObserverElements) {
+            mose.observer.disconnect(this.getRootNode());
         }
     }
 }
@@ -68,11 +81,11 @@ export class Synthesizer extends HTMLElement {
  * The `mutation-event` event represents something that happened.
  * We can document it here.
  */
-export class SyntheticEvent extends Event {
+export class SynthetizeEvent extends Event {
     mountObserverElement;
     static eventName = 'synthesize';
     constructor(mountObserverElement) {
-        super(SyntheticEvent.eventName);
+        super(SynthetizeEvent.eventName);
         this.mountObserverElement = mountObserverElement;
     }
 }
