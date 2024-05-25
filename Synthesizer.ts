@@ -1,17 +1,17 @@
-import {MountInit, MountObserverScriptElement} from './types';
+import {MountInit, MOSE} from './types';
 import {MountObserver} from './MountObserver.js';
 
 export abstract class Synthesizer extends HTMLElement{
     #mutationObserver: MutationObserver | undefined;
 
-    mountObserverElements: Array<MountObserverScriptElement> = [];
+    mountObserverElements: Array<MOSE> = [];
 
     mutationCallback(mutationList: Array<MutationRecord>){
         for (const mutation of mutationList) {
             const {addedNodes} = mutation;
             for(const node of addedNodes){
                 if(!(node instanceof HTMLScriptElement) || node.type !== 'mountobserver') continue;
-                const mose = node as MountObserverScriptElement;
+                const mose = node as MOSE;
                 this.mountObserverElements.push(mose);
                 this.activate(mose);
                 const e = new SynthetizeEvent(mose);
@@ -27,7 +27,7 @@ export abstract class Synthesizer extends HTMLElement{
             childList: true
         };
         this.querySelectorAll('script[type="mountobserver"]').forEach(s => {
-            const mose = s as MountObserverScriptElement;
+            const mose = s as MOSE;
             this.mountObserverElements.push(mose);
             this.activate(mose);
         })
@@ -36,7 +36,7 @@ export abstract class Synthesizer extends HTMLElement{
         this.inherit();
     }
 
-    activate(mose: MountObserverScriptElement){
+    activate(mose: MOSE){
         const {init, do: d, id} = mose;
         const mi: MountInit = {
             do: d,
@@ -47,9 +47,9 @@ export abstract class Synthesizer extends HTMLElement{
         mo.observe(this.getRootNode());
     }
 
-    import(mose: MountObserverScriptElement){
+    import(mose: MOSE){
         const {init, do: d, id, synConfig} = mose;
-        const se = document.createElement('script') as MountObserverScriptElement;
+        const se = document.createElement('script') as MOSE;
         se.init = {...init};
         se.id = id;
         se.do = {...d};
@@ -93,7 +93,7 @@ export abstract class Synthesizer extends HTMLElement{
 export class SynthetizeEvent extends Event{
     static eventName = 'synthesize';
   
-    constructor(public mountObserverElement: MountObserverScriptElement) {
+    constructor(public mountObserverElement: MOSE) {
       super(SynthetizeEvent.eventName);
     }
 }

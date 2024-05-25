@@ -171,14 +171,14 @@ export interface AddLoadEventListener{
 //#endregion
 
 //#region MountObserver Script Element
-export interface MountObserverScriptElementEndUserProps<TSynConfig=any>{
+export interface MOSEAddedProps<TSynConfig=any>{
     init: JSONSerializableMountInit;
     observer: IMountObserver;
     do: MountObserverCallbacks;
     synConfig: TSynConfig;
 }
-export interface MountObserverScriptElement<TSynConfig=any> 
-    extends HTMLScriptElement, MountObserverScriptElementEndUserProps<TSynConfig>{
+export interface MOSE<TSynConfig=any> 
+    extends HTMLScriptElement, MOSEAddedProps<TSynConfig>{
 
 }
 //#endregion
