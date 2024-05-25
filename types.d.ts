@@ -67,6 +67,7 @@ export interface IMountObserver {
     disconnect(within: Node): void;
     module?: any;
     mountedElements: WeakSet<Element>;
+    readAttrs(match: Element, branchIndexes?: Set<number>) : AttrChangeInfo[]
 } 
 
 export interface MountContext{
