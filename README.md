@@ -111,7 +111,7 @@ Previously, this proposal called for allowing arrow functions as well, thinking 
 
 This proposal would also include support for JSON and HTML module imports. 
 
-## MountObserver script element
+## MountObserver script elements (MOSEs)
 
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
