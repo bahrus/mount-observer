@@ -337,7 +337,7 @@ We want to be alerted by the discovery of elements adorned by these attributes, 
 
 I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we would want to observe into two categories:
 
-1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of the truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
+1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
 
 Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  I think in the vast majority of cases, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes.  There are exceptions, especially for non-string attributes like the checked property of the input element / type=checkbox. And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
   
