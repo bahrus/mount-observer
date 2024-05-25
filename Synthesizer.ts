@@ -13,8 +13,8 @@ export abstract class Synthesizer extends HTMLElement{
                 if(!(node instanceof HTMLScriptElement)) continue;
                 const mose = node as MountObserverScriptElement;
                 this.mountObserverElements.push(mose);
-                this.#import(mose);
-                const e = new SyntheticEvent(mose);
+                this.import(mose);
+                const e = new SynthetizeEvent(mose);
                 this.dispatchEvent(e);
             }
             
@@ -28,26 +28,29 @@ export abstract class Synthesizer extends HTMLElement{
         };
         this.#mutationObserver = new MutationObserver(this.mutationCallback);
         this.#mutationObserver.observe(this.getRootNode());
-        this.#inherit();
+        this.inherit();
     }
 
-    #import(mose: MountObserverScriptElement){
+    activate(mose: MountObserverScriptElement){
         const {init, do: d, id} = mose;
-        const se = document.createElement('script') as MountObserverScriptElement;
-        se.init = init;
-        se.id = id;
-        se.do = d;
         const mi: MountInit = {
             do: d,
             ...init
         };
         const mo = new MountObserver(mi);
-        se.observer = mo;
-        this.appendChild(se);
-        
+        mose.observer = mo;
     }
 
-    #inherit(){
+    import(mose: MountObserverScriptElement){
+        const {init, do: d, id} = mose;
+        const se = document.createElement('script') as MountObserverScriptElement;
+        se.init = init;
+        se.id = id;
+        se.do = d;
+        this.appendChild(se);
+    }
+
+    inherit(){
         const rn = this.getRootNode();
         const host = (<any>rn).host;
         if(!host) return;
@@ -56,11 +59,11 @@ export abstract class Synthesizer extends HTMLElement{
         const parentScopeSynthesizer = parentShadowRealm.querySelector(localName) as Synthesizer;
         const {mountObserverElements} = parentScopeSynthesizer;
         for(const moe of mountObserverElements){
-            this.#import(moe);
+            this.import(moe);
         }
         if(parentScopeSynthesizer !== null){
-            parentScopeSynthesizer.addEventListener(SyntheticEvent.eventName, e => {
-                this.#import((e as SyntheticEvent).mountObserverElement)
+            parentScopeSynthesizer.addEventListener(SynthetizeEvent.eventName, e => {
+                this.import((e as SynthetizeEvent).mountObserverElement)
             })
 
         }
@@ -77,10 +80,10 @@ export abstract class Synthesizer extends HTMLElement{
  * The `mutation-event` event represents something that happened.
  * We can document it here.
  */
-export class SyntheticEvent extends Event{
+export class SynthetizeEvent extends Event{
     static eventName = 'synthesize';
   
     constructor(public mountObserverElement: MountObserverScriptElement) {
-      super(SyntheticEvent.eventName);
+      super(SynthetizeEvent.eventName);
     }
 }
