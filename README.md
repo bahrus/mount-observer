@@ -109,7 +109,7 @@ Once again, the key can accept either a single import or it can also support mul
 
 The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 
-Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could just as effectively be done by the developer in the do methods.
+Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
 
 This proposal would also include support for JSON and HTML module imports. 
 
