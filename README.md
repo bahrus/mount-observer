@@ -161,7 +161,7 @@ If no id is found in the parent ShadowRoot (or in the parent window if the shado
 
 But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
 
-We will come back to some [additional features](#mountobserver-script-element-minutiae) of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
+We will come back to some [additional features](#creating-frameworks-that-revolve-around-mountobserver-script-elements-moses) of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
 
 ## Binding from a distance
 
@@ -715,23 +715,29 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 
 The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. or some equivalent.  But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
 
-## Creating "frameworks" that revolve around MountObserver Script Elements (Mose's).
+## Creating "frameworks" that revolve around MOSEs.
 
-Often, we will want to define a large number of "mount observers" programmatically, and we need it to be done in a generic way, that can be published and easily referenced.  
+Often, we will want to define a large number of "mount observer script elements (MOSEs)" programmatically, and we need it to be done in a generic way, that can be published and easily referenced.  
 
-This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with, and is used as an example for this section, to simply make things more concrete.  We can certainly envision other "frameworks" that could leverage this feature for a variety of purposes.  
+This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with, and is used as an example for this section, to simply make things more concrete.  But we can certainly envision other "frameworks" that could leverage this feature for a variety of purposes, including other families of behaviors/enhancements, or "binding from a distance" syntaxes.  
 
-In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of this ability that the MountObserver provides, that "ties the know" based on CSS matches in the DOM.  *be-hive" seeks to take advantage of the inheritable infrastructure that MountObserver script elements provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically.
+In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of the DOM filtering ability that the MountObserver provides, that "ties the knot" based on CSS matches in the DOM.  *be-hive" seeks to take advantage of the inheritable infrastructure that MountObserver script elements provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically.
 
 To support this, we propose these highlights:
 
-1.  Adding a "synthesize" method to the MountObserver api, only if observing a shadowRoot (or the top level document).  This would provide a kind of passage way from the imperative api to the declarative one.  
-2.  Synthesize method appends a script element of type MountObserver, that dispatches event from the synthesizing custom element it gets appended to, so subscribers don't need to add a general mutation observer in order to know when parent shadow roots had a MountObserver script tag inserted.
+1.  Adding a static "synthesize" method to the MountObserver api, only if observing a shadowRoot (or the top level document).  This would provide a kind of passage-way from the imperative api to the declarative one.  
+2.  As the Synthesize method is called repeatedly from different packages, it creates a cluster of MOSEs wrapped inside a custom element ("be-hive") that the framework developer authors.  It appends script elements with type="mountobserver" to the custom element instance sitting in the DOM, that dispatches events from the synthesizing custom element it gets appended to, so subscribers in child Shadow DOM's don't need to add a general mutation observer in order to know when parent shadow roots had a MOSE inserted.  This allows the child Shadow DOM's to inherit (in this case) behaviors/enhancements from the parent Shadow DOM.
 
+So framework developers can develop a bespoke custom element that inherits from the class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObservers together.  
 
-So developers can develop a custom element, used to group families of MountObservers together.  
+What functionality do these "synthesizing" custom elements provide, what value-add proposition do they fulfill over what is built into the MountObserver polyfill / package?
 
-If one inspects the DOM, one would see grouped (already "parsed") MountObservers, like so:
+The sky is the limit, but focusing on the first example, be-hive, they are:
+
+1.  Managing, interpreting and parsing the attributes that add semantic.
+2.  Establishing the "handshake" that passes properties passed to the pre-enhanced element to the attached enhancement/behavior.
+
+If one inspects the DOM, one would see grouped (already "parsed") MOSEs, like so:
 
 ```html
 <be-hive>
@@ -740,25 +746,15 @@ If one inspects the DOM, one would see grouped (already "parsed") MountObservers
 </be-hive>
 ```
 
-But the developer would not need to set these up automatically.
+Without the help of the synthesize method / Synthesizer base class, the developer would need to set these up manually, so this lifts a significant burden from the shoulders of people who want to leverage these behaviors/enhancements in a seamless way.  
 
-Instead, the framework developer would define a custom element that inherits from base class that this proposal/polyfill provides.
-
-Let's say the framework developer creates an extending Web Component with constructor:  BeHive.
-
-Then rather than invoking:
+The developer of each package defines their MOSE "template", and then syndicates it via the synthesize method:
 
 ```JavaScript
-mountObserver.observe(rootNode);
+mountObserver.synthesize(rootNode, BeHive, mose)
 ```
 
-we would invoke:
-
-```JavaScript
-mountObserver.synthesize(rootNode, BeHive, mountObserverScriptElement)
-```
-
-The MountObserver api would:
+What this method does is:
 
 1.  Use [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive').
 2.  Search for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, create it.
