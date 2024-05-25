@@ -14,7 +14,7 @@ export abstract class Synthesizer extends HTMLElement{
                 const mose = node as MOSE;
                 this.mountObserverElements.push(mose);
                 this.activate(mose);
-                const e = new SynthetizeEvent(mose);
+                const e = new SynthesizeEvent(mose);
                 this.dispatchEvent(e);
             }
             
@@ -69,8 +69,8 @@ export abstract class Synthesizer extends HTMLElement{
             this.import(moe);
         }
         if(parentScopeSynthesizer !== null){
-            parentScopeSynthesizer.addEventListener(SynthetizeEvent.eventName, e => {
-                this.import((e as SynthetizeEvent).mountObserverElement)
+            parentScopeSynthesizer.addEventListener(SynthesizeEvent.eventName, e => {
+                this.import((e as SynthesizeEvent).mountObserverElement)
             })
 
         }
@@ -90,10 +90,10 @@ export abstract class Synthesizer extends HTMLElement{
  * The `mutation-event` event represents something that happened.
  * We can document it here.
  */
-export class SynthetizeEvent extends Event{
+export class SynthesizeEvent extends Event{
     static eventName = 'synthesize';
   
     constructor(public mountObserverElement: MOSE) {
-      super(SynthetizeEvent.eventName);
+      super(SynthesizeEvent.eventName);
     }
 }
