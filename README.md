@@ -585,7 +585,6 @@ Tentative rules:
 The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
 
 
-
 ## Preemptive downloading
 
 There are two significant steps to imports, each of which imposes a cost:  
@@ -723,12 +722,12 @@ Often, we will want to define a large number of "mount observer script elements 
 
 This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with, and is used as an example for this section, to simply make things more concrete.  But we can certainly envision other "frameworks" that could leverage this feature for a variety of purposes, including other families of behaviors/enhancements, or "binding from a distance" syntaxes.  
 
-In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of the DOM filtering ability that the MountObserver provides, that "ties the knot" based on CSS matches in the DOM.  *be-hive" seeks to take advantage of the inheritable infrastructure that MountObserver script elements provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically.
+In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of the DOM filtering ability that the MountObserver provides, that "ties the knot" based on CSS matches in the DOM to behaviors/enhancements that we want to attach directly onto the matching elements.  *be-hive" seeks to take advantage of the inheritable infrastructure that MountObserver script elements provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically, only expecting manual intervention when we need some special customizations within a specific ShadowDOM scope.
 
 To support this, we propose these highlights:
 
-1.  Adding a static "synthesize" method to the MountObserver api, only if observing a shadowRoot (or the top level document).  This would provide a kind of passage-way from the imperative api to the declarative one.  
-2.  As the Synthesize method is called repeatedly from different packages, it creates a cluster of MOSEs wrapped inside a custom element ("be-hive") that the framework developer authors.  It appends script elements with type="mountobserver" to the custom element instance sitting in the DOM, that dispatches events from the synthesizing custom element it gets appended to, so subscribers in child Shadow DOM's don't need to add a general mutation observer in order to know when parent shadow roots had a MOSE inserted.  This allows the child Shadow DOM's to inherit (in this case) behaviors/enhancements from the parent Shadow DOM.
+1.  Adding a static "synthesize" method to the MountObserver api.  This would provide a kind of passage-way from the imperative api to the declarative one.  
+2.  As the Synthesize method is called repeatedly from different packages that work with that framework, it creates a cluster of MOSEs wrapped inside a custom element ("be-hive") that the framework developer authors.  It appends script elements with type="mountobserver" to the custom element instance sitting in the DOM, that dispatches events from the synthesizing custom element it gets appended to, so subscribers in child Shadow DOM's don't need to add a general mutation observer in order to know when parent shadow roots had a MOSE inserted that it needs to act on.  This allows the child Shadow DOM's to inherit (in this case) behaviors/enhancements from the parent Shadow DOM.
 
 So framework developers can develop a bespoke custom element that inherits from the class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObservers together.  
 
@@ -736,10 +735,10 @@ What functionality do these "synthesizing" custom elements provide, what value-a
 
 The sky is the limit, but focusing on the first example, be-hive, they are:
 
-1.  Managing, interpreting and parsing the attributes that add semantic.
-2.  Establishing the "handshake" that passes properties passed to the pre-enhanced element to the attached enhancement/behavior.
+1.  Managing, interpreting and parsing the attributes that add semantic enhancement vocabularies onto exiting elements.
+2.  Establishing the "handshake" that imports the enhancement package, instantiates the enhancement, and passes properties that wee previously assigned to the pre-enhanced element to the attached enhancement/behavior.
 
-If one inspects the DOM, one would see grouped (already "parsed") MOSEs, like so:
+If one inspects the DOM, one will see grouped (already "parsed") MOSEs, like so:
 
 ```html
 <be-hive>
@@ -758,8 +757,8 @@ mountObserver.synthesize(rootNode, BeHive, mose)
 
 What this method does is it:
 
-1.  Uses [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive').
-2.  Searches for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, create it.
+1.  Uses [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive') from the provided constructor.
+2.  Searches for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, creates it.
 3.  Places the MOSE script element inside.
 
 
