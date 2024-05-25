@@ -325,7 +325,7 @@ The alternative to providing this feature, which I'm leaning towards, is to just
 
 ## A tribute to attributes
 
-Attributes of DOM elements are tricky.  They've been around since the get-go, and they've survived multiple generations of the Web where different philosophies have prevailed, so prepare yourself for some subtle discussion in what follows.
+Attributes of DOM elements are tricky.  They've been around since the get-go of the Web, and they've survived multiple generations, where different philosophies have prevailed, so prepare yourself for some subtle discussion in what follows.
 
 Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attributes with this API:
 
