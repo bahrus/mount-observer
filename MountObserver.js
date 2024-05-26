@@ -31,7 +31,7 @@ export class MountObserver extends EventTarget {
     }
     #calculatedSelector;
     #attrParts;
-    #fullListOfAttrs;
+    #fullListOfEnhancementAttrs;
     //get #attrVals
     async #selector() {
         if (this.#calculatedSelector !== undefined)
@@ -43,7 +43,7 @@ export class MountObserver extends EventTarget {
         const { getWhereAttrSelector } = await import('./getWhereAttrSelector.js');
         const info = await getWhereAttrSelector(whereAttr, withoutAttrs);
         const { fullListOfAttrs, calculatedSelector, partitionedAttrs } = info;
-        this.#fullListOfAttrs = fullListOfAttrs;
+        this.#fullListOfEnhancementAttrs = fullListOfAttrs;
         this.#attrParts = partitionedAttrs;
         this.#calculatedSelector = calculatedSelector;
         return this.#calculatedSelector;
@@ -119,7 +119,7 @@ export class MountObserver extends EventTarget {
             }
         }
         const rootMutObs = mutationObserverLookup.get(within);
-        const fullListOfAttrs = this.#fullListOfAttrs;
+        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
         rootMutObs.addEventListener('mutation-event', async (e) => {
             //TODO:  disconnected
             if (this.#isComplex) {
@@ -151,6 +151,7 @@ export class MountObserver extends EventTarget {
                                 const newValue = target.getAttribute(attributeName);
                                 const parts = this.#attrParts[idx];
                                 const attrChangeInfo = {
+                                    isSOfTAttr: false,
                                     oldValue,
                                     name: attributeName,
                                     newValue,
@@ -245,8 +246,9 @@ export class MountObserver extends EventTarget {
         }
     }
     readAttrs(match, branchIndexes) {
-        const fullListOfAttrs = this.#fullListOfAttrs;
+        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
         const attrChangeInfos = [];
+        const oldValue = null;
         if (fullListOfAttrs !== undefined) {
             const attrParts = this.#attrParts;
             for (let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++) {
@@ -257,17 +259,40 @@ export class MountObserver extends EventTarget {
                         continue;
                 }
                 const name = fullListOfAttrs[idx];
-                const oldValue = null;
                 const newValue = match.getAttribute(name);
                 attrChangeInfos.push({
                     idx,
+                    isSOfTAttr: false,
                     newValue,
                     oldValue,
                     name,
                     parts
                 });
             }
-            //this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
+        }
+        const { observedAttrsWhenMounted } = this.#mountInit;
+        if (observedAttrsWhenMounted !== undefined) {
+            for (const observedAttr of observedAttrsWhenMounted) {
+                const attrIsString = typeof observedAttr === 'string';
+                const name = attrIsString ? observedAttr : observedAttr.name;
+                let mapsTo;
+                let newValue = match.getAttribute(name);
+                if (!attrIsString) {
+                    const { customParser, instanceOf, mapsTo: mt, valIfNull } = observedAttr;
+                    if (instanceOf || customParser)
+                        throw 'NI';
+                    if (newValue === null)
+                        newValue = valIfNull;
+                    mapsTo = mt;
+                }
+                attrChangeInfos.push({
+                    isSOfTAttr: true,
+                    newValue,
+                    oldValue,
+                    name,
+                    mapsTo
+                });
+            }
         }
         return attrChangeInfos;
     }

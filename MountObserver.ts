@@ -5,7 +5,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     MOSE
 } from './types';
 import {RootMutObs} from './RootMutObs.js';
-export {MOSE as MountObserverScriptElement} from './types';
+export {MOSE} from './types';
 
 const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
@@ -42,7 +42,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #calculatedSelector: string | undefined;
     #attrParts: Array<AttrParts> | undefined;
     
-    #fullListOfAttrs: Array<string> | undefined;
+    #fullListOfEnhancementAttrs: Array<string> | undefined;
     //get #attrVals
     async #selector() : Promise<string>{
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
@@ -52,7 +52,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const {getWhereAttrSelector} = await import('./getWhereAttrSelector.js');
         const info = await getWhereAttrSelector(whereAttr, withoutAttrs);
         const {fullListOfAttrs, calculatedSelector, partitionedAttrs} = info;
-        this.#fullListOfAttrs = fullListOfAttrs;
+        this.#fullListOfEnhancementAttrs = fullListOfAttrs;
         this.#attrParts = partitionedAttrs;
         this.#calculatedSelector = calculatedSelector
         return this.#calculatedSelector;
@@ -126,7 +126,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
         }
         const rootMutObs = mutationObserverLookup.get(within)!;
-        const fullListOfAttrs = this.#fullListOfAttrs;
+        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
         (rootMutObs as any as AddMutationEventListener).addEventListener('mutation-event', async (e: MutationEvent) => {
             //TODO:  disconnected
             if(this.#isComplex){
@@ -158,6 +158,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                                 const newValue = target.getAttribute(attributeName);
                                 const parts = this.#attrParts![idx];
                                 const attrChangeInfo: AttrChangeInfo = {
+                                    isSOfTAttr: false,
                                     oldValue,
                                     name: attributeName,
                                     newValue,
@@ -261,8 +262,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     readAttrs(match: Element, branchIndexes?: Set<number>){
-        const fullListOfAttrs = this.#fullListOfAttrs;
+        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
         const attrChangeInfos: Array<AttrChangeInfo> = [];
+        const oldValue = null;
         if(fullListOfAttrs !== undefined){
             const attrParts = this.#attrParts
             
@@ -273,20 +275,43 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     if(!branchIndexes.has(branchIdx)) continue;
                 }
                 const name = fullListOfAttrs[idx];
-                const oldValue = null;
+                
                 const newValue = match.getAttribute(name);
                 
                 attrChangeInfos.push({
                     idx,
+                    isSOfTAttr: false,
                     newValue,
                     oldValue,
                     name,
                     parts
-                })
+                });
             }
-            //this.dispatchEvent(new AttrChangeEvent(match, attrChangeInfos));
 
         }
+        const {observedAttrsWhenMounted} = this.#mountInit;
+        if(observedAttrsWhenMounted !== undefined){
+            for(const observedAttr of observedAttrsWhenMounted){
+                const attrIsString = typeof observedAttr === 'string';
+                const name = attrIsString ? observedAttr : observedAttr.name;
+                let mapsTo: string | undefined;
+                let newValue = match.getAttribute(name);
+                if(!attrIsString){
+                    const {customParser, instanceOf, mapsTo: mt, valIfNull} = observedAttr;
+                    if(instanceOf || customParser) throw 'NI';
+                    if(newValue === null) newValue = valIfNull;
+                    mapsTo = mt;
+                }
+                attrChangeInfos.push({
+                    isSOfTAttr: true,
+                    newValue,
+                    oldValue,
+                    name,
+                    mapsTo
+                });
+            }
+        }
+
         return attrChangeInfos;
     }
 

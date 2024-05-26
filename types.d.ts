@@ -2,13 +2,22 @@
 
 export interface JSONSerializableMountInit{
     readonly on?: CSSMatch,
-    observedAttrsWhenMounted?: string[],
+    readonly observedAttrsWhenMounted?: (string | ObservedSourceOfTruthAttribute)[],
     readonly whereAttr?: WhereAttr,  
     readonly whereElementIntersectsWith?: IntersectionObserverInit,
     readonly whereMediaMatches?: MediaQuery,
     readonly import?: ImportString | [ImportString, ImportAssertions] | PipelineProcessor,
 
 }
+
+export interface ObservedSourceOfTruthAttribute  {
+    name: string,
+    mapsTo?: string,
+    valIfNull?: any,
+    instanceOf?: any,
+    customParser?: (newValue: string | null, oldValue: string | null, instance: Element) => any
+}
+
 export interface MountInit extends JSONSerializableMountInit{
     
     readonly withTargetShadowRoot?: ShadowRoot, 
@@ -106,9 +115,11 @@ interface AttrParts{
 interface AttrChangeInfo{
     oldValue: string | null,
     newValue: string | null,
-    idx: number,
+    isSOfTAttr: boolean,
+    idx?: number,
     name: string,
-    parts: AttrParts,
+    parts?: AttrParts,
+    mapsTo?: string,
 }
 
 //#region mount event

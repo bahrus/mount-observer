@@ -1,6 +1,6 @@
 export async function getWhereAttrSelector(whereAttr, withoutAttrs) {
-    const { hasBase, hasBranchIn, hasRootIn, isIn } = whereAttr;
-    const fullListOfAttrs = isIn !== undefined ? [...isIn] : [];
+    const { hasBase, hasBranchIn, hasRootIn } = whereAttr;
+    const fullListOfAttrs = [];
     const partitionedAttrs = [];
     if (hasBase !== undefined) {
         const hasRootInGuaranteed = hasRootIn || [{
