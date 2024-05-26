@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
