@@ -14,6 +14,7 @@ export interface ObservedSourceOfTruthAttribute  {
     name: string,
     mapsTo?: string,
     valIfNull?: any,
+    valIfFalsy?: any,
     instanceOf?: any,
     customParser?: (newValue: string | null, oldValue: string | null, instance: Element) => any
 }

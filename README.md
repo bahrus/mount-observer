@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-5-22
+Last Update: 2024-5-27
 
 ## Benefits of this API
 
@@ -105,7 +105,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-Once again, the key can accept either a single import or it can also support multiple imports (via an array).
+Once again, the key can accept either a single import and it can also support multiple imports (via an array).
 
 The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 
@@ -113,7 +113,7 @@ Previously, this proposal called for allowing arrow functions as well, thinking 
 
 This proposal would also include support for JSON and HTML module imports. 
 
-## MountObserver script elements (MOSEs)
+## Mount Observer Script Elements (MOSEs)
 
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
@@ -136,7 +136,7 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 </script>
 ```
 
-The objects modules, observer, mountedElements (array of weak refs) would be available as properties of the script element:
+The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the ith "on" selector) would be accessible as properties of the script element:
 
 ```JavaScript
 const {modules, observer, mountedElements, mountInit} = myMountObserver;
@@ -144,11 +144,11 @@ const {modules, observer, mountedElements, mountInit} = myMountObserver;
 
 The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
-No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes).
+No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the on criteria can be an array of selectors.
 
 ## Shadow Root inheritance
 
-Inside a shadow root, we can plop a script element, also with type mountobserver, optionally giving it the same id as above:
+Inside a shadow root, we can plop a script element, also with type "mountobserver", optionally giving it the same id as above:
 
 ```html
 #shadowRoot
@@ -163,7 +163,7 @@ If no id is found in the parent ShadowRoot (or in the parent window if the shado
 
 But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
 
-We will come back to some [additional features](#creating-frameworks-that-revolve-around-moses) of using these script elements later, but wanted to cover the highlights of this proposal before getting bogged down in some tedious logistics.
+We will come back to some important [additional features](#creating-frameworks-that-revolve-around-moses) of using these script elements later, but first we want to cover the highlights of this proposal, in order to give more context as to what kinds of functionality these MOSEs can provide.
 
 ## Binding from a distance
 
@@ -325,9 +325,9 @@ The alternative to providing this feature, which I'm leaning towards, is to just
 
 ## A tribute to attributes
 
-Attributes of DOM elements are tricky.  They've been around since the get-go of the Web, and they've survived multiple generations, where different philosophies have prevailed, so prepare yourself for some subtle discussion in what follows.
+Attributes of DOM elements are tricky.  They've been around since the get-go of the Web, and they've survived multiple eras of web development, where different philosophies have prevailed, so prepare yourself for some esoteric discussions in what follows.
 
-Extra support is provided for monitoring attributes.  There are two primary reasons for needing to provide special support for attributes with this API:
+The MountObserver API provides explicit support for monitoring attributes.  There are two primary reasons for why it is important to provide this as part of the API:
 
 Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management, creating the most effective css query becomes challenging.
 
@@ -339,7 +339,9 @@ I think it is useful to divide [attributes](https://jakearchibald.com/2024/attri
 
 1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.
 
-Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  I think in the vast majority of cases, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes.  There are exceptions, especially for non-string attributes like the checked property of the input element / type=checkbox. And there are usually no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
+Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  I think in the vast majority of cases, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes.  There are exceptions, especially for non-string attributes like the checked property of the input element / type=checkbox, and JSON based attributes for custom elements. 
+
+Usually, that are no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value associated with the property is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
   
 
 2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes."
@@ -376,6 +378,7 @@ mo.addEventListener('attrChange', e => {
    //    attrChangeInfo:[{
    //       idx: 0,
    //       name: 'lang'
+   //       isSOfTAttr: true,
    //       oldValue: null,
    //       newValue: 'en-GB',
    //    }]
