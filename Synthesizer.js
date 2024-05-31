@@ -43,6 +43,7 @@ export class Synthesizer extends HTMLElement {
     import(mose) {
         const { init, do: d, id, synConfig } = mose;
         const se = document.createElement('script');
+        se.type = 'mountobserver';
         se.init = { ...init };
         se.id = id;
         se.do = { ...d };
@@ -57,15 +58,15 @@ export class Synthesizer extends HTMLElement {
         const parentShadowRealm = host.getRootNode();
         const { localName } = this;
         const parentScopeSynthesizer = parentShadowRealm.querySelector(localName);
+        if (parentScopeSynthesizer === null)
+            throw 404;
         const { mountObserverElements } = parentScopeSynthesizer;
         for (const moe of mountObserverElements) {
             this.import(moe);
         }
-        if (parentScopeSynthesizer !== null) {
-            parentScopeSynthesizer.addEventListener(SynthesizeEvent.eventName, e => {
-                this.import(e.mountObserverElement);
-            });
-        }
+        parentScopeSynthesizer.addEventListener(SynthesizeEvent.eventName, e => {
+            this.import(e.mountObserverElement);
+        });
     }
     disconnectedCallback() {
         if (this.#mutationObserver !== undefined) {
