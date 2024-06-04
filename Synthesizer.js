@@ -57,9 +57,17 @@ export class Synthesizer extends HTMLElement {
             return;
         const parentShadowRealm = host.getRootNode();
         const { localName } = this;
-        const parentScopeSynthesizer = parentShadowRealm.querySelector(localName);
-        if (parentScopeSynthesizer === null)
-            throw 404;
+        let parentScopeSynthesizer = parentShadowRealm.querySelector(localName);
+        if (parentScopeSynthesizer === null) {
+            parentScopeSynthesizer = document.createElement(localName);
+            if (parentShadowRealm === document) {
+                document.head.appendChild(parentScopeSynthesizer);
+            }
+            else {
+                parentShadowRealm.appendChild(parentScopeSynthesizer);
+            }
+        }
+        ;
         const { mountObserverElements } = parentScopeSynthesizer;
         for (const moe of mountObserverElements) {
             this.import(moe);

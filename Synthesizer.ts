@@ -64,8 +64,15 @@ export abstract class Synthesizer extends HTMLElement{
         if(!host) return;
         const parentShadowRealm = host.getRootNode();
         const {localName} = this;
-        const parentScopeSynthesizer = parentShadowRealm.querySelector(localName) as Synthesizer;
-        if(parentScopeSynthesizer === null) throw 404;
+        let parentScopeSynthesizer = parentShadowRealm.querySelector(localName) as Synthesizer;
+        if(parentScopeSynthesizer === null) {
+            parentScopeSynthesizer = document.createElement(localName) as Synthesizer;
+            if(parentShadowRealm === document) {
+                document.head.appendChild(parentScopeSynthesizer);
+            }else{
+                parentShadowRealm.appendChild(parentScopeSynthesizer);
+            }
+        };
         const {mountObserverElements} = parentScopeSynthesizer;
         for(const moe of mountObserverElements){
             this.import(moe);
