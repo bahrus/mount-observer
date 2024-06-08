@@ -717,7 +717,7 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 <compose src="#productCard"></compose>
 ```
 
-The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. or some equivalent.  But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
+The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
 
 ## Creating "frameworks" that revolve around MOSEs.
 
@@ -739,14 +739,14 @@ What functionality do these "synthesizing" custom elements provide, what value-a
 The sky is the limit, but focusing on the first example, be-hive, they are:
 
 1.  Managing, interpreting and parsing the attributes that add semantic enhancement vocabularies onto exiting elements.
-2.  Establishing the "handshake" that imports the enhancement package, instantiates the enhancement, and passes properties that wee previously assigned to the pre-enhanced element to the attached enhancement/behavior.
+2.  Establishing the "handshake" that imports the enhancement package, instantiates the enhancement, and passes properties that were previously assigned to the pre-enhanced element to the attached enhancement/behavior.
 
 If one inspects the DOM, one will see grouped (already "parsed") MOSEs, like so:
 
 ```html
 <be-hive>
-   <script type=mountobserver id=be-searching></script>
-   <script type=mountobserver id=be-counted></script>
+   <script type=mountobserver id=be-hive-be-searching></script>
+   <script type=mountobserver id=be-hive-be-counted></script>
 </be-hive>
 ```
 
@@ -775,7 +775,7 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 
 ```html
 <be-hive>
-   <script type=mountobserver id=be-searching>
+   <script type=mountobserver id=be-hive-be-searching>
       {
          ...my custom settings
       }
