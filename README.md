@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-6-8
+Last Update: 2024-6-10
 
 ## Benefits of this API
 
@@ -72,7 +72,7 @@ Invoking "disconnect" as shown above causes the observer to emit event "disconne
 
 The argument can also be an array of objects that fit the pattern shown above.
 
-In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.
+In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
 
 If no imports are specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
