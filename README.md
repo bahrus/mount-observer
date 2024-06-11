@@ -118,14 +118,14 @@ This proposal would also include support for JSON and HTML module imports.
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
 ```html
-<script type="mountobserver" id=myMountObserver  onmount="
+<script type="mountobserver" id=myMountObserver  onmount="{
    const {matchingElement} = event;
    const {localName} = matchingElement;
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
    observer.disconnect();
-">
+}">
 {
    "on":"my-element",
    "import": [
@@ -136,7 +136,7 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 </script>
 ```
 
-The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the ith "on" selector) would be accessible as properties of the script element:
+The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the i<sup>th</sup> "on" selector) would be accessible as properties of the script element:
 
 ```JavaScript
 const {modules, observer, mountedElements, mountInit} = myMountObserver;
@@ -144,7 +144,7 @@ const {modules, observer, mountedElements, mountInit} = myMountObserver;
 
 The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
-No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the on criteria can be an array of selectors.
+No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the "on" criteria can be an array of selectors.
 
 ## Shadow Root inheritance
 
@@ -729,7 +729,7 @@ Often, we will want to define a large number of "mount observer script elements 
 
 This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with, and is used as an example for this section, to simply make things more concrete.  But we can certainly envision other "frameworks" that could leverage this feature for a variety of purposes, including other families of behaviors/enhancements, or "binding from a distance" syntaxes.  
 
-In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of the DOM filtering ability that the MountObserver provides, that "ties the knot" based on CSS matches in the DOM to behaviors/enhancements that we want to attach directly onto the matching elements.  *be-hive* seeks to take advantage of the inheritable infrastructure that MOSEs provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically, only expecting manual intervention when we need some special customizations within a specific ShadowDOM scope.
+In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of the DOM filtering ability that the MountObserver provides, that "ties the knot" based on CSS matches in the DOM to behaviors/enhancements that we want to attach directly onto the matching elements.  *be-hive* seeks to take advantage of the inheritable infrastructure that MOSEs provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically, only expecting manual intervention when we need some special customizations within a specific ShadowDOM realm.
 
 To support this, we propose these highlights:
 
@@ -759,7 +759,7 @@ Without the help of the synthesize method / Synthesizer base class, the develope
 The developer of each package defines their MOSE "template", and then syndicates it via the synthesize method:
 
 ```JavaScript
-mountObserver.synthesize(rootNode, BeHive, mose)
+mountObserver.synthesize(root: document | shadowRootNode, ctr:  ({new() => Synthesizer}), mose: MOSE)
 ```
 
 What this method does is it:
@@ -779,7 +779,7 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 
 ```html
 <be-hive>
-   <script type=mountobserver id=be-hive-be-searching>
+   <script type=mountobserver id=be-hive.be-searching>
       {
          ...my custom settings
       }
