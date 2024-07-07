@@ -31,6 +31,8 @@ export class Synthesizer extends HTMLElement {
         this.inherit();
     }
     activate(mose) {
+        if (this.hasAttribute('passthrough'))
+            return;
         const { init, do: d, id } = mose;
         const mi = {
             do: d,

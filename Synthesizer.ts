@@ -37,6 +37,7 @@ export abstract class Synthesizer extends HTMLElement{
     }
 
     activate(mose: MOSE){
+        if(this.hasAttribute('passthrough')) return;
         const {init, do: d, id} = mose;
         const mi: MountInit = {
             do: d,

@@ -230,7 +230,7 @@ const observer = new MountObserver({
       exit: ...,
       forget: ...,
    }
-})
+});
 ```
 
 Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance. 
@@ -736,7 +736,8 @@ To support this, we propose these highlights:
 1.  Adding a static "synthesize" method to the MountObserver api.  This would provide a kind of passage-way from the imperative api to the declarative one.  
 2.  As the *synthesize* method is called repeatedly from different packages that work within that framework, it creates a cluster of MOSEs wrapped inside the "synthesizing" custom element ("be-hive") that the framework developer authors.  It appends script elements with type="mountobserver" to the custom element instance sitting in the DOM, that dispatches events from the synthesizing custom element it gets appended to, so subscribers in child Shadow DOM's don't need to add a general mutation observer in order to know when parent shadow roots had a MOSE inserted that it needs to act on.  This allows the child Shadow DOM's to inherit (in this case) behaviors/enhancements from the parent Shadow DOM.
 
-So framework developers can develop a bespoke custom element that inherits from the class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObservers together.  
+So framework developers can develop a bespoke custom element that inherits from the "abstract" class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObserver's together.  So this proposal is advocating for a platform provided "abstract" custom element that can be (gasp) extended. 
+ 
 
 What functionality do these "synthesizing" custom elements provide, what value-add proposition do they fulfill over what is built into the MountObserver polyfill / package?
 
