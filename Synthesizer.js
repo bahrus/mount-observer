@@ -34,6 +34,16 @@ export class Synthesizer extends HTMLElement {
         if (this.hasAttribute('passthrough'))
             return;
         const { init, do: d, id } = mose;
+        if (this.hasAttribute('include')) {
+            const split = this.getAttribute('include').split(' ');
+            if (!split.includes(id))
+                return;
+        }
+        if (this.hasAttribute('exclude')) {
+            const split = this.getAttribute('exclude').split(' ');
+            if (split.includes(id))
+                return;
+        }
         const mi = {
             do: d,
             ...init
