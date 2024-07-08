@@ -32,17 +32,17 @@ export class Synthesizer extends HTMLElement {
     }
     activate(mose) {
         if (this.hasAttribute('passthrough'))
-            return;
+            return { mode: 'passthrough' };
         const { init, do: d, id } = mose;
         if (this.hasAttribute('include')) {
             const split = this.getAttribute('include').split(' ');
             if (!split.includes(id))
-                return;
+                return { mode: 'exclude' };
         }
         if (this.hasAttribute('exclude')) {
             const split = this.getAttribute('exclude').split(' ');
             if (split.includes(id))
-                return;
+                return { mode: 'exclude' };
         }
         const mi = {
             do: d,
@@ -51,6 +51,7 @@ export class Synthesizer extends HTMLElement {
         const mo = new MountObserver(mi);
         mose.observer = mo;
         mo.observe(this.getRootNode());
+        return { mode: 'active' };
     }
     import(mose) {
         const { init, do: d, id, synConfig } = mose;

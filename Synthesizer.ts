@@ -1,4 +1,4 @@
-import {MountInit, MOSE} from './types';
+import {MountInit, MOSE, ActivateResponse} from './types';
 import {MountObserver} from './MountObserver.js';
 
 export abstract class Synthesizer extends HTMLElement{
@@ -36,16 +36,16 @@ export abstract class Synthesizer extends HTMLElement{
         this.inherit();
     }
 
-    activate(mose: MOSE){
-        if(this.hasAttribute('passthrough')) return;
+    activate(mose: MOSE) : ActivateResponse{
+        if(this.hasAttribute('passthrough')) return {mode: 'passthrough'};
         const {init, do: d, id} = mose;
         if(this.hasAttribute('include')){
             const split = this.getAttribute('include')!.split(' ');
-            if(!split.includes(id)) return;
+            if(!split.includes(id)) return {mode: 'exclude'};
         }
         if(this.hasAttribute('exclude')){
             const split = this.getAttribute('exclude')!.split(' ');
-            if(split.includes(id)) return;
+            if(split.includes(id)) return {mode: 'exclude'};
         }
         
         const mi: MountInit = {
@@ -55,6 +55,7 @@ export abstract class Synthesizer extends HTMLElement{
         const mo = new MountObserver(mi);
         mose.observer = mo;
         mo.observe(this.getRootNode());
+        return {mode: 'active'};
     }
 
     import(mose: MOSE){
