@@ -36,18 +36,23 @@ export abstract class Synthesizer extends HTMLElement{
         this.inherit();
     }
 
-    activate(mose: MOSE) : ActivateResponse{
-        if(this.hasAttribute('passthrough')) return {mode: 'passthrough'};
-        const {init, do: d, id} = mose;
+    checkIfAllowed(mose: MOSE){
+        if(this.hasAttribute('passthrough')) return false;
+        const {id} = mose;
         if(this.hasAttribute('include')){
             const split = this.getAttribute('include')!.split(' ');
-            if(!split.includes(id)) return {mode: 'exclude'};
+            if(!split.includes(id)) return false;
         }
         if(this.hasAttribute('exclude')){
             const split = this.getAttribute('exclude')!.split(' ');
-            if(split.includes(id)) return {mode: 'exclude'};
+            if(split.includes(id)) return false;
         }
-        
+        return true;
+    }
+
+    activate(mose: MOSE){
+        if(!this.checkIfAllowed(mose)) return;
+        const {init, do: d} = mose;
         const mi: MountInit = {
             do: d,
             ...init

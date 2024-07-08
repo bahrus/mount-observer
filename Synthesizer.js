@@ -30,20 +30,26 @@ export class Synthesizer extends HTMLElement {
         this.#mutationObserver.observe(this, init);
         this.inherit();
     }
-    activate(mose) {
+    checkIfAllowed(mose) {
         if (this.hasAttribute('passthrough'))
-            return { mode: 'passthrough' };
-        const { init, do: d, id } = mose;
+            return false;
+        const { id } = mose;
         if (this.hasAttribute('include')) {
             const split = this.getAttribute('include').split(' ');
             if (!split.includes(id))
-                return { mode: 'exclude' };
+                return false;
         }
         if (this.hasAttribute('exclude')) {
             const split = this.getAttribute('exclude').split(' ');
             if (split.includes(id))
-                return { mode: 'exclude' };
+                return false;
         }
+        return true;
+    }
+    activate(mose) {
+        if (!this.checkIfAllowed(mose))
+            return;
+        const { init, do: d } = mose;
         const mi = {
             do: d,
             ...init
