@@ -736,9 +736,9 @@ To support this, we propose these highlights:
 1.  Adding a static "synthesize" method to the MountObserver api.  This would provide a kind of passage-way from the imperative api to the declarative one.  
 2.  As the *synthesize* method is called repeatedly from different packages that work within that framework, it creates a cluster of MOSEs wrapped inside the "synthesizing" custom element ("be-hive") that the framework developer authors.  It appends script elements with type="mountobserver" to the custom element instance sitting in the DOM, that dispatches events from the synthesizing custom element it gets appended to, so subscribers in child Shadow DOM's don't need to add a general mutation observer in order to know when parent shadow roots had a MOSE inserted that it needs to act on.  This allows the child Shadow DOM's to inherit (in this case) behaviors/enhancements from the parent Shadow DOM.
 
-So framework developers can develop a bespoke custom element that inherits from the "abstract" class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObserver's together.  
+So framework developers can develop a bespoke custom element that inherits from the "abstract" class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObserver's together. 
 
-Some attributes that the base "Synthesizer" support.  They are all tied to allow individual ShadowDOM realms to be able to easily opt in or opt out, depending on the level of control/trust that is exerted by a web component / Shadow Root, as far as the HTML it imports in. 
+Some attributes that the base "Synthesizer" supports are listed below.  They are all related to allowing individual ShadowDOM realms to be able to easily opt in or opt out, depending on the level of control/trust that is exerted by a web component / Shadow Root, as far as the HTML it imports in. 
 
 1.  passthrough.  Allows for the inheritance of behaviors to flow through from above (or from the root document), while not actually activating any of them within the Shadow DOM realm itself.
 2.  exclude.  List of specific MOSE id's to block.  Allows them to flow through to child Shadow Roots.
