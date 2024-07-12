@@ -1,4 +1,4 @@
-import {MountInit, MOSE, ActivateResponse} from './types';
+import {MountInit, MOSE} from './types';
 import {MountObserver} from './MountObserver.js';
 
 export abstract class Synthesizer extends HTMLElement{
@@ -60,7 +60,6 @@ export abstract class Synthesizer extends HTMLElement{
         const mo = new MountObserver(mi);
         mose.observer = mo;
         mo.observe(this.getRootNode());
-        return {mode: 'active'};
     }
 
     import(mose: MOSE){

@@ -194,9 +194,7 @@ export interface MOSE<TSynConfig=any>
     extends HTMLScriptElement, MOSEAddedProps<TSynConfig>{
 
 }
-// export interface ActivateResponse {
-//     mode: 'active' | 'passthrough' | 'exclude'
-// }
+
 //#endregion
 
 

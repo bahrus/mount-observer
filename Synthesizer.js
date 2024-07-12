@@ -57,7 +57,6 @@ export class Synthesizer extends HTMLElement {
         const mo = new MountObserver(mi);
         mose.observer = mo;
         mo.observe(this.getRootNode());
-        return { mode: 'active' };
     }
     import(mose) {
         const { init, do: d, id, synConfig } = mose;
