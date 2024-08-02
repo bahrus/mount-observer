@@ -10,9 +10,9 @@ export interface JSONSerializableMountInit{
 
 }
 
-export interface ObservedSourceOfTruthAttribute  {
+export interface ObservedSourceOfTruthAttribute<TProps = any>  {
     name: string,
-    mapsTo?: string,
+    mapsTo?: keyof TProps & string,
     valIfNull?: any,
     valIfFalsy?: any,
     instanceOf?: any,
