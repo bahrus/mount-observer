@@ -11,7 +11,11 @@
   "exports": {
     ".": "./MountObserver.js",
     "./MountObserver.js": "./MountObserver.js",
-    "./Synthesizer.js": "./Synthesizer.js"
+    "./Synthesizer.js": "./Synthesizer.js",
+    "./types.d.ts": {
+      "default":"./MountObserver.js",
+      "types": "./types.d.ts"
+    }
   },
   "files": [
     "*.js",
