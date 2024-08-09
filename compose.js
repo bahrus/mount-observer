@@ -68,7 +68,6 @@ export async function compose(self, el, level) {
         }
         el.dispatchEvent(new LoadEvent(clone));
     }
-    const hasItemscope = el.hasAttribute('itemscope');
     if (level === 0) {
         const childRefs = [];
         for (const child of clone.children) {
@@ -87,7 +86,7 @@ export async function compose(self, el, level) {
     else {
         el.after(clone);
     }
-    if (level !== 0 || (slots.length === 0 && !hasItemscope))
+    if (level !== 0 || (slots.length === 0 && !el.hasAttribute('itemscope')))
         el.remove();
 }
 export class LoadEvent extends Event {

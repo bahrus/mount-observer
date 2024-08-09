@@ -76,7 +76,6 @@ export async function compose(
         }
         el.dispatchEvent(new LoadEvent(clone));
     }
-    const hasItemscope = el.hasAttribute('itemscope');
     if(level === 0){
         const childRefs: Array<WeakRef<Element>> = [];
         for(const child of clone.children){
@@ -93,7 +92,7 @@ export async function compose(
         el.after(clone);
     }
 
-    if(level !== 0 || (slots.length === 0 && !hasItemscope)) el.remove();
+    if(level !== 0 || (slots.length === 0 && !el.hasAttribute('itemscope'))) el.remove();
 
 }
 
