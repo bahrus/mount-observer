@@ -1,7 +1,11 @@
-import { ILoadEvent, loadEventName } from './types';
+import { ILoadEvent, loadEventName } from './types.js';
 import { MountObserver, inclTemplQry } from './MountObserver.js';
 
-export async function birtualizeMatch(self: MountObserver, el: HTMLTemplateElement, level: number){
+export async function compose(
+    self: MountObserver, 
+    el: HTMLTemplateElement, 
+    level: number
+){
         
     const src = el.getAttribute('src');
     el.removeAttribute('src');
@@ -30,7 +34,7 @@ export async function birtualizeMatch(self: MountObserver, el: HTMLTemplateEleme
             target.remove();
         }
     }
-    await self.birtualizeFragment(clone, level + 1);
+    await self.composeFragment(clone, level + 1);
     const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
     if(shadowRootModeOnLoad === null && level === 0){
         
@@ -70,7 +74,7 @@ export async function birtualizeMatch(self: MountObserver, el: HTMLTemplateEleme
         }
         el.dispatchEvent(new LoadEvent(clone));
     }
-    
+
     if(shadowRootModeOnLoad !== null){
         const parent = el.parentElement;
         if(parent === null) throw 404;

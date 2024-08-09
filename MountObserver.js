@@ -48,15 +48,15 @@ export class MountObserver extends EventTarget {
         this.#calculatedSelector = calculatedSelector;
         return this.#calculatedSelector;
     }
-    async birtualizeFragment(fragment, level) {
+    async composeFragment(fragment, level) {
         const bis = fragment.querySelectorAll(inclTemplQry);
         for (const bi of bis) {
-            await this.#birtalizeMatch(bi, level);
+            await this.#compose(bi, level);
         }
     }
-    async #birtalizeMatch(el, level) {
-        const { birtualizeMatch } = await import('./birtualizeMatch.js');
-        await birtualizeMatch(this, el, level);
+    async #compose(el, level) {
+        const { compose } = await import('./compose.js');
+        await compose(this, el, level);
     }
     #templLookUp = new Map();
     findByID(id, fragment) {
@@ -348,13 +348,13 @@ export class MountObserver extends EventTarget {
         });
         for (const elToMount of elsToMount) {
             if (elToMount.matches(inclTemplQry)) {
-                await this.#birtalizeMatch(elToMount, 0);
+                await this.#compose(elToMount, 0);
             }
         }
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
-        await this.birtualizeFragment(within, 0);
+        await this.composeFragment(within, 0);
         const els = Array.from(within.querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }

@@ -1,5 +1,5 @@
 import { inclTemplQry } from './MountObserver.js';
-export async function birtualizeMatch(self, el, level) {
+export async function compose(self, el, level) {
     const src = el.getAttribute('src');
     el.removeAttribute('src');
     const templID = src.substring(1);
@@ -28,7 +28,7 @@ export async function birtualizeMatch(self, el, level) {
             target.remove();
         }
     }
-    await self.birtualizeFragment(clone, level + 1);
+    await self.composeFragment(clone, level + 1);
     const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad');
     if (shadowRootModeOnLoad === null && level === 0) {
         const slotMap = el.getAttribute('slotmap');

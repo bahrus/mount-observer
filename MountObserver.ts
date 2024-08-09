@@ -58,16 +58,16 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return this.#calculatedSelector;
     }
 
-    async birtualizeFragment(fragment: DocumentFragment, level: number){
+    async composeFragment(fragment: DocumentFragment, level: number){
         const bis = fragment.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
-            await this.#birtalizeMatch(bi, level);
+            await this.#compose(bi, level);
         }
     }
 
-    async #birtalizeMatch(el: HTMLTemplateElement, level: number){
-        const {birtualizeMatch} = await import('./birtualizeMatch.js');
-        await birtualizeMatch(this, el, level);
+    async #compose(el: HTMLTemplateElement, level: number){
+        const {compose} = await import('./compose.js');
+        await compose(this, el, level);
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
     findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
@@ -363,14 +363,14 @@ export class MountObserver extends EventTarget implements IMountObserver{
         });
         for(const elToMount of elsToMount){
             if(elToMount.matches(inclTemplQry)){
-                await this.#birtalizeMatch(elToMount as HTMLTemplateElement, 0)
+                await this.#compose(elToMount as HTMLTemplateElement, 0)
             }
         }
         this.#mount(elsToMount, initializing);
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        await this.birtualizeFragment(within as DocumentFragment, 0);
+        await this.composeFragment(within as DocumentFragment, 0);
         const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }

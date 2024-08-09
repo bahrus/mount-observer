@@ -9,12 +9,17 @@
     "may-it-serve": "0.0.8"
   },
   "exports": {
-    ".": "./MountObserver.js",
-    "./MountObserver.js": "./MountObserver.js",
-    "./Synthesizer.js": "./Synthesizer.js",
-    "./types.d.ts": {
+    ".": {
       "default": "./MountObserver.js",
-      "types": "./types.d.ts"
+      "types": "./MountObserver.ts"
+    },
+    "./MountObserver.js":  {
+      "default": "./MountObserver.js",
+      "types": "./MountObserver.ts"
+    },
+    "./Synthesizer.js": {
+      "default": "./Synthesizer.js",
+      "types": "./Synthesizer.ts"
     }
   },
   "files": [
