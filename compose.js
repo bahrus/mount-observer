@@ -78,7 +78,7 @@ export async function compose(self, el, level) {
     else {
         el.after(clone);
     }
-    if (level !== 0 || slots.length === 0)
+    if (level !== 0 || (slots.length === 0 && !el.hasAttribute('itemscope')))
         el.remove();
 }
 export class LoadEvent extends Event {
