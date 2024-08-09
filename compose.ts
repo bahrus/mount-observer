@@ -83,16 +83,17 @@ export async function compose(
         }
         (<any>el)[guid] = childRefs;
     }
-    if(shadowRootModeOnLoad !== null){
-        const parent = el.parentElement;
-        if(parent === null) throw 404;
-        if(parent.shadowRoot === null) parent.attachShadow({mode: shadowRootModeOnLoad});
-        parent.shadowRoot?.append(clone);
-    }else{
-        el.after(clone);
+    if(!el.hasAttribute('itemscope')){
+        if(shadowRootModeOnLoad !== null){
+            const parent = el.parentElement;
+            if(parent === null) throw 404;
+            if(parent.shadowRoot === null) parent.attachShadow({mode: shadowRootModeOnLoad});
+            parent.shadowRoot?.append(clone);
+        }else{
+            el.after(clone);
+        }
     }
-
-    if(level !== 0 || (slots.length === 0 && !el.hasAttribute('itemscope'))) el.remove();
+    if(level !== 0 || (slots.length === 0 && el.attributes.length === 0)) el.remove();
 
 }
 
