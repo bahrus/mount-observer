@@ -75,6 +75,8 @@ export async function compose(self, el, level) {
         }
         el[guid] = childRefs;
     }
+    //if template has attribute, assume want to do some data binding before instantiating into
+    //DOM fragment.
     if (!el.hasAttribute('itemscope')) {
         if (shadowRootModeOnLoad !== null) {
             const parent = el.parentElement;
