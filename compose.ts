@@ -1,6 +1,8 @@
 import { ILoadEvent, loadEventName } from './types.js';
 import { MountObserver, inclTemplQry } from './MountObserver.js';
 
+export const guid = Symbol.for('Wr0WPVh84k+O93miuENdMA');
+
 export async function compose(
     self: MountObserver, 
     el: HTMLTemplateElement, 
@@ -74,7 +76,15 @@ export async function compose(
         }
         el.dispatchEvent(new LoadEvent(clone));
     }
-
+    const hasItemscope = el.hasAttribute('itemscope');
+    if(hasItemscope && level === 0){
+        //maybe we should always do this?
+        const childRefs: Array<WeakRef<Element>> = [];
+        for(const child of clone.children){
+            childRefs.push(new WeakRef(child));
+        }
+        (<any>el)[guid] = childRefs;
+    }
     if(shadowRootModeOnLoad !== null){
         const parent = el.parentElement;
         if(parent === null) throw 404;
@@ -83,8 +93,8 @@ export async function compose(
     }else{
         el.after(clone);
     }
-    
-    if(level !== 0 || (slots.length === 0 && !el.hasAttribute('itemscope'))) el.remove();
+
+    if(level !== 0 || (slots.length === 0 && !hasItemscope)) el.remove();
 
 }
 

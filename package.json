@@ -20,6 +20,10 @@
     "./Synthesizer.js": {
       "default": "./Synthesizer.js",
       "types": "./Synthesizer.ts"
+    },
+    "./compose.js": {
+      "default": "./compose.js",
+      "types": "./compose.ts"
     }
   },
   "files": [

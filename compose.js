@@ -1,4 +1,5 @@
 import { inclTemplQry } from './MountObserver.js';
+export const guid = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export async function compose(self, el, level) {
     const src = el.getAttribute('src');
     el.removeAttribute('src');
@@ -67,6 +68,15 @@ export async function compose(self, el, level) {
         }
         el.dispatchEvent(new LoadEvent(clone));
     }
+    const hasItemscope = el.hasAttribute('itemscope');
+    if (hasItemscope && level === 0) {
+        //maybe we should always do this?
+        const childRefs = [];
+        for (const child of clone.children) {
+            childRefs.push(new WeakRef(child));
+        }
+        el[guid] = childRefs;
+    }
     if (shadowRootModeOnLoad !== null) {
         const parent = el.parentElement;
         if (parent === null)
@@ -78,7 +88,7 @@ export async function compose(self, el, level) {
     else {
         el.after(clone);
     }
-    if (level !== 0 || (slots.length === 0 && !el.hasAttribute('itemscope')))
+    if (level !== 0 || (slots.length === 0 && !hasItemscope))
         el.remove();
 }
 export class LoadEvent extends Event {
