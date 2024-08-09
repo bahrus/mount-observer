@@ -77,8 +77,7 @@ export async function compose(
         el.dispatchEvent(new LoadEvent(clone));
     }
     const hasItemscope = el.hasAttribute('itemscope');
-    if(hasItemscope && level === 0){
-        //maybe we should always do this?
+    if(level === 0){
         const childRefs: Array<WeakRef<Element>> = [];
         for(const child of clone.children){
             childRefs.push(new WeakRef(child));
