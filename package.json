@@ -5,8 +5,8 @@
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "devDependencies": {
-    "@playwright/test": "1.44.1",
-    "may-it-serve": "0.0.6"
+    "@playwright/test": "1.46.0",
+    "may-it-serve": "0.0.8"
   },
   "exports": {
     ".": "./MountObserver.js",
