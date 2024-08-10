@@ -2,6 +2,9 @@ import { inclTemplQry } from './MountObserver.js';
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
 export async function compose(self, el, level) {
+    if (!el.hasAttribute('src')) {
+        return;
+    }
     const src = el.getAttribute('src');
     el.removeAttribute('src');
     const templID = src.substring(1);

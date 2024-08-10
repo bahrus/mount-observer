@@ -66,6 +66,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #compose(el: HTMLTemplateElement, level: number){
+        if(!el.hasAttribute('src')){
+            return;
+        }
         const {compose} = await import('./compose.js');
         await compose(this, el, level);
     }

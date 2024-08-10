@@ -55,6 +55,9 @@ export class MountObserver extends EventTarget {
         }
     }
     async #compose(el, level) {
+        if (!el.hasAttribute('src')) {
+            return;
+        }
         const { compose } = await import('./compose.js');
         await compose(this, el, level);
     }

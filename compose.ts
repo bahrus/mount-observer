@@ -9,7 +9,9 @@ export async function compose(
     el: HTMLTemplateElement, 
     level: number
 ){
-        
+    if(!el.hasAttribute('src')){
+        return;
+    }
     const src = el.getAttribute('src');
     el.removeAttribute('src');
     const templID = src!.substring(1);
