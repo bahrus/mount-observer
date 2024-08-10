@@ -1,5 +1,5 @@
 import { inclTemplQry } from './MountObserver.js';
-export const childRefs = Symbol.for('Wr0WPVh84k+O93miuENdMA');
+export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
 export async function compose(self, el, level) {
     const src = el.getAttribute('src');
@@ -74,7 +74,7 @@ export async function compose(self, el, level) {
         for (const child of clone.children) {
             refs.push(new WeakRef(child));
         }
-        el[childRefs] = refs;
+        el[childRefsKey] = refs;
     }
     //if template has itemscope attribute, assume want to do some data binding before instantiating into
     //DOM fragment.
