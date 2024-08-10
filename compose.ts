@@ -77,7 +77,7 @@ export async function compose(
             }
             slot.removeAttribute('slot');
         }
-        el.dispatchEvent(new LoadEvent(clone));
+        
     }
     if(level === 0){
         const refs: Array<WeakRef<Element>> = [];
@@ -102,6 +102,10 @@ export async function compose(
             el.after(clone);
         }
     }
+    if(level === 0){
+        el.dispatchEvent(new LoadEvent(clone));
+    }
+    
     if(!cloneStashed){
         if(level !== 0 || (slots.length === 0 && el.attributes.length === 0)) el.remove();
     }

@@ -70,7 +70,6 @@ export async function compose(self, el, level) {
             }
             slot.removeAttribute('slot');
         }
-        el.dispatchEvent(new LoadEvent(clone));
     }
     if (level === 0) {
         const refs = [];
@@ -98,6 +97,9 @@ export async function compose(self, el, level) {
         else {
             el.after(clone);
         }
+    }
+    if (level === 0) {
+        el.dispatchEvent(new LoadEvent(clone));
     }
     if (!cloneStashed) {
         if (level !== 0 || (slots.length === 0 && el.attributes.length === 0))
