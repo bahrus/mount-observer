@@ -1,4 +1,4 @@
-import { ILoadEvent, loadEventName } from './types.js';
+import { ILoadEvent, loadEventName } from './ts-refs/mount-observer/types';
 import { MountObserver, inclTemplQry } from './MountObserver.js';
 
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');

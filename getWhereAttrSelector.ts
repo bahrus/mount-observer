@@ -1,4 +1,4 @@
-import {AttrParts, RootCnfg, WhereAttr} from './types';
+import {AttrParts, RootCnfg, WhereAttr} from './ts-refs/mount-observer/types';
 export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string){
     const {hasBase, hasBranchIn, hasRootIn} = whereAttr;
 

@@ -3,9 +3,9 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
     AttrParts,
     MOSE
-} from './types';
+} from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
-export {MOSE} from './types';
+export {MOSE} from './ts-refs/mount-observer/types';
 
 const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();

@@ -1,4 +1,4 @@
-import {mutationEventName, AddMutationEventListener} from './types';
+import {mutationEventName, AddMutationEventListener} from './ts-refs/mount-observer/types';
 
 export class RootMutObs extends EventTarget{
     constructor(rootNode: Node ){

@@ -30,7 +30,7 @@
     "*.js",
     "types.d.ts"
   ],
-  "types": "types.d.ts",
+  "types": "./ts-refs/mount-observer/types.d.ts",
   "scripts": {
     "serve": "node node_modules/may-it-serve",
     "test": "playwright test",

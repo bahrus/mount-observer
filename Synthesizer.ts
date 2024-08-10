@@ -1,4 +1,4 @@
-import {MountInit, MOSE} from './types';
+import {MountInit, MOSE} from './ts-refs/mount-observer/types';
 import {MountObserver} from './MountObserver.js';
 
 export abstract class Synthesizer extends HTMLElement{
