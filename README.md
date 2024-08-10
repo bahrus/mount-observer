@@ -793,3 +793,5 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 </be-hive>
 ```
 
+[TODO]  Support MOSEs that only cover the closest itemscope to which it belongs?  Donut hole scoping css support
+
