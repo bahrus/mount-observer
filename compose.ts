@@ -1,7 +1,8 @@
 import { ILoadEvent, loadEventName } from './types.js';
 import { MountObserver, inclTemplQry } from './MountObserver.js';
 
-export const guid = Symbol.for('Wr0WPVh84k+O93miuENdMA');
+export const childRefs = Symbol.for('Wr0WPVh84k+O93miuENdMA');
+export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
 
 export async function compose(
     self: MountObserver, 
@@ -77,15 +78,19 @@ export async function compose(
         el.dispatchEvent(new LoadEvent(clone));
     }
     if(level === 0){
-        const childRefs: Array<WeakRef<Element>> = [];
+        const refs: Array<WeakRef<Element>> = [];
         for(const child of clone.children){
-            childRefs.push(new WeakRef(child));
+            refs.push(new WeakRef(child));
         }
-        (<any>el)[guid] = childRefs;
+        (<any>el)[childRefs] = refs;
     }
-    //if template has attribute, assume want to do some data binding before instantiating into
+    //if template has itemscope attribute, assume want to do some data binding before instantiating into
     //DOM fragment.
-    if(!el.hasAttribute('itemscope')){
+    let cloneStashed = false;
+    if(el.hasAttribute('itemscope')){
+        (<any>el)[cloneKey] = clone;
+        cloneStashed = true;
+    }else{
         if(shadowRootModeOnLoad !== null){
             const parent = el.parentElement;
             if(parent === null) throw 404;
@@ -95,7 +100,9 @@ export async function compose(
             el.after(clone);
         }
     }
-    if(level !== 0 || (slots.length === 0 && el.attributes.length === 0)) el.remove();
+    if(!cloneStashed){
+        if(level !== 0 || (slots.length === 0 && el.attributes.length === 0)) el.remove();
+    }
 
 }
 
