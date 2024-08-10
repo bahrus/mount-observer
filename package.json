@@ -28,7 +28,8 @@
   },
   "files": [
     "*.js",
-    "types.d.ts"
+    "*.ts",
+    "./ts-refs/*"
   ],
   "types": "./ts-refs/mount-observer/types.d.ts",
   "scripts": {
