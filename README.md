@@ -147,7 +147,7 @@ The "scope" of the observer would be the ShadowRoot containing the script elemen
 No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the "on" criteria can be an array of selectors.
 
 > [!Note]
-> To support the event handler above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via string concatenation operator. 
+> To support the event handler above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator. 
 
 ## Shadow Root inheritance
 
@@ -768,7 +768,7 @@ Without the help of the synthesize method / Synthesizer base class, the develope
 The developer of each package defines their MOSE "template", and then syndicates it via the synthesize method:
 
 ```JavaScript
-mountObserver.synthesize(root: document | shadowRootNode, ctr:  ({new() => Synthesizer}), mose: MOSE)
+MountObserver.synthesize(root: document | shadowRootNode, ctr:  ({new() => Synthesizer}), mose: MOSE)
 ```
 
 What this method does is it:
