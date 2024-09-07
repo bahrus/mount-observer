@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-6-11
+Last Update: 2024-9-6
 
 ## Benefits of this API
 
@@ -145,6 +145,9 @@ const {modules, observer, mountedElements, mountInit} = myMountObserver;
 The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
 No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the "on" criteria can be an array of selectors.
+
+> [!Note]
+> To support the event handler above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via string concatenation operator. 
 
 ## Shadow Root inheritance
 
