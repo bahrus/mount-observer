@@ -136,7 +136,7 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 </script>
 ```
 
-The onload event is critical for a number of reasons, among them we need a way to inject non JSON serializable settings (described below) when necessary.
+
 
 The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the i<sup>th</sup> "on" selector) would be accessible as properties of the script element:
 
@@ -149,7 +149,12 @@ The "scope" of the observer would be the ShadowRoot containing the script elemen
 No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the "on" criteria can be an array of selectors.
 
 > [!Note]
-> To support the event handler above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
+> To support the event handlers above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
+
+> [!Note]
+> The onload event is critical for a number of reasons, among them:
+> 1. We need a way to inject non JSON serializable settings (described below) when necessary, and 
+> 2. We need a way to override settings in child Shadow DOM's programmatically in some cases.
 
 
 
@@ -788,7 +793,7 @@ Then in our shadowroot, rather than adding a script type=mountobserver for every
 <be-hive></be-hive>
 ```
 
-And we can give each inheriting ShadowRoot a personality of its own by customizing the settings within that shadow scope, by (manually?) adding a MOSE with matching id that overrides the inheriting settings with custom settings:
+And we can give each inheriting ShadowRoot a personality of its own by customizing the settings within that shadow scope, by manually adding a MOSE with matching id that overrides the inheriting settings with custom settings:
 
 ```html
 <be-hive>
@@ -800,5 +805,5 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 </be-hive>
 ```
 
-[TODO]  Support MOSEs that only cover the closest itemscope to which it belongs?  Donut hole scoping css support
+
 
