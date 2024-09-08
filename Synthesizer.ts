@@ -119,3 +119,11 @@ export class SynthesizeEvent extends Event{
       super(SynthesizeEvent.eventName);
     }
 }
+
+export class LoadEvent extends Event {
+    static eventName = 'load';
+
+    constructor(){
+        super(LoadEvent.eventName);
+    }
+}
