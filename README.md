@@ -136,8 +136,6 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 </script>
 ```
 
-
-
 The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the i<sup>th</sup> "on" selector) would be accessible as properties of the script element:
 
 ```JavaScript
@@ -150,11 +148,6 @@ No arrays of settings would be supported within a single tag (as this causes iss
 
 > [!Note]
 > To support the event handlers above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
-
-> [!Note]
-> The onload event is critical for a number of reasons, among them:
-> 1. We need a way to inject non JSON serializable settings (described below) when necessary, and 
-> 2. We need a way to override settings in child Shadow DOM's programmatically in some cases.
 
 
 
@@ -174,6 +167,11 @@ Inside a shadow root, we can plop a script element, also with type "mountobserve
 If no id is found in the parent ShadowRoot (or in the parent window if the shadow root is at the top level), then this becomes a new set of rules to observe.
 
 But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
+
+> [!Note]
+> The onload event is critical for a number of reasons, among them:
+> 1. We need a way to inject non JSON serializable settings (described below) when necessary, and 
+> 2. We need a way to override settings in child Shadow DOM's programmatically in some cases.
 
 We will come back to some important [additional features](#creating-frameworks-that-revolve-around-moses) of using these script elements later, but first we want to cover the highlights of this proposal, in order to give more context as to what kinds of functionality these MOSEs can provide.
 
