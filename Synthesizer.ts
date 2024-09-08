@@ -30,6 +30,7 @@ export abstract class Synthesizer extends HTMLElement{
         this.querySelectorAll('script[type="mountobserver"]').forEach(s => {
             const mose = s as MOSE;
             this.mountObserverElements.push(mose);
+            mose.dispatchEvent(new LoadEvent());
             this.activate(mose);
         })
         this.#mutationObserver = new MutationObserver(this.mutationCallback.bind(this));
