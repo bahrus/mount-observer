@@ -13,7 +13,6 @@ export abstract class Synthesizer extends HTMLElement{
                 if(!(node instanceof HTMLScriptElement) || node.type !== 'mountobserver') continue;
                 const mose = node as MOSE;
                 this.mountObserverElements.push(mose);
-                mose.dispatchEvent(new LoadEvent());
                 this.activate(mose);
                 const e = new SynthesizeEvent(mose);
                 this.dispatchEvent(e);
@@ -30,9 +29,8 @@ export abstract class Synthesizer extends HTMLElement{
         this.querySelectorAll('script[type="mountobserver"]').forEach(s => {
             const mose = s as MOSE;
             this.mountObserverElements.push(mose);
-            mose.dispatchEvent(new LoadEvent());
             this.activate(mose);
-        })
+        });
         this.#mutationObserver = new MutationObserver(this.mutationCallback.bind(this));
         this.#mutationObserver.observe(this, init);
         this.inherit();
@@ -54,6 +52,7 @@ export abstract class Synthesizer extends HTMLElement{
 
     activate(mose: MOSE){
         if(!this.checkIfAllowed(mose)) return;
+        mose.dispatchEvent(new LoadEvent());
         const {init, do: d} = mose;
         const mi: MountInit = {
             do: d,
