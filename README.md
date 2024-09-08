@@ -760,6 +760,7 @@ The sky is the limit, but focusing on the first example, be-hive, they are:
 
 1.  Managing, interpreting and parsing the attributes that add semantic enhancement vocabularies onto exiting elements.
 2.  Establishing the "handshake" that imports the enhancement package, instantiates the enhancement, and passes properties that were previously assigned to the pre-enhanced element to the attached enhancement/behavior.
+3.  Providing an inheritable "registry" of reusable scriptlets that can be leveraged in a declarative way.
 
 If one inspects the DOM, one will see grouped (already "parsed") MOSEs, like so:
 
