@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-9-6
+Last Update: 2024-9-7
 
 ## Benefits of this API
 
@@ -118,7 +118,7 @@ This proposal would also include support for JSON and HTML module imports.
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
 ```html
-<script type="mountobserver" id=myMountObserver  onmount="{
+<script type="mountobserver" id=myMountObserver onload="{...}"  onmount="{
    const {matchingElement} = event;
    const {localName} = matchingElement;
    if(!customElements.get(localName)) {
@@ -136,6 +136,8 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 </script>
 ```
 
+The onload event is critical for a number of reasons, among them we need a way to inject non JSON serializable settings (described below) when necessary.
+
 The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the i<sup>th</sup> "on" selector) would be accessible as properties of the script element:
 
 ```JavaScript
@@ -147,7 +149,9 @@ The "scope" of the observer would be the ShadowRoot containing the script elemen
 No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the "on" criteria can be an array of selectors.
 
 > [!Note]
-> To support the event handler above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator. 
+> To support the event handler above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
+
+
 
 ## Shadow Root inheritance
 
