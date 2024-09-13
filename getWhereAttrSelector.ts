@@ -2,7 +2,7 @@ import {AttrParts, RootCnfg, WhereAttr} from './ts-refs/mount-observer/types';
 export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: string){
     const {hasBase, hasBranchIn, hasRootIn} = whereAttr;
 
-    const fullListOfAttrs: Array<string> = [];
+    let fullListOfAttrs: Array<string> = [];
     const partitionedAttrs: Array<AttrParts> = [];
     if(hasBase !== undefined){
         const hasRootInGuaranteed: Array<RootCnfg> = hasRootIn || [{
@@ -80,8 +80,8 @@ export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: s
         }
     }
 
-
-    const listOfSelectors = Array.from(new Set(fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`)));
+    fullListOfAttrs = Array.from(new Set(fullListOfAttrs));
+    const listOfSelectors = fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`);
     console.log({listOfSelectors});
     const calculatedSelector = listOfSelectors.join(',');
     return {

@@ -1,6 +1,6 @@
 export async function getWhereAttrSelector(whereAttr, withoutAttrs) {
     const { hasBase, hasBranchIn, hasRootIn } = whereAttr;
-    const fullListOfAttrs = [];
+    let fullListOfAttrs = [];
     const partitionedAttrs = [];
     if (hasBase !== undefined) {
         const hasRootInGuaranteed = hasRootIn || [{
@@ -72,7 +72,8 @@ export async function getWhereAttrSelector(whereAttr, withoutAttrs) {
             }
         }
     }
-    const listOfSelectors = Array.from(new Set(fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`)));
+    fullListOfAttrs = Array.from(new Set(fullListOfAttrs));
+    const listOfSelectors = fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`);
     console.log({ listOfSelectors });
     const calculatedSelector = listOfSelectors.join(',');
     return {
