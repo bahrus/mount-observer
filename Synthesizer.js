@@ -49,6 +49,7 @@ export class Synthesizer extends HTMLElement {
     activate(mose) {
         if (!this.checkIfAllowed(mose))
             return;
+        mose.dispatchEvent(new LoadEvent());
         const { init, do: d } = mose;
         const mi = {
             do: d,
@@ -114,5 +115,11 @@ export class SynthesizeEvent extends Event {
     constructor(mountObserverElement) {
         super(SynthesizeEvent.eventName);
         this.mountObserverElement = mountObserverElement;
+    }
+}
+export class LoadEvent extends Event {
+    static eventName = 'load';
+    constructor() {
+        super(LoadEvent.eventName);
     }
 }

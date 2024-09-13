@@ -8,7 +8,7 @@ export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: s
         const hasRootInGuaranteed: Array<RootCnfg> = hasRootIn || [{
             start: '',
             context: 'Both'
-        } as RootCnfg]
+        } as RootCnfg];
         
         let prefixLessMatches: Array<{
             rootToBaseDelimiter: string,
@@ -81,7 +81,8 @@ export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: s
     }
 
 
-    const listOfSelectors = fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`);
+    const listOfSelectors = Array.from(new Set(fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`)));
+    console.log({listOfSelectors});
     const calculatedSelector = listOfSelectors.join(',');
     return {
         fullListOfAttrs,
