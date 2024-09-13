@@ -82,7 +82,6 @@ export async function getWhereAttrSelector(whereAttr: WhereAttr, withoutAttrs: s
 
     fullListOfAttrs = Array.from(new Set(fullListOfAttrs));
     const listOfSelectors = fullListOfAttrs.map(s => `${withoutAttrs}[${s}]`);
-    console.log({listOfSelectors});
     const calculatedSelector = listOfSelectors.join(',');
     return {
         fullListOfAttrs,
