@@ -66,7 +66,7 @@ export class Synthesizer extends HTMLElement {
         se.init = { ...init };
         se.id = id;
         se.do = { ...d };
-        se.synConfig = { ...synConfig };
+        se.synConfig = synConfig;
         this.appendChild(se);
     }
     inherit() {
