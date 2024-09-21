@@ -78,7 +78,7 @@ const observer = new MountObserver({
         observer.disconnectedSignal.abort();
       },
    },
-   disconnectedSignal(): AbortSignal
+   disconnectedSignal: new AbortController().signal
 });
 observer.observe(document);
 ```
@@ -111,7 +111,7 @@ const observer = new MountObserver({
         if(!customElements.get(localName)) {
             customElements.define(localName, modules[1].MyElement);
         }
-        observer.disconnect();
+        observer.disconnectedSignal.abort();
       }
    }
 });
@@ -137,7 +137,7 @@ Following an approach similar to the [speculation api](https://developer.chrome.
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
-   observer.disconnect();
+   observer.disconnectedSignal.abort();
 }">
 {
    "on":"my-element",
