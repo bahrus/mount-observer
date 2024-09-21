@@ -21,6 +21,20 @@ What follows is a far more ambitious alternative to the [lazy custom element pro
 
 The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [this one](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [that one](https://github.com/whatwg/dom/issues/1225).
 
+Most every web application can be recursively broken down into logical regions, building blocks which are assembled together to form the whole site.
+
+At the most micro level, utilizing highly reusable, generic custom elements -- elements that can extend the HTML vocabulary, elements that could be incorporated into the browser, even -- form a great foundation to build on.
+
+But as one zooms out from the micro to the macro, the nature of the components changes in significant ways.
+
+At the micro level, components will have few, if any, dependencies, and those dependencies will tend to be quite stable, and likely all be used. The dependencies will skew more towards tightly coupled utility libraries.
+
+"Macro" level components will tend to be heavy on business-domain specific data, heavy on gluing / orchestrating smaller components, light on difficult, esoteric JavaScript. They aren't confined to static JS files, and likely will include dynamic content as well. They will also be heavy on conditional sections of the application only loading if requested by the user.
+
+ES module based web components may or may not be the best fit for these application macro "modules". A better fit might be a server-centric solution, like Rails, just to take an example.
+
+A significant pain point has to do with loading all the third-party web components and/or (progressive) enhancements that these macro components / compositions require, and loading them into memory only when needed.
+
 
 ### Does this api make the impossible possible?
 
@@ -61,16 +75,15 @@ const observer = new MountObserver({
         if(!customElements.get(localName)) {
             customElements.define(localName, modules[0].MyElement);
         }
-        observer.disconnect();
-      }
-   }
+        observer.disconnectedSignal.abort();
+      },
+   },
+   disconnectedSignal(): AbortSignal
 });
 observer.observe(document);
 ```
 
-Invoking "disconnect" as shown above causes the observer to emit event "disconnectedCallback".
-
-The argument can also be an array of objects that fit the pattern shown above.
+The constructor argument can also be an array of objects that fit the pattern shown above.
 
 In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
 
