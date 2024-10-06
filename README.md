@@ -19,7 +19,7 @@ What follows is a far more ambitious alternative to the [lazy custom element pro
 
 ["Binding from a distance"](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc, to the HTML as it streams in.  Libraries that take this approach include [Corset](https://corset.dev/) and [trans-render](https://github.com/bahrus/trans-render).  The concept has been promoted by a [number](https://bkardell.com/blog/CSSLike.html) [of](https://www.w3.org/TR/NOTE-AS)  [prominent](https://www.xanthir.com/blog/b4K_0) voices in the community. 
 
-The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [this one](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [that one](https://github.com/whatwg/dom/issues/1225).
+The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [a selector observor](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
 
 Most every web application can be recursively broken down into logical regions, building blocks which are assembled together to form the whole site.
 
@@ -126,6 +126,37 @@ Previously, this proposal called for allowing arrow functions as well, thinking 
 
 This proposal would also include support for JSON and HTML module imports. 
 
+## Preemptive downloading
+
+There are two significant steps to imports, each of which imposes a cost:  
+
+1.  Downloading the resource.
+2.  Loading the resource into memory.
+
+What if we want to download the resource ahead of time, but only load into memory when needed?
+
+The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
+
+So for this we add option:
+
+```JavaScript
+const observer = new MountObserver({
+   on: 'my-element',
+   loadingEagerness: 'eager',
+   import: './my-element.js',
+   do:{
+      mount: (matchingElement, {modules}) => customElements.define(modules[0].MyElement)
+   }
+})
+```
+
+So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
+
+> [!NOTE]
+> As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
+
+
+
 ## Mount Observer Script Elements (MOSEs)
 
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
@@ -187,6 +218,7 @@ But if a matching id is found, then the values from the parent script element ge
 > 2. We need a way to override settings in child Shadow DOM's programmatically in some cases.
 
 We will come back to some important [additional features](#creating-frameworks-that-revolve-around-moses) of using these script elements later, but first we want to cover the highlights of this proposal, in order to give more context as to what kinds of functionality these MOSEs can provide.
+
 
 ## Binding from a distance
 
@@ -321,7 +353,7 @@ So the dismount event should provide a "checklist" of all the conditions, and th
 ```JavaScript
 mediaMatches: true,
 containerMatches: true,
-satisifiesCustomCondition: true,
+satisfiesCustomCondition: true,
 whereLangIn: ['en-GB'],
 whereConnection:{
    effectiveTypeMatches: true
@@ -586,7 +618,16 @@ Possibly some libraries may prefer to mix it up a bit:
 </div>
 ```
 
-To support such syntax, specify the delimiter thusly:
+An example of this in the real world can be found with [HTMX](https://htmx.org/docs/#hx-on):
+
+```html
+<button hx-post="/example"
+        hx-on:htmx:config-request="event.detail.parameters.example = 'Hello Scripting!'">
+    Post Me!
+</button>
+```
+
+To support such syntax, specify the delimiters thusly:
 
 ```JavaScript
 const mo = new MountObserver({
@@ -615,34 +656,6 @@ Tentative rules:
 The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
 
 
-## Preemptive downloading
-
-There are two significant steps to imports, each of which imposes a cost:  
-
-1.  Downloading the resource.
-2.  Loading the resource into memory.
-
-What if we want to download the resource ahead of time, but only load into memory when needed?
-
-The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
-
-So for this we add option:
-
-```JavaScript
-const observer = new MountObserver({
-   on: 'my-element',
-   loadingEagerness: 'eager',
-   import: './my-element.js',
-   do:{
-      mount: (matchingElement, {modules}) => customElements.define(modules[0].MyElement)
-   }
-})
-```
-
-So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
-
-> [!NOTE]
-> As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
 
 ## Intra document html imports
 
