@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: 2024-9-21
+Last Update: Oct 6, 2024
 
 ## Benefits of this API
 
