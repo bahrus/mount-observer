@@ -343,6 +343,8 @@ If an element that is in "mounted" state according to a MountObserver instance i
 5)  If the new place it was added remains within the original rootNode and remains mounted, the MountObserver instance dispatches event "reconfirmed".
 6)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount". 
 
+Some of the events above are subject to change depending on the outcome of the [atomic moving](https://github.com/whatwg/dom/issues/1255) proposal.
+
 ## Dismounting
 
 In many cases, it will be critical to inform the developer **why** the element no longer satisfies all the criteria.  For example, we may be using an intersection observer, and when we've scrolled away from view, we can "shut down" until the element is (nearly) scrolled back into view.  We may also be displaying things differently depending on the network speed.  How we should respond when one of the original conditions, but not the other, no longer applies, is of paramount importance.
