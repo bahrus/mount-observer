@@ -118,7 +118,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-Once again, the key can accept either a single import and it can also support multiple imports (via an array).
+Once again, the key can accept either a single import, but alternatively it can also support multiple imports (via an array).
 
 The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 

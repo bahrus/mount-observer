@@ -43,6 +43,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #attrParts: Array<AttrParts> | undefined;
     
     #fullListOfEnhancementAttrs: Array<string> | undefined;
+    get observedAttrs(){
+        return this.#fullListOfEnhancementAttrs;
+    }
     //get #attrVals
     async #selector() : Promise<string>{
         if(this.#calculatedSelector !== undefined) return this.#calculatedSelector;
