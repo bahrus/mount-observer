@@ -667,12 +667,12 @@ const observedAttributes = await mo.observedAttrs();
 
 ## Resolving ambiguity
 
-Because we want the multiple root values (enh-*, data-enh-*, *) to be treated as equivalent, from a developer point of view, we have a possible ambiguity -- what if more than one root is present for the same base, branch and leaf?  Which value trumps the others?
+Because we want the multiple root values (enh-*, data-enh-*, *) to be treated as equivalent, from a developer point of view, we have a possible ambiguity -- what if more than one root is present for the same base, branch and leaf?  Which value prevails over the others?
 
 Tentative rules:
 
 1.  Roots must differ in length.
-2.  If one value is null (attribute not present) and the other a string, the one with the string value trumps.
+2.  If one value is null (attribute not present) and the other a string, the one with the string value prevails.
 3.  If two or more equivalent attributes have string values, the one with the longer root prevails.
 
 The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
@@ -780,6 +780,8 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 ```
 
 The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
+
+The [add src attribute to <template> to load a template from file](https://github.com/whatwg/html/issues/10571) and an interesting proposal that is [coming from Microsoft](https://github.com/htmlcomponents/declarative-shadow-imports/blob/main/examples/02-explainer-proposal/02-html.html) seem quite compatible with this idea, especially ideas related to joining multiple shared templates together.
 
 ## Creating "frameworks" that revolve around MOSEs.
 
