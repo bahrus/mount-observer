@@ -194,7 +194,6 @@ No arrays of settings would be supported within a single tag (as this causes iss
 > To support the event handlers above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
 
 
-
 ## Shadow Root inheritance
 
 Inside a shadow root, we can plop a script element, also with type "mountobserver", optionally giving it the same id as above:
@@ -403,9 +402,9 @@ I think in the vast majority of cases, setting the property values corresponding
 Usually, there are no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value associated with the property is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
   
 
-2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM scopes, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes."
+2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM realms, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes."
 
-We want our api to be able to distinguish between these two, and to be able to combine both types in one mount observer instance.
+We want our api to be able to distinguish between these two, and to be able to combine both types in one mount observer instance's set of observed attributes.
 
 > [!NOTE]
 > The most important reason for pointing out this distinction is this:  "Source of Truth" attributes will only be *observed*, and will **not** trigger mount/unmount states unless they are part of the "on" selector string. And unlike all the other "where" conditions this proposal supports, the where clauses for the "Enhancement Attributes" are "one-way" -- they trigger a "mount" event / callback, followed by the ability to observe the stream of changes (including removal of those attributes), but they never trigger a "dismount". 
@@ -641,6 +640,29 @@ const mo = new MountObserver({
       }
    }
 });
+```
+
+## Supporting userland security protections
+
+As we saw with the HTMX example above, element enhancement libraries that (progressively) enhance server rendered HTML are finding it necessary to support inline event handling.  Since the platform has provided no support for hashing built-in event handlers, there's no real advantage for these libraries to utilize the built-in event handlers, so might as well create bespoke event handlers, which unfortunately might not be detected by browser security mechanisms (perhaps at least some of these libraries only enable that functionality after confirming no such CSP rules are in place).  This reminds me of the plausible (but probably not universally held) belief that illegalizing relatively safe recreational drugs like marijuana pushes the illegal market to gravitate towards drugs which have more "bang for the buck", which are considerably less safe, hence causes more harm than good.
+
+I am personally pursuing a [userland implementation of CSP tailored for attributes](https://github.com/bahrus/be-hashing-out).  What I'm finding necessary to support this is a way to quickly determine *the full list of* attributes a particular enhancement is monitoring for.
+
+Thus the mountObserver does provide that information to the consumer as well:
+
+```JavaScript
+const mo = new MountObserver({
+   on: '*',
+   whereAttr:{
+      hasRootIn: ['data', 'enh', 'data-enh'],
+      hasBase: ['-', 'my-enhancement'],
+      hasBranchIn: [':', ['first-aspect', 'second-aspect', '']],
+      hasLeafIn: {
+         'first-aspect': ['--', ['wow-this-is-deep', 'have-you-considered-using-json-for-this']],
+      }
+   }
+});
+const observedAttributes = await mo.observedAttrs();
 ```
 
 ## Resolving ambiguity

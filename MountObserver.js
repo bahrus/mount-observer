@@ -32,7 +32,8 @@ export class MountObserver extends EventTarget {
     #calculatedSelector;
     #attrParts;
     #fullListOfEnhancementAttrs;
-    get observedAttrs() {
+    async observedAttrs() {
+        await this.#selector();
         return this.#fullListOfEnhancementAttrs;
     }
     //get #attrVals
