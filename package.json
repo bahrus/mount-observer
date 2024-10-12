@@ -5,8 +5,8 @@
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "devDependencies": {
-    "@playwright/test": "1.46.0",
-    "may-it-serve": "0.0.8"
+    "@playwright/test": "1.48.0",
+    "ssi-server": "0.0.1"
   },
   "exports": {
     ".": {
@@ -33,9 +33,9 @@
   ],
   "types": "./ts-refs/mount-observer/types.d.ts",
   "scripts": {
-    "serve": "node node_modules/may-it-serve",
+    "serve": "python3 ./node_modules/ssi-server/ssi_server.py",
     "test": "playwright test",
-    "safari": "npx playwright wk http://localhost:3030",
+    "safari": "npx playwright wk http://localhost:8000",
     "update": "ncu -u && npm install"
   },
   "author": "",
