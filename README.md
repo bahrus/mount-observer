@@ -162,7 +162,7 @@ So what this does is only check for the presence of an element with tag name "my
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
 ```html
-<script type="mountobserver" id=myMountObserver onload="{...}"  onmount="{
+<script type="mountobserver" onload="{...}"  onmount="{
    const {matchingElement} = event;
    const {localName} = matchingElement;
    if(!customElements.get(localName)) {
