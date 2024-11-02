@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: Oct 6, 2024
+Last Update: Nov 2, 2024
 
 ## Benefits of this API
 
@@ -192,6 +192,33 @@ Once again, arrays of settings could be supported, which, in practice, would gre
 
 > [!Note]
 > To support the event handlers above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
+
+## Specific solution for lazy loading custom element definitions
+
+Since the example we've been dwelling on so far (lazy custom element definition) seems like such a pressing, common requirement, and was in fact the originating impetus for this proposal, we can go a step further and make the example above 100% declarative, thus resulting in a less clunky interplay between JSON and custom script.  This is meant as a way of illustrating how the platform could continue to extend this proposal going forward.
+
+The syntax below is just one, "spit-balling" way this could be done, as an example, and would require absorbing final heuristics from other custom element initiatives (such as declarative custom elements) when they get added to the platform.
+
+```html
+<script type="mountobserver">
+{
+   "on":"my-element",
+   "import": [
+      ["./my-element-small.css", {type: "css"}],
+      "./my-element.js",
+   ],
+   "define": {
+      "targetRegistry": "CustomElement",
+      "targetScope": "global",
+      "styleModules": [0],
+      "classDefinition": {
+         "module": 1,
+         "exportSymbol": 'MyElement'
+      }
+   }
+}
+</script>
+```
 
 
 ## Shadow Root inheritance
