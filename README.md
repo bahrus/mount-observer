@@ -208,7 +208,7 @@ The syntax below is just one, "spit-balling" way this could be done, as an examp
       "./my-element.js",
    ],
    "define": {
-      "targetRegistry": "CustomElement",
+      "targetRegistry": "CustomElements",
       "targetScope": "global",
       "styleModules": [0],
       "classDefinition": {
