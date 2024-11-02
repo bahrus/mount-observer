@@ -188,7 +188,7 @@ const {modules, observer, mountedElements, mountInit} = myMountObserver;
 
 The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
 
-No arrays of settings would be supported within a single tag (as this causes issues as far as supporting a single onmount, ondismount, etc event attributes), but remember that the "on" criteria can be an array of selectors.
+Once again, arrays of settings could be supported, which, in practice, would greatly increase the ratio between declarative, JSON-parsable instructions that could be performed in low-level c++/rust threads, vs custom JavaScript in the example above.  The events / callbacks would need to provide the index of which set of criteria was just fulfilled.
 
 > [!Note]
 > To support the event handlers above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
