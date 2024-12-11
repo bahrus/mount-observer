@@ -19,7 +19,9 @@ What follows is a far more ambitious alternative to the [lazy custom element pro
 
 ["Binding from a distance"](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc, to the HTML as it streams in.  Libraries that take this approach include [Corset](https://corset.dev/) and [trans-render](https://github.com/bahrus/trans-render).  The concept has been promoted by a [number](https://bkardell.com/blog/CSSLike.html) [of](https://www.w3.org/TR/NOTE-AS)  [prominent](https://www.xanthir.com/blog/b4K_0) voices in the community. 
 
-The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [a selector observor](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
+The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [a selector observer](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
+
+### Finite Element Analysis
 
 Most every web application can be recursively broken down into logical regions, building blocks which are assembled together to form the whole site.
 
@@ -320,9 +322,9 @@ Callbacks like we see above are useful for tight coupling, and probably are unma
 
 ## InstanceOf checks in detail
 
-Carving out the special check for "whereInstanceOf" is provided based on the assumption that there's a performance benefit to doing so (if not, the developer could just add that check inside the "whereInstanceOf' logic).  For built-in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable (and thus easy to include in the mount observer script element JSON payload).  I don't think there would be any ambiguity in doing so, which means it could be part of the low-level check list that could be done within the c++/rust code / thread.
+Carving out the special check for "whereInstanceOf" is provided based on the assumption that there's a performance benefit to doing so. If not, the developer could just add that check inside the "whereSatisfies' logic.  For built-in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable (and thus easy to include in the mount observer script element JSON payload).  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
-The picture becomes murkier for custom elements.  The best solution for them seems to be to utilize customElement.getName(...) as a basis for the match, but that would  preclude being able to use base classes which a family of custom elements subclass.  I suppose the solution for this issue, when warranted, is to define a custom element for the subclass, and thus assigning it a name in applicable ShadowDOM scopes, even though it isn't actually necessarily used for any live custom elements.
+The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElement.getName(...) as a basis for the match, but that would  preclude being able to use base classes, which a family of custom elements subclass, if that subclass isn't itself a custom element.  I suppose the solution for this issue, when warranted, is simply to burden the developer with defining a custom element for the subclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each super class, which might not always be all that high as a percentage, compared to the base class.
 
 ## Event equivalent of whereSatisfies
 
