@@ -33,7 +33,7 @@ At the micro level, components will have few, if any, dependencies, and those de
 
 ES module based web components may or may not be the best fit for these application macro "modules". A better fit might be a server-centric solution, like Rails, just to take an example.
 
-A significant pain point has to do with loading all the third-party web components and/or (progressive) enhancements that these macro components / compositions require, and loading them into memory only when needed.
+A significant pain point has to do with downloading all the third-party web components and/or (progressive) enhancements that these macro components / compositions require, and loading them into memory only when needed.
 
 
 ### Does this api make the impossible possible?
