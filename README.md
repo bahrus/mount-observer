@@ -293,7 +293,7 @@ const observer = new MountObserver({
    on: 'div > p + p ~ span[class$="name"]',
    whereMediaMatches: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
-   whereInstanceOf: [HTMLMarqueeElement],
+   whereInstanceOf: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
    whereSatisfies: async (matchingElement, context) => true,
    whereLangIn: ['en-GB'],
    whereConnection:{
@@ -306,7 +306,9 @@ const observer = new MountObserver({
       },
       dismount: ...,
       disconnect: ...,
+      move: ...,
       reconnect: ...,
+      confirm: ...,
       reconfirm: ...,
       exit: ...,
       forget: ...,
@@ -314,7 +316,13 @@ const observer = new MountObserver({
 });
 ```
 
-Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance. 
+Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance.
+
+## InstanceOf checks in detail
+
+Carving out the special check for "whereInstanceOf" is provided based on the assumption that there's a performance benefit to doing so (if not, the developer could just add that check inside the "whereInstanceOf' logic).  For built in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable (and thus easy to include in the mount observer script element JSON payload).  I don't think there would be any ambiguity in doing so, which means it could be part of the low-level check list that could be done within the c++/rust code / thread.
+
+The picture becomes murkier for custom elements.  The best solution for them seems to be to utilize customElement.getName(...) as a basis for the match, but that would  preclude being able to use base classes which a family of custom elements subclass.  I suppose the solution to that is to define a custom element for the subclass, and thus assigning it a name in applicable ShadowDOM scopes, even though it isn't actually used for real custom elements.
 
 <!--
 
@@ -339,6 +347,9 @@ observer.addEventListener('dismount', e => {
   ...
 });
 observer.addEventListener('disconnect', e => {
+  ...
+});
+observer.addEventListener('move', e => {
   ...
 });
 observer.addEventListener('reconnect', e => {
