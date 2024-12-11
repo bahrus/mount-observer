@@ -320,9 +320,17 @@ Callbacks like we see above are useful for tight coupling, and probably are unma
 
 ## InstanceOf checks in detail
 
-Carving out the special check for "whereInstanceOf" is provided based on the assumption that there's a performance benefit to doing so (if not, the developer could just add that check inside the "whereInstanceOf' logic).  For built in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable (and thus easy to include in the mount observer script element JSON payload).  I don't think there would be any ambiguity in doing so, which means it could be part of the low-level check list that could be done within the c++/rust code / thread.
+Carving out the special check for "whereInstanceOf" is provided based on the assumption that there's a performance benefit to doing so (if not, the developer could just add that check inside the "whereInstanceOf' logic).  For built-in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable (and thus easy to include in the mount observer script element JSON payload).  I don't think there would be any ambiguity in doing so, which means it could be part of the low-level check list that could be done within the c++/rust code / thread.
 
-The picture becomes murkier for custom elements.  The best solution for them seems to be to utilize customElement.getName(...) as a basis for the match, but that would  preclude being able to use base classes which a family of custom elements subclass.  I suppose the solution to that is to define a custom element for the subclass, and thus assigning it a name in applicable ShadowDOM scopes, even though it isn't actually used for real custom elements.
+The picture becomes murkier for custom elements.  The best solution for them seems to be to utilize customElement.getName(...) as a basis for the match, but that would  preclude being able to use base classes which a family of custom elements subclass.  I suppose the solution for this issue, when warranted, is to define a custom element for the subclass, and thus assigning it a name in applicable ShadowDOM scopes, even though it isn't actually necessarily used for any live custom elements.
+
+## Event equivalent of whereSatisfies
+
+As mentioned earlier, there's probably nothing as fast as a direct method call as far as interfacing with custom code.
+
+However, I think @doeixd raises a good point about the desirability of making this check also be possible via event subscribing, which is the purpose of the "confirm" event above mentioned above.
+
+I would think that in most cases, the efficiency argument would suggest that should be the final, last check before mounting, as it would tend to be the most expensive.  However, it may be the case that some checks listed above, or that might be added in the future, may be more expensive than surfacing up to the JavaScript thread.  If that is the case, then the whereSatisfies method/confirm event should be called prior to those extra expensive checks.   I'm on the fence whether it would be better to use a single word that covers both, vs confirm/whereSatisfies?  
 
 <!--
 
