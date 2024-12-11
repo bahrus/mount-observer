@@ -345,6 +345,9 @@ However, since these rules may be of interest to multiple parties, it is useful 
 Subscribing can be done via:
 
 ```JavaScript
+observer.addEventListener('confirm', e => {
+  e.isSatisfied = true;
+});
 observer.addEventListener('mount', e => {
   console.log({
       matchingElement: e.matchingElement, 
