@@ -342,7 +342,7 @@ Subscribing can be done via:
 
 ```JavaScript
 observer.addEventListener('confirm', e => {
-  e.isSatisfied = true;
+  e.isSatisfied = true; //or false to prevent the mount event below
 });
 observer.addEventListener('mount', e => {
   console.log({
