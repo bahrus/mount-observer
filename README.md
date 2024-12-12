@@ -746,6 +746,16 @@ This proposal "sneaks in" one more feature, that perhaps should stand separately
 
 Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter, i.e. found somewhere [in the document tree structure](https://github.com/tc39/proposal-module-expressions)?
 
+The need for importing templates by id is also demonstrated by Corset's [Todo list example](https://codepen.io/matthewp/details/ZEXpJYr):
+
+```CSS
+#todos {
+   each-items: ${todos};
+   each-template: select(#todo-template);
+   each-key: title;
+}
+```
+
 The mount-observer is always on the lookout for template tags with a src attribute starting with #:
 
 ```html
