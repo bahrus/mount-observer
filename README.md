@@ -321,17 +321,13 @@ const observer = new MountObserver({
 });
 ```
 
-Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance.
-
-If the performance isn't impacted, I think it would be most convenient for the developer if the second argument of the callbacks is actually an event whose structure matches the events discussed below.
-
 ## InstanceOf checks in detail
 
-Carving out the special check for the "whereInstanceOf" check is provided based on the assumption that there's a performance benefit to doing so. If not, the developer could just add that check inside the "confirm" callback logic.  For built-in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable (and thus easy to include in the mount observer script element JSON payload).  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
+Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic.  For built-in elements, we can alternatively provide the string name, as indicated in the comment, which certainly makes it JSON serializable, thus easy to include in the mount observer script element JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
-The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElement.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes, which a family of custom elements subclass, if that subclass isn't itself a custom element.  I suppose the solution for this issue, when warranted, is simply to burden the developer with defining a custom element for the subclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each super class, which might not always be all that high as a percentage, compared to the base class.
+The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElement.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that subclass isn't itself a custom element.  I suppose the solution for this issue, when warranted, is simply to burden the developer with defining a custom element for the subclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each super class, which might not always be all that high as a percentage, compared to the base class.
 
-However, where this support for "whereInstanceOf" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to layer functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the custom enhancement would greatly benefit, as it could allow for lazy loading of the full enhancement based on the element types it is capable of enhancing. 
+However, where this support for "whereInstanceOf" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to layer some heavy lifting functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the entire custom enhancement based on the presence of a member of the familty of custom elements, would provide a significant benefit. Because now it allows for lazy loading of the full enhancement based on the element types it is capable of enhancing. 
  
 
 <!--
@@ -339,6 +335,12 @@ However, where this support for "whereInstanceOf" would be *most* helpful is whe
 [TODO] Maybe should also (optionally?) pass back which checks failed and which succeeded on dismount.  Not sure I really see a use case for it, but leaving the thought here for now 
 
 --> 
+
+## Justification for callbacks and discussion of the signature
+
+Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance.
+
+If the performance isn't impacted, I think it would be most convenient for the developer if the second argument of the callbacks are actually events whose structure match the loosely coupled events discussed below.  If so, the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate argument where the matching element is passed, as opposed to simply making it part of the event payload as is done for the loosely coupled events discussed below.  I'm on the fence with that one.  Providing it as a separate parameter makes the ergonomics a tiny bit smoother as far as dynamically ascertaining the name of the element (i.e. destructuring requires one more step).
 
 However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
 
