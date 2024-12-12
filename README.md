@@ -305,7 +305,7 @@ const observer = new MountObserver({
       confirm: (matchingElement, (e: MountObserverConfirmEvent) => {
          e.isSatisfied = true;
          e.preventDefault();
-      })
+      }),
       mount: ({localName}, {modules}) => {
         ...
       },
@@ -325,7 +325,7 @@ const observer = new MountObserver({
 
 Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic.  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
-The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that subclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the subclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each super class, which might not always be all that high as a percentage, compared to the base class.
+The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that subclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each super class, which might not always be all that high as a percentage, compared to the base class.
 
 However, where this support for "whereInstanceOf" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to lazily layer some heavy lifting functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the *entire custom **enhancement***, based on the presence in the DOM of a member of the family of custom elements, would, if my calculations are correct, result in providing a significant benefit. 
  
@@ -398,7 +398,7 @@ However, since these rules may be of interest to multiple parties, it is useful 
 
 If the performance isn't impacted, I think it would be most convenient for the developer if, at a minimum, the second argument of the callbacks above in fact precisely match the loosely coupled events.  The callback would get the first dibs on the event, and have the opportunity to prevent the event from going any further before getting dispatched, using something like preventDefault. I don't yet have any compelling use cases for that scenario, but I think there probably are some.
 
-In which case the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate parameter where the matching element is passed is unwise. Simply making the matching element be part of the event payload, as is done for the loosely coupled events discussed below, would reduce the learning curve, and make it easier to share logic between the two.  
+In which case the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate parameter where the matching element is passed is unwise. Simply making the matching element be part of the event payload, as is done for the loosely coupled events discussed above, would reduce the learning curve, and make it easier to share logic between the two.  
 
 On the other hand, providing the matching element as a separate parameter makes the ergonomics a tiny bit smoother as far as dynamically ascertaining the local name and other properties of the element (i.e. destructuring requires one more step for lazily defining the custom element).  
 
