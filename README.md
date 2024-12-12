@@ -396,13 +396,13 @@ Callbacks like we saw in our earlier examples above are useful for tight couplin
 
 However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these DOM filtering events.
 
-If the performance isn't impacted, I think it would be most convenient for the developer if, at a minimum, the second argument of the callbacks above are actually in fact precisely match the loosely coupled events.  The callback would get the first dibs on the event, and have the opportunity to prevent the event from going any further before getting dispatched. I don't yet have any compelling use cases for that scenario, but I think there probably are some.
+If the performance isn't impacted, I think it would be most convenient for the developer if, at a minimum, the second argument of the callbacks above in fact precisely match the loosely coupled events.  The callback would get the first dibs on the event, and have the opportunity to prevent the event from going any further before getting dispatched, using something like preventDefault. I don't yet have any compelling use cases for that scenario, but I think there probably are some.
 
-In which case the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate argument where the matching element is passed is unwise. Simply making the matching element be part of the event payload, as is done for the loosely coupled events discussed below, would reduce the learning curve, and make it easier to share logic between the two.  
+In which case the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate parameter where the matching element is passed is unwise. Simply making the matching element be part of the event payload, as is done for the loosely coupled events discussed below, would reduce the learning curve, and make it easier to share logic between the two.  
 
-On the other hand, providing the matching element as a separate parameter makes the ergonomics a tiny bit smoother as far as dynamically ascertaining the name of the element (i.e. destructuring requires one more step for lazily defining the custom element).  
+On the other hand, providing the matching element as a separate parameter makes the ergonomics a tiny bit smoother as far as dynamically ascertaining the local name and other properties of the element (i.e. destructuring requires one more step for lazily defining the custom element).  
 
-I'm on the fence on that one.   I think the benefits either way to DX are so small, that performance metrics should dictate which way to go.
+I'm on the fence on that one.   I think the benefits either way to DX are so small, that performance metrics should probably dictate which way to go.
 
 ## Dismounting
 
