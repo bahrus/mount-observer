@@ -336,14 +336,6 @@ However, where this support for "whereInstanceOf" would be *most* helpful is whe
 
 --> 
 
-## Justification for callbacks and discussion of the signature
-
-Callbacks like we see above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could also be a (stateful) user defined class instance.
-
-If the performance isn't impacted, I think it would be most convenient for the developer if the second argument of the callbacks are actually events whose structure match the loosely coupled events discussed below.  If so, the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate argument where the matching element is passed, as opposed to simply making it part of the event payload as is done for the loosely coupled events discussed below.  I'm on the fence on that one.  Providing it as a separate parameter makes the ergonomics a tiny bit smoother as far as dynamically ascertaining the name of the element (i.e. destructuring requires one more step for lazily defining the custom element).  I think the benefits either way, that performance metrics should dictate which way to go.
-
-However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these css rules.  This can be done via:
-
 ## Subscribing
 
 Subscribing can be done via:
@@ -397,6 +389,20 @@ If an element that is in "mounted" state according to a MountObserver instance i
 6)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount". 
 
 Some of the events above are subject to change depending on the outcome of the [atomic moving](https://github.com/whatwg/dom/issues/1255) proposal.
+
+## Justification for callbacks as well as events, and discussion of the signature
+
+Callbacks like we saw in our earlier examples above are useful for tight coupling, and probably are unmatched in terms of performance.  The expression that the "do" field points to could in fact be a (stateful) user defined class instance.
+
+However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these DOM filtering events.
+
+If the performance isn't impacted, I think it would be most convenient for the developer if, at a minimum, the second argument of the callbacks above are actually in fact precisely match the loosely coupled events.  The callback would get the first dibs on the event, and have the opportunity to prevent the event from going any further before getting dispatched. I don't yet have any compelling use cases for that scenario, but I think there probably are some.
+
+In which case the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate argument where the matching element is passed is unwise. Simply making the matching element be part of the event payload, as is done for the loosely coupled events discussed below, would reduce the learning curve, and make it easier to share logic between the two.  
+
+On the other hand, providing the matching element as a separate parameter makes the ergonomics a tiny bit smoother as far as dynamically ascertaining the name of the element (i.e. destructuring requires one more step for lazily defining the custom element).  
+
+I'm on the fence on that one.   I think the benefits either way to DX are so small, that performance metrics should dictate which way to go.
 
 ## Dismounting
 
