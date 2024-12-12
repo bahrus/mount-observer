@@ -381,14 +381,14 @@ The moment a MountObserver instance's "observe" method is called (passing in a r
 
 If an element that is in "mounted" state according to a MountObserver instance is moved from one parent DOM element to another:
 
-1)  "disconnect" event is dispatched from the MountObserver instance the moment the mounted element is disconnected from the DOM fragment.
+1)  "disconnect" event is dispatched from the MountObserver instance the moment the mounted element is disconnected from the DOM fragment (but not if employing the experimental but promising atomic moving API).
 2)  If/when the element is added somewhere else in the DOM tree, the mountObserver instance will dispatch event "reconnect", regardless of where. [Note:  can't polyfill this very easily]
 3)  If the mounted element is added outside the rootNode being observed, the mountObserver instance will dispatch event "exit", and the MountObserver instance will relinquish any further responsibility for this element.  
 4)  Ideally event "forget" would be dispatched just before the platform garbage collects an element the MountObserver instance is still monitoring, after all hard references are relinquished (or is that self-contradictory?).
 5)  If the new place it was added remains within the original rootNode and remains mounted, the MountObserver instance dispatches event "reconfirmed".
 6)  If the element no longer satisfies the criteria of the MountObserver instance, the MountObserver instance will dispatch event "dismount". 
 
-Some of the events above are subject to change depending on the outcome of the [atomic moving](https://github.com/whatwg/dom/issues/1255) proposal.
+The move event would become available at the outset of the [atomic moving](https://github.com/whatwg/dom/issues/1255) proposal getting shipped universally.
 
 ## Justification for callbacks as well as events, and discussion of the signature
 
