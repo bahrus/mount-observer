@@ -25,7 +25,10 @@ export class MountObserver extends EventTarget {
             throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();
-        this.mountedElements = new WeakSet();
+        this.mountedElements = {
+            weakSet: new WeakSet(),
+            setWeak: new Set(),
+        };
         this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
@@ -218,10 +221,14 @@ export class MountObserver extends EventTarget {
         const alreadyMounted = await this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount;
         const { import: imp } = this.#mountInit;
+        const me = this.mountedElements;
         for (const match of matching) {
             if (alreadyMounted.has(match))
                 continue;
-            this.mountedElements.add(match);
+            if (!me.weakSet.has(match)) {
+                me.setWeak.add(new WeakRef(match));
+                me.weakSet.add(match);
+            }
             if (imp !== undefined) {
                 switch (typeof imp) {
                     case 'string':

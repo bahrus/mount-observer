@@ -2,7 +2,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
     AttrParts,
-    MOSE
+    MOSE, WeakDual
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 export {MOSE} from './ts-refs/mount-observer/types';
@@ -14,7 +14,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #mountInit: MountInit;
     //#rootMutObs: RootMutObs | undefined;
     #abortController: AbortController;
-    mountedElements: WeakSet<Element>;
+    mountedElements: WeakDual<Element>;
     #mountedList: Array<WeakRef<Element>> | undefined;
     #disconnected: WeakSet<Element>;
     //#unmounted: WeakSet<Element>;
@@ -34,7 +34,10 @@ export class MountObserver extends EventTarget implements IMountObserver{
         if(whereElementIntersectsWith || whereMediaMatches) throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();
-        this.mountedElements = new WeakSet();
+        this.mountedElements = {
+            weakSet: new WeakSet(),
+            setWeak: new Set(),
+        };
         this.#disconnected = new WeakSet();
         //this.#unmounted = new WeakSet();
     }
@@ -232,10 +235,13 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const alreadyMounted = await this.#filterAndDismount();
         const mount = this.#mountInit.do?.mount; 
         const {import: imp} = this.#mountInit;
-        
+        const me = this.mountedElements;
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
-            this.mountedElements.add(match);
+            if(!me.weakSet.has(match)){
+                me.setWeak.add(new WeakRef(match));
+                me.weakSet.add(match);
+            }
             if(imp !== undefined){
                 switch(typeof imp){
                     case 'string':
