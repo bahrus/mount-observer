@@ -130,7 +130,18 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const mql = window.matchMedia(whereMediaMatches);
         if(mql.matches){
             await this.#observe2(within);  
-        }  
+        }
+        mql.addEventListener('change', async (e) => {
+            if(e.matches){
+                if(this.objNde === undefined){
+                    await this.#observe2(within);
+                }else{
+                    throw 'NI';
+                }
+            }else{
+
+            }
+        });
     }
 
     async #observe2(within: Node){
