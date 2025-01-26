@@ -112,6 +112,33 @@ export class MountObserver extends EventTarget {
         this.dispatchEvent(new Event('disconnectedCallback'));
     }
     async observe(within) {
+        const init = this.#mountInit;
+        const { whereMediaMatches } = init;
+        if (whereMediaMatches === undefined) {
+            await this.#observe2(within);
+            return;
+        }
+        const mql = window.matchMedia(whereMediaMatches);
+        if (mql.matches) {
+            await this.#observe2(within);
+        }
+        mql.addEventListener('change', async (e) => {
+            if (e.matches) {
+                if (this.objNde === undefined) {
+                    await this.#observe2(within);
+                }
+                else {
+                    await this.#mountAll();
+                }
+            }
+            else {
+                if (this.objNde !== undefined) {
+                    await this.#dismountAll();
+                }
+            }
+        });
+    }
+    async #observe2(within) {
         await this.#selector();
         this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
@@ -318,6 +345,19 @@ export class MountObserver extends EventTarget {
             }
             this.dispatchEvent(new DismountEvent(unmatch));
         }
+    }
+    async #dismountAll() {
+        const mounted = this.#mountedList;
+        if (mounted === undefined)
+            return;
+        this.#dismount(mounted.map(x => x.deref()).filter(x => x !== undefined));
+    }
+    async #mountAll() {
+        //TODO:  copilot created, check if needed
+        const { whereSatisfies, whereInstanceOf } = this.#mountInit;
+        const match = await this.#selector();
+        const els = Array.from(document.querySelectorAll(match));
+        this.#filterAndMount(els, false, true);
     }
     async #filterAndDismount() {
         const returnSet = new Set();

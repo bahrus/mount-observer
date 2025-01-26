@@ -136,10 +136,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 if(this.objNde === undefined){
                     await this.#observe2(within);
                 }else{
-                    throw 'NI';
+                    await this.#mountAll();
                 }
             }else{
-
+                if(this.objNde !== undefined){
+                    await this.#dismountAll();
+                }
             }
         });
     }
@@ -359,6 +361,20 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             this.dispatchEvent(new DismountEvent(unmatch));
         }
+    }
+
+    async #dismountAll(){
+        const mounted = this.#mountedList;
+        if(mounted === undefined) return;
+        this.#dismount(mounted.map(x => x.deref()).filter(x => x !== undefined) as Array<Element>);
+    }
+
+    async #mountAll(){
+        //TODO:  copilot created, check if needed
+        const {whereSatisfies, whereInstanceOf} = this.#mountInit;
+        const match = await this.#selector();
+        const els = Array.from(document.querySelectorAll(match));
+        this.#filterAndMount(els, false, true);
     }
 
     async #filterAndDismount(): Promise<Set<Element>>{
