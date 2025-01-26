@@ -121,6 +121,19 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async observe(within: Node){
+        const init = this.#mountInit;
+        const {whereMediaMatches} = init;
+        if(whereMediaMatches === undefined){
+            await this.#observe2(within);
+            return;
+        }
+        const mql = window.matchMedia(whereMediaMatches);
+        if(mql.matches){
+            await this.#observe2(within);  
+        }  
+    }
+
+    async #observe2(within: Node){
         await this.#selector();
         this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within; 
@@ -204,7 +217,6 @@ export class MountObserver extends EventTarget implements IMountObserver{
         }, {signal: this.#abortController.signal});
         
         await this.#inspectWithin(within, true);
-        
     }
 
     static synthesize(within: Document | ShadowRoot, customElement: {new(): HTMLElement}, mose: MOSE){
