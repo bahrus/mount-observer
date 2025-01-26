@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 test('mediaQueryTest1a', async ({ page }) => {
     await page.setViewportSize({ width: 700, height: 600 });
-    await page.goto('./tests/mediaQueryTest1a.html');
+    await page.goto('./tests/mediaQuery/mediaQueryTest1a.html');
     // wait for 1 second
     await page.waitForTimeout(1000);
     const editor = page.locator('#target');

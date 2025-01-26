@@ -9,7 +9,7 @@
     <div id=div>
         <span id=span></span>
     </div>
-    <div id=target></div>
+    <div id=target mark=good></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
         const mo = new MountObserver({
@@ -18,7 +18,7 @@
             do:{
                 mount: (el, ctx) => {
                     console.log({el, ctx});
-                    target.setAttribute('mark', 'good');
+                    target.removeAttribute('mark');
                 }
             }
         });
