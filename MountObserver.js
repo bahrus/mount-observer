@@ -21,7 +21,7 @@ export class MountObserver extends EventTarget {
             isComplex = reducedMatch.includes(' ') || (reducedMatch.includes(':') && reducedMatch.includes('('));
         }
         this.#isComplex = isComplex;
-        if (whereElementIntersectsWith || whereMediaMatches)
+        if (whereElementIntersectsWith)
             throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();

@@ -31,7 +31,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             isComplex = reducedMatch.includes(' ') || (reducedMatch.includes(':') && reducedMatch.includes('('));
         }
         this.#isComplex = isComplex;
-        if(whereElementIntersectsWith || whereMediaMatches) throw 'NI'; //not implemented
+        if(whereElementIntersectsWith) throw 'NI'; //not implemented
         this.#mountInit = init;
         this.#abortController = new AbortController();
         this.mountedElements = {

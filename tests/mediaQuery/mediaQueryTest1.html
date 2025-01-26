@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test 3</title>
+    <title>MediaQuery Test 1</title>
 </head>
 <body>
     <div id=div>
-            <span></span>
+        <span id=span></span>
     </div>
     <div id=target></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
         const mo = new MountObserver({
             on: '#span',
+            whereMediaMatches: '(max-width: 600px)',
             do:{
                 mount: (el, ctx) => {
                     console.log({el, ctx});
@@ -25,10 +26,6 @@
             console.log(e);
         });
         mo.observe(div);
-        setTimeout(() => {
-            const span = div.querySelector('span');
-            span.id = 'span';
-        }, 500);
     </script>
 </body>
 </html>
