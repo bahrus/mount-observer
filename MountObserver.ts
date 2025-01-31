@@ -2,16 +2,19 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
     AttrParts,
-    MOSE, WeakDual
+    MOSE, WeakDual,
+    MountObserverOptions
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 export {MOSE} from './ts-refs/mount-observer/types';
+export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 
 const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
 export class MountObserver extends EventTarget implements IMountObserver{
     
     #mountInit: MountInit;
+    #options: MountObserverOptions | undefined;
     //#rootMutObs: RootMutObs | undefined;
     #abortController: AbortController;
     mountedElements: WeakDual<Element>;
@@ -120,7 +123,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 
     }
 
-    async observe(within: Node){
+    async observe(within: Node, options?: MountObserverOptions){
+        this.#options = options;
         const init = this.#mountInit;
         const {whereMediaMatches} = init;
         if(whereMediaMatches === undefined){
@@ -261,6 +265,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const mount = this.#mountInit.do?.mount; 
         const {import: imp} = this.#mountInit;
         const me = this.mountedElements;
+        const options = this.#options;
         for(const match of matching){
             if(alreadyMounted.has(match)) continue;
             if(!me.weakSet.has(match)){
@@ -290,6 +295,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     stage: 'PostImport',
                     initializing
                 }) 
+            }
+            if(options?.LeaveBreadcrumb){
+                if((<any>match)[guid] === undefined){
+                    (<any>match)[guid] = new Set();
+                }
+                (<any>match)[guid].add(this);
             }
             this.dispatchEvent(new MountEvent(match, initializing));
             //should we automatically call readAttrs?

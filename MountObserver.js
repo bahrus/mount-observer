@@ -1,8 +1,10 @@
 import { RootMutObs } from './RootMutObs.js';
+export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 const mutationObserverLookup = new WeakMap();
 const refCount = new WeakMap();
 export class MountObserver extends EventTarget {
     #mountInit;
+    #options;
     //#rootMutObs: RootMutObs | undefined;
     #abortController;
     mountedElements;
@@ -111,7 +113,8 @@ export class MountObserver extends EventTarget {
         }
         this.dispatchEvent(new Event('disconnectedCallback'));
     }
-    async observe(within) {
+    async observe(within, options) {
+        this.#options = options;
         const init = this.#mountInit;
         const { whereMediaMatches } = init;
         if (whereMediaMatches === undefined) {
@@ -249,6 +252,7 @@ export class MountObserver extends EventTarget {
         const mount = this.#mountInit.do?.mount;
         const { import: imp } = this.#mountInit;
         const me = this.mountedElements;
+        const options = this.#options;
         for (const match of matching) {
             if (alreadyMounted.has(match))
                 continue;
@@ -279,6 +283,12 @@ export class MountObserver extends EventTarget {
                     stage: 'PostImport',
                     initializing
                 });
+            }
+            if (options?.LeaveBreadcrumb) {
+                if (match[guid] === undefined) {
+                    match[guid] = new Set();
+                }
+                match[guid].add(this);
             }
             this.dispatchEvent(new MountEvent(match, initializing));
             //should we automatically call readAttrs?
