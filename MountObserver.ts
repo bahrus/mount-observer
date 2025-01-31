@@ -296,7 +296,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     initializing
                 }) 
             }
-            if(options?.LeaveBreadcrumb){
+            if(options?.leaveBreadcrumb){
                 if((<any>match)[guid] === undefined){
                     (<any>match)[guid] = new Set();
                 }

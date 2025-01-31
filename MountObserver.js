@@ -284,7 +284,7 @@ export class MountObserver extends EventTarget {
                     initializing
                 });
             }
-            if (options?.LeaveBreadcrumb) {
+            if (options?.leaveBreadcrumb) {
                 if (match[guid] === undefined) {
                     match[guid] = new Set();
                 }
