@@ -70,6 +70,7 @@ export async function compose(self, el, level) {
             }
             slot.removeAttribute('slot');
         }
+        el.dispatchEvent(new LoadEvent(clone));
     }
     if (level === 0) {
         const refs = [];
@@ -98,9 +99,11 @@ export async function compose(self, el, level) {
             el.after(clone);
         }
     }
-    if (level === 0) {
-        el.dispatchEvent(new LoadEvent(clone));
-    }
+    //moving the code down here broke be-inclusive Example2.html (but maybe it caused something else to work, so will need to revisit)
+    //check to make sure the progresive loading of css-charts works as before.
+    // if(level === 0){
+    //     el.dispatchEvent(new LoadEvent(clone));
+    // }
     if (!cloneStashed) {
         if (level !== 0 || (slots.length === 0 && el.attributes.length === 0))
             el.remove();
