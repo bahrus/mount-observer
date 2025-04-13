@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
@@ -17,7 +17,7 @@
       "default": "./MountObserver.js",
       "types": "./MountObserver.ts"
     },
-    "./Newish.js":{
+    "./Newish.js": {
       "default": "./Newish.js",
       "types": "./Newish.ts"
     },
