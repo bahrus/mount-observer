@@ -69,18 +69,23 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async composeFragment(fragment: DocumentFragment, level: number){
-        const bis = fragment.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
+        const bis = fragment.querySelectorAll(`${inclTemplQry},${itemscopeQry}`) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
             await this.#compose(bi, level);
         }
     }
 
+
     async #compose(el: HTMLTemplateElement, level: number){
-        if(!el.hasAttribute('src')){
-            return;
+        if(el.hasAttribute('src')){
+            const {compose} = await import('./compose.js');
+            await compose(this, el, level);
         }
-        const {compose} = await import('./compose.js');
-        await compose(this, el, level);
+        const itemscope = el.getAttribute('itemscope');
+        if(itemscope && itemscope.includes('-')){
+            const {Newish} = await import('./Newish.js');
+            new Newish(el, itemscope, this.#mountInit.assigner);
+        }
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
     findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
