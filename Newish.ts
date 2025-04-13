@@ -1,5 +1,5 @@
 export {waitForEvent} from './waitForEvent.js';
-export class Newish extends EventTarget{
+export class Newish{
     queue: Array<any> = [];
     isResolved = false;
     #ce: HTMLElement | undefined;
@@ -7,7 +7,6 @@ export class Newish extends EventTarget{
     #assigner: undefined | ((target: any, source: any) => Promise<void>) = undefined;
 
     constructor(enhancedElement: Element, itemscope: string, assigner?: (target: any, source: any) => Promise<void>){
-        super();
         this.#assigner = assigner;
         this.#do(enhancedElement, itemscope);
     }
@@ -46,7 +45,7 @@ export class Newish extends EventTarget{
         }
         
         this.isResolved = true;
-        this.dispatchEvent(new Event('resolved'));
+        enhancedElement.dispatchEvent(new Event('ish-resolved'));
     }
 
     async #assignGingerly(){

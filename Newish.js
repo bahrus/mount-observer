@@ -1,11 +1,10 @@
 export { waitForEvent } from './waitForEvent.js';
-export class Newish extends EventTarget {
+export class Newish {
     queue = [];
     isResolved = false;
     #ce;
     #assigner = undefined;
     constructor(enhancedElement, itemscope, assigner) {
-        super();
         this.#assigner = assigner;
         this.#do(enhancedElement, itemscope);
     }
@@ -43,7 +42,7 @@ export class Newish extends EventTarget {
             this.#assignGingerly();
         }
         this.isResolved = true;
-        this.dispatchEvent(new Event('resolved'));
+        enhancedElement.dispatchEvent(new Event('ish-resolved'));
     }
     async #assignGingerly() {
         let ce = this.#ce;
