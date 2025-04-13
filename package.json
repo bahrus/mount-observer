@@ -17,6 +17,10 @@
       "default": "./MountObserver.js",
       "types": "./MountObserver.ts"
     },
+    "./Newish.js":{
+      "default": "./Newish.js",
+      "types": "./Newish.ts"
+    },
     "./Synthesizer.js": {
       "default": "./Synthesizer.js",
       "types": "./Synthesizer.ts"
@@ -24,6 +28,10 @@
     "./compose.js": {
       "default": "./compose.js",
       "types": "./compose.ts"
+    },
+    "./waitForEvent.js": {
+      "default": "./waitForEvent.js",
+      "types": "./waitForEvent.ts"
     }
   },
   "files": [

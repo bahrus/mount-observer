@@ -393,7 +393,7 @@ export class MountObserver extends EventTarget {
         return returnSet;
     }
     async #filterAndMount(els, checkMatch, initializing) {
-        const { whereSatisfies, whereInstanceOf } = this.#mountInit;
+        const { whereSatisfies, whereInstanceOf, assigner } = this.#mountInit;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if (checkMatch) {
@@ -414,6 +414,10 @@ export class MountObserver extends EventTarget {
             if (elToMount.matches(inclTemplQry)) {
                 await this.#compose(elToMount, 0);
             }
+            if (elToMount.matches(itemscopeQry)) {
+                const { Newish } = await import('./Newish.js');
+                new Newish(elToMount, elToMount.getAttribute('itemscope'), assigner);
+            }
         }
         this.#mount(elsToMount, initializing);
     }
@@ -425,6 +429,7 @@ export class MountObserver extends EventTarget {
 }
 const refCountErr = 'mount-observer ref count mismatch';
 export const inclTemplQry = 'template[src^="#"]:not([hidden])';
+export const itemscopeQry = '[itemscope~="-"]';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
