@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Check With Insert</title>
+</head>
+<body>
+    <div id=div></div>
+    <div id=target></div>
+    <script type=module>
+        import {MountObserver} from '/MountObserver.js';
+        const mo = new MountObserver({
+            on: 'h3',
+            do:{
+                mount: (el, ctx) => {
+                }
+            }
+        });
+
+        mo.observe(div);
+        customElements.define('my-element', class extends HTMLElement {
+            test = 'hello';
+            constructor() {
+                super();
+                this.attachShadow({mode: 'open'});
+                this.shadowRoot.innerHTML = `<span>My Element</span>`;
+            }
+        });
+        setTimeout(() => {
+            const span = document.createElement('span');
+            span.addEventListener('ish-resolved', e => {
+                if(e.target.ish.test === 'hello'){
+                    target.setAttribute('mark', 'good');
+                }
+            });
+            span.id = 'span';
+            span.setAttribute('itemscope', 'my-element');
+            div.appendChild(span);
+        }, 500);
+    </script>
+</body>
+</html>
