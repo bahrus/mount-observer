@@ -9,5 +9,5 @@ export function waitForEvent<TEvent extends Event = Event>(et: EventTarget, even
             },  {once: true});
         }
 
-    })
+    });
 }
