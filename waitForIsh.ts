@@ -1,6 +1,7 @@
 export function waitForIsh(el: Element){
     return new Promise((resolve, reject) => {
-        const ish = (<any>el)['ish'];
+        const ish = (<any>el)['ish']; // [TODO] should we make this something that can
+        // be passed in, more generic function -- waitForProperty?
         if (ish) {
             resolve(ish);
         } else {
