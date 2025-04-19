@@ -32,6 +32,10 @@
     "./waitForEvent.js": {
       "default": "./waitForEvent.js",
       "types": "./waitForEvent.ts"
+    },
+    "./waitForIsh.js": {
+      "default": "./waitForIsh.js",
+      "types": "./waitForIsh.ts"
     }
   },
   "files": [

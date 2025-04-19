@@ -45,7 +45,7 @@ export class Newish{
         }
         
         this.isResolved = true;
-        enhancedElement.dispatchEvent(new Event('ish-resolved'));
+        enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
 
     async #assignGingerly(){

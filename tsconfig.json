@@ -10,7 +10,8 @@
 	},
 	"files": [
 		"MountObserver.ts",
-		"Synthesizer.ts"
+		"Synthesizer.ts",
+		"waitForIsh.ts"
 	],
 	"exclude":[
 		"node_modules"

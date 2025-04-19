@@ -42,7 +42,7 @@ export class Newish {
             this.#assignGingerly();
         }
         this.isResolved = true;
-        enhancedElement.dispatchEvent(new Event('ish-resolved'));
+        enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
     async #assignGingerly() {
         let ce = this.#ce;
