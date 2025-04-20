@@ -29,7 +29,7 @@
         });
         setTimeout(() => {
             const span = document.createElement('span');
-            span.addEventListener('ish-resolved', e => {
+            span.addEventListener('ishAttached', e => {
                 if(e.target.ish.test === 'hello'){
                     target.setAttribute('mark', 'good');
                 }
