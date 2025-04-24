@@ -68,6 +68,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return this.#calculatedSelector;
     }
 
+    //This method is called publicly from outside mount-observer -- keep it public
     async composeFragment(fragment: DocumentFragment, level: number){
         const bis = fragment.querySelectorAll(`${inclTemplQry},${itemscopeQry}`) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){

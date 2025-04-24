@@ -57,6 +57,7 @@ export class MountObserver extends EventTarget {
         this.#calculatedSelector = calculatedSelector;
         return this.#calculatedSelector;
     }
+    //This method is called publicly from outside mount-observer -- keep it public
     async composeFragment(fragment, level) {
         const bis = fragment.querySelectorAll(`${inclTemplQry},${itemscopeQry}`);
         for (const bi of bis) {

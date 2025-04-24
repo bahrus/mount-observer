@@ -43,7 +43,24 @@ export class Newish{
             });
             this.#assignGingerly();
         }
-        
+        //attach any itemref references
+        if(enhancedElement.hasAttribute('itemref')){
+            const itemref = enhancedElement.getAttribute('itemref')!;
+            const itemrefList = itemref.split(' ');
+            let nextSibling = enhancedElement.nextElementSibling;
+            while(nextSibling){
+                if(itemrefList.includes(nextSibling.id)){
+                    (<any>this.#ce).inScopeCallback(nextSibling);
+                    itemrefList.splice(itemrefList.indexOf(nextSibling.id), 1);
+                }
+                if(itemrefList.length === 0) break;
+                nextSibling = nextSibling.nextElementSibling;
+            }
+            if(itemrefList.length > 0){
+                //TODO add an observer queue for the id found elsewhere
+                throw 'NI';
+            }
+        }
         this.isResolved = true;
         enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
