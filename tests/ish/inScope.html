@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In Scope</title>
+</head>
+<body>
+    <div id=div>
+        <span id=span itemscope=my-element itemref="test"></span>
+        <span id=test>hello</span>
+    </div>
+    <div id=target></div>
+    <script type=module>
+        import {MountObserver} from '/MountObserver.js';
+        const mo = new MountObserver({
+            on: 'h3',
+            do:{
+                mount: (el, ctx) => {
+                }
+            }
+        });
+        mo.observe(div);
+        customElements.define('my-element', class extends HTMLElement {
+            test = 'hello';
+            constructor() {
+                super();
+                this.attachShadow({mode: 'open'});
+                this.shadowRoot.innerHTML = `<span>My Element</span>`;
+            }
+
+            attachedCallback(el){
+                console.log({el});
+            }
+
+            inScopeCallback(el){
+                console.log({el});
+            }
+        });
+    </script>
+</body>
+</html>
