@@ -28,13 +28,23 @@
                 this.attachShadow({mode: 'open'});
                 this.shadowRoot.innerHTML = `<span>My Element</span>`;
             }
-
+            #attachedCallbackEl;
+            #inScopeCallbackEl;
             attachedCallback(el){
+                this.#attachedCallbackEl = el;
+                this.#checkIfBoth();
                 console.log({el});
             }
 
             inScopeCallback(el){
+                this.#inScopeCallbackEl = el;
+                this.#checkIfBoth();
                 console.log({el});
+            }
+            #checkIfBoth(){
+                if(this.#attachedCallbackEl && this.#inScopeCallbackEl){
+                    target.setAttribute('mark', 'good');
+                }
             }
         });
     </script>

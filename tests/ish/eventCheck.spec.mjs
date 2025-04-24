@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-test('test1', async ({ page }) => {
+test('eventCheck', async ({ page }) => {
     await page.goto('./tests/ish/eventCheck.html');
     // wait for 1 second
     await page.waitForTimeout(1000);
