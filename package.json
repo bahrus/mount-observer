@@ -25,6 +25,10 @@
       "default": "./Synthesizer.js",
       "types": "./Synthesizer.ts"
     },
+    "./bindish.js": {
+      "default": "./bindish.js",
+      "types": "./bindish.ts"
+    },
     "./compose.js": {
       "default": "./compose.js",
       "types": "./compose.ts"
