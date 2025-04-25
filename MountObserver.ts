@@ -3,7 +3,8 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
     AttrParts,
     MOSE, WeakDual,
-    MountObserverOptions
+    MountObserverOptions,
+    Assigner
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 export {MOSE} from './ts-refs/mount-observer/types';
@@ -70,7 +71,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     //This method is called publicly from outside mount-observer -- keep it public
     async composeFragment(fragment: DocumentFragment, level: number){
-        const bis = fragment.querySelectorAll(`${inclTemplQry},${itemscopeQry}`) as NodeListOf<HTMLTemplateElement>;
+        const bis = fragment.querySelectorAll(`${inclTemplQry}`) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
             await this.#compose(bi, level);
         }
@@ -82,11 +83,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             const {compose} = await import('./compose.js');
             await compose(this, el, level);
         }
-        const itemscope = el.getAttribute('itemscope');
-        if(itemscope && itemscope.includes('-')){
-            const {Newish} = await import('./Newish.js');
-            new Newish(el, itemscope, this.#mountInit.assigner);
-        }
+
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
     findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
@@ -446,13 +443,23 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
+        await bindish(within as DocumentFragment, this.#mountInit.assigner);
         await this.composeFragment(within as DocumentFragment, 0);
         const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
     }
 
+}
 
-
+export async function bindish(fragment: DocumentFragment, assigner?: Assigner){
+    const scopes = fragment.querySelectorAll(`${itemscopeQry}`);
+    for(const scope of scopes){
+        const itemscope = scope.getAttribute('itemscope');
+        if(itemscope && itemscope.includes('-') && !((<any>scope).ish instanceof HTMLElement)){
+            const {Newish} = await import('./Newish.js');
+            new Newish(scope, itemscope, assigner);
+        }
+    }
 }
 
 const refCountErr = 'mount-observer ref count mismatch';

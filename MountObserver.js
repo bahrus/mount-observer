@@ -59,7 +59,7 @@ export class MountObserver extends EventTarget {
     }
     //This method is called publicly from outside mount-observer -- keep it public
     async composeFragment(fragment, level) {
-        const bis = fragment.querySelectorAll(`${inclTemplQry},${itemscopeQry}`);
+        const bis = fragment.querySelectorAll(`${inclTemplQry}`);
         for (const bi of bis) {
             await this.#compose(bi, level);
         }
@@ -68,11 +68,6 @@ export class MountObserver extends EventTarget {
         if (el.hasAttribute('src')) {
             const { compose } = await import('./compose.js');
             await compose(this, el, level);
-        }
-        const itemscope = el.getAttribute('itemscope');
-        if (itemscope && itemscope.includes('-')) {
-            const { Newish } = await import('./Newish.js');
-            new Newish(el, itemscope, this.#mountInit.assigner);
         }
     }
     #templLookUp = new Map();
@@ -429,9 +424,20 @@ export class MountObserver extends EventTarget {
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
+        await bindish(within, this.#mountInit.assigner);
         await this.composeFragment(within, 0);
         const els = Array.from(within.querySelectorAll(await this.#selector()));
         this.#filterAndMount(els, false, initializing);
+    }
+}
+export async function bindish(fragment, assigner) {
+    const scopes = fragment.querySelectorAll(`${itemscopeQry}`);
+    for (const scope of scopes) {
+        const itemscope = scope.getAttribute('itemscope');
+        if (itemscope && itemscope.includes('-') && !(scope.ish instanceof HTMLElement)) {
+            const { Newish } = await import('./Newish.js');
+            new Newish(scope, itemscope, assigner);
+        }
     }
 }
 const refCountErr = 'mount-observer ref count mismatch';

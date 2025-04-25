@@ -1,12 +1,14 @@
+import { Assigner } from './ts-refs/mount-observer/types.js';
+
 export {waitForEvent} from './waitForEvent.js';
 export class Newish{
     queue: Array<any> = [];
     isResolved = false;
     #ce: HTMLElement | undefined;
 
-    #assigner: undefined | ((target: any, source: any) => Promise<void>) = undefined;
+    #assigner: undefined | Assigner = undefined;
 
-    constructor(enhancedElement: Element, itemscope: string, assigner?: (target: any, source: any) => Promise<void>){
+    constructor(enhancedElement: Element, itemscope: string, assigner?: Assigner){
         this.#assigner = assigner;
         this.#do(enhancedElement, itemscope);
     }
