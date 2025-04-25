@@ -1,4 +1,5 @@
 import { RootMutObs } from './RootMutObs.js';
+import { bindish, bindishIt } from './bindish.js';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 const mutationObserverLookup = new WeakMap();
 const refCount = new WeakMap();
@@ -415,12 +416,7 @@ export class MountObserver extends EventTarget {
                 await this.#compose(elToMount, 0);
             }
         }
-        for (const el of els) {
-            if (el.matches(itemscopeQry)) {
-                const { Newish } = await import('./Newish.js');
-                new Newish(el, el.getAttribute('itemscope'), assigner);
-            }
-        }
+        await bindishIt(els, assigner);
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
@@ -430,19 +426,8 @@ export class MountObserver extends EventTarget {
         this.#filterAndMount(els, false, initializing);
     }
 }
-export async function bindish(fragment, assigner) {
-    const scopes = fragment.querySelectorAll(`${itemscopeQry}`);
-    for (const scope of scopes) {
-        const itemscope = scope.getAttribute('itemscope');
-        if (itemscope && itemscope.includes('-') && !(scope.ish instanceof HTMLElement)) {
-            const { Newish } = await import('./Newish.js');
-            new Newish(scope, itemscope, assigner);
-        }
-    }
-}
 const refCountErr = 'mount-observer ref count mismatch';
 export const inclTemplQry = 'template[src^="#"]:not([hidden])';
-export const itemscopeQry = '[itemscope*="-"]';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.

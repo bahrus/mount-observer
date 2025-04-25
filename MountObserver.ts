@@ -7,6 +7,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     Assigner
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
+import {bindish, bindishIt} from './bindish.js';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 
@@ -433,12 +434,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             
         }
-        for(const el of els){
-            if(el.matches(itemscopeQry)){
-                const {Newish} = await import('./Newish.js');
-                new Newish(el, el.getAttribute('itemscope')!, assigner);
-            }
-        }
+        await bindishIt(els, assigner);
         this.#mount(elsToMount, initializing);
     }
 
@@ -451,20 +447,11 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
 }
 
-export async function bindish(fragment: DocumentFragment, assigner?: Assigner){
-    const scopes = fragment.querySelectorAll(`${itemscopeQry}`);
-    for(const scope of scopes){
-        const itemscope = scope.getAttribute('itemscope');
-        if(itemscope && itemscope.includes('-') && !((<any>scope).ish instanceof HTMLElement)){
-            const {Newish} = await import('./Newish.js');
-            new Newish(scope, itemscope, assigner);
-        }
-    }
-}
+
 
 const refCountErr = 'mount-observer ref count mismatch';
 export const inclTemplQry = 'template[src^="#"]:not([hidden])';
-export const itemscopeQry = '[itemscope*="-"]';
+
 export interface MountObserver extends IMountObserver{}
 
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
