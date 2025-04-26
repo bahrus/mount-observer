@@ -235,6 +235,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }
             }
             this.#filterAndMount(elsToInspect, true, false);
+            for(const el of elsToInspect){
+                await this.#inspectWithin(el, false);
+            }
         }, {signal: this.#abortController.signal});
         
         await this.#inspectWithin(within, true);
@@ -441,7 +444,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
     async #inspectWithin(within: Node, initializing: boolean){
         await bindish(within as DocumentFragment, this.#mountInit.assigner);
         await this.composeFragment(within as DocumentFragment, 0);
-        const els = Array.from((within as Element).querySelectorAll(await this.#selector()));
+        const match = await this.#selector();
+        const els = Array.from((within as Element).querySelectorAll(match));
         this.#filterAndMount(els, false, initializing);
     }
 
