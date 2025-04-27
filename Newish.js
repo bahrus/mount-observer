@@ -3,9 +3,10 @@ export class Newish {
     queue = [];
     isResolved = false;
     #ce;
-    #assigner = undefined;
-    constructor(enhancedElement, itemscope, assigner) {
-        this.#assigner = assigner;
+    //#assigner: undefined | Assigner = undefined;
+    #options;
+    constructor(enhancedElement, itemscope, options) {
+        this.#options = options || { assigner: Object.assign };
         this.#do(enhancedElement, itemscope);
     }
     async #do(enhancedElement, itemscope) {
@@ -76,12 +77,8 @@ export class Newish {
                 ce.$ = fi;
             }
             else {
-                if (this.#assigner !== undefined) {
-                    await this.#assigner(ce, fi);
-                }
-                else {
-                    Object.assign(ce, fi);
-                }
+                const { assigner } = this.#options;
+                await assigner(ce, fi);
             }
         }
     }

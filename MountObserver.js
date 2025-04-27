@@ -1,7 +1,7 @@
 import { RootMutObs } from './RootMutObs.js';
 import { bindish, bindishIt } from './bindish.js';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
-const mutationObserverLookup = new WeakMap();
+export const mutationObserverLookup = new WeakMap();
 const refCount = new WeakMap();
 export class MountObserver extends EventTarget {
     #mountInit;
@@ -419,16 +419,49 @@ export class MountObserver extends EventTarget {
                 await this.#compose(elToMount, 0);
             }
         }
-        await bindishIt(els, assigner);
+        await bindishIt(els, { assigner });
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
-        await bindish(within, this.#mountInit.assigner);
+        await bindish(within, { assigner: this.#mountInit.assigner });
         await this.composeFragment(within, 0);
         const match = await this.#selector();
         const els = Array.from(within.querySelectorAll(match));
         this.#filterAndMount(els, false, initializing);
     }
+}
+export function waitForIdleNodes(nodes) {
+    return new Promise((resolve) => {
+        const mutObservers = [];
+        for (const node of nodes) {
+            const mutObs = mutationObserverLookup.get(node);
+            if (mutObs !== undefined) {
+                mutObservers.push(mutObs);
+            }
+            else {
+                const newMutObs = new RootMutObs(node);
+                mutationObserverLookup.set(node, newMutObs);
+                mutObservers.push(newMutObs);
+            }
+        }
+        if (areAllIdle(mutObservers)) {
+            resolve();
+        }
+        for (const obs of mutObservers) {
+            obs.addEventListener('is-idle', () => {
+                if (areAllIdle(mutObservers)) {
+                    resolve();
+                }
+            });
+        }
+    });
+}
+function areAllIdle(mutObs) {
+    for (const mo of mutObs) {
+        if (!mo.isIdle)
+            return false;
+    }
+    return true;
 }
 const refCountErr = 'mount-observer ref count mismatch';
 export const inclTemplQry = 'template[src^="#"]:not([hidden])';

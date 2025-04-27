@@ -11,7 +11,7 @@ import {bindish, bindishIt} from './bindish.js';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 
-const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
+export const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
 export class MountObserver extends EventTarget implements IMountObserver{
     
@@ -437,12 +437,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             
         }
-        await bindishIt(els, assigner);
+        await bindishIt(els, {assigner});
         this.#mount(elsToMount, initializing);
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        await bindish(within as DocumentFragment, this.#mountInit.assigner);
+        await bindish(within as DocumentFragment, {assigner: this.#mountInit.assigner});
         await this.composeFragment(within as DocumentFragment, 0);
         const match = await this.#selector();
         const els = Array.from((within as Element).querySelectorAll(match));
@@ -451,6 +451,38 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
 }
 
+export function waitForIdleNodes(nodes: Array<Node>): Promise<void>{
+    return new Promise((resolve) => {
+        const mutObservers: Array<RootMutObs> = [];
+        for(const node of nodes){
+            const mutObs = mutationObserverLookup.get(node);
+            if(mutObs !== undefined){
+                mutObservers.push(mutObs);
+            }else{
+                const newMutObs = new RootMutObs(node);
+                mutationObserverLookup.set(node, newMutObs);
+                mutObservers.push(newMutObs);
+            }
+        }
+        if(areAllIdle(mutObservers)){
+            resolve();
+        }
+        for(const obs of mutObservers){
+            obs.addEventListener('is-idle', () => {
+                if(areAllIdle(mutObservers)){
+                    resolve();
+                }
+            });
+        }
+    });
+}
+
+function areAllIdle(mutObs: Array<RootMutObs>){
+    for(const mo of mutObs){
+        if(!mo.isIdle) return false;
+    }
+    return true;
+}   
 
 
 const refCountErr = 'mount-observer ref count mismatch';

@@ -1,8 +1,11 @@
 export class RootMutObs extends EventTarget {
+    #idleTimeout = 20; //TODO: make this configurable
+    #idlePointer = 0;
     constructor(rootNode) {
         super();
         this.#mutationObserver = new MutationObserver(mutationRecords => {
             this.dispatchEvent(new MutationEvent(mutationRecords));
+            this.#triggerIsIdle();
         });
         this.#mutationObserver.observe(rootNode, {
             subtree: true,
@@ -10,6 +13,19 @@ export class RootMutObs extends EventTarget {
             attributes: true,
             attributeOldValue: true,
         });
+        this.#triggerIsIdle();
+    }
+    #isIdle = false;
+    get isIdle() {
+        return this.#isIdle;
+    }
+    #triggerIsIdle() {
+        this.#isIdle = false;
+        clearTimeout(this.#idlePointer);
+        this.#idlePointer = setTimeout(() => {
+            this.#isIdle = true;
+            this.dispatchEvent(new Event('is-idle'));
+        }, this.#idleTimeout);
     }
     #mutationObserver;
     disconnect() {

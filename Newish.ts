@@ -1,4 +1,4 @@
-import { Assigner } from './ts-refs/mount-observer/types.js';
+import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
 export class Newish{
@@ -6,10 +6,11 @@ export class Newish{
     isResolved = false;
     #ce: HTMLElement | undefined;
 
-    #assigner: undefined | Assigner = undefined;
+    //#assigner: undefined | Assigner = undefined;
+    #options: BindishOptions;
 
-    constructor(enhancedElement: Element, itemscope: string, assigner?: Assigner){
-        this.#assigner = assigner;
+    constructor(enhancedElement: Element, itemscope: string, options?: BindishOptions){
+        this.#options = options || {assigner: Object.assign};
         this.#do(enhancedElement, itemscope);
     }
 
@@ -79,11 +80,9 @@ export class Newish{
             if(Array.isArray(fi)){
                 (<any>ce).$ = fi;
             }else{
-                if(this.#assigner !== undefined){
-                    await this.#assigner(ce, fi);
-                }else{
-                    Object.assign(ce, fi);
-                }
+                const {assigner} = this.#options;
+                await assigner!(ce, fi);
+
             }
             
         }
