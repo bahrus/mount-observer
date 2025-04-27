@@ -439,8 +439,10 @@ export function waitForIdleNodes(nodes) {
                 mutObservers.push(mutObs);
             }
             else {
+                const currentCount = refCount.get(node) || 0;
                 const newMutObs = new RootMutObs(node);
                 mutationObserverLookup.set(node, newMutObs);
+                refCount.set(node, currentCount + 1);
                 mutObservers.push(newMutObs);
             }
         }
