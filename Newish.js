@@ -1,4 +1,5 @@
 export { waitForEvent } from './waitForEvent.js';
+export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
     isResolved = false;
@@ -10,38 +11,40 @@ export class Newish {
         this.#do(enhancedElement, itemscope);
     }
     async #do(enhancedElement, itemscope) {
+        if (enhancedElement[attached] === true)
+            return;
+        enhancedElement[attached] = true;
         //if(Object.hasOwn(enhancedElement, 'host')) return;
         await customElements.whenDefined(itemscope);
         const initPropVals = enhancedElement['ish'];
-        //check to make sure it didn't already get attached while waiting
-        if (initPropVals === undefined || customElements.getName(initPropVals.constructor) !== itemscope) {
-            if (enhancedElement instanceof HTMLElement) {
-                if (enhancedElement.dataset.ish) {
-                    const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-                    this.queue.push(parsedHostProps);
-                }
+        //if(initPropVals === undefined ||  customElements.getName(initPropVals.constructor) !== itemscope){
+        if (enhancedElement instanceof HTMLElement) {
+            if (enhancedElement.dataset.ish) {
+                const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
+                this.queue.push(parsedHostProps);
             }
-            if (initPropVals !== undefined)
-                this.queue.push(initPropVals);
-            const ce = document.createElement(itemscope);
-            if ('attachedCallback' in ce && typeof ce.attachedCallback === 'function') {
-                await ce.attachedCallback(enhancedElement);
-            }
-            this.#ce = ce;
-            const self = this;
-            Object.defineProperty(enhancedElement, 'ish', {
-                get() {
-                    return self.#ce;
-                },
-                set(nv) {
-                    self.queue.push(nv);
-                    self.#assignGingerly();
-                },
-                enumerable: true,
-                configurable: true,
-            });
-            this.#assignGingerly();
         }
+        if (initPropVals !== undefined)
+            this.queue.push(initPropVals);
+        const ce = document.createElement(itemscope);
+        if ('attachedCallback' in ce && typeof ce.attachedCallback === 'function') {
+            await ce.attachedCallback(enhancedElement);
+        }
+        this.#ce = ce;
+        const self = this;
+        Object.defineProperty(enhancedElement, 'ish', {
+            get() {
+                return self.#ce;
+            },
+            set(nv) {
+                self.queue.push(nv);
+                self.#assignGingerly();
+            },
+            enumerable: true,
+            configurable: true,
+        });
+        this.#assignGingerly();
+        //}
         //attach any itemref references
         if (enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');

@@ -1,6 +1,7 @@
 import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
+export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish{
     queue: Array<any> = [];
     isResolved = false;
@@ -15,11 +16,12 @@ export class Newish{
     }
 
     async #do(enhancedElement: Element, itemscope: string){
+        if((<any>enhancedElement)[attached] === true) return;
+        (<any>enhancedElement)[attached] = true;
         //if(Object.hasOwn(enhancedElement, 'host')) return;
         await customElements.whenDefined(itemscope);
         const initPropVals = (<any>enhancedElement)['ish'];
-        //check to make sure it didn't already get attached while waiting
-        if(initPropVals === undefined ||  customElements.getName(initPropVals.constructor) !== itemscope){
+        //if(initPropVals === undefined ||  customElements.getName(initPropVals.constructor) !== itemscope){
             if(enhancedElement instanceof HTMLElement){
                 if(enhancedElement.dataset.ish){
                     const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
@@ -45,7 +47,7 @@ export class Newish{
                 configurable: true,
             });
             this.#assignGingerly();
-        }
+        //}
         //attach any itemref references
         if(enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
