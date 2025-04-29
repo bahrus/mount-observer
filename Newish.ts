@@ -18,36 +18,33 @@ export class Newish{
     async #do(enhancedElement: Element, itemscope: string){
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
-        //if(Object.hasOwn(enhancedElement, 'host')) return;
         await customElements.whenDefined(itemscope);
         const initPropVals = (<any>enhancedElement)['ish'];
-        //if(initPropVals === undefined ||  customElements.getName(initPropVals.constructor) !== itemscope){
-            if(enhancedElement instanceof HTMLElement){
-                if(enhancedElement.dataset.ish){
-                    const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-                    this.queue.push(parsedHostProps);
-                }
+        if(enhancedElement instanceof HTMLElement){
+            if(enhancedElement.dataset.ish){
+                const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
+                this.queue.push(parsedHostProps);
             }
-            if(initPropVals !== undefined) this.queue.push(initPropVals);
-            const ce = document.createElement(itemscope);
-            if('attachedCallback' in ce && typeof ce.attachedCallback === 'function'){
-                await ce.attachedCallback(enhancedElement)
-            }
-            this.#ce = ce;
-            const self = this;
-            Object.defineProperty(enhancedElement, 'ish', {
-                get(){
-                    return self.#ce;
-                },
-                set(nv: any){
-                    self.queue.push(nv);
-                    self.#assignGingerly();
-                },
-                enumerable: true,
-                configurable: true,
-            });
-            this.#assignGingerly();
-        //}
+        }
+        if(initPropVals !== undefined) this.queue.push(initPropVals);
+        const ce = document.createElement(itemscope);
+        if('attachedCallback' in ce && typeof ce.attachedCallback === 'function'){
+            await ce.attachedCallback(enhancedElement)
+        }
+        this.#ce = ce;
+        const self = this;
+        Object.defineProperty(enhancedElement, 'ish', {
+            get(){
+                return self.#ce;
+            },
+            set(nv: any){
+                self.queue.push(nv);
+                self.#assignGingerly();
+            },
+            enumerable: true,
+            configurable: true,
+        });
+        this.#assignGingerly();
         //attach any itemref references
         if(enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
@@ -75,7 +72,6 @@ export class Newish{
         if(ce === undefined){
             throw 500;
         }
-        //const {assignGingerly} = await import('../lib/assignGingerly.js');
         while(this.queue.length > 0 ){
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list

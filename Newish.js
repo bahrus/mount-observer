@@ -14,10 +14,8 @@ export class Newish {
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
-        //if(Object.hasOwn(enhancedElement, 'host')) return;
         await customElements.whenDefined(itemscope);
         const initPropVals = enhancedElement['ish'];
-        //if(initPropVals === undefined ||  customElements.getName(initPropVals.constructor) !== itemscope){
         if (enhancedElement instanceof HTMLElement) {
             if (enhancedElement.dataset.ish) {
                 const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
@@ -44,7 +42,6 @@ export class Newish {
             configurable: true,
         });
         this.#assignGingerly();
-        //}
         //attach any itemref references
         if (enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');
@@ -72,7 +69,6 @@ export class Newish {
         if (ce === undefined) {
             throw 500;
         }
-        //const {assignGingerly} = await import('../lib/assignGingerly.js');
         while (this.queue.length > 0) {
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
