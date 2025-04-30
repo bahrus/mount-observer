@@ -51,15 +51,19 @@ export class Newish{
         enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
 
+    #alreadyAttached = new Set<string>();
+
     #attachItemrefs(enhancedElement: Element){
         if(enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
             const itemrefList = itemref.split(' ');
             const rn = enhancedElement.getRootNode() as Document | ShadowRoot;
             for(const id of itemrefList){
+                if(this.#alreadyAttached.has(id)) continue;
                 const itemrefElement = rn.getElementById(id);
                 if(itemrefElement){
                     (<any>this.#ce).inScopeCallback(itemrefElement);
+                    this.#alreadyAttached.add(id);
                 }
             }
         }
