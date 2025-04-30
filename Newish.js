@@ -1,14 +1,23 @@
 export { waitForEvent } from './waitForEvent.js';
+import { ObsAttr } from './ObsAttr.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
     isResolved = false;
     #ce;
+    #ref;
     //#assigner: undefined | Assigner = undefined;
     #options;
     constructor(enhancedElement, itemscope, options) {
         this.#options = options || { assigner: Object.assign };
+        this.#ref = new WeakRef(enhancedElement);
         this.#do(enhancedElement, itemscope);
+    }
+    handleEvent(event) {
+        const enhancedElement = this.#ref.deref();
+        if (!enhancedElement)
+            return;
+        this.#attachItemrefs(enhancedElement);
     }
     async #do(enhancedElement, itemscope) {
         if (enhancedElement[attached] === true)
@@ -43,26 +52,30 @@ export class Newish {
         });
         this.#assignGingerly();
         //attach any itemref references
+        this.#attachItemrefs(enhancedElement);
+        const et = ObsAttr(enhancedElement, 'itemref');
+        et.addEventListener('attr-changed', this);
+        this.isResolved = true;
+        enhancedElement.dispatchEvent(new Event('ishAttached'));
+    }
+    #alreadyAttached = new Set();
+    #attachItemrefs(enhancedElement) {
+        //TODO:  watch for already attached itemrefs to be removed and remove them from the set
+        // and call outOfScopeCallback on them
         if (enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');
             const itemrefList = itemref.split(' ');
-            let nextSibling = enhancedElement.nextElementSibling;
-            while (nextSibling) {
-                if (itemrefList.includes(nextSibling.id)) {
-                    this.#ce.inScopeCallback(nextSibling);
-                    itemrefList.splice(itemrefList.indexOf(nextSibling.id), 1);
+            const rn = enhancedElement.getRootNode();
+            for (const id of itemrefList) {
+                if (this.#alreadyAttached.has(id))
+                    continue;
+                const itemrefElement = rn.getElementById(id);
+                if (itemrefElement) {
+                    this.#ce.inScopeCallback(itemrefElement);
+                    this.#alreadyAttached.add(id);
                 }
-                if (itemrefList.length === 0)
-                    break;
-                nextSibling = nextSibling.nextElementSibling;
-            }
-            if (itemrefList.length > 0) {
-                //TODO add an observer queue for the id found elsewhere
-                throw 'NI';
             }
         }
-        this.isResolved = true;
-        enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
     async #assignGingerly() {
         let ce = this.#ce;

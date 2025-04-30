@@ -1,4 +1,4 @@
-export function ObsAttr(element: Element, attr: string): EventTarget{
+export function ObsAttr(element, attr) {
     const eventTarget = new EventTarget();
     const obs = new MutationObserver((mutations) => {
         eventTarget.dispatchEvent(new Event('attr-changed'));

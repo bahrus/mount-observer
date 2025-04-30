@@ -1,18 +1,26 @@
 import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
+import {ObsAttr} from './ObsAttr.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
-export class Newish{
+export class Newish implements EventListenerObject {
     queue: Array<any> = [];
     isResolved = false;
     #ce: HTMLElement | undefined;
+    #ref: WeakRef<Element>;
 
     //#assigner: undefined | Assigner = undefined;
     #options: BindishOptions;
 
     constructor(enhancedElement: Element, itemscope: string, options?: BindishOptions){
         this.#options = options || {assigner: Object.assign};
+        this.#ref = new WeakRef(enhancedElement);
         this.#do(enhancedElement, itemscope);
+    }
+    handleEvent(event: Event): void {
+       const enhancedElement = this.#ref.deref();
+       if(!enhancedElement) return;
+       this.#attachItemrefs(enhancedElement);
     }
 
     async #do(enhancedElement: Element, itemscope: string){
@@ -47,13 +55,19 @@ export class Newish{
         this.#assignGingerly();
         //attach any itemref references
         this.#attachItemrefs(enhancedElement);
+        const et = ObsAttr(enhancedElement, 'itemref');
+        et.addEventListener('attr-changed', this);
         this.isResolved = true;
         enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
 
+    
+
     #alreadyAttached = new Set<string>();
 
     #attachItemrefs(enhancedElement: Element){
+        //TODO:  watch for already attached itemrefs to be removed and remove them from the set
+        // and call outOfScopeCallback on them
         if(enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
             const itemrefList = itemref.split(' ');
