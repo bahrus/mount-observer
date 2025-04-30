@@ -55,18 +55,12 @@ export class Newish{
         if(enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
             const itemrefList = itemref.split(' ');
-            let nextSibling = enhancedElement.nextElementSibling;
-            while(nextSibling){
-                if(itemrefList.includes(nextSibling.id)){
-                    (<any>this.#ce).inScopeCallback(nextSibling);
-                    itemrefList.splice(itemrefList.indexOf(nextSibling.id), 1);
+            const rn = enhancedElement.getRootNode() as Document | ShadowRoot;
+            for(const id of itemrefList){
+                const itemrefElement = rn.getElementById(id);
+                if(itemrefElement){
+                    (<any>this.#ce).inScopeCallback(itemrefElement);
                 }
-                if(itemrefList.length === 0) break;
-                nextSibling = nextSibling.nextElementSibling;
-            }
-            if(itemrefList.length > 0){
-                //TODO add an observer queue for the id found elsewhere
-                throw 'NI';
             }
         }
 
