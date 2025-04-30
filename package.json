@@ -21,6 +21,10 @@
       "default": "./Newish.js",
       "types": "./Newish.ts"
     },
+    "./ObsAttr.js": {
+      "default": "./ObsAttr.js",
+      "types": "./ObsAttr.ts"
+    },
     "./Synthesizer.js": {
       "default": "./Synthesizer.js",
       "types": "./Synthesizer.ts"

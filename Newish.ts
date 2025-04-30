@@ -46,6 +46,12 @@ export class Newish{
         });
         this.#assignGingerly();
         //attach any itemref references
+        this.#attachItemrefs(enhancedElement);
+        this.isResolved = true;
+        enhancedElement.dispatchEvent(new Event('ishAttached'));
+    }
+
+    #attachItemrefs(enhancedElement: Element){
         if(enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
             const itemrefList = itemref.split(' ');
@@ -63,8 +69,7 @@ export class Newish{
                 throw 'NI';
             }
         }
-        this.isResolved = true;
-        enhancedElement.dispatchEvent(new Event('ishAttached'));
+
     }
 
     async #assignGingerly(){
