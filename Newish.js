@@ -64,7 +64,9 @@ export class Newish {
         // and call outOfScopeCallback on them
         if (enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');
-            const itemrefList = itemref.split(' ');
+            const itemrefList = itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
+            if (itemrefList.length === 0)
+                return;
             const rn = enhancedElement.getRootNode();
             for (const id of itemrefList) {
                 if (this.#alreadyAttached.has(id))
