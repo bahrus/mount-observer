@@ -1,5 +1,6 @@
 export { waitForEvent } from './waitForEvent.js';
 import { ObsAttr } from './ObsAttr.js';
+import { splitRefs } from './itemRefUtils/splitRefs.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
@@ -64,7 +65,7 @@ export class Newish {
         // and call outOfScopeCallback on them
         if (enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');
-            const itemrefList = itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
+            const itemrefList = splitRefs(itemref); // itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
             if (itemrefList.length === 0)
                 return;
             const rn = enhancedElement.getRootNode();

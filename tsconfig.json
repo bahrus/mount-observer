@@ -11,7 +11,8 @@
 	"files": [
 		"MountObserver.ts",
 		"Synthesizer.ts",
-		"waitForIsh.ts"
+		"waitForIsh.ts",
+		"itemRefUtils/splitRefs.ts",
 	],
 	"exclude":[
 		"node_modules"
