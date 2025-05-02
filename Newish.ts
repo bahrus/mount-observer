@@ -2,7 +2,7 @@ import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
-import {splitRefs} from './itemRefUtils/splitRefs.js';
+import {splitRefs} from './refid/splitRefs.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish implements EventListenerObject {
     queue: Array<any> = [];

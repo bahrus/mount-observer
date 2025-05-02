@@ -12,7 +12,7 @@
 		"MountObserver.ts",
 		"Synthesizer.ts",
 		"waitForIsh.ts",
-		"itemRefUtils/splitRefs.ts",
+		"refid/splitRefs.ts",
 	],
 	"exclude":[
 		"node_modules"

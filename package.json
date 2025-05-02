@@ -45,16 +45,16 @@
       "default": "./waitForIsh.js",
       "types": "./waitForIsh.ts"
     },
-    "./itemRefUtils/splitRefs.js": {
-      "default": "./itemRefUtils/splitRefs.js",
-      "types": "./itemRefUtils/splitRefs.ts"
+    "./refid/splitRefs.js": {
+      "default": "./refid/splitRefs.js",
+      "types": "./refid/splitRefs.ts"
     }
   },
   "files": [
     "*.js",
     "*.ts",
     "./ts-refs/*",
-    "./itemRefUtils/*"
+    "./refid/*"
   ],
   "types": "./ts-refs/mount-observer/types.d.ts",
   "scripts": {
