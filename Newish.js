@@ -1,6 +1,6 @@
 export { waitForEvent } from './waitForEvent.js';
 import { ObsAttr } from './ObsAttr.js';
-import { splitRefs } from './refid/fs.js';
+import { splitRefs } from './refid/splitRefs.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
