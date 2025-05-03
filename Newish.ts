@@ -38,7 +38,7 @@ export class Newish implements EventListenerObject {
         if(initPropVals !== undefined) this.queue.push(initPropVals);
         const ce = document.createElement(itemscope);
         if('attachedCallback' in ce && typeof ce.attachedCallback === 'function'){
-            await ce.attachedCallback(enhancedElement)
+            await ce.attachedCallback(enhancedElement, this.#options)
         }
         this.#ce = ce;
         const self = this;
@@ -78,7 +78,7 @@ export class Newish implements EventListenerObject {
                 if(this.#alreadyAttached.has(id)) continue;
                 const itemrefElement = rn.getElementById(id);
                 if(itemrefElement){
-                    (<any>this.#ce).inScopeCallback(itemrefElement);
+                    (<any>this.#ce).inScopeCallback(itemrefElement, this.#options);
                     this.#alreadyAttached.add(id);
                 }
             }
