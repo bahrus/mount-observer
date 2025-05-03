@@ -1,8 +1,10 @@
 export class RootMutObs extends EventTarget {
-    #idleTimeout = 20; //TODO: make this configurable
+    #idleTimeout; //TODO: make this configurable
     #idlePointer = 0;
-    constructor(rootNode) {
+    constructor(rootNode, options) {
         super();
+        this.#idleTimeout = options?.idleTimeout ?? 30;
+        console.log(this.#idleTimeout);
         this.#mutationObserver = new MutationObserver(mutationRecords => {
             this.dispatchEvent(new MutationEvent(mutationRecords));
             this.#triggerIsIdle();

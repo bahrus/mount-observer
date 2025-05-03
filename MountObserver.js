@@ -147,7 +147,7 @@ export class MountObserver extends EventTarget {
         this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
-            mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor));
+            mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor, this.#mountInit));
             refCount.set(nodeToMonitor, 1);
         }
         else {
@@ -430,7 +430,10 @@ export class MountObserver extends EventTarget {
         this.#filterAndMount(els, false, initializing);
     }
 }
-export function waitForIdleNodes(nodes) {
+export function waitForIdleNodes(nodes, idleTimeout) {
+    const mountInit = {
+        idleTimeout
+    };
     return new Promise((resolve) => {
         const mutObservers = [];
         for (const node of nodes) {
@@ -440,7 +443,7 @@ export function waitForIdleNodes(nodes) {
             }
             else {
                 const currentCount = refCount.get(node) || 0;
-                const newMutObs = new RootMutObs(node);
+                const newMutObs = new RootMutObs(node, mountInit);
                 mutationObserverLookup.set(node, newMutObs);
                 refCount.set(node, currentCount + 1);
                 mutObservers.push(newMutObs);
