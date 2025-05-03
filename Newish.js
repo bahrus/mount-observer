@@ -89,7 +89,7 @@ export class Newish {
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
             if (Array.isArray(fi)) {
-                ce.$ = fi;
+                ce.ishList = fi;
             }
             else {
                 const { assigner } = this.#options;

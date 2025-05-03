@@ -95,7 +95,7 @@ export class Newish implements EventListenerObject {
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
             if(Array.isArray(fi)){
-                (<any>ce).$ = fi;
+                (<any>ce).ishList = fi;
             }else{
                 const {assigner} = this.#options;
                 await assigner!(ce, fi);
