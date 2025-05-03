@@ -63,7 +63,7 @@ export class Newish {
     #attachItemrefs(enhancedElement) {
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
-        if (enhancedElement.hasAttribute('itemref')) {
+        if ('inScopeCallback' in this.#ce && enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');
             const itemrefList = splitRefs(itemref); // itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
             if (itemrefList.length === 0)
