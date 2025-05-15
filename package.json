@@ -45,6 +45,10 @@
       "default": "./waitForIsh.js",
       "types": "./waitForIsh.ts"
     },
+    "./refid/regIsh.js": {
+      "default": "./refid/regIsh.js",
+      "types": "./refid/regIsh.js"
+    },
     "./refid/splitRefs.js": {
       "default": "./refid/splitRefs.js",
       "types": "./refid/splitRefs.ts"

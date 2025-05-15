@@ -45,6 +45,9 @@ export class Newish {
                 return self.#ce;
             },
             set(nv) {
+                if (self.#ce === nv)
+                    return;
+                console.log({ nv });
                 self.queue.push(nv);
                 self.#assignGingerly();
             },

@@ -47,6 +47,8 @@ export class Newish implements EventListenerObject {
                 return self.#ce;
             },
             set(nv: any){
+                if(self.#ce === nv) return;
+                console.log({nv});
                 self.queue.push(nv);
                 self.#assignGingerly();
             },
