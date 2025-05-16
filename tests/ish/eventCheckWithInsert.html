@@ -10,6 +10,10 @@
     <div id=target></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
+        import {regIsh} from '/refId/regIsh.js';
+                regIsh(div, 'myVM', class {
+            test = 'hello';
+        });
         const mo = new MountObserver({
             on: 'h3',
             do:{
@@ -19,14 +23,7 @@
         });
 
         mo.observe(div);
-        customElements.define('my-element', class extends HTMLElement {
-            test = 'hello';
-            constructor() {
-                super();
-                this.attachShadow({mode: 'open'});
-                this.shadowRoot.innerHTML = `<span>My Element</span>`;
-            }
-        });
+
         setTimeout(() => {
             const span = document.createElement('span');
             span.addEventListener('ishAttached', e => {
@@ -35,7 +32,7 @@
                 }
             });
             span.id = 'span';
-            span.setAttribute('itemscope', 'my-element');
+            span.setAttribute('itemscope', 'myVM');
             div.appendChild(span);
         }, 500);
     </script>
