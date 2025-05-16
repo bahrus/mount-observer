@@ -7,27 +7,15 @@
 </head>
 <body>
     <div id=div>
-        <span id=span itemscope=my-element itemref="test"></span>
+        <span id=span itemscope=myVM itemref="test"></span>
         <span id=test>hello</span>
     </div>
     <div id=target></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
-        const mo = new MountObserver({
-            on: 'h3',
-            do:{
-                mount: (el, ctx) => {
-                }
-            }
-        });
-        mo.observe(div);
-        customElements.define('my-element', class extends HTMLElement {
+        import {regIsh} from '/refId/regIsh.js';
+        regIsh(div, 'myVM', class {
             test = 'hello';
-            constructor() {
-                super();
-                this.attachShadow({mode: 'open'});
-                this.shadowRoot.innerHTML = `<span>My Element</span>`;
-            }
             #attachedCallbackEl;
             #inScopeCallbackEl;
             attachedCallback(el){
@@ -47,6 +35,14 @@
                 }
             }
         });
+        const mo = new MountObserver({
+            on: 'h3',
+            do:{
+                mount: (el, ctx) => {
+                }
+            }
+        });
+        mo.observe(div);
     </script>
 </body>
 </html>
