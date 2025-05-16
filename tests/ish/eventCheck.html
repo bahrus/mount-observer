@@ -7,13 +7,13 @@
 </head>
 <body>
     <div id=div>
-        <span id=span itemscope=my-vm></span>
+        <span id=span itemscope=myVM></span>
     </div>
     <div id=target></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
         import {regIsh} from '/refId/regIsh.js';
-        regIsh(div, 'my-vm', class {
+        regIsh(div, 'myVM', class {
             test = 'hello';
         });
         const mo = new MountObserver({
