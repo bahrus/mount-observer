@@ -37,7 +37,8 @@ export class Newish {
         if (initPropVals !== undefined)
             this.queue.push(initPropVals);
         //const ce = document.createElement(itemscope);
-        const ce = ctr.constructor.name === 'AsyncFunction' ? new (await ctr()) : new ctr();
+        const resolvedConstructor = ctr.constructor.name === 'AsyncFunction' ? await ctr() : ctr;
+        const ce = initPropVals instanceof resolvedConstructor ? initPropVals : new resolvedConstructor();
         if ('attachedCallback' in ce && typeof ce.attachedCallback === 'function') {
             await ce.attachedCallback(enhancedElement, this.#options);
         }
