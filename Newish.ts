@@ -38,10 +38,12 @@ export class Newish implements EventListenerObject {
                 this.queue.push(parsedHostProps);
             }
         }
-        if(initPropVals !== undefined) this.queue.push(initPropVals);
-        //const ce = document.createElement(itemscope);
+        
+        
         const resolvedConstructor = ctr.constructor.name === 'AsyncFunction' ? await ctr() : ctr;
-        const ce = initPropVals instanceof resolvedConstructor ? initPropVals : new resolvedConstructor();
+        const isInstance = initPropVals instanceof resolvedConstructor
+        const ce = isInstance ? initPropVals : new resolvedConstructor();
+        if(initPropVals !== undefined && !isInstance) this.queue.push(initPropVals);
         
         if('attachedCallback' in ce && typeof ce.attachedCallback === 'function'){
             await ce.attachedCallback(enhancedElement, this.#options)
