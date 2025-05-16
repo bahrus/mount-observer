@@ -7,11 +7,15 @@
 </head>
 <body>
     <div id=div>
-        <span id=span itemscope=my-element></span>
+        <span id=span itemscope=my-vm></span>
     </div>
     <div id=target></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
+        import {regIsh} from '/refId/regIsh.js';
+        regIsh(div, 'my-vm', class {
+            test = 'hello';
+        });
         const mo = new MountObserver({
             on: 'h3',
             do:{
@@ -25,14 +29,14 @@
             }
         });
         mo.observe(div);
-        customElements.define('my-element', class extends HTMLElement {
-            test = 'hello';
-            constructor() {
-                super();
-                this.attachShadow({mode: 'open'});
-                this.shadowRoot.innerHTML = `<span>My Element</span>`;
-            }
-        });
+        // customElements.define('my-element', class extends HTMLElement {
+        //     test = 'hello';
+        //     constructor() {
+        //         super();
+        //         this.attachShadow({mode: 'open'});
+        //         this.shadowRoot.innerHTML = `<span>My Element</span>`;
+        //     }
+        // });
     </script>
 </body>
 </html>

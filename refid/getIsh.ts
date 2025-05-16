@@ -1,15 +1,16 @@
 import {sym} from './regIsh.js';
+import {IshCtr} from '../ts-refs/mount-observer/types.js';
 export function getIsh(scope: Element | ShadowRoot | Document, name: string){
     let test = scope as any;
     
     while(true){
-        const map = test[sym] as Map<string, ({new() : Object})>;
+        const map = test[sym] as Map<string, IshCtr>;
         if(map !== undefined){
             if(map.has(name)){
                 return map.get(name);
             }
         }
-        if(test === document) return 404;
+        if(test === document) throw 404;
         if(test instanceof ShadowRoot){
             test = test.host;
             continue;
@@ -19,6 +20,6 @@ export function getIsh(scope: Element | ShadowRoot | Document, name: string){
             test = newTest;
             continue;
         }
-        newTest = test.getRootNode();
+        test = test.getRootNode();
     }
 }

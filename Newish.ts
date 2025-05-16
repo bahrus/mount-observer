@@ -3,6 +3,7 @@ import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
 export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
 import {splitRefs} from './refid/splitRefs.js';
+import {getIsh} from './refid/getIsh.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish implements EventListenerObject {
     queue: Array<any> = [];
@@ -27,7 +28,9 @@ export class Newish implements EventListenerObject {
     async #do(enhancedElement: Element, itemscope: string){
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
-        await customElements.whenDefined(itemscope);
+        //await customElements.whenDefined(itemscope);
+        const ctr = getIsh(enhancedElement, itemscope)!;
+
         const initPropVals = (<any>enhancedElement)['ish'];
         if(enhancedElement instanceof HTMLElement){
             if(enhancedElement.dataset.ish){
@@ -36,7 +39,8 @@ export class Newish implements EventListenerObject {
             }
         }
         if(initPropVals !== undefined) this.queue.push(initPropVals);
-        const ce = document.createElement(itemscope);
+        //const ce = document.createElement(itemscope);
+        const ce = ctr.constructor.name === 'AsyncFunction' ? new (await ctr()) : new ctr();
         if('attachedCallback' in ce && typeof ce.attachedCallback === 'function'){
             await ce.attachedCallback(enhancedElement, this.#options)
         }

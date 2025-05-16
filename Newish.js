@@ -1,6 +1,7 @@
 export { waitForEvent } from './waitForEvent.js';
 import { ObsAttr } from './ObsAttr.js';
 import { splitRefs } from './refid/splitRefs.js';
+import { getIsh } from './refid/getIsh.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
@@ -24,7 +25,8 @@ export class Newish {
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
-        await customElements.whenDefined(itemscope);
+        //await customElements.whenDefined(itemscope);
+        const ctr = getIsh(enhancedElement, itemscope);
         const initPropVals = enhancedElement['ish'];
         if (enhancedElement instanceof HTMLElement) {
             if (enhancedElement.dataset.ish) {
@@ -34,7 +36,8 @@ export class Newish {
         }
         if (initPropVals !== undefined)
             this.queue.push(initPropVals);
-        const ce = document.createElement(itemscope);
+        //const ce = document.createElement(itemscope);
+        const ce = ctr.constructor.name === 'AsyncFunction' ? new (await ctr()) : new ctr();
         if ('attachedCallback' in ce && typeof ce.attachedCallback === 'function') {
             await ce.attachedCallback(enhancedElement, this.#options);
         }
