@@ -25,7 +25,6 @@ export class Newish {
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
-        //await customElements.whenDefined(itemscope);
         const ctr = getIsh(enhancedElement, itemscope);
         const initPropVals = enhancedElement['ish'];
         if (enhancedElement instanceof HTMLElement) {
@@ -39,8 +38,8 @@ export class Newish {
         const ce = isInstance ? initPropVals : new resolvedConstructor();
         if (initPropVals !== undefined && !isInstance)
             this.queue.push(initPropVals);
-        if ('attachedCallback' in ce && typeof ce.attachedCallback === 'function') {
-            await ce.attachedCallback(enhancedElement, this.#options);
+        if ('<mount>' in ce && typeof ce.mount === 'function') {
+            await ce['<mount>'](enhancedElement, this.#options);
         }
         this.#ce = ce;
         const self = this;
@@ -70,7 +69,7 @@ export class Newish {
     #attachItemrefs(enhancedElement) {
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
-        if ('inScopeCallback' in this.#ce && enhancedElement.hasAttribute('itemref')) {
+        if ('<inScope>' in this.#ce && enhancedElement.hasAttribute('itemref')) {
             const itemref = enhancedElement.getAttribute('itemref');
             const itemrefList = splitRefs(itemref); // itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
             if (itemrefList.length === 0)
@@ -81,7 +80,7 @@ export class Newish {
                     continue;
                 const itemrefElement = rn.getElementById(id);
                 if (itemrefElement) {
-                    this.#ce.inScopeCallback(itemrefElement, this.#options);
+                    this.#ce['<inScope>'](itemrefElement, this.#options);
                     this.#alreadyAttached.add(id);
                 }
             }

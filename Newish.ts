@@ -28,8 +28,7 @@ export class Newish implements EventListenerObject {
     async #do(enhancedElement: Element, itemscope: string){
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
-        //await customElements.whenDefined(itemscope);
-        const ctr = getIsh(enhancedElement, itemscope)!;
+        const ctr = getIsh(enhancedElement, itemscope)! as any;
 
         const initPropVals = (<any>enhancedElement)['ish'];
         if(enhancedElement instanceof HTMLElement){
@@ -44,9 +43,9 @@ export class Newish implements EventListenerObject {
         const isInstance = initPropVals instanceof resolvedConstructor
         const ce = isInstance ? initPropVals : new resolvedConstructor();
         if(initPropVals !== undefined && !isInstance) this.queue.push(initPropVals);
-        
-        if('attachedCallback' in ce && typeof ce.attachedCallback === 'function'){
-            await ce.attachedCallback(enhancedElement, this.#options)
+
+        if('<mount>' in ce && typeof ce.mount === 'function'){
+            await ce['<mount>'](enhancedElement, this.#options)
         }
         
         this.#ce = ce;
@@ -80,7 +79,7 @@ export class Newish implements EventListenerObject {
     #attachItemrefs(enhancedElement: Element){
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
-        if('inScopeCallback' in (<any>this.#ce) && enhancedElement.hasAttribute('itemref')){
+        if('<inScope>' in (<any>this.#ce) && enhancedElement.hasAttribute('itemref')){
             const itemref = enhancedElement.getAttribute('itemref')!;
             const itemrefList = splitRefs(itemref);// itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
             if(itemrefList.length === 0) return;
@@ -89,7 +88,7 @@ export class Newish implements EventListenerObject {
                 if(this.#alreadyAttached.has(id)) continue;
                 const itemrefElement = rn.getElementById(id);
                 if(itemrefElement){
-                    (<any>this.#ce).inScopeCallback(itemrefElement, this.#options);
+                    (<any>this.#ce)['<inScope>'](itemrefElement, this.#options);
                     this.#alreadyAttached.add(id);
                 }
             }
