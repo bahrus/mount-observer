@@ -437,7 +437,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             }
             
         }
-        await bindishIt(els, {assigner});
+        await bindishIt(els, target, {assigner});
         this.#mount(elsToMount, initializing);
     }
 

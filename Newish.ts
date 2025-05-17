@@ -34,7 +34,7 @@ export class Newish implements EventListenerObject {
     ){
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
-        const ctr = getIsh(target, itemscope)! as any;
+        const ctr = getIsh(enhancedElement.isConnected ? enhancedElement :target, itemscope)! as any;
 
         const initPropVals = (<any>enhancedElement)['ish'];
         if(enhancedElement instanceof HTMLElement){

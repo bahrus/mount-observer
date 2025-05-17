@@ -20,7 +20,8 @@ export function getIsh(scope: Element | ShadowRoot | Document | Node, name: stri
             test = newTest;
             continue;
         }
+        const lastTest = test;
         test = test.getRootNode();
-        if(test === test) throw 404;
+        if(test === lastTest) throw 404;
     }
 }

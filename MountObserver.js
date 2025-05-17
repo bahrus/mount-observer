@@ -419,7 +419,7 @@ export class MountObserver extends EventTarget {
                 await this.#compose(elToMount, 0);
             }
         }
-        await bindishIt(els, { assigner });
+        await bindishIt(els, target, { assigner });
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {

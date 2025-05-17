@@ -19,8 +19,9 @@ export function getIsh(scope, name) {
             test = newTest;
             continue;
         }
+        const lastTest = test;
         test = test.getRootNode();
-        if (test === test)
+        if (test === lastTest)
             throw 404;
     }
 }
