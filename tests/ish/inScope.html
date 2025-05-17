@@ -16,21 +16,21 @@
         import {regIsh} from '/refId/regIsh.js';
         regIsh(div, 'myVM', class {
             test = 'hello';
-            #attachedCallbackEl;
-            #inScopeCallbackEl;
-            attachedCallback(el){
-                this.#attachedCallbackEl = el;
+            #mountedEl;
+            #inScopeEl;
+            '<mount>'(self, el){
+                this.#mountedEl = el;
                 this.#checkIfBoth();
                 console.log({el});
             }
 
-            inScopeCallback(el){
-                this.#inScopeCallbackEl = el;
+            '<inScope>'(self, el){
+                this.#inScopeEl = el;
                 this.#checkIfBoth();
                 console.log({el});
             }
             #checkIfBoth(){
-                if(this.#attachedCallbackEl && this.#inScopeCallbackEl){
+                if(this.#mountedEl && this.#inScopeEl){
                     target.setAttribute('mark', 'good');
                 }
             }

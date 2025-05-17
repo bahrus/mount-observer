@@ -44,8 +44,8 @@ export class Newish implements EventListenerObject {
         const ce = isInstance ? initPropVals : new resolvedConstructor();
         if(initPropVals !== undefined && !isInstance) this.queue.push(initPropVals);
 
-        if('<mount>' in ce && typeof ce.mount === 'function'){
-            await ce['<mount>'](enhancedElement, this.#options)
+        if('<mount>' in ce && typeof ce['<mount>'] === 'function'){
+            await ce['<mount>'](ce, enhancedElement, this.#options)
         }
         
         this.#ce = ce;
@@ -88,7 +88,7 @@ export class Newish implements EventListenerObject {
                 if(this.#alreadyAttached.has(id)) continue;
                 const itemrefElement = rn.getElementById(id);
                 if(itemrefElement){
-                    (<any>this.#ce)['<inScope>'](itemrefElement, this.#options);
+                    (<any>this.#ce)['<inScope>'](this.#ce, itemrefElement, this.#options);
                     this.#alreadyAttached.add(id);
                 }
             }

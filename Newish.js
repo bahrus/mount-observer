@@ -38,8 +38,8 @@ export class Newish {
         const ce = isInstance ? initPropVals : new resolvedConstructor();
         if (initPropVals !== undefined && !isInstance)
             this.queue.push(initPropVals);
-        if ('<mount>' in ce && typeof ce.mount === 'function') {
-            await ce['<mount>'](enhancedElement, this.#options);
+        if ('<mount>' in ce && typeof ce['<mount>'] === 'function') {
+            await ce['<mount>'](ce, enhancedElement, this.#options);
         }
         this.#ce = ce;
         const self = this;
@@ -80,7 +80,7 @@ export class Newish {
                     continue;
                 const itemrefElement = rn.getElementById(id);
                 if (itemrefElement) {
-                    this.#ce['<inScope>'](itemrefElement, this.#options);
+                    this.#ce['<inScope>'](this.#ce, itemrefElement, this.#options);
                     this.#alreadyAttached.add(id);
                 }
             }
