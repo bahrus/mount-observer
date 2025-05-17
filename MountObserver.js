@@ -219,7 +219,7 @@ export class MountObserver extends EventTarget {
                     this.dispatchEvent(new AttrChangeEvent(key, value));
                 }
             }
-            this.#filterAndMount(elsToInspect, true, false);
+            this.#filterAndMount(elsToInspect, within, true, false);
             for (const el of elsToInspect) {
                 await this.#inspectWithin(el, false);
             }
@@ -371,7 +371,7 @@ export class MountObserver extends EventTarget {
         const { whereSatisfies, whereInstanceOf } = this.#mountInit;
         const match = await this.#selector();
         const els = Array.from(document.querySelectorAll(match));
-        this.#filterAndMount(els, false, true);
+        this.#filterAndMount(els, document.body, false, true);
     }
     async #filterAndDismount() {
         const returnSet = new Set();
@@ -396,7 +396,7 @@ export class MountObserver extends EventTarget {
         this.#mountedList = Array.from(returnSet).map(x => new WeakRef(x));
         return returnSet;
     }
-    async #filterAndMount(els, checkMatch, initializing) {
+    async #filterAndMount(els, target, checkMatch, initializing) {
         const { whereSatisfies, whereInstanceOf, assigner } = this.#mountInit;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
@@ -423,11 +423,11 @@ export class MountObserver extends EventTarget {
         this.#mount(elsToMount, initializing);
     }
     async #inspectWithin(within, initializing) {
-        await bindish(within, { assigner: this.#mountInit.assigner });
+        await bindish(within, within, { assigner: this.#mountInit.assigner });
         await this.composeFragment(within, 0);
         const match = await this.#selector();
         const els = Array.from(within.querySelectorAll(match));
-        this.#filterAndMount(els, false, initializing);
+        this.#filterAndMount(els, within, false, initializing);
     }
 }
 export function waitForIdleNodes(nodes, idleTimeout) {

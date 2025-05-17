@@ -20,5 +20,7 @@ export function getIsh(scope, name) {
             continue;
         }
         test = test.getRootNode();
+        if (test === test)
+            throw 404;
     }
 }

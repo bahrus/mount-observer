@@ -10,10 +10,10 @@ export class Newish {
     #ref;
     //#assigner: undefined | Assigner = undefined;
     #options;
-    constructor(enhancedElement, itemscope, options) {
+    constructor(enhancedElement, target, itemscope, options) {
         this.#options = options || { assigner: Object.assign };
         this.#ref = new WeakRef(enhancedElement);
-        this.#do(enhancedElement, itemscope);
+        this.#do(enhancedElement, target, itemscope);
     }
     handleEvent(event) {
         const enhancedElement = this.#ref.deref();
@@ -21,11 +21,11 @@ export class Newish {
             return;
         this.#attachItemrefs(enhancedElement);
     }
-    async #do(enhancedElement, itemscope) {
+    async #do(enhancedElement, target, itemscope) {
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
-        const ctr = getIsh(enhancedElement, itemscope);
+        const ctr = getIsh(target, itemscope);
         const initPropVals = enhancedElement['ish'];
         if (enhancedElement instanceof HTMLElement) {
             if (enhancedElement.dataset.ish) {

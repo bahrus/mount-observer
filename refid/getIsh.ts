@@ -1,6 +1,6 @@
 import {sym} from './regIsh.js';
 import {IshCtr} from '../ts-refs/mount-observer/types.js';
-export function getIsh(scope: Element | ShadowRoot | Document, name: string){
+export function getIsh(scope: Element | ShadowRoot | Document | Node, name: string){
     let test = scope as any;
     
     while(true){
@@ -21,5 +21,6 @@ export function getIsh(scope: Element | ShadowRoot | Document, name: string){
             continue;
         }
         test = test.getRootNode();
+        if(test === test) throw 404;
     }
 }

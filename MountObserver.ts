@@ -234,7 +234,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                     this.dispatchEvent(new AttrChangeEvent(key, value))
                 }
             }
-            this.#filterAndMount(elsToInspect, true, false);
+            this.#filterAndMount(elsToInspect, within, true, false);
             for(const el of elsToInspect){
                 await this.#inspectWithin(el, false);
             }
@@ -392,7 +392,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const {whereSatisfies, whereInstanceOf} = this.#mountInit;
         const match = await this.#selector();
         const els = Array.from(document.querySelectorAll(match));
-        this.#filterAndMount(els, false, true);
+        this.#filterAndMount(els, document.body, false, true);
     }
 
     async #filterAndDismount(): Promise<Set<Element>>{
@@ -416,7 +416,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return returnSet;
     }
 
-    async #filterAndMount(els: Array<Element>, checkMatch: boolean, initializing: boolean){
+    async #filterAndMount(els: Array<Element>, target: Node, checkMatch: boolean, initializing: boolean){
         const {whereSatisfies, whereInstanceOf, assigner} = this.#mountInit;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
@@ -442,11 +442,11 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        await bindish(within as DocumentFragment, {assigner: this.#mountInit.assigner});
+        await bindish(within as DocumentFragment, within, {assigner: this.#mountInit.assigner});
         await this.composeFragment(within as DocumentFragment, 0);
         const match = await this.#selector();
         const els = Array.from((within as Element).querySelectorAll(match));
-        this.#filterAndMount(els, false, initializing);
+        this.#filterAndMount(els, within, false, initializing);
     }
 
 }

@@ -14,10 +14,12 @@ export class Newish implements EventListenerObject {
     //#assigner: undefined | Assigner = undefined;
     #options: BindishOptions;
 
-    constructor(enhancedElement: Element, itemscope: string, options?: BindishOptions){
+    constructor(enhancedElement: Element,
+        target: Node,
+        itemscope: string, options?: BindishOptions){
         this.#options = options || {assigner: Object.assign};
         this.#ref = new WeakRef(enhancedElement);
-        this.#do(enhancedElement, itemscope);
+        this.#do(enhancedElement, target, itemscope);
     }
     handleEvent(event: Event): void {
        const enhancedElement = this.#ref.deref();
@@ -25,10 +27,14 @@ export class Newish implements EventListenerObject {
        this.#attachItemrefs(enhancedElement);
     }
 
-    async #do(enhancedElement: Element, itemscope: string){
+    async #do(
+        enhancedElement: Element,
+        target: Node, 
+        itemscope: string
+    ){
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
-        const ctr = getIsh(enhancedElement, itemscope)! as any;
+        const ctr = getIsh(target, itemscope)! as any;
 
         const initPropVals = (<any>enhancedElement)['ish'];
         if(enhancedElement instanceof HTMLElement){
