@@ -1,5 +1,6 @@
 import {IshCtr} from '../ts-refs/mount-observer/types';
-export const sym = Symbol.for('La8Cx9vHsUOd03WomqdnPw');
+export const guid = 'La8Cx9vHsUOd03WomqdnPw'
+export const sym = Symbol.for(guid);
 
 export function regIsh(scope: Element | ShadowRoot | Document, name: string, ctr:IshCtr){
     let map = (<any>scope)[sym] as Map<string, IshCtr>;
@@ -11,4 +12,5 @@ export function regIsh(scope: Element | ShadowRoot | Document, name: string, ctr
         throw 403;
     }
     map.set(name, ctr);
+    document.dispatchEvent(new Event(guid));
 }

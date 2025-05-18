@@ -25,7 +25,7 @@ export class Newish {
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
-        const ctr = getIsh(enhancedElement.isConnected ? enhancedElement : target, itemscope);
+        const ctr = await getIsh(enhancedElement.isConnected ? enhancedElement : target, itemscope);
         const initPropVals = enhancedElement['ish'];
         if (enhancedElement instanceof HTMLElement) {
             if (enhancedElement.dataset.ish) {
