@@ -62,7 +62,6 @@ export class Newish implements EventListenerObject {
             },
             set(nv: any){
                 if(self.#ce === nv) return;
-                console.log({nv});
                 self.queue.push(nv);
                 self.#assignGingerly();
             },
@@ -119,6 +118,27 @@ export class Newish implements EventListenerObject {
             }
             
         }
+        const ref = this.#ref.deref();
+        if(ref){
+            ref.dispatchEvent(new Event('ishAssigned'));
+        }   
     }
 
+}
+
+type Action = 
+    | 'attached' 
+    | 'ishAssigned'
+    | 'ishListAssigned'
+
+interface IIshEvent{
+    action: Action;
+}
+
+export class IshEvent extends Event implements IIshEvent{
+    static eventName = 'ish';
+
+    constructor(public action: Action){
+        super(IshEvent.eventName);
+    }
 }
