@@ -113,6 +113,7 @@ export class Newish implements EventListenerObject {
         while(this.queue.length > 0 ){
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
+            //TODO:  Maybe should check if iterable rather than an array?
             if(Array.isArray(fi)){
                 (<any>ce)[sym] = fi;
                 actions.add('ishListAssigned');
