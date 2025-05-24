@@ -1,4 +1,4 @@
-import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
+import { BindishOptions } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
@@ -115,7 +115,11 @@ export class Newish implements EventListenerObject {
             //TODO: Provide support for a virtual slice of a very large list
             //TODO:  Maybe should check if iterable rather than an array?
             if(Array.isArray(fi)){
-                (<any>ce)[arr] = fi;
+                let filtered = fi;
+                if('arr=>' in ce && typeof ce['arr=>'] === 'function'){
+                    filtered = await ce['arr=>'](ce, fi, this.#options);
+                }
+                (<any>ce)[arr] = filtered;
                 actions.add('ishListAssigned');
             }else{
                 const {assigner} = this.#options;
