@@ -4,6 +4,7 @@ export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
 import {splitRefs} from './refid/splitRefs.js';
 import {getIsh} from './refid/getIsh.js';
+import {sym} from './refid/regIsh.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish implements EventListenerObject {
     queue: Array<any> = [];
@@ -113,7 +114,7 @@ export class Newish implements EventListenerObject {
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
             if(Array.isArray(fi)){
-                (<any>ce).ishList = fi;
+                (<any>ce)[sym] = fi;
                 actions.add('ishListAssigned');
             }else{
                 const {assigner} = this.#options;
