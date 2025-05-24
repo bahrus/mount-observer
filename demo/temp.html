@@ -19,9 +19,11 @@
                 next: function() {
                     return { 
                         value: data === undefined ? undefined : data[++index], 
-                        done: data ===  undefined || !(index in data) 
+                        done: data ===  undefined || !(index in data),
+                        
                     }
-                }
+                },
+                
             };
         };
 
@@ -29,6 +31,7 @@
         for(const obj of myTest){
             console.log(obj);
         }
+        console.log(myTest.length);
     </script>
 </body>
 </html>
