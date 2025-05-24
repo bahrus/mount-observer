@@ -125,7 +125,7 @@ export class Newish implements EventListenerObject {
         }
         const ref = this.#ref.deref();
         if(ref){
-            ref.dispatchEvent(new Event('ishAssigned'));
+            ref.dispatchEvent(new IshEvent(Array.from(actions)));
         }   
     }
 
