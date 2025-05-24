@@ -18,8 +18,8 @@
             return {
                 next: function() {
                     return { 
-                        value: data[++index], 
-                        done: !(index in data) 
+                        value: data === undefined ? undefined : data[++index], 
+                        done: data ===  undefined || !(index in data) 
                     }
                 }
             };
