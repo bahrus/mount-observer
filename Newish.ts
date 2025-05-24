@@ -63,12 +63,12 @@ export class Newish implements EventListenerObject {
             set(nv: any){
                 if(self.#ce === nv) return;
                 self.queue.push(nv);
-                self.#assignGingerly();
+                self.#assignGingerly(false);
             },
             enumerable: true,
             configurable: true,
         });
-        this.#assignGingerly();
+        this.#assignGingerly(true);
         //attach any itemref references
         this.#attachItemrefs(enhancedElement);
         const et = ObsAttr(enhancedElement, 'itemref');
@@ -101,7 +101,11 @@ export class Newish implements EventListenerObject {
 
     }
 
-    async #assignGingerly(){
+    async #assignGingerly(fromDo: boolean){
+        const actions = new Set<Action>();
+        if(fromDo){
+            actions.add('attached');
+        }
         let ce = this.#ce!;
         if(ce === undefined){
             throw 500;
@@ -111,10 +115,11 @@ export class Newish implements EventListenerObject {
             //TODO: Provide support for a virtual slice of a very large list
             if(Array.isArray(fi)){
                 (<any>ce).ishList = fi;
+                actions.add('ishListAssigned');
             }else{
                 const {assigner} = this.#options;
                 await assigner!(ce, fi);
-
+                actions.add('ishAssigned');
             }
             
         }
@@ -132,13 +137,13 @@ type Action =
     | 'ishListAssigned'
 
 interface IIshEvent{
-    action: Action;
+    actions: Array<Action>;
 }
 
 export class IshEvent extends Event implements IIshEvent{
     static eventName = 'ish';
 
-    constructor(public action: Action){
+    constructor(public actions: Array<Action>){
         super(IshEvent.eventName);
     }
 }
