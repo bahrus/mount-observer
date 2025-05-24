@@ -12,5 +12,18 @@ export function regIsh(scope: Element | ShadowRoot | Document, name: string, ctr
         throw 403;
     }
     map.set(name, ctr);
+    ctr.prototype[Symbol.iterator] = function() {
+        var index = -1;
+        var data  = this[sym];
+
+        return {
+            next: function() {
+                return { 
+                    value: data === undefined ? undefined : data[++index], 
+                    done: data ===  undefined || !(index in data) 
+                }
+            }
+        };
+    };
     document.dispatchEvent(new Event(guid));
 }
