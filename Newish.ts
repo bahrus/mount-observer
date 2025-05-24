@@ -38,12 +38,12 @@ export class Newish implements EventListenerObject {
         const ctr = await getIsh(enhancedElement.isConnected ? enhancedElement :target, itemscope)! as any;
 
         const initPropVals = (<any>enhancedElement)['ish'];
-        if(enhancedElement instanceof HTMLElement){
-            if(enhancedElement.dataset.ish){
-                const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-                this.queue.push(parsedHostProps);
-            }
-        }
+        // if(enhancedElement instanceof HTMLElement){
+        //     if(enhancedElement.dataset.ish){
+        //         const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
+        //         this.queue.push(parsedHostProps);
+        //     }
+        // }
         
         
         const resolvedConstructor = ctr.constructor.name === 'AsyncFunction' ? await ctr() : ctr;
