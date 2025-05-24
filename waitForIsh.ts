@@ -6,7 +6,7 @@ export function waitForIsh(el: Element) : Promise<EventTarget> {
             resolve(ish);
         } else {
             // If the element is not yet defined, wait for it to be defined
-            el.addEventListener('ishAttached', () => {
+            el.addEventListener('ish', () => {
                 const ish = (<any>el)['ish'] as EventTarget;
                 if (ish) {
                     resolve(ish);

@@ -50,20 +50,18 @@ export class Newish {
             set(nv) {
                 if (self.#ce === nv)
                     return;
-                console.log({ nv });
                 self.queue.push(nv);
-                self.#assignGingerly();
+                self.#assignGingerly(false);
             },
             enumerable: true,
             configurable: true,
         });
-        this.#assignGingerly();
+        this.#assignGingerly(true);
         //attach any itemref references
         this.#attachItemrefs(enhancedElement);
         const et = ObsAttr(enhancedElement, 'itemref');
         et.addEventListener('attr-changed', this);
         this.isResolved = true;
-        enhancedElement.dispatchEvent(new Event('ishAttached'));
     }
     #alreadyAttached = new Set();
     #attachItemrefs(enhancedElement) {
@@ -86,7 +84,11 @@ export class Newish {
             }
         }
     }
-    async #assignGingerly() {
+    async #assignGingerly(fromDo) {
+        const actions = new Set();
+        if (fromDo) {
+            actions.add('attached');
+        }
         let ce = this.#ce;
         if (ce === undefined) {
             throw 500;
@@ -96,11 +98,25 @@ export class Newish {
             //TODO: Provide support for a virtual slice of a very large list
             if (Array.isArray(fi)) {
                 ce.ishList = fi;
+                actions.add('ishListAssigned');
             }
             else {
                 const { assigner } = this.#options;
                 await assigner(ce, fi);
+                actions.add('ishAssigned');
             }
         }
+        const ref = this.#ref.deref();
+        if (ref) {
+            ref.dispatchEvent(new IshEvent(Array.from(actions)));
+        }
+    }
+}
+export class IshEvent extends Event {
+    actions;
+    static eventName = 'ish';
+    constructor(actions) {
+        super(IshEvent.eventName);
+        this.actions = actions;
     }
 }

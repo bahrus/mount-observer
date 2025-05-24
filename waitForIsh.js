@@ -7,7 +7,7 @@ export function waitForIsh(el) {
         }
         else {
             // If the element is not yet defined, wait for it to be defined
-            el.addEventListener('ishAttached', () => {
+            el.addEventListener('ish', () => {
                 const ish = el['ish'];
                 if (ish) {
                     resolve(ish);
