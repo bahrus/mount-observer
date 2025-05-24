@@ -1,4 +1,4 @@
-import { BindishOptions } from './ts-refs/mount-observer/types.js';
+import { BindishOptions, Ishcycle } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
@@ -9,7 +9,7 @@ export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish implements EventListenerObject {
     queue: Array<any> = [];
     isResolved = false;
-    #ce: HTMLElement | undefined;
+    #ce: Ishcycle | undefined;
     #ref: WeakRef<Element>;
 
     //#assigner: undefined | Assigner = undefined;
@@ -35,21 +35,31 @@ export class Newish implements EventListenerObject {
     ){
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
-        const ctr = await getIsh(enhancedElement.isConnected ? enhancedElement :target, itemscope)! as any;
+        const options = this.#options;
+        const {initPropVals, ctr} = options;
+        let ce: Ishcycle;
+        if(ctr === undefined){
+            const foundCtr = await getIsh(enhancedElement.isConnected ? enhancedElement :target, itemscope)! as any;
 
-        const initPropVals = (<any>enhancedElement)['ish'];
-        // if(enhancedElement instanceof HTMLElement){
-        //     if(enhancedElement.dataset.ish){
-        //         const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-        //         this.queue.push(parsedHostProps);
-        //     }
-        // }
-        
-        
-        const resolvedConstructor = ctr.constructor.name === 'AsyncFunction' ? await ctr() : ctr;
-        const isInstance = initPropVals instanceof resolvedConstructor
-        const ce = isInstance ? initPropVals : new resolvedConstructor();
-        if(initPropVals !== undefined && !isInstance) this.queue.push(initPropVals);
+            const initPropVals =  (<any>enhancedElement)['ish'];
+            // if(enhancedElement instanceof HTMLElement){
+            //     if(enhancedElement.dataset.ish){
+            //         const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
+            //         this.queue.push(parsedHostProps);
+            //     }
+            // }
+            
+            
+            const resolvedConstructor = foundCtr.constructor.name === 'AsyncFunction' ? await foundCtr() : foundCtr;
+            const isInstance = initPropVals instanceof resolvedConstructor
+            ce = isInstance ? initPropVals : new resolvedConstructor() as Ishcycle;
+            if(initPropVals !== undefined && !isInstance) this.queue.push(initPropVals);
+        }else{
+            ce = new ctr();
+            if(initPropVals !== undefined) this.queue.push(initPropVals);
+        }
+
+       
 
         if('<mount>' in ce && typeof ce['<mount>'] === 'function'){
             await ce['<mount>'](ce, enhancedElement, this.#options)

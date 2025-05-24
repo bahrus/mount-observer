@@ -2,7 +2,7 @@ export { waitForEvent } from './waitForEvent.js';
 import { ObsAttr } from './ObsAttr.js';
 import { splitRefs } from './refid/splitRefs.js';
 import { getIsh } from './refid/getIsh.js';
-import { sym } from './refid/regIsh.js';
+import { arr } from './refid/secretKeys.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
@@ -26,19 +26,29 @@ export class Newish {
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
-        const ctr = await getIsh(enhancedElement.isConnected ? enhancedElement : target, itemscope);
-        const initPropVals = enhancedElement['ish'];
-        if (enhancedElement instanceof HTMLElement) {
-            if (enhancedElement.dataset.ish) {
-                const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-                this.queue.push(parsedHostProps);
-            }
+        const options = this.#options;
+        const { initPropVals, ctr } = options;
+        let ce;
+        if (ctr === undefined) {
+            const foundCtr = await getIsh(enhancedElement.isConnected ? enhancedElement : target, itemscope);
+            const initPropVals = enhancedElement['ish'];
+            // if(enhancedElement instanceof HTMLElement){
+            //     if(enhancedElement.dataset.ish){
+            //         const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
+            //         this.queue.push(parsedHostProps);
+            //     }
+            // }
+            const resolvedConstructor = foundCtr.constructor.name === 'AsyncFunction' ? await foundCtr() : foundCtr;
+            const isInstance = initPropVals instanceof resolvedConstructor;
+            ce = isInstance ? initPropVals : new resolvedConstructor();
+            if (initPropVals !== undefined && !isInstance)
+                this.queue.push(initPropVals);
         }
-        const resolvedConstructor = ctr.constructor.name === 'AsyncFunction' ? await ctr() : ctr;
-        const isInstance = initPropVals instanceof resolvedConstructor;
-        const ce = isInstance ? initPropVals : new resolvedConstructor();
-        if (initPropVals !== undefined && !isInstance)
-            this.queue.push(initPropVals);
+        else {
+            ce = new ctr();
+            if (initPropVals !== undefined)
+                this.queue.push(initPropVals);
+        }
         if ('<mount>' in ce && typeof ce['<mount>'] === 'function') {
             await ce['<mount>'](ce, enhancedElement, this.#options);
         }
@@ -99,7 +109,11 @@ export class Newish {
             //TODO: Provide support for a virtual slice of a very large list
             //TODO:  Maybe should check if iterable rather than an array?
             if (Array.isArray(fi)) {
-                ce[sym] = fi;
+                let filtered = fi;
+                if ('arr=>' in ce && typeof ce['arr=>'] === 'function') {
+                    filtered = await ce['arr=>'](ce, fi, this.#options);
+                }
+                ce[arr] = filtered;
                 actions.add('ishListAssigned');
             }
             else {

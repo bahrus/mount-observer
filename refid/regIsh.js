@@ -1,5 +1,6 @@
 export const guid = 'La8Cx9vHsUOd03WomqdnPw';
 export const sym = Symbol.for(guid);
+import { arr } from './secretKeys.js';
 export function regIsh(scope, name, ctr) {
     let map = scope[sym];
     if (map === undefined) {
@@ -12,7 +13,7 @@ export function regIsh(scope, name, ctr) {
     map.set(name, ctr);
     ctr.prototype[Symbol.iterator] = function () {
         var index = -1;
-        var data = this[sym];
+        var data = this[arr];
         return {
             next: function () {
                 return {
