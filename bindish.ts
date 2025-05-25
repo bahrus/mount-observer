@@ -15,7 +15,8 @@ export async function bindishIt(scopes: Array<Element>, target: Node, options?: 
         const itemscope = scope.getAttribute('itemscope');
         if(itemscope && !((<any>scope).ish instanceof HTMLElement)){
             const {Newish} = await import('./Newish.js');
-            new Newish(scope, target, itemscope, options);
+            const newIsh = new Newish(scope, target, itemscope, options);
+            await newIsh.do()
         }
     }
 }

@@ -14,13 +14,17 @@ export class Newish implements EventListenerObject {
 
     //#assigner: undefined | Assigner = undefined;
     #options: BindishOptions;
-
-    constructor(enhancedElement: Element,
+    #args: [enhancedElement: Element, target: Node, itemscope: string] | undefined;
+    constructor(
+        enhancedElement: Element,
         target: Node,
-        itemscope: string, options?: BindishOptions){
+        itemscope: string, 
+        options?: BindishOptions
+    ){
+        this.#args = [enhancedElement, target, itemscope];
         this.#options = options || {assigner: Object.assign};
         this.#ref = new WeakRef(enhancedElement);
-        this.#do(enhancedElement, target, itemscope);
+        //this.#do(enhancedElement, target, itemscope);
     }
     handleEvent(event: Event): void {
        const enhancedElement = this.#ref.deref();
@@ -28,11 +32,9 @@ export class Newish implements EventListenerObject {
        this.#attachItemrefs(enhancedElement);
     }
 
-    async #do(
-        enhancedElement: Element,
-        target: Node, 
-        itemscope: string
-    ){
+    async do(){
+        const [enhancedElement, target, itemscope] = this.#args!;
+        this.#args = undefined;
         if((<any>enhancedElement)[attached] === true) return;
         (<any>enhancedElement)[attached] = true;
         const options = this.#options;
@@ -61,9 +63,7 @@ export class Newish implements EventListenerObject {
 
        
 
-        if('<mount>' in ce && typeof ce['<mount>'] === 'function'){
-            await ce['<mount>'](ce, enhancedElement, this.#options)
-        }
+
         
         this.#ce = ce;
         const self = this;
@@ -79,7 +79,10 @@ export class Newish implements EventListenerObject {
             enumerable: true,
             configurable: true,
         });
-        this.#assignGingerly(true);
+        await this.#assignGingerly(true);
+            if('<mount>' in ce && typeof ce['<mount>'] === 'function'){
+            await ce['<mount>'](ce, enhancedElement, this.#options)
+        }
         //attach any itemref references
         this.#attachItemrefs(enhancedElement);
         const et = ObsAttr(enhancedElement, 'itemref');

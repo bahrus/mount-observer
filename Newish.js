@@ -11,10 +11,12 @@ export class Newish {
     #ref;
     //#assigner: undefined | Assigner = undefined;
     #options;
+    #args;
     constructor(enhancedElement, target, itemscope, options) {
+        this.#args = [enhancedElement, target, itemscope];
         this.#options = options || { assigner: Object.assign };
         this.#ref = new WeakRef(enhancedElement);
-        this.#do(enhancedElement, target, itemscope);
+        //this.#do(enhancedElement, target, itemscope);
     }
     handleEvent(event) {
         const enhancedElement = this.#ref.deref();
@@ -22,7 +24,9 @@ export class Newish {
             return;
         this.#attachItemrefs(enhancedElement);
     }
-    async #do(enhancedElement, target, itemscope) {
+    async do() {
+        const [enhancedElement, target, itemscope] = this.#args;
+        this.#args = undefined;
         if (enhancedElement[attached] === true)
             return;
         enhancedElement[attached] = true;
@@ -49,9 +53,6 @@ export class Newish {
             if (initPropVals !== undefined)
                 this.queue.push(initPropVals);
         }
-        if ('<mount>' in ce && typeof ce['<mount>'] === 'function') {
-            await ce['<mount>'](ce, enhancedElement, this.#options);
-        }
         this.#ce = ce;
         const self = this;
         Object.defineProperty(enhancedElement, 'ish', {
@@ -67,7 +68,10 @@ export class Newish {
             enumerable: true,
             configurable: true,
         });
-        this.#assignGingerly(true);
+        await this.#assignGingerly(true);
+        if ('<mount>' in ce && typeof ce['<mount>'] === 'function') {
+            await ce['<mount>'](ce, enhancedElement, this.#options);
+        }
         //attach any itemref references
         this.#attachItemrefs(enhancedElement);
         const et = ObsAttr(enhancedElement, 'itemref');
