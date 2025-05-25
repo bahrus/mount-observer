@@ -27,7 +27,15 @@
             };
         };
 
+        MyTest.prototype['arr='] = function(arr){
+            this.myList = arr;
+        }
+
         const myTest = new MyTest();
+        for(const obj of myTest){
+            console.log(obj);
+        }
+        myTest['arr=']([4, 5, 6]);
         for(const obj of myTest){
             console.log(obj);
         }
