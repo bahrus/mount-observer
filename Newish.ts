@@ -60,6 +60,9 @@ export class Newish implements EventListenerObject {
             ce = new ctr();
             if(initPropVals !== undefined) this.queue.push(initPropVals);
         }
+        if('tbd' in ce && typeof ce['tbd'] === 'function'){
+            await ce['tbd'](ce, enhancedElement, this.#options);
+        }
 
        
 
@@ -124,14 +127,17 @@ export class Newish implements EventListenerObject {
         if(ce === undefined){
             throw 500;
         }
+        let foundArray = false;
+        const hasArrFilter = 'arr=>' in ce && typeof ce['arr=>'] === 'function';
         while(this.queue.length > 0 ){
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
             //TODO:  Maybe should check if iterable rather than an array?
             if(Array.isArray(fi)){
+                foundArray = true;
                 let filtered = fi;
-                if('arr=>' in ce && typeof ce['arr=>'] === 'function'){
-                    filtered = await ce['arr=>'](ce, fi, this.#options);
+                if(hasArrFilter){
+                    filtered = await (ce['arr=>']!)(ce, fi, this.#options);
                 }
                 (<any>ce)[arr] = filtered;
                 actions.add('ishListAssigned');
@@ -141,6 +147,13 @@ export class Newish implements EventListenerObject {
                 actions.add('ishAssigned');
             }
             
+        }
+        if(fromDo && !foundArray){
+            const filtered = await (ce['arr=>']!)(ce, undefined, this.#options);
+            if(filtered !== undefined){
+                (<any>ce)[arr] = filtered;
+                actions.add('ishListAssigned');
+            }
         }
         const ref = this.#ref.deref();
         if(ref){
