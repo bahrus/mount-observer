@@ -23,11 +23,11 @@ export function regIsh(scope, name, ctr) {
             }
         };
     };
-    ctr.prototype['#arr='] = function (newArr) {
-        if (newArr === undefined) {
-            return this[arr];
-        }
-        this[arr] = newArr;
-    };
+    // ctr.prototype['#arr='] = function(newArr?: any[]){
+    //     if(newArr === undefined){
+    //         return this[arr];
+    //     }
+    //     this[arr] = newArr;
+    // }
     document.dispatchEvent(new Event(guid));
 }
