@@ -77,6 +77,7 @@ export class Newish {
         const et = ObsAttr(enhancedElement, 'itemref');
         et.addEventListener('attr-changed', this);
         this.isResolved = true;
+        return ce;
     }
     #alreadyAttached = new Set();
     #attachItemrefs(enhancedElement) {

@@ -88,6 +88,7 @@ export class Newish implements EventListenerObject {
         const et = ObsAttr(enhancedElement, 'itemref');
         et.addEventListener('attr-changed', this);
         this.isResolved = true;
+        return ce;
     }
 
     
