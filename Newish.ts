@@ -1,4 +1,4 @@
-import { BindishOptions, Ishcycle } from './ts-refs/mount-observer/types.js';
+import { BindishOptions, HasIsh, Ishcycle } from './ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
@@ -12,7 +12,6 @@ export class Newish implements EventListenerObject {
     #ce: Ishcycle | undefined;
     #ref: WeakRef<Element>;
 
-    //#assigner: undefined | Assigner = undefined;
     #options: BindishOptions;
     #args: [enhancedElement: Element, target: Node, itemscope: string] | undefined;
     constructor(
@@ -24,9 +23,8 @@ export class Newish implements EventListenerObject {
         this.#args = [enhancedElement, target, itemscope];
         this.#options = options || {assigner: Object.assign};
         this.#ref = new WeakRef(enhancedElement);
-        //this.#do(enhancedElement, target, itemscope);
     }
-    handleEvent(event: Event): void {
+    handleEvent(): void {
        const enhancedElement = this.#ref.deref();
        if(!enhancedElement) return;
        this.#attachItemrefs(enhancedElement);
@@ -44,14 +42,7 @@ export class Newish implements EventListenerObject {
             const foundCtr = await getIsh(enhancedElement.isConnected ? enhancedElement :target, itemscope)! as any;
 
             const initPropVals =  (<any>enhancedElement)['ish'];
-            // if(enhancedElement instanceof HTMLElement){
-            //     if(enhancedElement.dataset.ish){
-            //         const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-            //         this.queue.push(parsedHostProps);
-            //     }
-            // }
-            
-            
+
             const resolvedConstructor = foundCtr.constructor.name === 'AsyncFunction' ? await foundCtr() : foundCtr;
             const isInstance = initPropVals instanceof resolvedConstructor
             ce = isInstance ? initPropVals : new resolvedConstructor() as Ishcycle;
@@ -64,10 +55,6 @@ export class Newish implements EventListenerObject {
             await ce['tbd'](ce, enhancedElement, this.#options);
         }
 
-       
-
-
-        
         this.#ce = ce;
         const self = this;
         Object.defineProperty(enhancedElement, 'ish', {
@@ -84,7 +71,7 @@ export class Newish implements EventListenerObject {
         });
         await this.#assignGingerly(true);
             if('<mount>' in ce && typeof ce['<mount>'] === 'function'){
-            await ce['<mount>'](ce, enhancedElement, this.#options)
+            await ce['<mount>'](ce, enhancedElement as HasIsh & Element, this.#options)
         }
         //attach any itemref references
         this.#attachItemrefs(enhancedElement);
@@ -138,7 +125,7 @@ export class Newish implements EventListenerObject {
                 foundArray = true;
                 let filtered = fi as any | undefined;
                 if(hasArrFilter){
-                    filtered = await (ce['arr=>']!)(ce, fi, ref!, this.#options);
+                    filtered = await (ce['arr=>']!)(ce, fi, ref! as HasIsh & Element, this.#options);
                 }
                 (<any>ce)[arr] = filtered;
                 actions.add('ishListAssigned');
@@ -150,7 +137,7 @@ export class Newish implements EventListenerObject {
             
         }
         if(fromDo && !foundArray){
-            const filtered = await (ce['arr=>']!)(ce, undefined, ref!, this.#options);
+            const filtered = await (ce['arr=>']!)(ce, undefined, ref! as HasIsh &  Element, this.#options);
             if(filtered !== undefined){
                 (<any>ce)[arr] = filtered;
                 actions.add('ishListAssigned');

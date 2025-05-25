@@ -9,16 +9,14 @@ export class Newish {
     isResolved = false;
     #ce;
     #ref;
-    //#assigner: undefined | Assigner = undefined;
     #options;
     #args;
     constructor(enhancedElement, target, itemscope, options) {
         this.#args = [enhancedElement, target, itemscope];
         this.#options = options || { assigner: Object.assign };
         this.#ref = new WeakRef(enhancedElement);
-        //this.#do(enhancedElement, target, itemscope);
     }
-    handleEvent(event) {
+    handleEvent() {
         const enhancedElement = this.#ref.deref();
         if (!enhancedElement)
             return;
@@ -36,12 +34,6 @@ export class Newish {
         if (ctr === undefined) {
             const foundCtr = await getIsh(enhancedElement.isConnected ? enhancedElement : target, itemscope);
             const initPropVals = enhancedElement['ish'];
-            // if(enhancedElement instanceof HTMLElement){
-            //     if(enhancedElement.dataset.ish){
-            //         const parsedHostProps = JSON.parse(enhancedElement.dataset.ish);
-            //         this.queue.push(parsedHostProps);
-            //     }
-            // }
             const resolvedConstructor = foundCtr.constructor.name === 'AsyncFunction' ? await foundCtr() : foundCtr;
             const isInstance = initPropVals instanceof resolvedConstructor;
             ce = isInstance ? initPropVals : new resolvedConstructor();
@@ -52,6 +44,9 @@ export class Newish {
             ce = new ctr();
             if (initPropVals !== undefined)
                 this.queue.push(initPropVals);
+        }
+        if ('tbd' in ce && typeof ce['tbd'] === 'function') {
+            await ce['tbd'](ce, enhancedElement, this.#options);
         }
         this.#ce = ce;
         const self = this;
@@ -109,14 +104,18 @@ export class Newish {
         if (ce === undefined) {
             throw 500;
         }
+        let foundArray = false;
+        const hasArrFilter = 'arr=>' in ce && typeof ce['arr=>'] === 'function';
+        const ref = this.#ref.deref();
         while (this.queue.length > 0) {
             const fi = this.queue.shift();
             //TODO: Provide support for a virtual slice of a very large list
             //TODO:  Maybe should check if iterable rather than an array?
             if (Array.isArray(fi)) {
+                foundArray = true;
                 let filtered = fi;
-                if ('arr=>' in ce && typeof ce['arr=>'] === 'function') {
-                    filtered = await ce['arr=>'](ce, fi, this.#options);
+                if (hasArrFilter) {
+                    filtered = await (ce['arr=>'])(ce, fi, ref, this.#options);
                 }
                 ce[arr] = filtered;
                 actions.add('ishListAssigned');
@@ -127,7 +126,13 @@ export class Newish {
                 actions.add('ishAssigned');
             }
         }
-        const ref = this.#ref.deref();
+        if (fromDo && !foundArray) {
+            const filtered = await (ce['arr=>'])(ce, undefined, ref, this.#options);
+            if (filtered !== undefined) {
+                ce[arr] = filtered;
+                actions.add('ishListAssigned');
+            }
+        }
         if (ref) {
             ref.dispatchEvent(new IshEvent(Array.from(actions)));
         }
