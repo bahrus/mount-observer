@@ -48,7 +48,7 @@ export class Newish implements EventListenerObject {
             ce = isInstance ? initPropVals : new resolvedConstructor() as Ishcycle;
             if(initPropVals !== undefined && !isInstance) this.queue.push(initPropVals);
         }else{
-            ce = new ctr();
+            ce = new (ctr as any)();
             if(initPropVals !== undefined) this.queue.push(initPropVals);
         }
         if('tbd' in ce && typeof ce['tbd'] === 'function'){
