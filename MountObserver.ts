@@ -442,7 +442,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
-        await bindish(within as DocumentFragment, within, {assigner: this.#mountInit.assigner});
+        bindish(within as DocumentFragment, within, {assigner: this.#mountInit.assigner});
         await this.composeFragment(within as DocumentFragment, 0);
         const match = await this.#selector();
         const els = Array.from((within as Element).querySelectorAll(match));
