@@ -13,6 +13,11 @@
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
         import {regIsh} from '/refId/regIsh.js';
+        span.addEventListener('ish', e => {
+            if(e.target.ish.test === 'hello'){
+                target.setAttribute('mark', 'good');
+            }
+        });
         regIsh(div, 'myVM', class {
             test = 'hello';
         });
@@ -23,11 +28,7 @@
                 }
             }
         });
-        span.addEventListener('ish', e => {
-            if(e.target.ish.test === 'hello'){
-                target.setAttribute('mark', 'good');
-            }
-        });
+
         mo.observe(div);
         // customElements.define('my-element', class extends HTMLElement {
         //     test = 'hello';

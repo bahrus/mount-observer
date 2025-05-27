@@ -51,9 +51,9 @@ export class Newish implements EventListenerObject {
             ce = new (ctr as any)();
             if(initPropVals !== undefined) this.queue.push(initPropVals);
         }
-        if('tbd' in ce && typeof ce['tbd'] === 'function'){
-            await ce['tbd'](ce, enhancedElement, this.#options);
-        }
+        // if('tbd' in ce && typeof ce['tbd'] === 'function'){
+        //     await ce['tbd'](ce, enhancedElement, this.#options);
+        // }
 
         this.#ce = ce;
         const self = this;
@@ -136,7 +136,7 @@ export class Newish implements EventListenerObject {
             }
             
         }
-        if(fromDo && !foundArray){
+        if(fromDo && !foundArray && hasArrFilter){
             const filtered = await (ce['arr=>']!)(ce, undefined, ref! as HasIsh &  Element, this.#options);
             if(filtered !== undefined){
                 (<any>ce)[arr] = filtered;

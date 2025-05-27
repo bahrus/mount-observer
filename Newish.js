@@ -45,9 +45,9 @@ export class Newish {
             if (initPropVals !== undefined)
                 this.queue.push(initPropVals);
         }
-        if ('tbd' in ce && typeof ce['tbd'] === 'function') {
-            await ce['tbd'](ce, enhancedElement, this.#options);
-        }
+        // if('tbd' in ce && typeof ce['tbd'] === 'function'){
+        //     await ce['tbd'](ce, enhancedElement, this.#options);
+        // }
         this.#ce = ce;
         const self = this;
         Object.defineProperty(enhancedElement, 'ish', {
@@ -126,7 +126,7 @@ export class Newish {
                 actions.add('ishAssigned');
             }
         }
-        if (fromDo && !foundArray) {
+        if (fromDo && !foundArray && hasArrFilter) {
             const filtered = await (ce['arr=>'])(ce, undefined, ref, this.#options);
             if (filtered !== undefined) {
                 ce[arr] = filtered;
