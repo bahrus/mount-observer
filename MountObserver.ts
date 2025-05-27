@@ -442,6 +442,10 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #inspectWithin(within: Node, initializing: boolean){
+        //the line below had an await for bindish, consistent with the rest of the code, but it was
+        //getting into a catch-22 scenario frequently, blocking the code for resuming.
+        //This was observed with per-each package, demo/ScopeScript.html, clicking refresh a few times
+        //one will see the inconsistent behavior if await is added below.
         bindish(within as DocumentFragment, within, {assigner: this.#mountInit.assigner});
         await this.composeFragment(within as DocumentFragment, 0);
         const match = await this.#selector();
