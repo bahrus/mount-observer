@@ -10,7 +10,7 @@ import {RootMutObs} from './RootMutObs.js';
 import {bindish, bindishIt} from './bindish.js';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
-const wasItemReffed = Symbol.for('TODO: guid');
+const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
 
 export const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
