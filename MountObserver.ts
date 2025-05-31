@@ -111,6 +111,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 const fragment = document.createDocumentFragment();
                 for(const adjRef of adjRefs){
                     const clone = adjRef.cloneNode(true) as HTMLElement;
+                    clone.removeAttribute('id');
                     fragment.appendChild(clone);
                 }
                 const {doCleanup} = await import('./doCleanup.js');

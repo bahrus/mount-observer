@@ -97,6 +97,7 @@ export class MountObserver extends EventTarget {
                 const fragment = document.createDocumentFragment();
                 for (const adjRef of adjRefs) {
                     const clone = adjRef.cloneNode(true);
+                    clone.removeAttribute('id');
                     fragment.appendChild(clone);
                 }
                 const { doCleanup } = await import('./doCleanup.js');
