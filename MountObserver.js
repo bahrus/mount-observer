@@ -1,6 +1,7 @@
 import { RootMutObs } from './RootMutObs.js';
 import { bindish, bindishIt } from './bindish.js';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
+export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
 export const mutationObserverLookup = new WeakMap();
 const refCount = new WeakMap();
 export class MountObserver extends EventTarget {
@@ -72,7 +73,7 @@ export class MountObserver extends EventTarget {
         }
     }
     #templLookUp = new Map();
-    findByID(id, fragment) {
+    async findByID(id, fragment) {
         if (this.#templLookUp.has(id))
             return this.#templLookUp.get(id);
         let templ = fragment.getElementById(id);
@@ -84,8 +85,27 @@ export class MountObserver extends EventTarget {
                 templ = rootToSearchOutwardFrom.getElementById(id);
             }
         }
-        if (templ !== null)
+        if (templ !== null) {
+            if (!(templ instanceof HTMLTemplateElement)) {
+                const newTempl = document.createElement('template');
+                const { getAdjRefs } = await import('./refid/getAdjRefs.js');
+                const adjRefs = getAdjRefs(templ);
+                if (adjRefs.length > 1) {
+                    newTempl[wasItemReffed] = true;
+                    adjRefs[0].setAttribute('itemref', '<autogen>');
+                }
+                const fragment = document.createDocumentFragment();
+                for (const adjRef of adjRefs) {
+                    const clone = adjRef.cloneNode(true);
+                    fragment.appendChild(clone);
+                }
+                const { doCleanup } = await import('./doCleanup.js');
+                doCleanup(templ, fragment);
+                newTempl.content.appendChild(fragment);
+                templ = newTempl;
+            }
             this.#templLookUp.set(id, templ);
+        }
         return templ;
     }
     disconnect(within) {

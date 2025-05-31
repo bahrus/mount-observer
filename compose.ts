@@ -1,18 +1,15 @@
 import { ILoadEvent, loadEventName } from './ts-refs/mount-observer/types';
-import { MountObserver, inclTemplQry } from './MountObserver.js';
+import { MountObserver, inclTemplQry, wasItemReffed } from './MountObserver.js';
 
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
-
+const autogenKey = Symbol.for('YpP5EP0i1UKcBBBH9tsm0w');
 export async function compose(
     self: MountObserver, 
     el: HTMLTemplateElement, 
     level: number
 ){
-    if(!el.hasAttribute('src')){
-        return;
-    }
-    const src = el.getAttribute('src');
+    const src = el.getAttribute('src'); if(src === null) return;
     el.removeAttribute('src');
     const templID = src!.substring(1);
     const fragment = self.objNde?.deref() as DocumentFragment;
@@ -20,6 +17,38 @@ export async function compose(
     const templ = await self.findByID(templID, fragment);
     if(!(templ instanceof HTMLTemplateElement)) throw 404;
     const clone = templ.content.cloneNode(true) as DocumentFragment;
+    const dataLd = el.dataset.ld;
+    const wasReffed = (<any>templ)[wasItemReffed];
+    if(wasReffed || dataLd){
+        const firstElement = clone.firstElementChild!;
+        if(wasReffed){
+            let ns = firstElement.nextElementSibling;
+            const ids = [];
+            let count = (<any>window)[autogenKey];
+            if(count === undefined){
+                count = 0;
+            }else{
+                count++;
+            }
+            while(ns !== null){
+                const id = ns.id = `moc-${count}`;
+                ids.push(id);
+                ns = ns.nextElementSibling;
+            }
+        }
+        if(dataLd){
+            const parsed = JSON.parse(dataLd);
+            let type = parsed['@type'];
+            const itemscopeAttr = firstElement.getAttribute('itemscope');
+            if(type && !itemscopeAttr){
+                firstElement.setAttribute('itemscope', type);
+            }else{
+                type = itemscopeAttr;
+            }
+
+        }
+        
+    }
     const slots = el.content.querySelectorAll(`[slot]`);
 
     for(const slot of slots){
