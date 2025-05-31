@@ -17,7 +17,7 @@ export async function compose(
     const templID = src!.substring(1);
     const fragment = self.objNde?.deref() as DocumentFragment;
     if(fragment === undefined) return;
-    const templ = self.findByID(templID, fragment);
+    const templ = await self.findByID(templID, fragment);
     if(!(templ instanceof HTMLTemplateElement)) throw 404;
     const clone = templ.content.cloneNode(true) as DocumentFragment;
     const slots = el.content.querySelectorAll(`[slot]`);

@@ -87,7 +87,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
-    findByID(id: string, fragment: DocumentFragment): HTMLElement | null{
+    async findByID(id: string, fragment: DocumentFragment): Promise<HTMLElement | null>{
         if(this.#templLookUp.has(id)) return this.#templLookUp.get(id)!;
         let templ = fragment.getElementById(id);
         if(templ === null){
@@ -102,7 +102,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
             if(!(templ instanceof HTMLTemplateElement)){
                 const newTempl = document.createElement('template');
                 const clone = templ.cloneNode(true) as DocumentFragment;
-                
+                const {doCleanup} = await import('./doCleanup.js');
+                doCleanup(templ as HTMLElement, clone);
                 newTempl.content.appendChild(clone);
                 templ = newTempl;
             }
