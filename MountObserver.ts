@@ -98,7 +98,29 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 templ = rootToSearchOutwardFrom.getElementById(id);
             }
         }
-        if(templ !== null) this.#templLookUp.set(id, templ);
+        if(templ !== null) {
+            if(!(templ instanceof HTMLTemplateElement)){
+                const newTempl = document.createElement('template');
+                const clone = templ.cloneNode(true) as DocumentFragment;
+                const removeInner = templ.getAttribute('remove-inner') || '[itemprop]:not([itemscope])';
+                const removeInnerEls = clone.querySelectorAll(removeInner);
+                for(const removeInnerEl of removeInnerEls){
+                    if('href' in removeInnerEl){
+                        removeInnerEl.href = '';
+                    } else if ('value' in removeInnerEl){
+                        removeInnerEl.value = '';
+                    }else if('datetime' in removeInnerEl){
+                        removeInnerEl.datetime = '';
+                    }else{ 
+                        //any other exceptions?                       
+                        removeInnerEl.textContent = '';
+                    }
+                }
+                newTempl.content.appendChild(clone);
+                templ = newTempl;
+            }
+            this.#templLookUp.set(id, templ);
+        }
         return templ;
     }
 
