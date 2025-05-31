@@ -130,7 +130,10 @@ export class Newish implements EventListenerObject {
                 (<any>ce)[arr] = filtered;
                 actions.add('ishListAssigned');
             }else{
-                const {assigner} = this.#options;
+                let {assigner} = this.#options;
+                if(assigner === undefined){
+                    assigner = Object.assign;
+                }
                 await assigner!(ce, fi);
                 actions.add('ishAssigned');
             }

@@ -90,7 +90,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     #templLookUp: Map<string, HTMLElement> = new Map();
     async findByID(id: string, fragment: DocumentFragment): Promise<HTMLElement | null>{
         if(this.#templLookUp.has(id)) return this.#templLookUp.get(id)!;
-        let templ = fragment.getElementById(id);
+        let templ = fragment.querySelector(`#${id}`);
         if(templ === null){
             let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document) as any;
             templ = rootToSearchOutwardFrom.getElementById(id);

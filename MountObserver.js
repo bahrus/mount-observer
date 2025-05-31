@@ -76,7 +76,7 @@ export class MountObserver extends EventTarget {
     async findByID(id, fragment) {
         if (this.#templLookUp.has(id))
             return this.#templLookUp.get(id);
-        let templ = fragment.getElementById(id);
+        let templ = fragment.querySelector(`#${id}`);
         if (templ === null) {
             let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
             templ = rootToSearchOutwardFrom.getElementById(id);

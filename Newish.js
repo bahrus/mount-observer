@@ -121,7 +121,10 @@ export class Newish {
                 actions.add('ishListAssigned');
             }
             else {
-                const { assigner } = this.#options;
+                let { assigner } = this.#options;
+                if (assigner === undefined) {
+                    assigner = Object.assign;
+                }
                 await assigner(ce, fi);
                 actions.add('ishAssigned');
             }

@@ -42,9 +42,7 @@ export async function compose(self, el, level) {
             if (type && !itemscopeAttr) {
                 firstElement.setAttribute('itemscope', type);
             }
-            else {
-                type = itemscopeAttr;
-            }
+            firstElement['ish'] = parsed;
         }
     }
     const slots = el.content.querySelectorAll(`[slot]`);

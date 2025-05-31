@@ -42,9 +42,8 @@ export async function compose(
             const itemscopeAttr = firstElement.getAttribute('itemscope');
             if(type && !itemscopeAttr){
                 firstElement.setAttribute('itemscope', type);
-            }else{
-                type = itemscopeAttr;
             }
+            (<any>firstElement)['ish'] = parsed;
 
         }
         
