@@ -101,6 +101,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
         if(templ !== null) {
             if(!(templ instanceof HTMLTemplateElement)){
                 const newTempl = document.createElement('template');
+                const {getAdjRefs} = await import('./refid/getAdjRefs.js');
+                const fragment = document.createDocumentFragment();
+                for(const )
                 const clone = templ.cloneNode(true) as DocumentFragment;
                 const {doCleanup} = await import('./doCleanup.js');
                 doCleanup(templ as HTMLElement, clone);

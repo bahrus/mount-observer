@@ -49,6 +49,10 @@
       "default": "./waitForIsh.js",
       "types": "./waitForIsh.ts"
     },
+    "./refid/getAdjRefs.js": {
+      "default": "./refid/getAdjRefs.js",
+      "types": "./refid/getAdjRefs.ts"
+    },
     "./refid/regIsh.js": {
       "default": "./refid/regIsh.js",
       "types": "./refid/regIsh.js"
