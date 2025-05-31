@@ -10,6 +10,7 @@ import {RootMutObs} from './RootMutObs.js';
 import {bindish, bindishIt} from './bindish.js';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
+const wasItemReffed = Symbol.for('TODO: guid');
 
 export const mutationObserverLookup = new WeakMap<Node, RootMutObs>();
 const refCount = new WeakMap<Node, number>();
@@ -103,6 +104,10 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 const newTempl = document.createElement('template');
                 const {getAdjRefs} = await import('./refid/getAdjRefs.js');
                 const adjRefs = getAdjRefs(templ);
+                if(adjRefs.length > 1){
+                    (<any>newTempl)[wasItemReffed] = true;
+                    adjRefs[0].setAttribute('itemref', '<autogen>');
+                }
                 const fragment = document.createDocumentFragment();
                 for(const adjRef of adjRefs){
                     const clone = adjRef.cloneNode(true) as HTMLElement;
