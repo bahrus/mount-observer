@@ -43,6 +43,7 @@ export async function compose(self, el, level) {
                 firstElement.setAttribute('itemscope', type);
             }
             firstElement['ish'] = parsed;
+            delete el.dataset.ld;
         }
     }
     const slots = el.content.querySelectorAll(`[slot]`);

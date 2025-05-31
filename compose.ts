@@ -44,7 +44,7 @@ export async function compose(
                 firstElement.setAttribute('itemscope', type);
             }
             (<any>firstElement)['ish'] = parsed;
-
+            delete el.dataset.ld;
         }
         
     }
