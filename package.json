@@ -37,6 +37,10 @@
       "default": "./compose.js",
       "types": "./compose.ts"
     },
+    "./doCleanup.js": {
+      "default": "./doCleanup.js",
+      "types": "./doCleanup.ts"
+    },
     "./waitForEvent.js": {
       "default": "./waitForEvent.js",
       "types": "./waitForEvent.ts"
