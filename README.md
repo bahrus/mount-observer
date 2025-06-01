@@ -850,9 +850,47 @@ This proposal (and polyfill) also supports the option to utilize ShadowDOM / slo
 <compose src="#productCard"></compose>
 ```
 
-The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. But I strongly suspect that could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
+The discussion there leads to an open question whether a processing instruction would be better.  I think the compose tag would make much more sense, vs a processing instruction, as it could then support slotted children (behaving similar to the Beatles' example above).  Or maybe another tag should be introduced that is the equivalent of the slot, to avoid confusion. But I strongly suspect supporting intra document HTML imports could significantly reduce the payload size of some documents, if we can reuse blocks of HTML, inserting sections of customized content for each instance.
 
 The [add src attribute to template to load a template from file](https://github.com/whatwg/html/issues/10571) and an interesting proposal that is [coming from](https://github.com/htmlcomponents/declarative-shadow-imports/blob/main/examples/02-explainer-proposal/02-html.html) the Edge team [seem quite compatible](https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/ShadowDOM/explainer.md#proposal-inline-declarative-css-module-scripts) with this idea.
+
+## Lazy Loading / Conditionally loading intra document imports [WIP specification]
+
+Just as it is useful to be able lazy load external imports when needed, it would also be useful to do the same for intra document HTML imports.  The most straightforward way this could be done seems to be as follows, either introducing some attribute like "type=conditional", or defining a new element that inherits from the HTMLTemplateElement, for example:
+
+```html
+<template id=source-template type=conditional>
+
+   <template id="english-version" class=source-template mount='{
+      "on": ":not([defer-loading])",
+      "loadingEagerness": "eager",
+      "whereMediaMatches": "(min-width: 700px)",
+      "whereLangIn": ["en-GB"],
+   }'>
+      <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
+   </template>
+
+   <template id="french-version" class=source-template mount='{
+      "on": ":not([defer-loading])",
+      "loadingEagerness": "eager",
+      "whereMediaMatches": "(min-width: 700px)",
+      "whereLangIn": ["fr"],
+   }'>
+      <div>Je ne sais pas pourquoi tu dis  <slot name=slot2></slot> je dis  <slot name=slot1></slot></div>
+   </template>
+   
+</template>
+
+...
+<template src=#source-template>
+   <span slot=slot1>hello</span>
+   <span slot=slot2>goodbye<span>
+</template>
+```
+
+```html
+
+```
 
 ## Creating "frameworks" that revolve around MOSEs.
 
