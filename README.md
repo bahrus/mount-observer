@@ -861,7 +861,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 ```html
 <template id=source-template type=conditional>
 
-   <template id="english-version" class=source-template mount='{
+   <template mount='{
       "on": ":not([defer-loading])",
       "loadingEagerness": "eager",
       "whereMediaMatches": "(min-width: 700px)",
@@ -870,10 +870,10 @@ Just as it is useful to be able lazy load external imports when needed, it would
       <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
    </template>
 
-   <template id="french-version" class=source-template mount='{
+   <template mount='{
       "on": ":not([defer-loading])",
-      "loadingEagerness": "eager",
-      "whereMediaMatches": "(min-width: 700px)",
+      "loadingEagerness": "lazy",
+      "whereMediaMatches": "(max-width: 700px)",
       "whereLangIn": ["fr"],
    }'>
       <div>Je ne sais pas pourquoi tu dis  <slot name=slot2></slot> je dis  <slot name=slot1></slot></div>
@@ -888,9 +888,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 </template>
 ```
 
-```html
 
-```
 
 ## Creating "frameworks" that revolve around MOSEs.
 
