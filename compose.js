@@ -35,6 +35,7 @@ export async function compose(self, el, level) {
                 ids.push(id);
                 ns = ns.nextElementSibling;
             }
+            firstElement.setAttribute('itemref', ids.join(' '));
         }
         if (dataLd) {
             const parsed = JSON.parse(dataLd);
