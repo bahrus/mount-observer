@@ -886,6 +886,13 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <span slot=slot1>hello</span>
    <span slot=slot2>goodbye<span>
 </template>
+
+<!-- or, alternatively: -->
+
+<compose src=#source-template>
+   <span slot=slot1>hello</span>
+   <span slot=slot2>goodbye<span>
+</compose>
 ```
 
 
