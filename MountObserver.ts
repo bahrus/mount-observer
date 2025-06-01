@@ -104,13 +104,19 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 const newTempl = document.createElement('template');
                 const {getAdjRefs} = await import('./refid/getAdjRefs.js');
                 const adjRefs = getAdjRefs(templ);
-                if(adjRefs.length > 1){
-                    (<any>newTempl)[wasItemReffed] = true;
-                    adjRefs[0].setAttribute('itemref', '<autogen>');
-                }
+                // if(adjRefs.length > 1){
+                //     (<any>newTempl)[wasItemReffed] = true;
+                //     adjRefs[0].setAttribute('itemref', '<autogen>');
+                // }
                 const fragment = document.createDocumentFragment();
+                let first = true;
                 for(const adjRef of adjRefs){
                     const clone = adjRef.cloneNode(true) as HTMLElement;
+                    if(first && adjRefs.length > 1){
+                        clone.setAttribute('itemref', '<autogen>');
+                        (<any>newTempl)[wasItemReffed] = true;
+                        first = false;
+                    }
                     clone.removeAttribute('id');
                     fragment.appendChild(clone);
                 }
@@ -119,9 +125,9 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 newTempl.content.appendChild(fragment);
                 templ = newTempl;
             }
-            this.#templLookUp.set(id, templ);
+            this.#templLookUp.set(id, templ as HTMLTemplateElement);
         }
-        return templ;
+        return templ as HTMLTemplateElement;
     }
 
     disconnect(within: Node){

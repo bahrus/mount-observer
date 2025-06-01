@@ -90,13 +90,19 @@ export class MountObserver extends EventTarget {
                 const newTempl = document.createElement('template');
                 const { getAdjRefs } = await import('./refid/getAdjRefs.js');
                 const adjRefs = getAdjRefs(templ);
-                if (adjRefs.length > 1) {
-                    newTempl[wasItemReffed] = true;
-                    adjRefs[0].setAttribute('itemref', '<autogen>');
-                }
+                // if(adjRefs.length > 1){
+                //     (<any>newTempl)[wasItemReffed] = true;
+                //     adjRefs[0].setAttribute('itemref', '<autogen>');
+                // }
                 const fragment = document.createDocumentFragment();
+                let first = true;
                 for (const adjRef of adjRefs) {
                     const clone = adjRef.cloneNode(true);
+                    if (first && adjRefs.length > 1) {
+                        clone.setAttribute('itemref', '<autogen>');
+                        newTempl[wasItemReffed] = true;
+                        first = false;
+                    }
                     clone.removeAttribute('id');
                     fragment.appendChild(clone);
                 }
