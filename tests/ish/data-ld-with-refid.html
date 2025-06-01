@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<script nomodule id=Person be-scoped>
+    ({})
+</script>
+    <table>
+        <thead><th>Name</th><th>SSN Number</th></thead>
+        <tbody>
+            <tr itemscope=Person id=temp itemref=childRow>
+                <td itemprop=name>Burt</td>
+                <td itemprop=ssn>123-45-6789</td>
+            </tr>
+            <tr id=childRow colspan=2>
+                <td>ChildRow</td>
+            </tr>
+            <template data-ld='{"@type": "Person", "name": "Sally", "ssn": "987-65-4321"}' src=#temp></template>
+            <template data-ld='{"@type": "Person", "name": "Anne", "ssn": "135-79-2468"}' src=#temp></template>
+        </tbody>
+    </table>
+    <script type=module>
+        import {MountObserver} from '/MountObserver.js';
+        import {regIsh} from '/refId/regIsh.js';
+        regIsh(document.querySelector('table'), 'Person', class {
+            constructor() {
+                console.log('iah');
+            }
+        });
+
+        const mo = new MountObserver({
+            on: 'h3',
+            do:{
+                mount: (el, ctx) => {
+                }
+            }
+        });
+        mo.observe(document.body);
+    </script>
+</body>
+</html>
