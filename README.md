@@ -295,6 +295,7 @@ const observer = new MountObserver({
    on: 'div > p + p ~ span[class$="name"]',
    whereMediaMatches: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
+   whereContainerHas: '[itemprop=isActive][value="true"]',
    whereInstanceOf: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
    whereLangIn: ['en-GB'],
    whereConnection:{
