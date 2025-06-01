@@ -32,7 +32,7 @@ export async function compose(
             }
             (<any>window)[autogenKey] = count;
             while(ns !== null){
-                const id = ns.id = `moc-${count}`;
+                const id = ns.id = `mount-observer-${count}`;
                 ids.push(id);
                 ns = ns.nextElementSibling;
             }
