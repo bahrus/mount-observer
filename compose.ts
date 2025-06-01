@@ -30,6 +30,7 @@ export async function compose(
             }else{
                 count++;
             }
+            (<any>window)[autogenKey] = count;
             while(ns !== null){
                 const id = ns.id = `moc-${count}`;
                 ids.push(id);
