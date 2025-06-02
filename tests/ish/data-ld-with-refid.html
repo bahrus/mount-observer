@@ -19,14 +19,16 @@
             <tr id=childRow colspan=2>
                 <td>ChildRow</td>
             </tr>
-            <template data-ld='{"@type": "Person", "name": "Sally", "ssn": "987-65-4321"}' src=#temp></template>
-            <template data-ld='{"@type": "Person", "name": "Anne", "ssn": "135-79-2468"}' src=#temp></template>
+            <template data-ld='{"name": "Sally", "ssn": "987-65-4321"}' src=#temp></template>
+            <template data-ld='{"name": "Anne", "ssn": "135-79-2468"}' src=#temp></template>
         </tbody>
     </table>
+    <div id=target></div>
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
         import {regIsh} from '/refid/regIsh.js';
         regIsh(document.querySelector('table'), 'Person', class {
+            
             constructor() {
                 console.log('iah');
             }
@@ -40,6 +42,16 @@
             }
         });
         mo.observe(document.body);
+        function runTest(){
+            const tbl = document.querySelector('table');
+            const cnt = tbl.querySelectorAll('*').length;
+            if(cnt === 20){
+                target.setAttribute('mark', 'good');
+            } 
+        }
+        setTimeout(() => {
+            runTest();
+        }, 500);
     </script>
 </body>
 </html>
