@@ -7,6 +7,6 @@ export function toQuery(el: Element): string {
     const attributes = Array.from(el.attributes)
         .map(attr => `[${attr.name}="${attr.value}"]`)
         .join('');
-    const tagName = el.tagName.toLowerCase();
-    return `${tagName}${classes}${parts}${attributes}`;
+    const {localName} = el;
+    return `${localName}${classes}${parts}${attributes}`;
 }
