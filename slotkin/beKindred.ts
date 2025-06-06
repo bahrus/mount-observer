@@ -1,6 +1,6 @@
 import {toQuery} from './toQuery.js';
 import {splitRefs} from '../refid/splitRefs.js';
-export function kindred(fragment: DocumentFragment, el: Element){
+export function beKindred(fragment: DocumentFragment, el: Element){
     const qry = toQuery(el);
     const matches = Array.from(fragment.querySelectorAll(qry));
     const elFragment = new DocumentFragment();
