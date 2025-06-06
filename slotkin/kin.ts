@@ -20,5 +20,11 @@ export function kin(fragment: DocumentFragment, el: Element){
     for(const match of matches){
         const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
         match.replaceWith(fragmentClone);
+        if(map !== null){
+            for(const key in map){
+                const value = map[key]!;
+                match.setAttribute(key, value);
+            }
+        }
     }
 }
