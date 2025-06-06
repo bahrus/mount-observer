@@ -1,6 +1,6 @@
 import {toQuery} from './toQuery.js';
 import {splitRefs} from '../refid/splitRefs.js';
-export function kin(fragment: DocumentFragment, el: Element){
+export function kindred(fragment: DocumentFragment, el: Element){
     const qry = toQuery(el);
     const matches = Array.from(fragment.querySelectorAll(qry));
     const elFragment = new DocumentFragment();
@@ -19,7 +19,7 @@ export function kin(fragment: DocumentFragment, el: Element){
     }
     for(const match of matches){
         const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
-        match.replaceWith(fragmentClone);
+        match.replaceChildren(fragmentClone);
         if(map !== null){
             for(const key in map){
                 const value = map[key]!;
