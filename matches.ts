@@ -5,6 +5,7 @@ export function toQuery(el: Element): string {
     const classes = Array.from(el.classList).map(c => `.${c}`).join('');
     const parts = Array.from(el.part).map(p => `[part~="${p}"`).join('');
     const attributes = Array.from(el.attributes)
+        .filter(attr => attr.name !== '-i')
         .map(attr => `[${attr.name}="${attr.value}"]`)
         .join('');
     const {localName} = el;
