@@ -13,6 +13,7 @@
 		"Synthesizer.ts",
 		"waitForIsh.ts",
 		"refid/splitRefs.ts",
+		"slotkin/beKindred.ts"
 	],
 	"exclude":[
 		"node_modules"
