@@ -60,7 +60,12 @@
     "./refid/splitRefs.js": {
       "default": "./refid/splitRefs.js",
       "types": "./refid/splitRefs.ts"
+    },
+    "./slotkin/beKindred.js":{
+      "default": "./slotkin/beKindred.js",
+      "types": "./slotkin/beKindred.ts"
     }
+    
   },
   "files": [
     "*.js",
