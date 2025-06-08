@@ -70,7 +70,8 @@
     "*.js",
     "*.ts",
     "./ts-refs/*",
-    "./refid/*"
+    "./refid/*",
+    "./slotkin/*"
   ],
   "types": "./ts-refs/mount-observer/types.d.ts",
   "scripts": {
