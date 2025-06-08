@@ -41,15 +41,5 @@ export function beKindred(
     });
     mo.observe(fragment);
     return mo;
-    // const matches = Array.from(fragment.querySelectorAll(qry));
-    // for(const match of matches){
-    //     const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
-    //     match.replaceChildren(fragmentClone);
-    //     if(map !== null){
-    //         for(const key in map){
-    //             const value = map[key]!;
-    //             match.setAttribute(key, value);
-    //         }
-    //     }
-    // }
+
 }
