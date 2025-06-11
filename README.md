@@ -769,8 +769,8 @@ For example:
 <div>Your Mother Should Know</div>
 <div>I Am the Walrus</div>
 <template src=#id-of-source-template>
-   <span slot=slot1>hello</span>
-   <span slot=slot2>goodbye<span>
+   <span part=greeting>hello</span>
+   <span part=parting>goodbye<span>
 </template>
 <div>Strawberry Fields Forever</div>
 ```
@@ -781,7 +781,12 @@ Let's say the source template looks as follows:
 
 ```html
 <template id=id-of-source-template>
-   <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
+   <div>
+      I don't know why you say 
+      <span part=greeting></span> 
+       I say 
+      <span part=parting></span>
+   </div>
 </template>
 ```
 
@@ -791,14 +796,20 @@ What we would end up with is:
 ```html
 <div>Your Mother Should Know</div>
 <div>I Am the Walrus</div>
-<div>I don't know why you say <span>goodbye</span> I say <span>hello</span></div>
+<div>
+   I don't know why you say 
+   <span part=greeting>goodbye</span>
+    I say 
+   <span part=parting>hello</span>
+</div>
 <div>Strawberry Fields Forever</div>
 ```
 
-Some significant differences with genuine slot support as used with (ShadowDOM'd) custom elements
+Some significant differences with slot support as used with (ShadowDOM'd) custom elements
 
-1.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive), that could possibly lead to a future implementation request tied to template instantiation.  It takes the approach of morphing from slots to a JS host object model that binds to where all the slots were "from a distance".
-2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) inclusions, instead, follow the opposite approach -- a single element with a slot identifier can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
+1.  The mechanism to weave DOM together is more flexible here:  We are searching for DOM elements that match all the attributes of the children of the target template, that is pulling in the intra document source template.  The "part" attribute was used just as an example.
+2.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive) that allows for updating the existing DOM tree based on identical syntax.
+2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) inclusions, instead, follow the opposite approach -- a single element can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
 
 ## Intra document html imports with Shadow DOM support
 
