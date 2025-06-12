@@ -807,7 +807,7 @@ What we would end up with is:
 
 Some significant differences with slot support as used with (ShadowDOM'd) custom elements
 
-1.  The mechanism to weave DOM together is more flexible here:  We are searching for DOM elements that match all the attributes of the children of the target template, that is pulling in the intra document source template.  The "part" attribute was used just as an example.
+1.  The mechanism to weave DOM together is more flexible here:  We are searching for DOM elements that match all the attributes of the children of the *target* template, that template that is pulling in the intra document source template.  The "part" attribute was used just as an example.
 2.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive) that allows for updating the existing DOM tree based on identical syntax.
 2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) inclusions, instead, follow the opposite approach -- a single element can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
 
