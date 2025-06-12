@@ -781,6 +781,7 @@ Let's say the source template looks as follows:
 
 ```html
 <template id=id-of-source-template>
+   <!--+-->
    <div>
       You say, <span part=parting></span> and I say, 
       <span part=greeting></span>, <span part=greeting></span>, <span part=greeting></span>
@@ -791,6 +792,7 @@ Let's say the source template looks as follows:
        I say 
       <span part=parting></span>
    </div>
+   <!----->
 </template>
 ```
 
@@ -800,6 +802,7 @@ What we end up with is:
 ```html
 <div>Your Mother Should Know</div>
 <div>I Am the Walrus</div>
+<!--+-->
 <div>
    You say, <span part=parting>goodbye</span> and I say, 
    <span part=greeting>hello</span>, <span part=greeting>hello</span>, <span part=greeting>hello</span>
@@ -810,6 +813,7 @@ What we end up with is:
     I say 
    <span part=parting>hello</span>
 </div>
+<!----->
 <div>Strawberry Fields Forever</div>
 ```
 
