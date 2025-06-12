@@ -782,6 +782,10 @@ Let's say the source template looks as follows:
 ```html
 <template id=id-of-source-template>
    <div>
+      You say, <span part=parting></span> and I say, 
+      <span part=greeting></span>, <span part=greeting></span>, <span part=greeting></span>
+   </div>
+   <div>
       I don't know why you say 
       <span part=greeting></span> 
        I say 
@@ -790,12 +794,16 @@ Let's say the source template looks as follows:
 </template>
 ```
 
-What we would end up with is:
+What we end up with is:
 
 
 ```html
 <div>Your Mother Should Know</div>
 <div>I Am the Walrus</div>
+<div>
+   You say, <span part=parting>goodbye</span> and I say, 
+   <span part=greeting>hello</span>, <span part=greeting>hello</span>, <span part=greeting>hello</span>
+</div>
 <div>
    I don't know why you say 
    <span part=greeting>goodbye</span>
