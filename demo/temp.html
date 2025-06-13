@@ -6,7 +6,7 @@
     <title>Document</title>
 </head>
 <body>
-<?+?>
+<!--+-->
 <div>
    You say, <span part=parting>goodbye</span> and I say, 
    <span part=greeting>hello</span>, <span part=greeting>hello</span>, <span part=greeting>hello</span>
@@ -17,14 +17,11 @@
     I say 
    <span part=parting>hello</span>
 </div>
-<?-?>
+<!----->
 <script>
-//     const nsResolver =
-//   contextNode.ownerDocument === null
-//     ? contextNode.documentElement
-//     : contextNode.ownerDocument.documentElement;
+
 const iterator = document.evaluate(
-  '//span',
+  `//comment()`,
   document.body,
   null,
   XPathResult.ANY_TYPE,
@@ -35,7 +32,7 @@ try {
   let thisNode = iterator.iterateNext();
 
   while (thisNode) {
-    console.log(thisNode.textContent);
+    console.log('x=' + thisNode.textContent);
     thisNode = iterator.iterateNext();
   }
 } catch (e) {
