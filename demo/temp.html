@@ -6,40 +6,41 @@
     <title>Document</title>
 </head>
 <body>
-    <script>
-        class MyTest{
-            myList = [1, 2, 3];
-        }
+<?+?>
+<div>
+   You say, <span part=parting>goodbye</span> and I say, 
+   <span part=greeting>hello</span>, <span part=greeting>hello</span>, <span part=greeting>hello</span>
+</div>
+<div>
+   I don't know why you say 
+   <span part=greeting>goodbye</span>
+    I say 
+   <span part=parting>hello</span>
+</div>
+<?-?>
+<script>
+//     const nsResolver =
+//   contextNode.ownerDocument === null
+//     ? contextNode.documentElement
+//     : contextNode.ownerDocument.documentElement;
+const iterator = document.evaluate(
+  '//span',
+  document.body,
+  null,
+  XPathResult.ANY_TYPE,
+  null
+);
+//console.log({xpathResult})
+try {
+  let thisNode = iterator.iterateNext();
 
-        MyTest.prototype[Symbol.iterator] = function() {
-            var index = -1;
-            var data  = this.myList;
-
-            return {
-                next: function() {
-                    return { 
-                        value: data === undefined ? undefined : data[++index], 
-                        done: data ===  undefined || !(index in data),
-                        
-                    }
-                },
-                
-            };
-        };
-
-        MyTest.prototype['arr='] = function(arr){
-            this.myList = arr;
-        }
-
-        const myTest = new MyTest();
-        for(const obj of myTest){
-            console.log(obj);
-        }
-        myTest['arr=']([4, 5, 6]);
-        for(const obj of myTest){
-            console.log(obj);
-        }
-        console.log(myTest.length);
-    </script>
+  while (thisNode) {
+    console.log(thisNode.textContent);
+    thisNode = iterator.iterateNext();
+  }
+} catch (e) {
+  console.error(`Error: Document tree modified during iteration ${e}`);
+}
+</script>
 </body>
 </html>
