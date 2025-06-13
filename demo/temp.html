@@ -21,7 +21,7 @@
 <script>
 
 const iterator = document.evaluate(
-  `//comment()`,
+  `//comment()[.="+"]`,
   document.body,
   null,
   XPathResult.ANY_TYPE,

@@ -2,6 +2,7 @@ import { inclTemplQry, wasItemReffed } from './MountObserver.js';
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
 const autogenKey = Symbol.for('YpP5EP0i1UKcBBBH9tsm0w');
+const wrapped = Symbol.for('50tzQZt95ECXUtHF7a40og');
 export async function compose(self, el, level) {
     const src = el.getAttribute('src');
     if (src === null)
@@ -14,6 +15,16 @@ export async function compose(self, el, level) {
     const templ = await self.findByID(templID, fragment);
     if (!(templ instanceof HTMLTemplateElement))
         throw 404;
+    const wasWrapped = templ[wrapped];
+    if (!wasWrapped) {
+        templ[wrapped] = true;
+        if (templ.content.childElementCount > 1) {
+            const start = document.createComment('+');
+            templ.content.prepend(start);
+            const end = document.createComment('-');
+            templ.content.appendChild(end);
+        }
+    }
     const clone = templ.content.cloneNode(true);
     const dataLd = el.dataset.ld;
     const wasReffed = templ[wasItemReffed];
@@ -48,6 +59,7 @@ export async function compose(self, el, level) {
             delete el.dataset.ld;
         }
     }
+    //TODO switch to css matches
     const slots = el.content.querySelectorAll(`[slot]`);
     for (const slot of slots) {
         const name = slot.getAttribute('slot');

@@ -4,6 +4,7 @@ import { MountObserver, inclTemplQry, wasItemReffed } from './MountObserver.js';
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
 const autogenKey = Symbol.for('YpP5EP0i1UKcBBBH9tsm0w');
+const wrapped = Symbol.for('50tzQZt95ECXUtHF7a40og');
 export async function compose(
     self: MountObserver, 
     el: HTMLTemplateElement, 
@@ -16,6 +17,16 @@ export async function compose(
     if(fragment === undefined) return;
     const templ = await self.findByID(templID, fragment);
     if(!(templ instanceof HTMLTemplateElement)) throw 404;
+    const wasWrapped = (<any>templ)[wrapped];
+    if(!wasWrapped){
+        (<any>templ)[wrapped] = true;
+        if(templ.content.childElementCount > 1){
+            const start = document.createComment('+');
+            templ.content.prepend(start);
+            const end = document.createComment('-');
+            templ.content.appendChild(end);
+        }
+    }
     const clone = templ.content.cloneNode(true) as DocumentFragment;
     const dataLd = el.dataset.ld;
     const wasReffed = (<any>templ)[wasItemReffed];
@@ -51,6 +62,8 @@ export async function compose(
         }
         
     }
+
+    //TODO switch to css matches
     const slots = el.content.querySelectorAll(`[slot]`);
 
     for(const slot of slots){
