@@ -9,7 +9,6 @@ import {MountInit, IMountObserver, AddMutationEventListener,
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 import {bindish, bindishIt} from './bindish.js';
-import { registeredHandlers } from '../node_modules/be-hive/be-hive';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
@@ -83,10 +82,13 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
 
     async #compose(el: HTMLTemplateElement, level: number){
-        if(el.hasAttribute('src')){
-            const {compose} = await import('./compose.js');
-            await compose(this, el, level);
-        }
+        const src = el.getAttribute('src');
+        if(src === null || src.length < 2) return;
+        const refType = src[0] as RefType;
+        if(!['!', '#'].includes(refType)) return;
+        const {compose} = await import('./compose.js');
+        await compose(this, el, level, src.substring(1), refType);
+        
 
     }
     #templLookUp: Map<string, HTMLElement> = new Map();

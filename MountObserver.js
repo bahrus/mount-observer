@@ -67,10 +67,14 @@ export class MountObserver extends EventTarget {
         }
     }
     async #compose(el, level) {
-        if (el.hasAttribute('src')) {
-            const { compose } = await import('./compose.js');
-            await compose(this, el, level);
-        }
+        const src = el.getAttribute('src');
+        if (src === null || src.length < 2)
+            return;
+        const refType = src[0];
+        if (!['!', '#'].includes(refType))
+            return;
+        const { compose } = await import('./compose.js');
+        await compose(this, el, level, src.substring(1), refType);
     }
     #templLookUp = new Map();
     #searchForComment(refName, fragment) {
