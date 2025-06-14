@@ -1,6 +1,7 @@
 import { ILoadEvent, loadEventName } from './ts-refs/mount-observer/types';
 import { MountObserver, inclTemplQry, wasItemReffed } from './MountObserver.js';
 
+//goal:  deprecate this key, in favor of comments
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
 export const cloneKey = Symbol.for('LD97VKZYc02CQv23DT/6fQ');
 const autogenKey = Symbol.for('YpP5EP0i1UKcBBBH9tsm0w');
