@@ -69,67 +69,79 @@ export async function compose(
         }
         
     }
+    if(el.content.childElementCount > 0){
+        const {beKindred} = await import('./slotkin/beKindred.js');
+        const children = Array.from(el.content.children);
+        for(const child of children){
+            //TODO support clean up
+            const mo = beKindred(clone, child);
 
-    //TODO switch to css matches
-    const slots = el.content.querySelectorAll(`[slot]`);
-
-    for(const slot of slots){
-        const name = slot.getAttribute('slot')!;
-        const slotQry = `slot[name="${name}"]`;
-        const targets = Array.from(clone.querySelectorAll(slotQry));
-        const innerTempls = clone.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
-        for(const innerTempl of innerTempls){
-            const innerSlots = innerTempl.content.querySelectorAll(slotQry);
-            for(const innerSlot of innerSlots){
-                targets.push(innerSlot);
-            }
         }
-        for(const target of targets){
-            const slotClone = slot.cloneNode(true) as Element;
-            target.after(slotClone);
-            target.remove();
-        }
-    }
-    await self.composeFragment(clone, level + 1);
-    const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
-    if(shadowRootModeOnLoad === null && level === 0){
         
-        const slotMap = el.getAttribute('slotmap');
-        let map = slotMap === null ? undefined : JSON.parse(slotMap);
-        const slots = clone.querySelectorAll('[slot]');
-        for(const slot of slots){
-            if(map !== undefined){
-                const slotName = slot.slot;
-                for(const key in map){
-                    if(slot.matches(key)){
-                        const targetAttSymbols = map[key] as string;
-                        for(const sym of targetAttSymbols){
-                            switch(sym){
-                                case '|':
-                                    slot.setAttribute('itemprop', slotName);
-                                    break;
-                                case '$':
-                                    slot.setAttribute('itemscope', '');
-                                    slot.setAttribute('itemprop', slotName);
-                                    break;
-                                case '@':
-                                    slot.setAttribute('name', slotName);
-                                    break;
-                                case '.':
-                                    slot.classList.add(slotName);
-                                    break;
-                                case '%':
-                                    slot.part.add(slotName);
-                                    break;
+    }
+    // //TODO switch to css matches
+    // const slots = el.content.querySelectorAll(`[slot]`);
+
+    // for(const slot of slots){
+    //     const name = slot.getAttribute('slot')!;
+    //     const slotQry = `slot[name="${name}"]`;
+    //     const targets = Array.from(clone.querySelectorAll(slotQry));
+    //     const innerTempls = clone.querySelectorAll(inclTemplQry) as NodeListOf<HTMLTemplateElement>;
+    //     for(const innerTempl of innerTempls){
+    //         const innerSlots = innerTempl.content.querySelectorAll(slotQry);
+    //         for(const innerSlot of innerSlots){
+    //             targets.push(innerSlot);
+    //         }
+    //     }
+    //     for(const target of targets){
+    //         const slotClone = slot.cloneNode(true) as Element;
+    //         target.after(slotClone);
+    //         target.remove();
+    //     }
+    // }
+    await self.composeFragment(clone, level + 1);
+    if(false){
+        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
+        if(shadowRootModeOnLoad === null && level === 0){
+            
+            const slotMap = el.getAttribute('slotmap');
+            let map = slotMap === null ? undefined : JSON.parse(slotMap);
+            const slots = clone.querySelectorAll('[slot]');
+            for(const slot of slots){
+                if(map !== undefined){
+                    const slotName = slot.slot;
+                    for(const key in map){
+                        if(slot.matches(key)){
+                            const targetAttSymbols = map[key] as string;
+                            for(const sym of targetAttSymbols){
+                                switch(sym){
+                                    case '|':
+                                        slot.setAttribute('itemprop', slotName);
+                                        break;
+                                    case '$':
+                                        slot.setAttribute('itemscope', '');
+                                        slot.setAttribute('itemprop', slotName);
+                                        break;
+                                    case '@':
+                                        slot.setAttribute('name', slotName);
+                                        break;
+                                    case '.':
+                                        slot.classList.add(slotName);
+                                        break;
+                                    case '%':
+                                        slot.part.add(slotName);
+                                        break;
+                                }
                             }
                         }
                     }
                 }
+                slot.removeAttribute('slot');
             }
-            slot.removeAttribute('slot');
+            el.dispatchEvent(new LoadEvent(clone));
         }
-        el.dispatchEvent(new LoadEvent(clone));
     }
+
     if(level === 0){
         const refs: Array<WeakRef<Element>> = [];
         for(const child of clone.children){
