@@ -17,14 +17,16 @@ export async function compose(self, el, level, refName, refType) {
     const templ = await self.findByID(refName, fragment, refType);
     if (!(templ instanceof HTMLTemplateElement))
         throw 404;
-    const wasWrapped = templ[wrapped];
-    if (!wasWrapped) {
-        templ[wrapped] = true;
-        if (templ.content.childElementCount > 1) {
-            const start = document.createComment('+');
-            templ.content.prepend(start);
-            const end = document.createComment('-');
-            templ.content.appendChild(end);
+    if (refType === '#') {
+        const wasWrapped = templ[wrapped];
+        if (!wasWrapped) {
+            templ[wrapped] = true;
+            if (templ.content.childElementCount > 1) {
+                const start = document.createComment(refName);
+                templ.content.prepend(start);
+                const end = document.createComment(`/${refName}`);
+                templ.content.appendChild(end);
+            }
         }
     }
     const clone = templ.content.cloneNode(true);
