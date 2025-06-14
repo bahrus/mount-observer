@@ -4,10 +4,12 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     AttrParts,
     MOSE, WeakDual,
     MountObserverOptions,
-    Assigner
+    Assigner,
+    RefType
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 import {bindish, bindishIt} from './bindish.js';
+import { registeredHandlers } from '../node_modules/be-hive/be-hive';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
@@ -88,17 +90,38 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
-    async findByID(id: string, fragment: DocumentFragment): Promise<HTMLElement | null>{
-        if(this.#templLookUp.has(id)) return this.#templLookUp.get(id)!;
-        let templ = fragment.querySelector(`#${id}`);
+    #searchForComment(refName: string, fragment: Node){
+        const iterator = document.evaluate(
+        `//comment()[.="${refName}"]`,
+        fragment,
+        null,
+        XPathResult.ANY_TYPE,
+        null
+        );
+        //console.log({xpathResult})
+        try {
+            let thisNode = iterator.iterateNext();
+            return thisNode;
+        }catch(e){
+            return null;
+        }
+    }
+    async findByID(
+        refName: string, fragment: DocumentFragment, 
+        type: RefType): Promise<HTMLElement | DocumentFragment | null>{
+        if(this.#templLookUp.has(refName)) return this.#templLookUp.get(refName)!;
+        let templ: Node | null = null;
+        templ = type === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
         if(templ === null){
             let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document) as any;
-            templ = rootToSearchOutwardFrom.getElementById(id);
+            templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             while(templ === null && rootToSearchOutwardFrom !== (document as any as DocumentFragment) ){
                 rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode() as DocumentFragment;
-                templ = rootToSearchOutwardFrom.getElementById(id);
+                templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             }
         }
+
+
         if(templ !== null) {
             if(!(templ instanceof HTMLTemplateElement)){
                 const newTempl = document.createElement('template');
@@ -125,7 +148,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 newTempl.content.appendChild(fragment);
                 templ = newTempl;
             }
-            this.#templLookUp.set(id, templ as HTMLTemplateElement);
+            this.#templLookUp.set(refName, templ as HTMLTemplateElement);
         }
         return templ as HTMLTemplateElement;
     }

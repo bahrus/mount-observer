@@ -1,4 +1,4 @@
-import { ILoadEvent, loadEventName } from './ts-refs/mount-observer/types';
+import { ILoadEvent, loadEventName, RefType } from './ts-refs/mount-observer/types';
 import { MountObserver, inclTemplQry, wasItemReffed } from './MountObserver.js';
 
 //goal:  deprecate this key, in favor of comments
@@ -9,11 +9,14 @@ const wrapped = Symbol.for('50tzQZt95ECXUtHF7a40og');
 export async function compose(
     self: MountObserver, 
     el: HTMLTemplateElement, 
-    level: number
+    level: number,
+    ref: string,
+    refType: RefType,
 ){
     const src = el.getAttribute('src'); if(src === null) return;
     el.removeAttribute('src');
-    const templID = src!.substring(1);
+    //const templID = src!.substring(1);
+    //const refType = src![0];
     const fragment = self.objNde?.deref() as DocumentFragment;
     if(fragment === undefined) return;
     const templ = await self.findByID(templID, fragment);

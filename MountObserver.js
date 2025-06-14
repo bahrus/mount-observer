@@ -73,16 +73,28 @@ export class MountObserver extends EventTarget {
         }
     }
     #templLookUp = new Map();
-    async findByID(id, fragment) {
-        if (this.#templLookUp.has(id))
-            return this.#templLookUp.get(id);
-        let templ = fragment.querySelector(`#${id}`);
+    #searchForComment(refName, fragment) {
+        const iterator = document.evaluate(`//comment()[.="${refName}"]`, fragment, null, XPathResult.ANY_TYPE, null);
+        //console.log({xpathResult})
+        try {
+            let thisNode = iterator.iterateNext();
+            return thisNode;
+        }
+        catch (e) {
+            return null;
+        }
+    }
+    async findByID(refName, fragment, type) {
+        if (this.#templLookUp.has(refName))
+            return this.#templLookUp.get(refName);
+        let templ = null;
+        templ = type === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
         if (templ === null) {
             let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
-            templ = rootToSearchOutwardFrom.getElementById(id);
+            templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             while (templ === null && rootToSearchOutwardFrom !== document) {
                 rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
-                templ = rootToSearchOutwardFrom.getElementById(id);
+                templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             }
         }
         if (templ !== null) {
@@ -111,7 +123,7 @@ export class MountObserver extends EventTarget {
                 newTempl.content.appendChild(fragment);
                 templ = newTempl;
             }
-            this.#templLookUp.set(id, templ);
+            this.#templLookUp.set(refName, templ);
         }
         return templ;
     }
