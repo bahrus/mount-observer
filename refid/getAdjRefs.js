@@ -6,7 +6,7 @@ export function getAdjRefs(node) {
         const closedText = `/${openText}`;
         let ns = node.nextSibling;
         while (ns) {
-            returnArr.push(node);
+            returnArr.push(ns);
             if (node.nodeType === node.COMMENT_NODE && node.data === closedText) {
                 return returnArr;
             }

@@ -110,16 +110,16 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
     async findByID(
         refName: string, fragment: DocumentFragment, 
-        type: RefType): Promise<HTMLElement | DocumentFragment | null>{
+        refType: RefType): Promise<HTMLElement | DocumentFragment | null>{
         if(this.#templLookUp.has(refName)) return this.#templLookUp.get(refName)!;
         let templ: Node | null = null;
-        templ = type === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
+        templ = refType === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
         if(templ === null){
             let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document) as any;
-            templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
+            templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             while(templ === null && rootToSearchOutwardFrom !== (document as any as DocumentFragment) ){
                 rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode() as DocumentFragment;
-                templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
+                templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             }
         }
 
@@ -137,18 +137,27 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 let first = true;
                 for(const adjRef of adjRefs){
                     const clone = adjRef.cloneNode(true) as HTMLElement;
-                    if(first && adjRefs.length > 1){
-                        clone.setAttribute('itemref', '<autogen>');
-                        (<any>newTempl)[wasItemReffed] = true;
-                        first = false;
+                    if(refType === '#' && clone instanceof Element){
+                        if(first && adjRefs.length > 1){
+                            clone.setAttribute('itemref', '<autogen>');
+                            (<any>newTempl)[wasItemReffed] = true;
+                            first = false;
+                        }
+                        clone.removeAttribute('id');
                     }
-                    clone.removeAttribute('id');
+                    
                     fragment.appendChild(clone);
                 }
-                const {doCleanup} = await import('./doCleanup.js');
-                doCleanup(templ as HTMLElement, fragment);
+                if(templ instanceof Element){
+                    const {doCleanup} = await import('./doCleanup.js');
+                    doCleanup(templ as HTMLElement, fragment);
+                    
+                }else{
+                    //TODO: cleanup
+                }
                 newTempl.content.appendChild(fragment);
                 templ = newTempl;
+                
             }
             this.#templLookUp.set(refName, templ as HTMLTemplateElement);
         }
@@ -548,7 +557,7 @@ function areAllIdle(mutObs: Array<RootMutObs>){
 
 
 const refCountErr = 'mount-observer ref count mismatch';
-export const inclTemplQry = 'template[src^="#"]:not([hidden])';
+export const inclTemplQry = 'template[src^="#"]:not([hidden]),template[src^="!"]:not([hidden])';
 
 export interface MountObserver extends IMountObserver{}
 

@@ -88,17 +88,17 @@ export class MountObserver extends EventTarget {
             return null;
         }
     }
-    async findByID(refName, fragment, type) {
+    async findByID(refName, fragment, refType) {
         if (this.#templLookUp.has(refName))
             return this.#templLookUp.get(refName);
         let templ = null;
-        templ = type === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
+        templ = refType === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
         if (templ === null) {
             let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
-            templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
+            templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             while (templ === null && rootToSearchOutwardFrom !== document) {
                 rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
-                templ = type === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
+                templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             }
         }
         if (templ !== null) {
@@ -114,16 +114,23 @@ export class MountObserver extends EventTarget {
                 let first = true;
                 for (const adjRef of adjRefs) {
                     const clone = adjRef.cloneNode(true);
-                    if (first && adjRefs.length > 1) {
-                        clone.setAttribute('itemref', '<autogen>');
-                        newTempl[wasItemReffed] = true;
-                        first = false;
+                    if (refType === '#' && clone instanceof Element) {
+                        if (first && adjRefs.length > 1) {
+                            clone.setAttribute('itemref', '<autogen>');
+                            newTempl[wasItemReffed] = true;
+                            first = false;
+                        }
+                        clone.removeAttribute('id');
                     }
-                    clone.removeAttribute('id');
                     fragment.appendChild(clone);
                 }
-                const { doCleanup } = await import('./doCleanup.js');
-                doCleanup(templ, fragment);
+                if (templ instanceof Element) {
+                    const { doCleanup } = await import('./doCleanup.js');
+                    doCleanup(templ, fragment);
+                }
+                else {
+                    //TODO: cleanup
+                }
                 newTempl.content.appendChild(fragment);
                 templ = newTempl;
             }
@@ -516,7 +523,7 @@ function areAllIdle(mutObs) {
     return true;
 }
 const refCountErr = 'mount-observer ref count mismatch';
-export const inclTemplQry = 'template[src^="#"]:not([hidden])';
+export const inclTemplQry = 'template[src^="#"]:not([hidden]),template[src^="!"]:not([hidden])';
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
