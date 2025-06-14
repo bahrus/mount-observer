@@ -2,7 +2,8 @@ import { splitRefs } from './splitRefs.js';
 export function getAdjRefs(node: Node){
     const returnArr: Array<Node> = [node];
     if(node.nodeType === node.COMMENT_NODE){
-        const closedText = `/${(node as Comment).data}`;
+        const openText = (node as Comment).data.split(' ')[0];
+        const closedText = `/${openText}`;
         let ns = node.nextSibling;
         while(ns){
             returnArr.push(node);

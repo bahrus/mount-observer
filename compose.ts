@@ -10,7 +10,7 @@ export async function compose(
     self: MountObserver, 
     el: HTMLTemplateElement, 
     level: number,
-    ref: string,
+    refName: string,
     refType: RefType,
 ){
     const src = el.getAttribute('src'); if(src === null) return;
@@ -19,7 +19,7 @@ export async function compose(
     //const refType = src![0];
     const fragment = self.objNde?.deref() as DocumentFragment;
     if(fragment === undefined) return;
-    const templ = await self.findByID(templID, fragment);
+    const templ = await self.findByID(refName, fragment, refType);
     if(!(templ instanceof HTMLTemplateElement)) throw 404;
     const wasWrapped = (<any>templ)[wrapped];
     if(!wasWrapped){
