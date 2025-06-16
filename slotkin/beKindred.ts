@@ -9,11 +9,12 @@ export function beKindred(
     fragment: DocumentFragment | Element, 
     el: Element,
 ){
+    if(!fragment.isConnected) throw 'too soon';
     const qry = toQuery(el);
-    const previousObserversOfFragement = previousObservers.get(fragment);
-    if(previousObserversOfFragement !== undefined){
-        const staleObservers = previousObserversOfFragement.filter(x => el.matches(x[0]));
-        const nonStaleObservers = previousObserversOfFragement.filter(x => !el.matches(x[0]));
+    const previousObserversOfFragment = previousObservers.get(fragment);
+    if(previousObserversOfFragment !== undefined){
+        const staleObservers = previousObserversOfFragment.filter(x => el.matches(x[0]));
+        const nonStaleObservers = previousObserversOfFragment.filter(x => !el.matches(x[0]));
         if(staleObservers !== undefined && staleObservers.length > 0){
             for(const staleObserver of staleObservers){
                 staleObserver[1].disconnect(fragment);

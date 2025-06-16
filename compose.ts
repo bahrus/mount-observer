@@ -157,7 +157,7 @@ export async function compose(
         (<any>el)[cloneKey] = clone;
         cloneStashed = true;
     }else{
-        if(shadowRootModeOnLoad !== null){
+        if(false /*shadowRootModeOnLoad !== null */){
             const parent = el.parentElement;
             if(parent === null) throw 404;
             if(parent.shadowRoot === null) parent.attachShadow({mode: shadowRootModeOnLoad});
@@ -173,7 +173,7 @@ export async function compose(
     // }
     
     if(!cloneStashed){
-        if(level !== 0 || (slots.length === 0 && el.attributes.length === 0)) el.remove();
+        if(level !== 0 || el.attributes.length === 0) el.remove();
     }
 
 }
