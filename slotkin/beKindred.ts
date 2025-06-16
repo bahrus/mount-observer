@@ -1,6 +1,7 @@
 import {toQuery} from './toQuery.js';
 import {splitRefs} from '../refid/splitRefs.js';
 import {MountObserver} from '../MountObserver.js';
+import {prep} from './affine.js';
 
 type OnMountObserver = [string, MountObserver];
 const previousObservers = new WeakMap<DocumentFragment | Element, Array<OnMountObserver>>();
@@ -9,7 +10,7 @@ export function beKindred(
     fragment: DocumentFragment | Element, 
     el: Element,
 ){
-    if(!fragment.isConnected) throw 'too soon';
+    if(!fragment.isConnected) throw 'too soon, use affine';
     const qry = toQuery(el);
     const previousObserversOfFragment = previousObservers.get(fragment);
     if(previousObserversOfFragment !== undefined){
@@ -23,20 +24,22 @@ export function beKindred(
         previousObservers.set(fragment, nonStaleObservers);
     }
 
-    const elFragment = new DocumentFragment();
-    const clone = el.cloneNode(true);
-    for(const child of clone.childNodes){
-        elFragment.appendChild(child);
-    }
-    const insertAttrs = el.getAttribute('-i');
-    let map: {[key: string]: string} | null = null;
-    if(insertAttrs !== null){
-        const attrs = splitRefs(insertAttrs);
-        map = {};
-        for(const attr of attrs){
-            map[attr] = el.getAttribute(attr)!;
-        }
-    }
+    // const elFragment = new DocumentFragment();
+    // const clone = el.cloneNode(true);
+    // for(const child of clone.childNodes){
+    //     elFragment.appendChild(child);
+    // }
+    // const insertAttrs = el.getAttribute('-i');
+    // let map: {[key: string]: string} | null = null;
+    // if(insertAttrs !== null){
+    //     const attrs = splitRefs(insertAttrs);
+    //     map = {};
+    //     for(const attr of attrs){
+    //         map[attr] = el.getAttribute(attr)!;
+    //     }
+    // }
+
+    const {elFragment, map} = prep(el);
 
     const mo = new MountObserver({
         on: qry,

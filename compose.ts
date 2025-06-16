@@ -1,5 +1,6 @@
 import { ILoadEvent, loadEventName, RefType } from './ts-refs/mount-observer/types';
 import { MountObserver, inclTemplQry, wasItemReffed } from './MountObserver.js';
+//import {prep} from './slotkin/affine.js';
 
 //goal:  deprecate this key, in favor of comments
 export const childRefsKey = Symbol.for('Wr0WPVh84k+O93miuENdMA');
