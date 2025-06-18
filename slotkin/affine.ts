@@ -4,7 +4,11 @@ import {splitRefs} from '../refid/splitRefs.js';
 export function affine(fragment: DocumentFragment | Element, 
     el: Element){
     const qry = toQuery(el);
-
+    const {elFragment, map} = prep(el);
+    const matches = Array.from(fragment.querySelectorAll(qry));
+    for(const match of matches){
+        clone(match, elFragment, map);
+    }
 }
 
 export function prep(el: Element){
@@ -24,5 +28,19 @@ export function prep(el: Element){
     }
     return {
         elFragment, map
+    }
+}
+
+export function clone(
+    matchingElement: Element, 
+    elFragment: DocumentFragment, 
+    map: {[key: string]: string} | null){
+    const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
+    matchingElement.replaceChildren(fragmentClone);
+    if(map !== null){
+        for(const key in map){
+            const value = map[key]!;
+            matchingElement.setAttribute(key, value);
+        }
     }
 }

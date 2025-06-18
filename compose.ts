@@ -71,11 +71,11 @@ export async function compose(
         
     }
     if(el.content.childElementCount > 0){
-        const {beKindred} = await import('./slotkin/beKindred.js');
+        const {affine} = await import('./slotkin/affine.js');
         const children = Array.from(el.content.children);
         for(const child of children){
             //TODO support clean up
-            const mo = beKindred(clone, child);
+            const mo = affine(clone, child);
 
         }
         

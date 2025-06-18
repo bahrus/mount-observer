@@ -1,6 +1,6 @@
 import { toQuery } from './toQuery.js';
 import { MountObserver } from '../MountObserver.js';
-import { prep } from './affine.js';
+import { prep, clone } from './affine.js';
 const previousObservers = new WeakMap();
 export function beKindred(fragment, el) {
     if (!fragment.isConnected)
@@ -17,33 +17,20 @@ export function beKindred(fragment, el) {
         }
         previousObservers.set(fragment, nonStaleObservers);
     }
-    // const elFragment = new DocumentFragment();
-    // const clone = el.cloneNode(true);
-    // for(const child of clone.childNodes){
-    //     elFragment.appendChild(child);
-    // }
-    // const insertAttrs = el.getAttribute('-i');
-    // let map: {[key: string]: string} | null = null;
-    // if(insertAttrs !== null){
-    //     const attrs = splitRefs(insertAttrs);
-    //     map = {};
-    //     for(const attr of attrs){
-    //         map[attr] = el.getAttribute(attr)!;
-    //     }
-    // }
     const { elFragment, map } = prep(el);
     const mo = new MountObserver({
         on: qry,
         do: {
             mount: (matchingElement) => {
-                const fragmentClone = elFragment.cloneNode(true);
-                matchingElement.replaceChildren(fragmentClone);
-                if (map !== null) {
-                    for (const key in map) {
-                        const value = map[key];
-                        matchingElement.setAttribute(key, value);
-                    }
-                }
+                clone(matchingElement, elFragment, map);
+                // const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
+                // matchingElement.replaceChildren(fragmentClone);
+                // if(map !== null){
+                //     for(const key in map){
+                //         const value = map[key]!;
+                //         matchingElement.setAttribute(key, value);
+                //     }
+                // }
             }
         }
     });
