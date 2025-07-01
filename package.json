@@ -64,6 +64,10 @@
     "./slotkin/beKindred.js": {
       "default": "./slotkin/beKindred.js",
       "types": "./slotkin/beKindred.ts"
+    },
+    "./slotkin/wrap.js":{
+      "default": "./slotkin/wrap.js",
+      "types": "./slotkin/wrap.ts"
     }
   },
   "files": [
