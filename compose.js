@@ -19,18 +19,7 @@ export async function compose(self, el, level, refName, refType) {
     if (!(templ instanceof HTMLTemplateElement))
         throw 404;
     if (refType === '#') {
-        const { wrap } = await import('./slotkin/wrap.js');
-        wrap(templ, refName);
-        // const wasWrapped = (<any>templ)[wrapped];
-        // if (!wasWrapped) {
-        //     (<any>templ)[wrapped] = true;
-        //     if (templ.content.childElementCount > 1) {
-        //         const start = document.createComment(refName);
-        //         templ.content.prepend(start);
-        //         const end = document.createComment(`/${refName}`);
-        //         templ.content.appendChild(end);
-        //     }
-        // }
+        (await import('./slotkin/wrap.js')).wrap(templ, refName);
     }
     const clone = templ.content.cloneNode(true);
     const dataLd = el.dataset.ld;
