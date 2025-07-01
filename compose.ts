@@ -74,47 +74,47 @@ export async function compose(
 
 
     await self.composeFragment(clone, level + 1);
-    if (false) {
-        const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
-        if (shadowRootModeOnLoad === null && level === 0) {
+    // if (false) {
+    //     const shadowRootModeOnLoad = el.getAttribute('shadowRootModeOnLoad') as null | ShadowRootMode;
+    //     if (shadowRootModeOnLoad === null && level === 0) {
 
-            const slotMap = el.getAttribute('slotmap');
-            let map = slotMap === null ? undefined : JSON.parse(slotMap);
-            const slots = clone.querySelectorAll('[slot]');
-            for (const slot of slots) {
-                if (map !== undefined) {
-                    const slotName = slot.slot;
-                    for (const key in map) {
-                        if (slot.matches(key)) {
-                            const targetAttSymbols = map[key] as string;
-                            for (const sym of targetAttSymbols) {
-                                switch (sym) {
-                                    case '|':
-                                        slot.setAttribute('itemprop', slotName);
-                                        break;
-                                    case '$':
-                                        slot.setAttribute('itemscope', '');
-                                        slot.setAttribute('itemprop', slotName);
-                                        break;
-                                    case '@':
-                                        slot.setAttribute('name', slotName);
-                                        break;
-                                    case '.':
-                                        slot.classList.add(slotName);
-                                        break;
-                                    case '%':
-                                        slot.part.add(slotName);
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                }
-                slot.removeAttribute('slot');
-            }
-            el.dispatchEvent(new LoadEvent(clone));
-        }
-    }
+    //         const slotMap = el.getAttribute('slotmap');
+    //         let map = slotMap === null ? undefined : JSON.parse(slotMap);
+    //         const slots = clone.querySelectorAll('[slot]');
+    //         for (const slot of slots) {
+    //             if (map !== undefined) {
+    //                 const slotName = slot.slot;
+    //                 for (const key in map) {
+    //                     if (slot.matches(key)) {
+    //                         const targetAttSymbols = map[key] as string;
+    //                         for (const sym of targetAttSymbols) {
+    //                             switch (sym) {
+    //                                 case '|':
+    //                                     slot.setAttribute('itemprop', slotName);
+    //                                     break;
+    //                                 case '$':
+    //                                     slot.setAttribute('itemscope', '');
+    //                                     slot.setAttribute('itemprop', slotName);
+    //                                     break;
+    //                                 case '@':
+    //                                     slot.setAttribute('name', slotName);
+    //                                     break;
+    //                                 case '.':
+    //                                     slot.classList.add(slotName);
+    //                                     break;
+    //                                 case '%':
+    //                                     slot.part.add(slotName);
+    //                                     break;
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //             slot.removeAttribute('slot');
+    //         }
+    //         el.dispatchEvent(new LoadEvent(clone));
+    //     }
+    // }
 
     if (level === 0) {
         const refs: Array<WeakRef<Element>> = [];
@@ -131,14 +131,14 @@ export async function compose(
         (<any>el)[cloneKey] = clone;
         cloneStashed = true;
     } else {
-        if (false /*shadowRootModeOnLoad !== null */) {
-            const parent = el.parentElement;
-            if (parent === null) throw 404;
-            if (parent.shadowRoot === null) parent.attachShadow({ mode: shadowRootModeOnLoad });
-            parent.shadowRoot?.append(clone);
-        } else {
+        // if (false /*shadowRootModeOnLoad !== null */) {
+        //     const parent = el.parentElement;
+        //     if (parent === null) throw 404;
+        //     if (parent.shadowRoot === null) parent.attachShadow({ mode: shadowRootModeOnLoad });
+        //     parent.shadowRoot?.append(clone);
+        // } else {
             el.after(clone);
-        }
+        //}
     }
     //moving the code down here broke be-inclusive Example2.html (but maybe it caused something else to work, so will need to revisit)
     //check to make sure the progresive loading of css-charts works as before.
