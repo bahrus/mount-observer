@@ -1,12 +1,12 @@
 const wrapped = Symbol.for('50tzQZt95ECXUtHF7a40og');
-export function wrap(templ, refName) {
+export function wrap(templ, base) {
     const wasWrapped = templ[wrapped];
     if (!wasWrapped) {
         templ[wrapped] = true;
         if (templ.content.childElementCount > 1) {
-            const start = document.createComment(refName);
+            const start = document.createComment(base);
             templ.content.prepend(start);
-            const end = document.createComment(`/${refName}`);
+            const end = document.createComment(`/${base}`);
             templ.content.appendChild(end);
         }
     }
