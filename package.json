@@ -65,6 +65,10 @@
       "default": "./slotkin/beKindred.js",
       "types": "./slotkin/beKindred.ts"
     },
+    "./slotkin/getFrag.js":{
+      "default": "./slotkin/getFrag.js",
+      "types": "./slotkin/getFrag.ts"
+    },
     "./slotkin/wrap.js": {
       "default": "./slotkin/wrap.js",
       "types": "./slotkin/wrap.ts"
