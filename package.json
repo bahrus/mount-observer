@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.74",
+  "version": "0.0.75",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
@@ -65,7 +65,7 @@
       "default": "./slotkin/beKindred.js",
       "types": "./slotkin/beKindred.ts"
     },
-    "./slotkin/getFrag.js":{
+    "./slotkin/getFrag.js": {
       "default": "./slotkin/getFrag.js",
       "types": "./slotkin/getFrag.ts"
     },
