@@ -15,6 +15,7 @@
 		"refid/splitRefs.ts",
 		"slotkin/beKindred.ts",
 		"slotkin/getFrag.ts",
+		"slotkin/getBreadth.ts"
 	],
 	"exclude":[
 		"node_modules"
