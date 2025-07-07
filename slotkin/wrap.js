@@ -4,9 +4,9 @@ export function wrap(templ, base, force = false) {
     if (!wasWrapped) {
         templ[wrapped] = base;
         if (force || templ.content.childElementCount > 1) {
-            const start = document.createComment(base);
+            const start = document.createComment(` ${base} `);
             templ.content.prepend(start);
-            const end = document.createComment(`/${base}`);
+            const end = document.createComment(` /${base} `);
             templ.content.appendChild(end);
         }
     }
