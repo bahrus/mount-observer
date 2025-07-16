@@ -48,6 +48,8 @@ There is quite a bit of functionality this proposal would open up, that is excee
 
 3.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
 
+4.  Some css selectors, such as the [scope donut hole range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope) aren't supported by querySelector(All) or matches.
+
 ###  Most significant use cases.
 
 The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant.  Building it into the platform would potentially:
