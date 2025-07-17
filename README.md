@@ -441,6 +441,48 @@ So I believe the prudent thing to do is wait for all the conditions to be satisf
 
 The alternative to providing this feature, which I'm leaning towards, is to just ask the developer to create "specialized" mountObserver construction arguments, that turn on and off precisely when the developer needs to know.
 
+
+## Support for "donut hole scoping"
+
+While browsers are getting support for css based donut hole scoping, such support appears to be elusive for oElement.querySelectorAll(...) and oElement.matches(...).  In fact it is unclear how oElement.matches(...) would support it.  Such support would be quite useful. for microdata-based binding.
+
+Ideally, should this proposal be built into the browser, it would as a matter of course support donut hole scoping.
+
+For the polyfill, we need to support it as follows:
+
+```html
+<div id=myTest itemscope>
+   <span itemprop=name>
+</div>
+```
+
+```JavaScript
+const oElement = document.getElementById('myTest');
+const observer = new MountObserver({
+   on:'[itemprop]',
+   outside: '[itemscope]'
+   do: {
+      mount: ({localName}, {modules, observer}) => {
+        ...
+      },
+   },
+   disconnectedSignal: new AbortController().signal
+});
+observer.observe(oElement);
+```
+
+The check for "outside" is done via script:
+
+```JavaScript
+function outsideCheck(oElement: Element, matchCandidate: Element, outside: string){
+   const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
+   for(const elementToExclude of elementsToExclude){
+      if(elementToExclude === matchCandidate || elementToExlude.includes(matchCandidate)) return false
+   }
+   return true;
+}
+```
+
 ## A tribute to attributes
 
 Attributes of DOM elements are tricky.  They've been around since the get-go of the Web, and they've survived multiple eras of web development, where different philosophies have prevailed, so prepare yourself for some esoteric discussions in what follows.
