@@ -466,6 +466,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             const elsToUnMount = previouslyMounted.filter(x => {
                 if(x === undefined) return false;
                 if(!x.matches(match)) return true;
+                //TODO:  add check for outside
                 if(whereSatisfies !== undefined){
                     if(!whereSatisfies(x, this, {stage: 'Inspecting', initializing: false})) return true;
                 }
@@ -478,12 +479,25 @@ export class MountObserver extends EventTarget implements IMountObserver{
         return returnSet;
     }
 
+    #outsideCheck(oElement: Element, matchCandidate: Element, outside: string){
+        const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
+        for(const elementToExclude of elementsToExclude){
+            if(elementToExclude === matchCandidate || elementToExclude.contains(matchCandidate)) return false;
+        }
+        return true;
+    }
+
     async #filterAndMount(els: Array<Element>, target: Node, checkMatch: boolean, initializing: boolean){
-        const {whereSatisfies, whereInstanceOf, assigner} = this.#mountInit;
+        const {whereSatisfies, whereInstanceOf, assigner, outside} = this.#mountInit;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if(checkMatch){
                 if(!x.matches(match)) return false;
+
+                //TODO:  check for outside
+            }
+            if(outside !== undefined){
+                if(!this.#outsideCheck(target as Element, x, outside)) return false;
             }
             if(whereSatisfies !== undefined){
                 if(!whereSatisfies(x, this, {stage: 'Inspecting', initializing})) return false;

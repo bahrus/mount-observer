@@ -444,7 +444,7 @@ The alternative to providing this feature, which I'm leaning towards, is to just
 
 ## Support for "donut hole scoping"
 
-While browsers are getting support for css based donut hole scoping, such support appears to be elusive for oElement.querySelectorAll(...) and oElement.matches(...).  In fact it is unclear how oElement.matches(...) would support it.  Such support would be quite useful. for microdata-based binding.
+While browsers are getting support for css based donut hole scoping, such support appears to be elusive for oElement.querySelectorAll(...) and oElement.matches(...).  In fact it is unclear how oElement.matches(...) would ever support it.  Such support would be quite useful. for microdata-based binding.
 
 Ideally, should this proposal be built into the browser, it would as a matter of course support donut hole scoping.
 
@@ -474,10 +474,10 @@ observer.observe(oElement);
 The check for "outside" is done via script:
 
 ```JavaScript
-function outsideCheck(oElement: Element, matchCandidate: Element, outside: string){
+outsideCheck(oElement: Element, matchCandidate: Element, outside: string){
    const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
    for(const elementToExclude of elementsToExclude){
-      if(elementToExclude === matchCandidate || elementToExlude.includes(matchCandidate)) return false
+      if(elementToExclude === matchCandidate || elementToExclude.contains(matchCandidate)) return false;
    }
    return true;
 }
