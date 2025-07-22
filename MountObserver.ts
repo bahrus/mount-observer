@@ -497,7 +497,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 //TODO:  check for outside
             }
             if(outside !== undefined){
-                if(!this.#outsideCheck(target as Element, x, outside)) return false;
+                if(!this.#outsideCheck(this.objNde!.deref() as Element, x, outside)) return false;
             }
             if(whereSatisfies !== undefined){
                 if(!whereSatisfies(x, this, {stage: 'Inspecting', initializing})) return false;
@@ -514,6 +514,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
             
         }
         await bindishIt(els, target, {assigner});
+        if(elsToMount.length === 0) return;
         this.#mount(elsToMount, initializing);
     }
 
