@@ -819,6 +819,15 @@ For example:
 <div>Strawberry Fields Forever</div>
 ```
 
+Optionally, a rel=stream attribute can be specified.  Other values of the attribute will result in different behavior from what is described below:
+
+```html
+<template rel=stream src=#id-of-source-template>
+   <span part=greeting>hello</span>
+   <span part=parting>goodbye<span>
+</template>
+```
+
 When it encounters such a thing, it searches "upwardly" through the chain of ShadowRoots for a template with id=id-of-source-template (in this case), and caches them as it finds them. 
 
 Let's say the source template looks as follows:
