@@ -871,8 +871,8 @@ What we end up with is:
 Some significant differences with slot support as used with (ShadowDOM'd) custom elements
 
 1.  The mechanism to weave DOM together is more flexible here:  We are searching for DOM elements that match all the attributes of the children of the *target* template, that template that is pulling in the intra document source template.  The "part" attribute was used just as an example.
-2.  There is no mechanism for updating the slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive) that allows for updating the existing DOM tree based on identical syntax.
-2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) inclusions, instead, follow the opposite approach -- a single element can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
+2.  There is no mechanism for updating slots.  That is something under investigation with this userland [custom enhancement](https://github.com/bahrus/be-inclusive) that allows for updating the existing DOM tree based on identical syntax.
+2.  ShadowDOM's slots act on a "many to one" basis.  Multiple light children with identical slot identifiers all get merged into a single (first?) matching slot within the Shadow DOM.  These "birtual" (birth-only, virtual) streaming inclusions, instead, follow the opposite approach -- a single element can get cloned into multiple slot targets as it weaves itself into the templates as they get merged together.
 
 ## Intra document html imports with Shadow DOM support
 
@@ -934,7 +934,7 @@ The [add src attribute to template to load a template from file](https://github.
 Just as it is useful to be able lazy load external imports when needed, it would also be useful to do the same for intra document HTML imports.  The most straightforward way this could be done seems to be as follows, either introducing some attribute like "type=conditional", or defining a new element that inherits from the HTMLTemplateElement, for example:
 
 ```html
-<template id=source-template type=conditional>
+<template id=source-template rel=conditional-stream>
 
    <template mount='{
       "on": ":not([defer-loading])",
@@ -968,6 +968,27 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <span slot=slot1>hello</span>
    <span slot=slot2>goodbye<span>
 </compose>
+```
+
+## Applying DRY to templates.
+
+My timing experiments indicate that it is faster to extract out all the needed template elements defined within   a repeating template.
+
+```html
+<html>
+   <head>
+      <template id=directory>
+      </template>
+   </head>
+   <body>
+      <div itemscope>
+         <template id=directoryConsumer rel=eager-ref src=#directory></template>
+      </div>
+   </body>
+   <script>
+      await directoryConsumer.loadedContent();
+   </script>
+</html>
 ```
 
 
