@@ -970,7 +970,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 </compose>
 ```
 
-## Applying DRY to templates.
+## Applying DRY to templates. [TODO]
 
 My timing experiments indicate that it is faster to extract out all the needed template elements defined within   a repeating template.
 
