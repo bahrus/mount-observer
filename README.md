@@ -972,17 +972,29 @@ Just as it is useful to be able lazy load external imports when needed, it would
 
 ## Applying DRY to templates. [TODO]
 
-My timing experiments indicate that it is faster to extract out all the needed template elements defined within a repeating template.
+Recall that the previous examples, there was an implicit value of the rel attribute:
+
+```html
+<template src=#source-template rel=stream>
+   <span slot=slot1>hello</span>
+   <span slot=slot2>goodbye<span>
+</template>
+```
+
+Now we provide another scenario where we want to specify a different kind of use of the src attribute adorning the template element -- simply as a way of saying "here is a template to be used within this context as templates are traditionally used (for cloning reusable HTML), but the actual contents for the template is defined remotely (intra document or via http).
+
+My timing experiments indicate that it is faster to extract out all the needed template elements defined within a repeating template -- keep the contents that need repeated cloning lighter, and only clone fragments as needed from an external reference.
 
 ```html
 <html>
    <head>
       <template id=directory>
+         My Shared Content
       </template>
    </head>
    <body>
       <div itemscope>
-         <template id=directoryConsumer rel=eager-ref src=#directory></template>
+         <template id=directoryConsumer rel=import src=#directory></template>
       </div>
    </body>
    <script type=module>
@@ -992,7 +1004,7 @@ My timing experiments indicate that it is faster to extract out all the needed t
          await waitForEvent(directoryConsumer, 'load');
          return directoryConsumer.remoteContents;
       }
-      directoryConsumer.loadedContent();
+      await getContents(directoryConsumer)
    </script>
 </html>
 ```
