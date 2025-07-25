@@ -76,7 +76,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
     async composeFragment(fragment: DocumentFragment, level: number){
         const bis = fragment.querySelectorAll(`${inclTemplQry}`) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
-            await this.#compose(bi, level);
+            if(bi.getAttribute('rel') === 'preload'){
+                (await import('./getContents.js')).getContents(bi, this.#mountInit.withTargetShadowRoot);
+            }else{
+                await this.#compose(bi, level);
+            }
+            
         }
     }
 
@@ -509,7 +514,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
         });
         for(const elToMount of elsToMount){
             if(elToMount.matches(inclTemplQry)){
-                await this.#compose(elToMount as HTMLTemplateElement, 0)
+                if(elToMount instanceof HTMLTemplateElement && elToMount.getAttribute('rel') === 'preload'){
+                    (await import('./getContents.js')).getContents(elToMount, this.#mountInit.withTargetShadowRoot);
+                }else{
+                    await this.#compose(elToMount as HTMLTemplateElement, 0);
+                }
+                
             }
             
         }

@@ -63,7 +63,12 @@ export class MountObserver extends EventTarget {
     async composeFragment(fragment, level) {
         const bis = fragment.querySelectorAll(`${inclTemplQry}`);
         for (const bi of bis) {
-            await this.#compose(bi, level);
+            if (bi.getAttribute('rel') === 'preload') {
+                (await import('./getContents.js')).getContents(bi, this.#mountInit.withTargetShadowRoot);
+            }
+            else {
+                await this.#compose(bi, level);
+            }
         }
     }
     async #compose(el, level) {
@@ -480,7 +485,12 @@ export class MountObserver extends EventTarget {
         });
         for (const elToMount of elsToMount) {
             if (elToMount.matches(inclTemplQry)) {
-                await this.#compose(elToMount, 0);
+                if (elToMount instanceof HTMLTemplateElement && elToMount.getAttribute('rel') === 'preload') {
+                    (await import('./getContents.js')).getContents(elToMount, this.#mountInit.withTargetShadowRoot);
+                }
+                else {
+                    await this.#compose(elToMount, 0);
+                }
             }
         }
         await bindishIt(els, target, { assigner });
