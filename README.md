@@ -972,7 +972,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 
 ## Applying DRY to templates. [TODO]
 
-My timing experiments indicate that it is faster to extract out all the needed template elements defined within   a repeating template.
+My timing experiments indicate that it is faster to extract out all the needed template elements defined within a repeating template.
 
 ```html
 <html>
@@ -985,8 +985,14 @@ My timing experiments indicate that it is faster to extract out all the needed t
          <template id=directoryConsumer rel=eager-ref src=#directory></template>
       </div>
    </body>
-   <script>
-      await directoryConsumer.loadedContent();
+   <script type=module>
+      import {waitForEvent} from 'mount-observer/waitForEvent.js'
+      async function getContents(){
+         if(directoryConsumer.remoteContents) return directoryConsumer.remoteContents;
+         await waitForEvent(directoryConsumer, 'load');
+         return directoryConsumer.remoteContents;
+      }
+      directoryConsumer.loadedContent();
    </script>
 </html>
 ```
