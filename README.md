@@ -994,7 +994,7 @@ My timing experiments indicate that it is faster to extract out all the needed t
    </head>
    <body>
       <div itemscope>
-         <template id=directoryConsumer rel=import src=#directory></template>
+         <template id=directoryConsumer rel=preload src=#directory></template>
       </div>
    </body>
    <script type=module>
