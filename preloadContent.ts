@@ -38,7 +38,6 @@ export async function preloadContent(
         templWithRemoteContent[remoteTemplElSym] = new WeakRef(remoteTempl);
         templWithRemoteContent.dispatchEvent(new Event('load'));
     }else{
-        debugger;
         throw 'NI'; //not implemented
     }
 }
