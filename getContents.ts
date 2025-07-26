@@ -29,6 +29,8 @@ export async function getContents(templ: HTMLTemplateElement, target?: DocumentF
         const id = src.substring(1);
         const {upShadowSearch} = await import('./upShadowSearch.js');
         const remoteTempl = upShadowSearch(templ, id) || upShadowSearch((target || document) as Element, id);
+        if(!(remoteTempl instanceof HTMLTemplateElement)) throw 404; //not found
+        templWithRemoteContent[remoteTemplElSym] = new WeakRef(remoteTempl);
     }else{
         throw 'NI'; //not implemented
     }

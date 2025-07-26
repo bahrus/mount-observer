@@ -970,7 +970,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 </compose>
 ```
 
-## Applying DRY to templates. [TODO]
+## Applying DRY to templates. [WIP]
 
 Recall that the previous examples, there was an implicit value of the rel attribute:
 

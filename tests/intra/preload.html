@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragment With Template</title>
+</head>
+<body>
+    <div id=div>
+        <template id=my-template>
+            <div>hello</div>
+            <span></span>
+            <div>world</div>
+        </template>
+
+        <template rel=preload src=#my-template></template>
+    </div>
+    
+    <script type=module>
+        import {MountObserver} from '/MountObserver.js';
+    
+        const mo = new MountObserver({
+            on: 'h3',
+            do:{
+                mount: (el, ctx) => {
+                }
+            }
+        });
+
+        mo.observe(div);
+        
+    </script>
+</body>
+</html>
