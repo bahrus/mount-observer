@@ -24,6 +24,9 @@ export async function preloadContent(templ, target) {
             configurable: true,
         });
     }
+    else {
+        return;
+    }
     if (isIntraDoc) {
         const id = src.substring(1);
         const { upShadowSearch } = await import('./upShadowSearch.js');

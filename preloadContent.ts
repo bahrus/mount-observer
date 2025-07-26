@@ -1,8 +1,8 @@
+import {TemplateWithRemoteContent} from './ts-refs/mount-observer/types.js';
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
 
 export async function preloadContent(templ: HTMLTemplateElement, target?: DocumentFragment | ShadowRoot | Document | Element) {
-    const templWithRemoteContent = templ as HTMLTemplateElement & { 
-        remoteContent?: DocumentFragment,
+    const templWithRemoteContent = templ as TemplateWithRemoteContent & { 
         [remoteTemplElSym]?: WeakRef<HTMLTemplateElement>
     };
     if(templWithRemoteContent.remoteContent) return templWithRemoteContent.remoteContent;
@@ -24,6 +24,8 @@ export async function preloadContent(templ: HTMLTemplateElement, target?: Docume
             configurable: true,
 
         });
+    }else{
+        return;
     }
     if(isIntraDoc){
         const id = src.substring(1);

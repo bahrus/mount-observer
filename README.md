@@ -972,7 +972,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 
 ## Applying DRY to templates. [WIP]
 
-Recall that the previous examples, there was an implicit value of the rel attribute:
+Recall that with the previous examples, there was an implicit value of the rel attribute:
 
 ```html
 <template src=#source-template rel=stream>
@@ -999,12 +999,12 @@ My timing experiments indicate that it is faster to extract out all the needed t
    </body>
    <script type=module>
       import {waitForEvent} from 'mount-observer/waitForEvent.js'
-      async function getContents(){
-         if(directoryConsumer.remoteContents) return directoryConsumer.remoteContents;
+      async function getContent(){
+         if(directoryConsumer.remoteContent) return directoryConsumer.remoteContents;
          await waitForEvent(directoryConsumer, 'load');
          return directoryConsumer.remoteContents;
       }
-      await getContents(directoryConsumer)
+      await getContent(directoryConsumer)
    </script>
 </html>
 ```
