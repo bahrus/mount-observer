@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.78",
+  "version": "0.0.79",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
@@ -41,7 +41,7 @@
       "default": "./doCleanup.js",
       "types": "./doCleanup.ts"
     },
-    "./getContent.js":{
+    "./getContent.js": {
       "default": "./getContent.js",
       "types": "./getContent.ts"
     },
