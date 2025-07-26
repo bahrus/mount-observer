@@ -13,6 +13,6 @@ export function upShadowSearch(ref, id) {
         else if (rn === document) {
             return null;
         }
-        throw 'NI';
+        return null;
     }
 }

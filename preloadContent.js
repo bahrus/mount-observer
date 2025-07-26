@@ -37,6 +37,7 @@ export async function preloadContent(templ, target) {
         templWithRemoteContent.dispatchEvent(new Event('load'));
     }
     else {
+        debugger;
         throw 'NI'; //not implemented
     }
 }

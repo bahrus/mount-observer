@@ -10,7 +10,7 @@ export function upShadowSearch(ref: Element, id: string){
         }else if(rn === document){
             return null;
         }
-        throw 'NI';
+        return null;
     }
 }
 
