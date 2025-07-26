@@ -12,7 +12,7 @@
 		"MountObserver.ts",
 		"Synthesizer.ts",
 		"waitForIsh.ts",
-		"preloadContent.ts",
+		"getContent.ts",
 		"refid/splitRefs.ts",
 		"slotkin/beKindred.ts",
 		"slotkin/getFrag.ts",
