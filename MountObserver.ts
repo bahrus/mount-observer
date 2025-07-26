@@ -77,7 +77,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const bis = fragment.querySelectorAll(`${inclTemplQry}`) as NodeListOf<HTMLTemplateElement>;
         for(const bi of bis){
             if(bi.getAttribute('rel') === 'preload'){
-                (await import('./getContents.js')).getContents(bi, this.#mountInit.withTargetShadowRoot);
+                (await import('./preloadContent.js')).preloadContent(bi, this.#mountInit.withTargetShadowRoot);
             }else{
                 await this.#compose(bi, level);
             }
@@ -515,7 +515,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         for(const elToMount of elsToMount){
             if(elToMount.matches(inclTemplQry)){
                 if(elToMount instanceof HTMLTemplateElement && elToMount.getAttribute('rel') === 'preload'){
-                    (await import('./getContents.js')).getContents(elToMount, this.#mountInit.withTargetShadowRoot);
+                    (await import('./preloadContent.js')).preloadContent(elToMount, this.#mountInit.withTargetShadowRoot);
                 }else{
                     await this.#compose(elToMount as HTMLTemplateElement, 0);
                 }

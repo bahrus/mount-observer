@@ -1,5 +1,5 @@
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
-export async function getContents(templ, target) {
+export async function preloadContent(templ, target) {
     const templWithRemoteContent = templ;
     if (templWithRemoteContent.remoteContent)
         return templWithRemoteContent.remoteContent;
@@ -31,6 +31,7 @@ export async function getContents(templ, target) {
         if (!(remoteTempl instanceof HTMLTemplateElement))
             throw 404; //not found
         templWithRemoteContent[remoteTemplElSym] = new WeakRef(remoteTempl);
+        templWithRemoteContent.dispatchEvent(new Event('load'));
     }
     else {
         throw 'NI'; //not implemented

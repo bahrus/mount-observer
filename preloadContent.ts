@@ -1,6 +1,6 @@
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
 
-export async function getContents(templ: HTMLTemplateElement, target?: DocumentFragment | ShadowRoot | Document | Element) {
+export async function preloadContent(templ: HTMLTemplateElement, target?: DocumentFragment | ShadowRoot | Document | Element) {
     const templWithRemoteContent = templ as HTMLTemplateElement & { 
         remoteContent?: DocumentFragment,
         [remoteTemplElSym]?: WeakRef<HTMLTemplateElement>
@@ -31,6 +31,7 @@ export async function getContents(templ: HTMLTemplateElement, target?: DocumentF
         const remoteTempl = upShadowSearch(templ, id) || upShadowSearch((target || document) as Element, id);
         if(!(remoteTempl instanceof HTMLTemplateElement)) throw 404; //not found
         templWithRemoteContent[remoteTemplElSym] = new WeakRef(remoteTempl);
+        templWithRemoteContent.dispatchEvent(new Event('load'));
     }else{
         throw 'NI'; //not implemented
     }
