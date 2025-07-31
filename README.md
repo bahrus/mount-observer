@@ -444,7 +444,7 @@ The alternative to providing this feature, which I'm leaning towards, is to just
 
 ## Support for "donut hole scoping"
 
-While browsers are getting support for css based donut hole scoping, such support appears to be elusive for oElement.querySelectorAll(...) and oElement.matches(...).  In fact it is unclear how oElement.matches(...) would ever support it.  Such support would be quite useful. for microdata-based binding.
+While browsers are getting support for css based donut hole scoping, such support appears to be elusive for oElement.querySelectorAll(...) and oElement.matches(...).  In fact it is unclear to me how oElement.matches(...) would ever be able to support it.  Such support would be quite useful for microdata-based binding.
 
 Ideally, should this proposal be built into the browser, it would as a matter of course support donut hole scoping.
 
@@ -787,7 +787,7 @@ The thinking here is that longer roots indicate higher "specificity", so it is s
 
 ## Intra document html imports
 
-This proposal "sneaks in" one more feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
+This proposal "sneaks in" one more expasive feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
 Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter, i.e. found somewhere [in the document tree structure](https://github.com/tc39/proposal-module-expressions)?
 
@@ -801,7 +801,7 @@ The need for importing templates by id is also demonstrated by Corset's [Todo li
 }
 ```
 
-The mount-observer is always on the lookout for template tags with a src attribute starting with #:
+The mount-observer is always on the lookout for template tags with a src attribute starting with # (as well as url patterns):
 
 ```html
 <template src=#id-of-source-template></template>
@@ -929,6 +929,84 @@ The discussion there leads to an open question whether a processing instruction 
 
 The [add src attribute to template to load a template from file](https://github.com/whatwg/html/issues/10571) and an interesting proposal that is [coming from](https://github.com/htmlcomponents/declarative-shadow-imports/blob/main/examples/02-explainer-proposal/02-html.html) the Edge team [seem quite compatible](https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/ShadowDOM/explainer.md#proposal-inline-declarative-css-module-scripts) with this idea.
 
+## Applying DRY to templates. [WIP]
+
+Recall that with the previous examples, there was an implicit value of the rel attribute:
+
+```html
+<template src=#source-template rel=stream>
+   <span slot=slot1>hello</span>
+   <span slot=slot2>goodbye<span>
+</template>
+```
+
+Now we provide another scenario where we want to specify a different kind of use of the src attribute adorning the template element -- simply as a way of saying "here is a template to be used within this context as templates are traditionally used (for cloning reusable HTML), but the actual contents for the template is defined remotely (intra document or via http).
+
+My timing experiments indicate that it is faster to extract out all the needed template elements defined within a repeating template -- keep the contents that need repeated cloning lighter, and only clone fragments as needed from an external reference.
+
+```html
+<html>
+   <head>
+      <template id=directory>
+         My Shared Content
+      </template>
+   </head>
+   <body>
+      <div itemscope>
+         <template id=directoryConsumer rel=preload src=#directory></template>
+      </div>
+   </body>
+   <script type=module>
+      import {waitForEvent} from 'mount-observer/waitForEvent.js'
+      async function getContent(){
+         if(directoryConsumer.remoteContent) return directoryConsumer.remoteContents;
+         await waitForEvent(directoryConsumer, 'load');
+         return directoryConsumer.remoteContents;
+      }
+      await getContent(directoryConsumer)
+   </script>
+</html>
+```
+
+This can allow for elegant "lazy-loaded recursive" patterns:
+
+```html
+<html>
+   <head>
+      ...
+      <template id=dirs-files>
+        <ul itemscope=DirList itemprop=subDirs>
+            <li per-each="DirInfo of DirList">
+                <details>
+                    <summary itemprop=name></summary>
+                    <template 🎚️="on when ^{details}." 
+                        rel=preload src=#dirs-files></template>
+                </details>
+            </li>
+        </ul>
+        <ul itemscope=DirList itemprop=files>
+            <li per-each="FileInfo of DirList">
+                File: <span itemprop=name></span>
+                <button name=delete>Delete</button>
+            </li>
+        </ul>        
+    </template>
+    ...
+   </head>
+   <body>
+      ...
+      <button name=dirPick disabled>Pick directory</button>
+
+      <details itemscope=DirInfo data-kind="directory" 
+         when-resolved="@dirPick+📁⛏️ set $0?.ish?.handle to directoryHandle">
+         <summary itemprop=name></summary>
+         <template 🎚️="on when ^{details}." rel=preload src=#dirs-files></template>
+      </details>
+      ...
+   </body>
+</html>
+```
+
 ## Lazy Loading / Conditionally loading intra document imports [WIP specification]
 
 Just as it is useful to be able lazy load external imports when needed, it would also be useful to do the same for intra document HTML imports.  The most straightforward way this could be done seems to be as follows, either introducing some attribute like "type=conditional", or defining a new element that inherits from the HTMLTemplateElement, for example:
@@ -969,46 +1047,6 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <span slot=slot2>goodbye<span>
 </compose>
 ```
-
-## Applying DRY to templates. [WIP]
-
-Recall that with the previous examples, there was an implicit value of the rel attribute:
-
-```html
-<template src=#source-template rel=stream>
-   <span slot=slot1>hello</span>
-   <span slot=slot2>goodbye<span>
-</template>
-```
-
-Now we provide another scenario where we want to specify a different kind of use of the src attribute adorning the template element -- simply as a way of saying "here is a template to be used within this context as templates are traditionally used (for cloning reusable HTML), but the actual contents for the template is defined remotely (intra document or via http).
-
-My timing experiments indicate that it is faster to extract out all the needed template elements defined within a repeating template -- keep the contents that need repeated cloning lighter, and only clone fragments as needed from an external reference.
-
-```html
-<html>
-   <head>
-      <template id=directory>
-         My Shared Content
-      </template>
-   </head>
-   <body>
-      <div itemscope>
-         <template id=directoryConsumer rel=preload src=#directory></template>
-      </div>
-   </body>
-   <script type=module>
-      import {waitForEvent} from 'mount-observer/waitForEvent.js'
-      async function getContent(){
-         if(directoryConsumer.remoteContent) return directoryConsumer.remoteContents;
-         await waitForEvent(directoryConsumer, 'load');
-         return directoryConsumer.remoteContents;
-      }
-      await getContent(directoryConsumer)
-   </script>
-</html>
-```
-
 
 
 ## Creating "frameworks" that revolve around MOSEs.
