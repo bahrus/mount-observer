@@ -1164,7 +1164,7 @@ This would be useful for other linkages as well, which the platform doesn't supp
   ...
 <span id="tac">I agree to the Terms and Conditions.</span>
 
-<span id="tac2">I agree to the tese other Terms and Conditions.</span>
+<span id="tac2">I agree to the other Terms and Conditions.</span>
 <script>
    console.log(mySpan.refs.labelledby.get());
    myDiv.refs.labelledby.addEventListener('ref', e => {
