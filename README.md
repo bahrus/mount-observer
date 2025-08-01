@@ -1139,10 +1139,18 @@ The platform provides some nice help with managing forms, including IDREF depend
 This would be useful for other linkages as well, which the platform doesn't support currently:
 
 ```html
-<div itemscope itemref="myID1 myID2">
+<div id=myDiv itemscope itemref="myID1 myID2">
    <span itemprop=greeting></span>
 </div>
+...
+<div id=myId1>...</div>
+<div id=myId2>...</div>
 <script>
+   console.log(myDiv.refs.byItemref);
+   myDiv.refs.addEventListener('itemref', e => {
+      console.log({e});
+      //{addedRefs, removedRefs}
+   })
 </script>
 ```
 
