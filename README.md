@@ -787,7 +787,7 @@ The thinking here is that longer roots indicate higher "specificity", so it is s
 
 ## Intra document html imports
 
-This proposal "sneaks in" one more expasive feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
+This proposal "sneaks in" one more expansive feature, that perhaps should stand separately as its own proposal.  Because the MountObserver api allows us to attach behaviors on the fly based on css matching, and because the MountObserver would provide developers the "first point of contact" for such functionality, the efficiency argument seemingly "screams out" for this feature.
 
 Also, this proposal is partly focused on better management of importing resources "from a distance", in particular via imports carried out via http.  Is it such a stretch to look closely at scenarios where that distance happens to be shorter, i.e. found somewhere [in the document tree structure](https://github.com/tc39/proposal-module-expressions)?
 
@@ -840,9 +840,9 @@ Let's say the source template looks as follows:
    </div>
    <div>
       I don't know why you say 
-      <span part=greeting></span> 
+      <span part=parting></span> 
        I say 
-      <span part=parting></span>
+      <span part=greeting></span>
    </div>
 </template>
 ```
@@ -860,9 +860,9 @@ What we end up with is:
 </div>
 <div>
    I don't know why you say 
-   <span part=greeting>goodbye</span>
+   <span part=parting>goodbye</span>
     I say 
-   <span part=parting>hello</span>
+   <span part=greeting>hello</span>
 </div>
 <?-?>
 <div>Strawberry Fields Forever</div>
@@ -1121,6 +1121,30 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 ```
 
 ## Creating an Element-To-RefID DOM passageway
+
+The platform provides some nice help with managing forms, including IDREF dependency support:
+
+```html
+<input name=field2 form=myForm>
+
+<form id=myForm>
+   <input name="field1">
+</form>
+<script>
+   console.log(myForm.elements);
+   // includes both field1 and field2
+</script>
+```
+
+This would be useful for other linkages as well, which the platform doesn't support currently:
+
+```html
+<div itemscope itemref="myID1 myID2">
+   <span itemprop=greeting></span>
+</div>
+<script>
+</script>
+```
 
 
 

@@ -1,43 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
 </head>
 <body>
-<!--+-->
-<div>
-   You say, <span part=parting>goodbye</span> and I say, 
-   <span part=greeting>hello</span>, <span part=greeting>hello</span>, <span part=greeting>hello</span>
-</div>
-<div>
-   I don't know why you say 
-   <span part=greeting>goodbye</span>
-    I say 
-   <span part=parting>hello</span>
-</div>
-<!----->
-<script>
-
-const iterator = document.evaluate(
-  `//comment()[.="+"]`,
-  document.body,
-  null,
-  XPathResult.ANY_TYPE,
-  null
-);
-//console.log({xpathResult})
-try {
-  let thisNode = iterator.iterateNext();
-
-  while (thisNode) {
-    console.log('x=' + thisNode.textContent);
-    thisNode = iterator.iterateNext();
-  }
-} catch (e) {
-  console.error(`Error: Document tree modified during iteration ${e}`);
-}
-</script>
+  <input name=field2 form=myForm>
+  
+  <form id=myForm>
+    <input name="field1">
+  </form>
 </body>
 </html>
