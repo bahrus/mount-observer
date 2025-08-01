@@ -1146,8 +1146,28 @@ This would be useful for other linkages as well, which the platform doesn't supp
 <div id=myId1>...</div>
 <div id=myId2>...</div>
 <script>
-   console.log(myDiv.refs.byItemref);
-   myDiv.refs.addEventListener('itemref', e => {
+   console.log(myDiv.refs.itemref.get());
+   myDiv.refs.byItemref.addEventListener('ref', e => {
+      console.log({e});
+      //{addedRefs, removedRefs}
+   })
+</script>
+```
+
+```html
+<span
+  id=mySpan
+  role="checkbox"
+  aria-checked="false"
+  tabindex="0"
+  aria-labelledby="tac tac2"></span>
+  ...
+<span id="tac">I agree to the Terms and Conditions.</span>
+
+<span id="tac2">I agree to the tese other Terms and Conditions.</span>
+<script>
+   console.log(mySpan.refs.labelledby.get());
+   myDiv.refs.labelledby.addEventListener('ref', e => {
       console.log({e});
       //{addedRefs, removedRefs}
    })
