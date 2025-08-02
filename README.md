@@ -1167,6 +1167,12 @@ This would be useful for other linkages as well, which the platform doesn't supp
 <span id="tac2">I agree to the other Terms and Conditions.</span>
 <script>
    console.log(mySpan.refs.['aria-labelledby'].elements);
+   //[span#tac, span#tac2, {referrer: span#mySpan}]
+
+   console.log(tac2.refs.['aria-labelledby'].elements);
+   //[span#tac, span#tac2, {referrer: span#mySpan}]
+
+
    myDiv.refs['aria-labelledby'].addEventListener('ref', e => {
       console.log({e});
       //{addedRefs, removedRefs}
