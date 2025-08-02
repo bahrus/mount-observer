@@ -1194,5 +1194,25 @@ Again, because of the mount-observer being the "first point of contact" with the
 </script>
 ```
 
+```html
+<label class="radio-inline">
+   <input id=myRadio1 type="radio" name="radio" value="1">
+   Group 1 Option 1
+</label>
+<label class="radio-inline">
+   <input id=myRadio2 type="radio" name="radio" value="2">
+   Group 1 Option 2
+</label>
+<label class="radio-inline">
+   <input id=myRadio3 type="radio" name="radio" value="3">
+   Group 1 Option 3
+</label>
+
+<script>
+   console.log(myRadio.via.name.matches)
+   // [input#myRadio1, input#myRadio2, input#myRadio3]
+</script>
+```
+
 
 
