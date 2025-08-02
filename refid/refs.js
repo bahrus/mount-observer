@@ -40,7 +40,7 @@ class RefManager extends EventTarget {
         this.attr = attr;
         this.#el = new WeakRef(el);
     }
-    get elements() {
+    get children() {
         if (this.#refs === undefined) {
             const el = this.#el.deref();
             if (el === undefined)

@@ -12,9 +12,9 @@
     <div id="myId2">Item 2</div>
     <script type=module>
         import '/refid/refs.js';
-        const els = myDiv.refs.itemref.elements;
+        const els = myDiv.via.itemref.children;
         console.log({els});
-        myDiv.refs.itemref.addEventListener('ref', e => {
+        myDiv.via.itemref.addEventListener('ref', e => {
             console.log({e});
             // {addedRefs, removedRefs}
         });

@@ -1146,8 +1146,8 @@ This would be useful for other linkages as well, which the platform doesn't supp
 <div id=myId1>...</div>
 <div id=myId2>...</div>
 <script>
-   console.log(myDiv.refs.itemref.elements);
-   myDiv.refs.itemref.addEventListener('ref', e => {
+   console.log(myDiv.via.itemref.elements);
+   myDiv.via.itemref.addEventListener('ref', e => {
       console.log({e});
       //{addedRefs, removedRefs}
    })
@@ -1166,14 +1166,16 @@ This would be useful for other linkages as well, which the platform doesn't supp
 
 <span id="tac2">I agree to the other Terms and Conditions.</span>
 <script>
-   console.log(mySpan.refs.['aria-labelledby'].elements);
-   //[span#tac, span#tac2, {referrer: span#mySpan}]
+   console.log(mySpan.via.['aria-labelledby'].children);
+   //[span#tac, span#tac2]
 
-   console.log(tac2.refs.['aria-labelledby'].elements);
-   //[span#tac, span#tac2, {referrer: span#mySpan}]
+   console.log(tac2.via.['aria-labelledby'].parents);
+   //[span#mySpan]
+
+   
 
 
-   myDiv.refs['aria-labelledby'].addEventListener('ref', e => {
+   myDiv.via['aria-labelledby'].addEventListener('ref', e => {
       console.log({e});
       //{addedRefs, removedRefs}
    })
