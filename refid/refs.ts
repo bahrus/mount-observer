@@ -50,7 +50,8 @@ class RefManager extends EventTarget {
             if(!attr) return [];
             const refIds = splitRefs(attr);
             const qry = refIds.map(id => `#id`).join(', ');
-            const refsArr = Array.from((el.getRootNode() as DocumentFragment).querySelectorAll(qry));
+            const rn = el.getRootNode() as DocumentFragment;
+            const refsArr = Array.from(rn.querySelectorAll(qry));
             const refs = new Map<string, WeakRef<Element>>();
             for(const ref of refsArr){
                 refs.set(ref.id, new WeakRef(ref));
@@ -74,7 +75,8 @@ class RefManager extends EventTarget {
                         }
                     }
                 }
-            })
+            });
+            mo.observe(rn);
             this.dispatchEvent(new RefEvent((refsArr), []));
         }
         return this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined) || [];
