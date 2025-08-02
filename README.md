@@ -1175,9 +1175,9 @@ This would be useful for other linkages as well, which the platform doesn't supp
    
 
 
-   myDiv.via['aria-labelledby'].addEventListener('ref', e => {
+   myDiv.via['aria-labelledby'].addEventListener('change', e => {
       console.log({e});
-      //{addedRefs, removedRefs}
+      //{addedChildren, removedChildren}
    })
 </script>
 ```

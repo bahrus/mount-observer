@@ -14,7 +14,7 @@
         import '/refid/refs.js';
         const els = myDiv.via.itemref.children;
         console.log({els});
-        myDiv.via.itemref.addEventListener('ref', e => {
+        myDiv.via.itemref.addEventListener('change', e => {
             console.log({e});
             // {addedRefs, removedRefs}
         });

@@ -64,31 +64,31 @@ class RefManager extends EventTarget {
                         const id = el.id;
                         if (id && !this.#children?.has(id)) {
                             this.#children?.set(id, new WeakRef(el));
-                            this.dispatchEvent(new RefEvent([el], []));
+                            this.dispatchEvent(new ChangeEvent([el], []));
                         }
                     },
                     dismount: (el) => {
                         const id = el.id;
                         if (id && this.#children?.has(id)) {
                             this.#children?.delete(id);
-                            this.dispatchEvent(new RefEvent([], [el]));
+                            this.dispatchEvent(new ChangeEvent([], [el]));
                         }
                     }
                 }
             });
             mo.observe(rn);
-            this.dispatchEvent(new RefEvent((refsArr), []));
+            this.dispatchEvent(new ChangeEvent((refsArr), []));
         }
         return Array.from(this.#children?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
     }
 }
-export class RefEvent extends Event {
-    addedRefs;
-    removedRefs;
-    static eventName = 'ref';
-    constructor(addedRefs, removedRefs) {
-        super(RefEvent.eventName);
-        this.addedRefs = addedRefs;
-        this.removedRefs = removedRefs;
+export class ChangeEvent extends Event {
+    addedChildren;
+    removedChildren;
+    static eventName = 'change';
+    constructor(addedChildren, removedChildren) {
+        super(ChangeEvent.eventName);
+        this.addedChildren = addedChildren;
+        this.removedChildren = removedChildren;
     }
 }
