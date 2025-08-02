@@ -1125,7 +1125,7 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 The platform provides some nice help with managing forms, including IDREF dependency support:
 
 ```html
-<input name=field2 form=myForm>
+<input id=field2 name=field2 form=myForm>
 
 <form id=myForm>
    <input name="field1">
@@ -1133,10 +1133,14 @@ The platform provides some nice help with managing forms, including IDREF depend
 <script>
    console.log(myForm.elements);
    // includes both field1 and field2
+   console.log(field2.form)
+   // form#myForm
 </script>
 ```
 
-This would be useful for other linkages as well, which the platform doesn't support currently:
+This would be useful for other linkages as well, which the platform doesn't support currently.
+
+Again, because of the mount-observer being the "first point of contact" with the DOM, this is supported by mount-observer as well.
 
 ```html
 <div id=myDiv itemscope itemref="myID1 myID2">
@@ -1146,10 +1150,16 @@ This would be useful for other linkages as well, which the platform doesn't supp
 <div id=myId1>...</div>
 <div id=myId2>...</div>
 <script>
-   console.log(myDiv.via.itemref.elements);
-   myDiv.via.itemref.addEventListener('ref', e => {
+   console.log(myDiv.via.itemref.children);
+   // [div#myId1, div#myId2]
+   myDiv.via.itemref.addEventListener('change', e => {
       console.log({e});
-      //{addedRefs, removedRefs}
+      //{addedChildren, removedChildren}
+   });
+   console.log(myId2.via.itemref.parents);
+   // [div#myDiv]
+   myId2.via.itemref.addEventListener('change', e => {
+      //{addedParents, removedParents};
    })
 </script>
 ```
@@ -1166,19 +1176,21 @@ This would be useful for other linkages as well, which the platform doesn't supp
 
 <span id="tac2">I agree to the other Terms and Conditions.</span>
 <script>
-   console.log(mySpan.via.['aria-labelledby'].children);
+   console.log(mySpan.via['aria-labelledby'].children);
    //[span#tac, span#tac2]
 
-   console.log(tac2.via.['aria-labelledby'].parents);
+   console.log(tac2.via['aria-labelledby'].parents);
    //[span#mySpan]
 
-   
 
-
-   myDiv.via['aria-labelledby'].addEventListener('change', e => {
+   mySpan.via['aria-labelledby'].addEventListener('change', e => {
       console.log({e});
       //{addedChildren, removedChildren}
-   })
+   });
+
+   tac2.via['aria-labelledby'].addEventListener('change', e => {
+      //{addedParents, removedParents}
+   });
 </script>
 ```
 
