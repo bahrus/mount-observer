@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: Dec 11, 2024
+Last Update: Aug 2, 2025
 
 ## Benefits of this API
 
@@ -1146,8 +1146,8 @@ This would be useful for other linkages as well, which the platform doesn't supp
 <div id=myId1>...</div>
 <div id=myId2>...</div>
 <script>
-   console.log(myDiv.refs.itemref.get());
-   myDiv.refs.byItemref.addEventListener('ref', e => {
+   console.log(myDiv.refs.itemref.elements);
+   myDiv.refs.itemref.addEventListener('ref', e => {
       console.log({e});
       //{addedRefs, removedRefs}
    })
