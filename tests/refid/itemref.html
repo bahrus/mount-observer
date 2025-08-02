@@ -7,13 +7,23 @@
 </head>
 <body>
     <script type=module src="/refid/refs.js"></script>
-    <div id=myDiv itemscope itemref="myId1 myId2"></div>
+    <div id=myDiv itemscope itemref="myId1 myId2 myId3"></div>
     <div id="myId1">Item 1</div>
     <div id="myId2">Item 2</div>
     <script type=module>
         import '/refid/refs.js';
         const els = myDiv.refs.itemref.elements;
         console.log({els});
+        myDiv.refs.itemref.addEventListener('ref', e => {
+            console.log({e});
+            // {addedRefs, removedRefs}
+        });
+        
+        const myId3 = document.createElement('div');
+        myId3.id = 'myId3';
+        myId3.textContent = 'Item 3';
+        document.body.appendChild(myId3);
+        
     </script>
 </body>
 </html>
