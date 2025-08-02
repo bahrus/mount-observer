@@ -57,6 +57,10 @@
       "default": "./refid/getAdjRefs.js",
       "types": "./refid/getAdjRefs.ts"
     },
+    "./refid/refs.js":{
+      "default": "./refid/refs.js",
+      "types": "./refid/refs.ts"
+    },
     "./refid/regIsh.js": {
       "default": "./refid/regIsh.js",
       "types": "./refid/regIsh.js"

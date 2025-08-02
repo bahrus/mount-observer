@@ -4,7 +4,7 @@ export function upShadowSearch(ref: Element, id: string){
         let test = rn.getElementById(id);
         if(test) return test;
         if(rn.host){
-            test = rn.host[id];
+            test = (<any>rn.host)[id];
             if(test instanceof HTMLElement) return test;
             rn = rn.host.getRootNode() as (DocumentFragment | ShadowRoot) & { host?: Element };
         }else if(rn === document){
