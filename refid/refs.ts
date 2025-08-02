@@ -1,4 +1,5 @@
 import {splitRefs} from './splitRefs.js';
+import {MountObserver} from '../MountObserver.js';
 const proxies = new WeakMap<Element, ProxyConstructor>();
 const refLookup = new WeakMap<ProxyConstructor, RefLookup>();
 Object.defineProperty(Element.prototype, 'refs', {
@@ -48,11 +49,38 @@ class RefManager extends EventTarget {
             const attr = el.getAttribute(this.prop);
             if(!attr) return [];
             const refIds = splitRefs(attr);
-            const refs = (el.getRootNode() as DocumentFragment).querySelectorAll(refIds.map(id => `#id`).join(', '));
-            this.dispatchEvent(new RefEvent(Array.from(refs), []));
+            const qry = refIds.map(id => `#id`).join(', ');
+            const refsArr = Array.from((el.getRootNode() as DocumentFragment).querySelectorAll(qry));
+            const refs = new Map<string, WeakRef<Element>>();
+            for(const ref of refsArr){
+                refs.set(ref.id, new WeakRef(ref));
+            }
+            this.#refs = refs;
+            const mo = new MountObserver({
+                on: qry,
+                do: {
+                    mount: (el) => {
+                        const id = el.id;
+                        if(id && !this.#refs?.has(id)){
+                            this.#refs?.set(id, new WeakRef(el));
+                            this.dispatchEvent(new RefEvent([el], []));
+                        }
+                    },
+                    dismount: (el) => {
+                        const id = el.id;
+                        if(id && this.#refs?.has(id)){
+                            this.#refs?.delete(id);
+                            this.dispatchEvent(new RefEvent([], [el]));
+                        }
+                    }
+                }
+            })
+            this.dispatchEvent(new RefEvent((refsArr), []));
         }
         return this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined) || [];
     }
+
+
 }
 
 export class RefEvent extends Event {
