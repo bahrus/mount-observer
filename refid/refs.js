@@ -7,20 +7,19 @@ Object.defineProperty(Element.prototype, 'refs', {
         if (!proxies.has(this)) {
             const handler = {
                 get(target, prop) {
-                    console.log({ target, prop });
                     let lookup;
-                    if (refLookup.has(target.constructor)) {
-                        lookup = refLookup.get(target.constructor);
+                    if (refLookup.has(target)) {
+                        lookup = refLookup.get(target);
                     }
                     else {
                         lookup = new Map();
-                        refLookup.set(target.constructor, lookup);
+                        refLookup.set(target, lookup);
                     }
                     if (lookup.has(prop)) {
                         return lookup.get(prop);
                     }
                     else {
-                        const refManager = new RefManager(this, prop);
+                        const refManager = new RefManager(target, prop);
                         lookup.set(prop, refManager);
                         return refManager;
                     }
@@ -42,7 +41,7 @@ class RefManager extends EventTarget {
         this.#el = new WeakRef(el);
     }
     get elements() {
-        if (this.#refs !== undefined) {
+        if (this.#refs === undefined) {
             const el = this.#el.deref();
             if (el === undefined)
                 return [];
@@ -50,7 +49,7 @@ class RefManager extends EventTarget {
             if (!attr)
                 return [];
             const refIds = splitRefs(attr);
-            const qry = refIds.map(id => `#id`).join(', ');
+            const qry = refIds.map(id => `#${id}`).join(', ');
             const rn = el.getRootNode();
             const refsArr = Array.from(rn.querySelectorAll(qry));
             const refs = new Map();
@@ -80,7 +79,7 @@ class RefManager extends EventTarget {
             mo.observe(rn);
             this.dispatchEvent(new RefEvent((refsArr), []));
         }
-        return this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined) || [];
+        return Array.from(this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
     }
 }
 export class RefEvent extends Event {

@@ -1,24 +1,23 @@
 import {splitRefs} from './splitRefs.js';
 import {MountObserver} from '../MountObserver.js';
 const proxies = new WeakMap<Element, ProxyConstructor>();
-const refLookup = new WeakMap<ProxyConstructor, RefLookup>();
+const refLookup = new WeakMap<Element, RefLookup>();
 Object.defineProperty(Element.prototype, 'refs', {
     get(){
         if(!proxies.has(this)){
             const handler = {
-                get(target: any, prop: string) {
-                    console.log({target, prop});
+                get(target: Element, prop: string) {
                     let lookup: RefLookup;
-                    if(refLookup.has(target.constructor)){
-                        lookup = refLookup.get(target.constructor)!;
+                    if(refLookup.has(target)){
+                        lookup = refLookup.get(target)!;
                     }else{
                         lookup = new Map<prop, RefManager>();
-                        refLookup.set(target.constructor, lookup);
+                        refLookup.set(target, lookup);
                     }
                     if(lookup.has(prop)){
                         return lookup.get(prop);
                     }else{
-                        const refManager = new RefManager(this, prop as string);
+                        const refManager = new RefManager(target, prop as string);
                         lookup.set(prop, refManager);
                         return refManager;
                     }
@@ -44,13 +43,13 @@ class RefManager extends EventTarget {
         this.#el = new WeakRef(el);
     }
     get elements(){
-        if(this.#refs !== undefined){
+        if(this.#refs === undefined){
             const el = this.#el.deref();
             if(el === undefined) return [];
             const attr = el.getAttribute(this.prop);
             if(!attr) return [];
             const refIds = splitRefs(attr);
-            const qry = refIds.map(id => `#id`).join(', ');
+            const qry = refIds.map(id => `#${id}`).join(', ');
             const rn = el.getRootNode() as DocumentFragment;
             const refsArr = Array.from(rn.querySelectorAll(qry));
             const refs = new Map<string, WeakRef<Element>>();
@@ -80,7 +79,7 @@ class RefManager extends EventTarget {
             mo.observe(rn);
             this.dispatchEvent(new RefEvent((refsArr), []));
         }
-        return this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined) || [];
+        return Array.from(this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
     }
 
 
