@@ -1,3 +1,4 @@
+import {splitRefs} from './splitRefs.js';
 const proxies = new WeakMap<Element, ProxyConstructor>();
 const refLookup = new WeakMap<ProxyConstructor, RefLookup>();
 Object.defineProperty(Element.prototype, 'refs', {
@@ -15,11 +16,11 @@ Object.defineProperty(Element.prototype, 'refs', {
                     if(lookup.has(prop)){
                         return lookup.get(prop);
                     }else{
-                        const refManager = new RefManager();
+                        const refManager = new RefManager(this, prop as string);
                         lookup.set(prop, refManager);
                         return refManager;
                     }
-                    return Reflect.get(target, prop);
+                    //return Reflect.get(target, prop);
                 },
                 
             };
@@ -33,6 +34,30 @@ type prop = string;
 
 type RefLookup = Map<prop, RefManager>;
 
-class RefManager{
+class RefManager extends EventTarget {
+    #el: WeakRef<Element>;
+    #refs: Map<string, WeakRef<Element>> | undefined;
+    constructor(el: Element, public prop: string){
+        super();
+        this.#el = new WeakRef(el);
+    }
+    get elements(){
+        if(this.#refs !== undefined){
+            const el = this.#el.deref();
+            if(el === undefined) return [];
+            const attr = el.getAttribute(this.prop);
+            if(!attr) return [];
+            const refIds = splitRefs(attr);
+            const refs = (el.getRootNode() as DocumentFragment).querySelectorAll(refIds.map(id => `#id`).join(', '));
+            this.dispatchEvent(new RefEvent(Array.from(refs), []));
+        }
+        return this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined) || [];
+    }
+}
 
+export class RefEvent extends Event {
+    static eventName = 'ref';
+    constructor(public addedRefs: Array<Element>, public removedRefs: Array<Element>){ 
+        super(RefEvent.eventName);
+    }
 }
