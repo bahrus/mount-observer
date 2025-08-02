@@ -6,7 +6,7 @@ Object.defineProperty(Element.prototype, 'refs', {
     get() {
         if (!proxies.has(this)) {
             const handler = {
-                get(target, prop) {
+                get(target, attr) {
                     let lookup;
                     if (refLookup.has(target)) {
                         lookup = refLookup.get(target);
@@ -15,12 +15,12 @@ Object.defineProperty(Element.prototype, 'refs', {
                         lookup = new Map();
                         refLookup.set(target, lookup);
                     }
-                    if (lookup.has(prop)) {
-                        return lookup.get(prop);
+                    if (lookup.has(attr)) {
+                        return lookup.get(attr);
                     }
                     else {
-                        const refManager = new RefManager(target, prop);
-                        lookup.set(prop, refManager);
+                        const refManager = new RefManager(target, attr);
+                        lookup.set(attr, refManager);
                         return refManager;
                     }
                     //return Reflect.get(target, prop);
@@ -32,12 +32,12 @@ Object.defineProperty(Element.prototype, 'refs', {
     }
 });
 class RefManager extends EventTarget {
-    prop;
+    attr;
     #el;
     #refs;
-    constructor(el, prop) {
+    constructor(el, attr) {
         super();
-        this.prop = prop;
+        this.attr = attr;
         this.#el = new WeakRef(el);
     }
     get elements() {
@@ -45,7 +45,7 @@ class RefManager extends EventTarget {
             const el = this.#el.deref();
             if (el === undefined)
                 return [];
-            const attr = el.getAttribute(this.prop);
+            const attr = el.getAttribute(this.attr);
             if (!attr)
                 return [];
             const refIds = splitRefs(attr);

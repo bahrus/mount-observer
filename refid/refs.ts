@@ -6,7 +6,7 @@ Object.defineProperty(Element.prototype, 'refs', {
     get(){
         if(!proxies.has(this)){
             const handler = {
-                get(target: Element, prop: string) {
+                get(target: Element, attr: string) {
                     let lookup: RefLookup;
                     if(refLookup.has(target)){
                         lookup = refLookup.get(target)!;
@@ -14,11 +14,11 @@ Object.defineProperty(Element.prototype, 'refs', {
                         lookup = new Map<prop, RefManager>();
                         refLookup.set(target, lookup);
                     }
-                    if(lookup.has(prop)){
-                        return lookup.get(prop);
+                    if(lookup.has(attr)){
+                        return lookup.get(attr);
                     }else{
-                        const refManager = new RefManager(target, prop as string);
-                        lookup.set(prop, refManager);
+                        const refManager = new RefManager(target, attr as string);
+                        lookup.set(attr, refManager);
                         return refManager;
                     }
                     //return Reflect.get(target, prop);
@@ -38,7 +38,7 @@ type RefLookup = Map<prop, RefManager>;
 class RefManager extends EventTarget {
     #el: WeakRef<Element>;
     #refs: Map<string, WeakRef<Element>> | undefined;
-    constructor(el: Element, public prop: string){
+    constructor(el: Element, public attr: string){
         super();
         this.#el = new WeakRef(el);
     }
@@ -46,7 +46,7 @@ class RefManager extends EventTarget {
         if(this.#refs === undefined){
             const el = this.#el.deref();
             if(el === undefined) return [];
-            const attr = el.getAttribute(this.prop);
+            const attr = el.getAttribute(this.attr);
             if(!attr) return [];
             const refIds = splitRefs(attr);
             const qry = refIds.map(id => `#${id}`).join(', ');
