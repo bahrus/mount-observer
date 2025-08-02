@@ -5,7 +5,20 @@ Object.defineProperty(Element.prototype, 'refs', {
         if(!proxies.has(this)){
             const handler = {
                 get(target, prop) {
-                    
+                    let lookup: RefLookup;
+                    if(refLookup.has(target.constructor)){
+                        lookup = refLookup.get(target.constructor)!;
+                    }else{
+                        lookup = new Map<prop, RefManager>();
+                        refLookup.set(target.constructor, lookup);
+                    }
+                    if(lookup.has(prop)){
+                        return lookup.get(prop);
+                    }else{
+                        const refManager = new RefManager();
+                        lookup.set(prop, refManager);
+                        return refManager;
+                    }
                     return Reflect.get(target, prop);
                 },
                 
@@ -14,7 +27,7 @@ Object.defineProperty(Element.prototype, 'refs', {
         }
         return proxies.get(this);
     }
-})];
+});
 
 type prop = string;
 
