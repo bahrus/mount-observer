@@ -1209,7 +1209,7 @@ Again, because of the mount-observer being the "first point of contact" with the
 </label>
 
 <script>
-   console.log(myRadio.via.name.matches)
+   console.log(myRadio1.via.name.matches)
    // [input#myRadio1, input#myRadio2, input#myRadio3]
 </script>
 ```
