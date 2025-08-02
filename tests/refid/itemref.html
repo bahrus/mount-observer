@@ -7,5 +7,13 @@
 </head>
 <body>
     <script type=module src="/refid/refs.js"></script>
+    <div id=myDiv itemscope itemref="myId1 myId2"></div>
+    <div id="myId1">Item 1</div>
+    <div id="myId2">Item 2</div>
+    <script type=module>
+        import '/refid/refs.js';
+        const els = myDiv.refs.itemref.elements;
+        console.log({els});
+    </script>
 </body>
 </html>

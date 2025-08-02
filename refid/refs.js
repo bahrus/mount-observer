@@ -7,6 +7,7 @@ Object.defineProperty(Element.prototype, 'refs', {
         if (!proxies.has(this)) {
             const handler = {
                 get(target, prop) {
+                    console.log({ target, prop });
                     let lookup;
                     if (refLookup.has(target.constructor)) {
                         lookup = refLookup.get(target.constructor);
