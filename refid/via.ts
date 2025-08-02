@@ -2,7 +2,7 @@ import {splitRefs} from './splitRefs.js';
 import {MountObserver} from '../MountObserver.js';
 const proxies = new WeakMap<Element, ProxyConstructor>();
 const refLookup = new WeakMap<Element, RefLookup>();
-Object.defineProperty(Element.prototype, 'refs', {
+Object.defineProperty(Element.prototype, 'via', {
     get(){
         if(!proxies.has(this)){
             const handler = {
@@ -37,13 +37,13 @@ type RefLookup = Map<prop, RefManager>;
 
 class RefManager extends EventTarget {
     #el: WeakRef<Element>;
-    #refs: Map<string, WeakRef<Element>> | undefined;
+    #children: Map<string, WeakRef<Element>> | undefined;
     constructor(el: Element, public attr: string){
         super();
         this.#el = new WeakRef(el);
     }
     get children(){
-        if(this.#refs === undefined){
+        if(this.#children === undefined){
             const el = this.#el.deref();
             if(el === undefined) return [];
             const attr = el.getAttribute(this.attr);
@@ -56,21 +56,21 @@ class RefManager extends EventTarget {
             for(const ref of refsArr){
                 refs.set(ref.id, new WeakRef(ref));
             }
-            this.#refs = refs;
+            this.#children = refs;
             const mo = new MountObserver({
                 on: qry,
                 do: {
                     mount: (el) => {
                         const id = el.id;
-                        if(id && !this.#refs?.has(id)){
-                            this.#refs?.set(id, new WeakRef(el));
+                        if(id && !this.#children?.has(id)){
+                            this.#children?.set(id, new WeakRef(el));
                             this.dispatchEvent(new RefEvent([el], []));
                         }
                     },
                     dismount: (el) => {
                         const id = el.id;
-                        if(id && this.#refs?.has(id)){
-                            this.#refs?.delete(id);
+                        if(id && this.#children?.has(id)){
+                            this.#children?.delete(id);
                             this.dispatchEvent(new RefEvent([], [el]));
                         }
                     }
@@ -79,7 +79,7 @@ class RefManager extends EventTarget {
             mo.observe(rn);
             this.dispatchEvent(new RefEvent((refsArr), []));
         }
-        return Array.from(this.#refs?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
+        return Array.from(this.#children?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
     }
 
 

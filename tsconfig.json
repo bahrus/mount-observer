@@ -14,7 +14,7 @@
 		"waitForIsh.ts",
 		"getContent.ts",
 		"refid/splitRefs.ts",
-		"refid/refs.ts",
+		"refid/via.ts",
 		"slotkin/beKindred.ts",
 		"slotkin/getFrag.ts",
 		"slotkin/getBreadth.ts"
