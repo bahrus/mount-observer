@@ -82,7 +82,7 @@ class RefManager extends EventTarget {
         return Array.from(this.#children?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
     }
 
-
+    get matches
 }
 
 export class ChangeEvent extends Event {
