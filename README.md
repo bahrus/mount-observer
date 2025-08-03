@@ -1150,7 +1150,7 @@ Again, because of the mount-observer being the "first point of contact" with the
 </section>
 ...
 <div id=myId1>
-   <span>hello</span>
+   <span itemprop=greeting2>hello</span>
 </div>
 <div id=myId2>...</div>
 <script>
@@ -1201,6 +1201,7 @@ Again, because of the mount-observer being the "first point of contact" with the
    });
    const mo = new MountObserver({
       via: 'aria-labelledby.parents'
+   });
 </script>
 ```
 
@@ -1259,7 +1260,11 @@ Again, because of the mount-observer being the "first point of contact" with the
    // [tr.myTR1, tr.myTR2]
    myTbody.groupBy['data-parent-name'].group1.addEventListener('change', e => {
       {addedMember, removedMember}
-   })
+   });
+   const mo = new MountObserver({
+      groupBy: 'data-parent-name.group1'
+   });
+   mo.observe('myTbody');
 </script>
 ```
 
