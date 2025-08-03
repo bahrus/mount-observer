@@ -1195,24 +1195,36 @@ Again, because of the mount-observer being the "first point of contact" with the
 ```
 
 ```html
-<form>
-<label class="radio-inline">
-   <input id=myRadio1 type="radio" name="radio" value="1">
-   Group 1 Option 1
-</label>
-<label class="radio-inline">
-   <input id=myRadio2 type="radio" name="radio" value="2">
-   Group 1 Option 2
-</label>
-<label class="radio-inline">
-   <input id=myRadio3 type="radio" name="radio" value="3">
-   Group 1 Option 3
-</label>
+<form id=myForm>
+   <label class="radio-inline">
+      <input id=myRadio1 type="radio" name="radioGroup1" value="1">
+      Group 1 Option 1
+   </label>
+   <label class="radio-inline">
+      <input id=myRadio2 type="radio" name="radioGroup1" value="2">
+      Group 1 Option 2
+   </label>
+   <label class="radio-inline">
+      <input id=myRadio3 type="radio" name="radioGroup1" value="3">
+      Group 1 Option 3
+   </label>
+      <label class="radio-inline">
+      <input id=myRadio4 type="radio" name="radioGroup2" value="1">
+      Group 2 Option 1
+   </label>
+   <label class="radio-inline">
+      <input id=myRadio5 type="radio" name="radioGroup2" value="2">
+      Group 2 Option 2
+   </label>
+   <label class="radio-inline">
+      <input id=myRadio6 type="radio" name="radioGroup2" value="3">
+      Group 2 Option 3
+   </label>
 </form>
 
 <script>
-   console.log(myRadio1.via.name.withinClosest('form').matches)
-   // [input#myRadio1, input#myRadio2, input#myRadio3]
+   console.log(myForm.elements.radioGroup1, myForm.elements.radioGroup2)
+   [input#myRadio1, input#myRadio2, input#myRadio3], [input#myRadio4, input#myRadio5, input#myRadio6]
 </script>
 ```
 
@@ -1221,20 +1233,23 @@ Again, because of the mount-observer being the "first point of contact" with the
    <thead>
       ...
    </thead>
-   <tbody>
-      <tr id=myTR1 data-parent-id=11>
+   <tbody id=myTbody>
+      <tr id=myTR1 data-parent-name=group1>
          <td>hello</td>
-      <tr id=myTR2 data-parent-id=11>
+      <tr id=myTR2 data-parent-name=group1>
          <td>goodbye</td>
       </tr>
-      <tr data-parent-id=12>
+      <tr id=myTR3 data-parent-name=group2>
          <td>good morrow</td>
       </tr>
    </tbody>
 </table>
 <script>
-   console.log(myTR.via['data-parent-id'].withinClosest('tbody').matches);
+   console.log(myTbody.groupBy['data-parent-name'].group1);
    // [tr.myTR1, tr.myTR2]
+   myTbody.groupBy['data-parent-name'].group1.addEventListener('change', e => {
+      {addedMember, removedMember}
+   })
 </script>
 ```
 
