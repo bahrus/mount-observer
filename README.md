@@ -1166,9 +1166,9 @@ Again, because of the mount-observer being the "first point of contact" with the
       //{addedParents, removedParents};
    });
    const mo = new MountObserver({
-      on: '[itemprop]',
       via: 'itemref.children',
-   })
+   });
+   mo.observe('#section');
 </script>
 ```
 
@@ -1199,6 +1199,8 @@ Again, because of the mount-observer being the "first point of contact" with the
    tac2.via['aria-labelledby'].addEventListener('change', e => {
       //{addedParents, removedParents}
    });
+   const mo = new MountObserver({
+      via: 'aria-labelledby.parents'
 </script>
 ```
 
