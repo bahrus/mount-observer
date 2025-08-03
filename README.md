@@ -1211,7 +1211,7 @@ Again, because of the mount-observer being the "first point of contact" with the
 </form>
 
 <script>
-   console.log(myRadio1.via.name.within('form').matches)
+   console.log(myRadio1.via.name.withinClosest('form').matches)
    // [input#myRadio1, input#myRadio2, input#myRadio3]
 </script>
 ```
