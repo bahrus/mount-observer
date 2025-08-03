@@ -1166,7 +1166,8 @@ Again, because of the mount-observer being the "first point of contact" with the
       //{addedParents, removedParents};
    });
    const mo = new MountObserver({
-      onLike: #myDiv::prop(via.itemref.children) span
+      on: '[itemprop]',
+      via: 'itemref.children',
    })
 </script>
 ```
