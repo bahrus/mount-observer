@@ -1143,11 +1143,15 @@ This would be useful for other linkages as well, which the platform doesn't supp
 Again, because of the mount-observer being the "first point of contact" with the DOM, this is supported by mount-observer as well.
 
 ```html
-<div id=myDiv itemscope itemref="myID1 myID2">
-   <span itemprop=greeting></span>
-</div>
+<section id=section>
+   <div id=myDiv itemscope itemref="myID1 myID2">
+      <span itemprop=greeting></span>
+   </div>
+</section>
 ...
-<div id=myId1>...</div>
+<div id=myId1>
+   <span>hello</span>
+</div>
 <div id=myId2>...</div>
 <script>
    console.log(myDiv.via.itemref.children);
@@ -1160,6 +1164,9 @@ Again, because of the mount-observer being the "first point of contact" with the
    // [div#myDiv]
    myId2.via.itemref.addEventListener('change', e => {
       //{addedParents, removedParents};
+   });
+   const mo = new MountObserver({
+      onLike: #myDiv${via.itemref.children} span
    })
 </script>
 ```
