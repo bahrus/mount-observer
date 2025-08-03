@@ -1216,5 +1216,27 @@ Again, because of the mount-observer being the "first point of contact" with the
 </script>
 ```
 
+```html
+<table>
+   <thead>
+      ...
+   </thead>
+   <tbody>
+      <tr id=myTR1 data-parent-id=11>
+         <td>hello</td>
+      <tr id=myTR2 data-parent-id=11>
+         <td>goodbye</td>
+      </tr>
+      <tr data-parent-id=12>
+         <td>good morrow</td>
+      </tr>
+   </tbody>
+</table>
+<script>
+   console.log(myTR.via['data-parent-id'].withinClosest('tbody').matches);
+   // [tr.myTR1, tr.myTR2]
+</script>
+```
+
 
 
