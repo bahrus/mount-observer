@@ -1,5 +1,6 @@
 import {splitRefs} from './splitRefs.js';
 import {MountObserver} from '../MountObserver.js';
+import {camelToKebob} from './camelToKebob.js';
 const proxies = new WeakMap<Element, ProxyConstructor>();
 const refLookup = new WeakMap<Element, RefLookup>();
 Object.defineProperty(Element.prototype, 'via', {
@@ -38,16 +39,18 @@ type RefLookup = Map<attr, RefManager>;
 class RefManager extends EventTarget {
     #el: WeakRef<Element>;
     #children: Map<string, WeakRef<Element>> | undefined;
+    #attr: string;
     //#parents: Array<WeakRef<Element>> | undefined;
-    constructor(el: Element, public attr: string){
+    constructor(el: Element, prop: string){
         super();
+        this.#attr = camelToKebob(prop);
         this.#el = new WeakRef(el);
     }
     get children(){
         if(this.#children === undefined){
             const el = this.#el.deref();
             if(el === undefined) return [];
-            const attr = el.getAttribute(this.attr);
+            const attr = el.getAttribute(this.#attr);
             if(!attr) return [];
             const refIds = splitRefs(attr);
             const qry = refIds.map(id => `#${id}`).join(', ');
@@ -90,7 +93,7 @@ class RefManager extends EventTarget {
             if(el === undefined) return [];
             if(el.id === '') return [];
             const rn = el.getRootNode() as DocumentFragment;
-            const qry = `[${this.attr}~="${el.id}"]`;
+            const qry = `[${this.#attr}~="${el.id}"]`;
             const parents = Array.from(rn.querySelectorAll(qry));
             //this.#parents = parents.map(parent => new WeakRef(parent));
             return parents;

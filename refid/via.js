@@ -1,5 +1,6 @@
 import { splitRefs } from './splitRefs.js';
 import { MountObserver } from '../MountObserver.js';
+import { camelToKebob } from './camelToKebob.js';
 const proxies = new WeakMap();
 const refLookup = new WeakMap();
 Object.defineProperty(Element.prototype, 'via', {
@@ -32,12 +33,13 @@ Object.defineProperty(Element.prototype, 'via', {
     }
 });
 class RefManager extends EventTarget {
-    attr;
     #el;
     #children;
-    constructor(el, attr) {
+    #attr;
+    //#parents: Array<WeakRef<Element>> | undefined;
+    constructor(el, prop) {
         super();
-        this.attr = attr;
+        this.#attr = camelToKebob(prop);
         this.#el = new WeakRef(el);
     }
     get children() {
@@ -45,7 +47,7 @@ class RefManager extends EventTarget {
             const el = this.#el.deref();
             if (el === undefined)
                 return [];
-            const attr = el.getAttribute(this.attr);
+            const attr = el.getAttribute(this.#attr);
             if (!attr)
                 return [];
             const refIds = splitRefs(attr);
@@ -80,6 +82,22 @@ class RefManager extends EventTarget {
             this.dispatchEvent(new ChangeEvent((refsArr), []));
         }
         return Array.from(this.#children?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
+    }
+    get parents() {
+        //for now, hold off on caching parents until a use case arises
+        //if(this.#parents === undefined){
+        const el = this.#el.deref();
+        if (el === undefined)
+            return [];
+        if (el.id === '')
+            return [];
+        const rn = el.getRootNode();
+        const qry = `[${this.#attr}~="${el.id}"]`;
+        const parents = Array.from(rn.querySelectorAll(qry));
+        //this.#parents = parents.map(parent => new WeakRef(parent));
+        return parents;
+        //}
+        //return this.#parents.map(ref => ref.deref()).filter(el => el !== undefined) || [];
     }
 }
 export class ChangeEvent extends Event {

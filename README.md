@@ -1184,23 +1184,23 @@ Again, because of the mount-observer being the "first point of contact" with the
 
 <span id="tac2">I agree to the other Terms and Conditions.</span>
 <script>
-   console.log(mySpan.via['aria-labelledby'].children);
+   console.log(mySpan.via.ariaLabelledby.children);
    //[span#tac, span#tac2]
 
-   console.log(tac2.via['aria-labelledby'].parents);
+   console.log(tac2.via.ariaLabelledby.parents);
    //[span#mySpan]
 
 
-   mySpan.via['aria-labelledby'].addEventListener('change', e => {
+   mySpan.via.ariaLabelledby.addEventListener('change', e => {
       console.log({e});
       //{addedChildren, removedChildren}
    });
 
-   tac2.via['aria-labelledby'].addEventListener('change', e => {
+   tac2.via.ariaLabelledby.addEventListener('change', e => {
       //{addedParents, removedParents}
    });
    const mo = new MountObserver({
-      via: 'aria-labelledby.parents'
+      via: 'ariaLabelledby.parents'
    });
 </script>
 ```
