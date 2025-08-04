@@ -7,7 +7,7 @@ Object.defineProperty(Element.prototype, 'via', {
     get(){
         if(!proxies.has(this)){
             const handler = {
-                get(target: Element, attr: string) {
+                get(target: Element, prop: string) {
                     let lookup: RefLookup;
                     if(refLookup.has(target)){
                         lookup = refLookup.get(target)!;
@@ -15,11 +15,11 @@ Object.defineProperty(Element.prototype, 'via', {
                         lookup = new Map<attr, RefManager>();
                         refLookup.set(target, lookup);
                     }
-                    if(lookup.has(attr)){
-                        return lookup.get(attr);
+                    if(lookup.has(prop)){
+                        return lookup.get(prop);
                     }else{
-                        const refManager = new RefManager(target, attr as string);
-                        lookup.set(attr, refManager);
+                        const refManager = new RefManager(target, prop as string);
+                        lookup.set(prop, refManager);
                         return refManager;
                     }
                     //return Reflect.get(target, prop);

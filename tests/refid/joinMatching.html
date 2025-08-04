@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+<table>
+   <!-- <thead>
+      <tr></tr>
+   </thead> -->
+   <tbody id=myTbody>
+      <tr id=myTR1 data-parent-name=group1>
+         <td>hello</td>
+      <tr id=myTR2 data-parent-name=group1>
+         <td>goodbye</td>
+      </tr>
+      <tr id=myTR3 data-parent-name=group2>
+         <td>good morrow</td>
+      </tr>
+   </tbody>
+</table>   
+<script type=module>
+    import '/refid/joinMatching.js';
+    const test = myTR1.joinMatching.dataParentName.fromClosest.tbody;
+</script>
+</body>
+</html>

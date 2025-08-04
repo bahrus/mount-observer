@@ -13,6 +13,8 @@
 		"Synthesizer.ts",
 		"waitForIsh.ts",
 		"getContent.ts",
+		"refid/camelToKebob.ts",
+		"refid/joinMatching.ts",
 		"refid/splitRefs.ts",
 		"refid/via.ts",
 		"slotkin/beKindred.ts",

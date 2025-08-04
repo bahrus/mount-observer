@@ -6,12 +6,11 @@
     <title>Document</title>
 </head>
 <body>
-    <script type=module src="/refid/refs.js"></script>
     <div id=myDiv itemscope itemref="myId1 myId2 myId3"></div>
     <div id="myId1">Item 1</div>
     <div id="myId2">Item 2</div>
     <script type=module>
-        import '/refid/refs.js';
+        import '/refid/via.js';
         const els = myDiv.via.itemref.children;
         console.log({els});
         myDiv.via.itemref.addEventListener('change', e => {
