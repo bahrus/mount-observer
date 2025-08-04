@@ -1264,7 +1264,7 @@ Again, because of the mount-observer being the "first point of contact" with the
    const mo = new MountObserver({
       groupBy: 'data-parent-name.group1'
    });
-   myTR1.via.dataParentName.groupFromClosest['tbody'].members
+   myTR1.joinMatching.dataParentName.fromClosest.tbody
    mo.observe('myTbody');
 </script>
 ```
