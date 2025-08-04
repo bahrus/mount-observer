@@ -1258,13 +1258,13 @@ Again, because of the mount-observer being the "first point of contact" with the
 <script>
    console.log(myTbody.groupBy['data-parent-name'].group1);
    // [tr.myTR1, tr.myTR2]
-   myTbody.groupBy['data-parent-name'].group1.addEventListener('change', e => {
+   myTbody.groupBy.dataParentName.group1.addEventListener('change', e => {
       {addedMember, removedMember}
    });
    const mo = new MountObserver({
       groupBy: 'data-parent-name.group1'
    });
-   myTR1.via['data-parent-name'].groupFromClosest['tbody'].members
+   myTR1.via.dataParentName.groupFromClosest['tbody'].members
    mo.observe('myTbody');
 </script>
 ```
