@@ -11,7 +11,7 @@ Object.defineProperty(Element.prototype, 'via', {
                     if(refLookup.has(target)){
                         lookup = refLookup.get(target)!;
                     }else{
-                        lookup = new Map<prop, RefManager>();
+                        lookup = new Map<attr, RefManager>();
                         refLookup.set(target, lookup);
                     }
                     if(lookup.has(attr)){
@@ -31,13 +31,14 @@ Object.defineProperty(Element.prototype, 'via', {
     }
 });
 
-type prop = string;
+type attr = string;
 
-type RefLookup = Map<prop, RefManager>;
+type RefLookup = Map<attr, RefManager>;
 
 class RefManager extends EventTarget {
     #el: WeakRef<Element>;
     #children: Map<string, WeakRef<Element>> | undefined;
+    #parents: Array<WeakRef<Element>> | undefined;
     constructor(el: Element, public attr: string){
         super();
         this.#el = new WeakRef(el);
@@ -82,7 +83,21 @@ class RefManager extends EventTarget {
         return Array.from(this.#children?.values().map(ref => ref.deref()).filter(el => el !== undefined)) || [];
     }
 
-    get matches
+    get parents(){
+        if(this.#parents === undefined){
+            const el = this.#el.deref();
+            if(el === undefined) return [];
+            if(el.id === '') return [];
+            const rn = el.getRootNode() as DocumentFragment;
+            const qry = `[${this.attr}~="${el.id}"]`;
+            const parents = Array.from(rn.querySelectorAll(qry));
+            this.#parents = parents.map(parent => new WeakRef(parent));
+            return parents;
+        }
+        return this.#parents.map(ref => ref.deref()).filter(el => el !== undefined) || [];
+        
+        
+    }
 }
 
 export class ChangeEvent extends Event {
