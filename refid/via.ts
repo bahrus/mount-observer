@@ -38,7 +38,7 @@ type RefLookup = Map<attr, RefManager>;
 class RefManager extends EventTarget {
     #el: WeakRef<Element>;
     #children: Map<string, WeakRef<Element>> | undefined;
-    #parents: Array<WeakRef<Element>> | undefined;
+    //#parents: Array<WeakRef<Element>> | undefined;
     constructor(el: Element, public attr: string){
         super();
         this.#el = new WeakRef(el);
@@ -84,18 +84,18 @@ class RefManager extends EventTarget {
     }
 
     get parents(){
-        if(this.#parents === undefined){
+        //for now, hold off on caching parents until a use case arises
+        //if(this.#parents === undefined){
             const el = this.#el.deref();
             if(el === undefined) return [];
             if(el.id === '') return [];
             const rn = el.getRootNode() as DocumentFragment;
             const qry = `[${this.attr}~="${el.id}"]`;
             const parents = Array.from(rn.querySelectorAll(qry));
-            this.#parents = parents.map(parent => new WeakRef(parent));
+            //this.#parents = parents.map(parent => new WeakRef(parent));
             return parents;
-        }
-        return this.#parents.map(ref => ref.deref()).filter(el => el !== undefined) || [];
-        
+        //}
+        //return this.#parents.map(ref => ref.deref()).filter(el => el !== undefined) || [];
         
     }
 }
