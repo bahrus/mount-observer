@@ -16,14 +16,17 @@ Object.defineProperty(Element.prototype, 'joinMatching', {
 
 export class JoinMatching {
     #proxy: ProxyConstructor | undefined;
-    constructor(el: Element, prop: string){
-
+    elRef: WeakRef<Element>;
+    constructor(el: Element, public prop: string){
+        this.elRef = new WeakRef(el);
     }
 
     get fromClosest(){
         const handler = {
-            get(target: any, prop: string){
-                console.log({target, prop});
+            get(self: JoinMatching, closestQry: string){
+                const {elRef, prop} = self;
+                const el = elRef.deref();
+                console.log({self, closestQry, prop, el});
             }
         }
         return new Proxy(this, handler);
