@@ -1,6 +1,6 @@
 import { splitRefs } from './splitRefs.js';
 import { MountObserver } from '../MountObserver.js';
-import { camelToKebob } from './camelToKebob.js';
+import { camelToKebab } from './camelToKebab.js';
 const proxies = new WeakMap();
 const refLookup = new WeakMap();
 Object.defineProperty(Element.prototype, 'via', {
@@ -39,7 +39,7 @@ class RefManager extends EventTarget {
     //#parents: Array<WeakRef<Element>> | undefined;
     constructor(el, prop) {
         super();
-        this.#attr = camelToKebob(prop);
+        this.#attr = camelToKebab(prop);
         this.#el = new WeakRef(el);
     }
     get children() {

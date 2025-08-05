@@ -13,7 +13,7 @@
 		"Synthesizer.ts",
 		"waitForIsh.ts",
 		"getContent.ts",
-		"refid/camelToKebob.ts",
+		"refid/camelToKebab.ts",
 		"refid/joinMatching.ts",
 		"refid/splitRefs.ts",
 		"refid/via.ts",

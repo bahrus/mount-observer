@@ -1,3 +1,4 @@
+import { camelToKebab } from './camelToKebab.js';
 const proxies = new WeakMap();
 Object.defineProperty(Element.prototype, 'joinMatching', {
     get() {
@@ -14,19 +15,29 @@ Object.defineProperty(Element.prototype, 'joinMatching', {
     },
 });
 export class JoinMatching {
-    prop;
     #proxy;
     elRef;
+    attr;
     constructor(el, prop) {
-        this.prop = prop;
         this.elRef = new WeakRef(el);
+        this.attr = camelToKebab(prop);
     }
     get fromClosest() {
         const handler = {
             get(self, closestQry) {
-                const { elRef, prop } = self;
+                const { elRef, attr } = self;
                 const el = elRef.deref();
-                console.log({ self, closestQry, prop, el });
+                if (el === undefined)
+                    return [];
+                const attrVal = el.getAttribute(attr);
+                const tryClosestQry = camelToKebab(closestQry);
+                let closest = el.closest(tryClosestQry);
+                if (closest === null)
+                    closest = el.closest(closestQry);
+                if (closest === null)
+                    throw 404;
+                return Array.from(closest.querySelectorAll(`[${attr}="${attrVal}"]`));
+                //console.log({self, closestQry, prop, el});
             }
         };
         return new Proxy(this, handler);

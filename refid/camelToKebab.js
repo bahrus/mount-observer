@@ -1,4 +1,4 @@
 const ctlRe = /(?=[A-Z])/;
-export function camelToKebob(s: string) {
+export function camelToKebab(s) {
     return s.split(ctlRe).join('-').toLowerCase();
 }
