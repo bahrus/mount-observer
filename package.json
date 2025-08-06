@@ -61,14 +61,23 @@
       "default": "./refid/getAdjRefs.js",
       "types": "./refid/getAdjRefs.ts"
     },
+    "./refid/joinMatching.js":{
+      "default": "./refid/joinMatching.js",
+      "types": "./refid/joinMatching.ts"
+    },
     "./refid/refs.js": {
       "default": "./refid/refs.js",
       "types": "./refid/refs.ts"
     },
     "./refid/regIsh.js": {
       "default": "./refid/regIsh.js",
-      "types": "./refid/regIsh.js"
+      "types": "./refid/regIsh.ts"
     },
+    "./refid/via.js": {
+      "default": "./refid/via.js",
+      "types": "./refid/via.ts"
+    },
+
     "./refid/splitRefs.js": {
       "default": "./refid/splitRefs.js",
       "types": "./refid/splitRefs.ts"
