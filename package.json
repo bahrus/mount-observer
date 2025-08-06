@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.81",
+  "version": "0.0.82",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
@@ -53,7 +53,7 @@
       "default": "./waitForIsh.js",
       "types": "./waitForIsh.ts"
     },
-    "./refid/camelToKebab.js":{
+    "./refid/camelToKebab.js": {
       "default": "./refid/camelToKebab.js",
       "types": "./refid/camelToKebab.ts"
     },
@@ -61,7 +61,7 @@
       "default": "./refid/getAdjRefs.js",
       "types": "./refid/getAdjRefs.ts"
     },
-    "./refid/refs.js":{
+    "./refid/refs.js": {
       "default": "./refid/refs.js",
       "types": "./refid/refs.ts"
     },
