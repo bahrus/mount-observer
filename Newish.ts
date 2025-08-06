@@ -24,10 +24,10 @@ export class Newish implements EventListenerObject {
         this.#options = options || {assigner: Object.assign};
         this.#ref = new WeakRef(enhancedElement);
     }
-    handleEvent(): void {
+    async handleEvent() {
        const enhancedElement = this.#ref.deref();
        if(!enhancedElement) return;
-       this.#attachItemrefs(enhancedElement);
+       await this.#attachItemrefs(enhancedElement);
     }
 
     async do(){
@@ -74,7 +74,7 @@ export class Newish implements EventListenerObject {
             await ce['<mount>'](ce, enhancedElement as HasIsh & Element, this.#options)
         }
         //attach any itemref references
-        this.#attachItemrefs(enhancedElement);
+        await this.#attachItemrefs(enhancedElement);
         const et = ObsAttr(enhancedElement, 'itemref');
         et.addEventListener('attr-changed', this);
         this.isResolved = true;
@@ -83,24 +83,21 @@ export class Newish implements EventListenerObject {
 
     
 
-    #alreadyAttached = new Set<string>();
+    #alreadyAttached = new WeakSet<Element>;
 
-    #attachItemrefs(enhancedElement: Element){
+    async #attachItemrefs(enhancedElement: Element){
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
         if('<inScope>' in (<any>this.#ce) && enhancedElement.hasAttribute('itemref')){
-            const itemref = enhancedElement.getAttribute('itemref')!;
-            const itemrefList = splitRefs(itemref);// itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
-            if(itemrefList.length === 0) return;
-            const rn = enhancedElement.getRootNode() as Document | ShadowRoot;
-            for(const id of itemrefList){
-                if(this.#alreadyAttached.has(id)) continue;
-                const itemrefElement = rn.getElementById(id);
-                if(itemrefElement){
-                    (<any>this.#ce)['<inScope>'](this.#ce, itemrefElement, this.#options);
-                    this.#alreadyAttached.add(id);
-                }
+            await import('./refid/via.js');
+            const itemref = (<any>enhancedElement).via.itemref
+            const refs = itemref.children as Element[];
+            for(const ref of refs){
+                if(this.#alreadyAttached.has(ref)) continue;
+                (<any>this.#ce)['<inScope>'](this.#ce, ref, this.#options);
             }
+            itemref.addEventListener('change', this);
+
         }
 
     }

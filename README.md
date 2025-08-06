@@ -1160,12 +1160,8 @@ Again, because of the mount-observer being the "first point of contact" with the
       console.log({e});
       //{addedChildren, removedChildren}
    });
-   console.log(myId2.via.itemref.parents);
-   // [div#myDiv]
-   myId2.via.itemref.addEventListener('change', e => {
-      //{addedParents, removedParents};
-   });
-   const mo = new MountObserver({
+   console.log(myId2.via.itemref.parents); //TODO
+   const mo = new MountObserver({ //TODO
       via: 'itemref.children',
    });
    mo.observe('#section');
@@ -1196,48 +1192,11 @@ Again, because of the mount-observer being the "first point of contact" with the
       //{addedChildren, removedChildren}
    });
 
-   tac2.via.ariaLabelledby.addEventListener('change', e => {
-      //{addedParents, removedParents}
-   });
-   const mo = new MountObserver({
-      via: 'ariaLabelledby.parents'
-   });
+
 </script>
 ```
 
-```html
-<form id=myForm>
-   <label class="radio-inline">
-      <input id=myRadio1 type="radio" name="radioGroup1" value="1">
-      Group 1 Option 1
-   </label>
-   <label class="radio-inline">
-      <input id=myRadio2 type="radio" name="radioGroup1" value="2">
-      Group 1 Option 2
-   </label>
-   <label class="radio-inline">
-      <input id=myRadio3 type="radio" name="radioGroup1" value="3">
-      Group 1 Option 3
-   </label>
-      <label class="radio-inline">
-      <input id=myRadio4 type="radio" name="radioGroup2" value="1">
-      Group 2 Option 1
-   </label>
-   <label class="radio-inline">
-      <input id=myRadio5 type="radio" name="radioGroup2" value="2">
-      Group 2 Option 2
-   </label>
-   <label class="radio-inline">
-      <input id=myRadio6 type="radio" name="radioGroup2" value="3">
-      Group 2 Option 3
-   </label>
-</form>
 
-<script>
-   console.log(myForm.elements.radioGroup1, myForm.elements.radioGroup2)
-   [input#myRadio1, input#myRadio2, input#myRadio3], [input#myRadio4, input#myRadio5, input#myRadio6]
-</script>
-```
 
 ```html
 <table>
@@ -1256,16 +1215,17 @@ Again, because of the mount-observer being the "first point of contact" with the
    </tbody>
 </table>
 <script>
-   console.log(myTbody.groupBy['data-parent-name'].group1);
+   console.log(myTbody.group.dataParentName.by.group1);
    // [tr.myTR1, tr.myTR2]
-   myTbody.groupBy.dataParentName.group1.addEventListener('change', e => {
+   myTbody.group.dataParentName.by.group1.addEventListener('change', e => {
       {addedMember, removedMember}
    });
-   const mo = new MountObserver({
-      groupBy: 'data-parent-name.group1'
-   });
-   myTR1.joinMatching.dataParentName.fromClosest.tbody
-   mo.observe('myTbody');
+
+   console.log(myTR1.joinMatching.dataParentName.fromClosest.tbody);
+   // [tr#myTR1, tr#myTR2]
+   console.log(myTR1.joinMatching.dataParentName.fromParent);
+   // [tr#myTR1, tr#myTR2]
+   
 </script>
 ```
 

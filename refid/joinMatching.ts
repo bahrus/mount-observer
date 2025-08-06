@@ -41,4 +41,14 @@ export class JoinMatching {
         }
         return new Proxy(this, handler);
     }
+
+    get fromParent(){
+        const {elRef, attr} = this;
+        const el = elRef.deref();
+        if(el === undefined) return [];
+        const {parentElement} = el;
+        if(parentElement === null) return [];
+        const attrVal = el.getAttribute(attr);
+        return Array.from(parentElement.querySelectorAll(`[${attr}="${attrVal}"]`));
+    }
 }

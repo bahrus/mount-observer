@@ -1,6 +1,5 @@
 export { waitForEvent } from './waitForEvent.js';
 import { ObsAttr } from './ObsAttr.js';
-import { splitRefs } from './refid/splitRefs.js';
 import { getIsh } from './refid/getIsh.js';
 import { arr } from './refid/secretKeys.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
@@ -16,11 +15,11 @@ export class Newish {
         this.#options = options || { assigner: Object.assign };
         this.#ref = new WeakRef(enhancedElement);
     }
-    handleEvent() {
+    async handleEvent() {
         const enhancedElement = this.#ref.deref();
         if (!enhancedElement)
             return;
-        this.#attachItemrefs(enhancedElement);
+        await this.#attachItemrefs(enhancedElement);
     }
     async do() {
         const [enhancedElement, target, itemscope] = this.#args;
@@ -68,31 +67,26 @@ export class Newish {
             await ce['<mount>'](ce, enhancedElement, this.#options);
         }
         //attach any itemref references
-        this.#attachItemrefs(enhancedElement);
+        await this.#attachItemrefs(enhancedElement);
         const et = ObsAttr(enhancedElement, 'itemref');
         et.addEventListener('attr-changed', this);
         this.isResolved = true;
         return ce;
     }
-    #alreadyAttached = new Set();
-    #attachItemrefs(enhancedElement) {
+    #alreadyAttached = new WeakSet;
+    async #attachItemrefs(enhancedElement) {
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
         if ('<inScope>' in this.#ce && enhancedElement.hasAttribute('itemref')) {
-            const itemref = enhancedElement.getAttribute('itemref');
-            const itemrefList = splitRefs(itemref); // itemref.split(' ').map((id) => id.trim()).filter((id) => id.length > 0);
-            if (itemrefList.length === 0)
-                return;
-            const rn = enhancedElement.getRootNode();
-            for (const id of itemrefList) {
-                if (this.#alreadyAttached.has(id))
+            await import('./refid/via.js');
+            const itemref = enhancedElement.via.itemref;
+            const refs = itemref.children;
+            for (const ref of refs) {
+                if (this.#alreadyAttached.has(ref))
                     continue;
-                const itemrefElement = rn.getElementById(id);
-                if (itemrefElement) {
-                    this.#ce['<inScope>'](this.#ce, itemrefElement, this.#options);
-                    this.#alreadyAttached.add(id);
-                }
+                this.#ce['<inScope>'](this.#ce, ref, this.#options);
             }
+            itemref.addEventListener('change', this);
         }
     }
     async #assignGingerly(fromDo) {
