@@ -11,7 +11,7 @@ Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
 
 Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
 
-Last Update: Aug 2, 2025
+Last Update: Aug 7, 2025
 
 ## Benefits of this API
 
@@ -1160,11 +1160,7 @@ Again, because of the mount-observer being the "first point of contact" with the
       console.log({e});
       //{addedChildren, removedChildren}
    });
-   console.log(myId2.via.itemref.parents); //TODO
-   const mo = new MountObserver({ //TODO
-      via: 'itemref.children',
-   });
-   mo.observe('#section');
+   
 </script>
 ```
 
@@ -1182,9 +1178,6 @@ Again, because of the mount-observer being the "first point of contact" with the
 <script>
    console.log(mySpan.via.ariaLabelledby.children);
    //[span#tac, span#tac2]
-
-   console.log(tac2.via.ariaLabelledby.parents);
-   //[span#mySpan]
 
 
    mySpan.via.ariaLabelledby.addEventListener('change', e => {
@@ -1215,11 +1208,6 @@ Again, because of the mount-observer being the "first point of contact" with the
    </tbody>
 </table>
 <script>
-   console.log(myTbody.group.dataParentName.by.group1);
-   // [tr.myTR1, tr.myTR2]
-   myTbody.group.dataParentName.by.group1.addEventListener('change', e => {
-      {addedMember, removedMember}
-   });
 
    console.log(myTR1.joinMatching.dataParentName.fromClosest.tbody);
    // [tr#myTR1, tr#myTR2]

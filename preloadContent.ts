@@ -1,43 +1,46 @@
 import {TemplateWithRemoteContent} from './ts-refs/mount-observer/types.js';
+import {upShadowSearch} from './upShadowSearch.js';
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
 
-export async function preloadContent(
-    templ: HTMLTemplateElement, 
-    target?: DocumentFragment | ShadowRoot | Document | Element
-) {
-    const templWithRemoteContent = templ as TemplateWithRemoteContent & { 
-        [remoteTemplElSym]?: WeakRef<HTMLTemplateElement>
-    };
-    if(templWithRemoteContent.remoteContent) return templWithRemoteContent.remoteContent;
-    const src = templ.getAttribute('src');
-    if(!src) throw 300; //no src attribute
-    const isIntraDoc = src[0] === '#';
-    if(!('remoteContent' in templWithRemoteContent)) {
-        //define a property on the template instance
-        Object.defineProperty(templWithRemoteContent, 'remoteContent', {
-            get(){
-                if(isIntraDoc){
-                    const ref = this[remoteTemplElSym]?.deref();
-                    if(ref) return ref.content;
-                }else{
-                    throw 'NI'; //not implemented
-                }
-            },
-            enumerable: true,
-            configurable: true,
+Object.defineProperty(HTMLTemplateElement.prototype, 'remoteContent', {
+    get(){
+        const templ = this as HTMLTemplateElement;
+        const src = templ.getAttribute('src');
+        if(src === null){
+            const head = document.head;
+            if((<any>window)[remoteTemplElSym] === undefined ){
+                (<any>window)[remoteTemplElSym] = 0;
+            }
+            const id = (<any>window)[remoteTemplElSym]++;
+            const sourceTempl = document.createElement('template');
+            sourceTempl.id = '' + id;
+            sourceTempl.content.appendChild(templ.content);
+            head.append(sourceTempl);
+            templ.innerHTML = '';
+            templ.setAttribute('src', `#${id}`);
+            templ.setAttribute('rel', 'preload');
+            (<any>templ)[remoteTemplElSym] = new WeakRef(sourceTempl);
+            return sourceTempl.content;
+        }
+        {
+            const test = (<any>templ)[remoteTemplElSym]?.deref();
+            if(test !== undefined) return test;
+            if(templ.getAttribute('rel') !== 'preload') throw 'NI';
+            const isIntraDoc = src[0] === '#';
+            if(!isIntraDoc) throw 'NI';
+            const id = src.substring(1);
+            const remoteTempl = upShadowSearch(templ, id);
+            if(!(remoteTempl instanceof HTMLTemplateElement)) throw 404; //not found
+            (<any>templ)[remoteTemplElSym] = new WeakRef(remoteTempl);
+            //templ.dispatchEvent(new Event('load'));
+        }
 
-        });
-    }else{
-        return;
     }
-    if(isIntraDoc){
-        const id = src.substring(1);
-        const {upShadowSearch} = await import('./upShadowSearch.js');
-        const remoteTempl = upShadowSearch(templ, id) || upShadowSearch((target || document) as Element, id);
-        if(!(remoteTempl instanceof HTMLTemplateElement)) throw 404; //not found
-        templWithRemoteContent[remoteTemplElSym] = new WeakRef(remoteTempl);
-        templWithRemoteContent.dispatchEvent(new Event('load'));
-    }else{
-        throw 'NI'; //not implemented
-    }
+})
+
+export function preloadContent(
+    templ: HTMLTemplateElement,
+) {
+    const content = (<any>templ).remoteContent;
+    
 }
