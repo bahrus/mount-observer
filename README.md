@@ -929,7 +929,7 @@ The discussion there leads to an open question whether a processing instruction 
 
 The [add src attribute to template to load a template from file](https://github.com/whatwg/html/issues/10571) and an interesting proposal that is [coming from](https://github.com/htmlcomponents/declarative-shadow-imports/blob/main/examples/02-explainer-proposal/02-html.html) the Edge team [seem quite compatible](https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/ShadowDOM/explainer.md#proposal-inline-declarative-css-module-scripts) with this idea.
 
-## Applying DRY to templates. [WIP]
+## Applying DRY to templates
 
 Recall that with the previous examples, there was an implicit value of the rel attribute:
 
