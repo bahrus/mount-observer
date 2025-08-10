@@ -9,8 +9,12 @@ export function upShadowSearch(ref: Element, id: string){
             rn = rn.host.getRootNode() as (DocumentFragment | ShadowRoot) & { host?: Element };
         }else if(rn === document){
             return null;
+        }else if(!rn.isConnected){
+            //TODO:  search first for targetFragment
+            rn = document;
+
         }
-        return null;
+        //return null;
     }
 }
 

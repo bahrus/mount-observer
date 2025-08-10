@@ -23,7 +23,7 @@ Object.defineProperty(HTMLTemplateElement.prototype, 'remoteContent', {
         {
             const test = templ[remoteTemplElSym]?.deref();
             if (test !== undefined)
-                return test;
+                return test.content;
             if (templ.getAttribute('rel') !== 'preload')
                 throw 'NI';
             const isIntraDoc = src[0] === '#';
@@ -34,6 +34,7 @@ Object.defineProperty(HTMLTemplateElement.prototype, 'remoteContent', {
             if (!(remoteTempl instanceof HTMLTemplateElement))
                 throw 404; //not found
             templ[remoteTemplElSym] = new WeakRef(remoteTempl);
+            return remoteTempl.content;
             //templ.dispatchEvent(new Event('load'));
         }
     }
