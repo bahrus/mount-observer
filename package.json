@@ -41,10 +41,6 @@
       "default": "./doCleanup.js",
       "types": "./doCleanup.ts"
     },
-    "./getContent.js": {
-      "default": "./getContent.js",
-      "types": "./getContent.ts"
-    },
     "./waitForEvent.js": {
       "default": "./waitForEvent.js",
       "types": "./waitForEvent.ts"
