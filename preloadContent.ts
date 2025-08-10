@@ -11,7 +11,7 @@ Object.defineProperty(HTMLTemplateElement.prototype, 'remoteContent', {
             if((<any>window)[remoteTemplElSym] === undefined ){
                 (<any>window)[remoteTemplElSym] = 0;
             }
-            const id = (<any>window)[remoteTemplElSym]++;
+            const id = templ.id || (<any>window)[remoteTemplElSym]++;
             const sourceTempl = document.createElement('template');
             sourceTempl.id = '' + id;
             sourceTempl.content.appendChild(templ.content);

@@ -9,7 +9,7 @@ Object.defineProperty(HTMLTemplateElement.prototype, 'remoteContent', {
             if (window[remoteTemplElSym] === undefined) {
                 window[remoteTemplElSym] = 0;
             }
-            const id = window[remoteTemplElSym]++;
+            const id = templ.id || window[remoteTemplElSym]++;
             const sourceTempl = document.createElement('template');
             sourceTempl.id = '' + id;
             sourceTempl.content.appendChild(templ.content);
