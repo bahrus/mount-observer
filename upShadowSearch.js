@@ -14,9 +14,12 @@ export function upShadowSearch(ref, id) {
             return null;
         }
         else if (!rn.isConnected) {
-            //TODO:  search first for targetFragment
-            rn = document;
+            if (rn.targetFragment) {
+                rn = rn.targetFragment;
+            }
+            else {
+                rn = document;
+            }
         }
-        //return null;
     }
 }

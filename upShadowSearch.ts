@@ -1,5 +1,5 @@
 export function upShadowSearch(ref: Element, id: string){
-    let rn = ref.getRootNode() as (Document | DocumentFragment | ShadowRoot) & { host?: Element };
+    let rn = ref.getRootNode() as any;
     while(rn){
         let test = rn.getElementById(id);
         if(test) return test;
@@ -10,11 +10,14 @@ export function upShadowSearch(ref: Element, id: string){
         }else if(rn === document){
             return null;
         }else if(!rn.isConnected){
-            //TODO:  search first for targetFragment
-            rn = document;
+            if(rn.targetFragment){
+                rn = rn.targetFragment;
+            }else{
+                rn = document;
+            }
+            
 
         }
-        //return null;
     }
 }
 

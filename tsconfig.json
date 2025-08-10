@@ -12,7 +12,6 @@
 		"MountObserver.ts",
 		"Synthesizer.ts",
 		"waitForIsh.ts",
-		"getContent.ts",
 		"refid/camelToKebab.ts",
 		"refid/joinMatching.ts",
 		"refid/splitRefs.ts",
