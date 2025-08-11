@@ -51,7 +51,7 @@ class RefManager extends EventTarget {
             if (!attr)
                 return [];
             const refIds = splitRefs(attr);
-            const qry = refIds.map(id => `#${id}`).join(', ');
+            const qry = refIds.map(id => `#${id}`).join(',');
             const rn = el.getRootNode();
             const refsArr = Array.from(rn.querySelectorAll(qry));
             const refs = new Map();

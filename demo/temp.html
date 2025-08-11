@@ -6,23 +6,12 @@
   <title>Document</title>
 </head>
 <body>
-   <script>
-      customElements.define('test-el', class extends HTMLElement{
-         constructor(){
-            super();
-            console.log('iah1');
-         }
-         connectedCallback(){
-            console.log('iah2');
-         }
-      })
-   </script>
-   <template id=myTemplate>
-      <test-el></test-el>
-   </template>
-   <script>
-      //const test = myTemplate.content.importNode(true);
-      const test = document.importNode(myTemplate, true);
-   </script>
+   <div id=a1>hello</div>
+   <div id=a2>goodbye</div>
+   <style>
+      #a1,#a2 {
+         color: green;
+      }
+   </style>
 </body>
 </html>
