@@ -36,6 +36,7 @@ class RefManager extends EventTarget {
     #el;
     #children;
     #attr;
+    #lastAttrVal = '';
     //#parents: Array<WeakRef<Element>> | undefined;
     constructor(el, prop) {
         super();
@@ -43,13 +44,14 @@ class RefManager extends EventTarget {
         this.#el = new WeakRef(el);
     }
     get children() {
-        if (this.#children === undefined) {
-            const el = this.#el.deref();
-            if (el === undefined)
-                return [];
-            const attr = el.getAttribute(this.#attr);
+        const el = this.#el.deref();
+        if (el === undefined)
+            return [];
+        const attr = el.getAttribute(this.#attr);
+        if (this.#children === undefined || attr !== this.#lastAttrVal) {
             if (!attr)
                 return [];
+            this.#lastAttrVal = attr;
             const refIds = splitRefs(attr);
             const qry = refIds.map(id => `#${id}`).join(',');
             const rn = el.getRootNode();
