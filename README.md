@@ -399,7 +399,7 @@ Callbacks like we saw in our earlier examples above are useful for tight couplin
 
 However, since these rules may be of interest to multiple parties, it is useful to also provide the ability for multiple parties to subscribe to these DOM filtering events.
 
-If the performance isn't impacted, I think it would be most convenient for the developer if, at a minimum, the second argument of the callbacks above in fact precisely match the loosely coupled events.  The callback would get the first dibs on the event, and have the opportunity to prevent the event from going any further before getting dispatched, using something like preventDefault. I don't yet have any compelling use cases for that scenario, but I think there probably are some.
+If the performance isn't impacted, I think it would be most convenient for the developer if, at a minimum, the second argument of the callbacks above in fact precisely match the loosely coupled events.  The callback would get the first dibs on the event, and have the opportunity to prevent the event from going any further before getting dispatched, using something like stopPropagation. I don't yet have any compelling use cases for that scenario, but I think there probably are some.
 
 In which case the argument becomes quite strong that the inconsistency of making the callback methods above  have a separate parameter where the matching element is passed is unwise. Simply making the matching element be part of the event payload, as is done for the loosely coupled events discussed above, would reduce the learning curve, and make it easier to share logic between the two.  
 
@@ -1120,7 +1120,7 @@ And we can give each inheriting ShadowRoot a personality of its own by customizi
 </be-hive>
 ```
 
-## Creating an Element-To-RefID DOM passageway
+## Creating an Element-To-RefID DOM traversal API
 
 The platform provides some nice help with managing forms, including IDREF dependency support:
 
@@ -1216,6 +1216,24 @@ Again, because of the mount-observer being the "first point of contact" with the
    
 </script>
 ```
+
+One quirk to consider:
+
+In the case of multiple elements being linked to "mother ship" element forming a concept of "children" like we've seen before, the "mother ship" element is the one that points outward to the children
+
+The one exception (or are there others?) is the form element, where outside elements can say "hey, I want to be considered part of the form".
+
+The question is:  
+
+1.  Is that a bad design, just a quirk of history, like it was the first example of linking things through id's, and then with subsequent cases, we had wised up, and went with the mother ship approach?  or...
+
+2.  It's an arbitrary choice, and there were two conflicting approaches (left hand not knowing what the right hand was doing type thing), and consistency just on the mother ship approach.  or...
+
+3.  There is an advantage to the approach that form elements take, that isn't applicable to other scenarios?
+
+The form element already has an api to access the children, so if form is the only example where this is needed, no need for an extra generalized api call like above.  We just need to have logic that makes special exceptions for forms, when we we need to get such linked "children".
+
+What I like about the approach forms takes is it feels easier to lazy load new elements into the mix.  Even if the platform doesn't have any other support for this, maybe it would be a useful api for userland scenarios?
 
 
 
