@@ -1219,7 +1219,7 @@ Again, because of the mount-observer being the "first point of contact" with the
 
 One quirk to consider:
 
-In the case of multiple elements being linked to "mother ship" element forming a concept of "children" like we've seen before, the "mother ship" element is the one that points outward to the children
+In the case of multiple elements being linked to a "mother ship" element forming a concept of "children" like we've seen before, the "mother ship" element is the one that points outward to the children.
 
 The one exception (or are there others?) is the form element, where outside elements can say "hey, I want to be considered part of the form".
 
@@ -1234,6 +1234,7 @@ The question is:
 The form element already has an api to access the children, so if form is the only example where this is needed, no need for an extra generalized api call like above.  We just need to have logic that makes special exceptions for forms, when we we need to get such linked "children".
 
 What I like about the approach forms takes is it feels easier to lazy load new elements into the mix.  Even if the platform doesn't have any other support for this, maybe it would be a useful api for userland scenarios?
+
 
 
 
