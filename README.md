@@ -1223,18 +1223,20 @@ In the case of multiple elements being linked to a "mother ship" element forming
 
 The one exception (or are there others?) is the form element, where outside elements can say "hey, I want to be considered part of the form".
 
-The question is:  
+To keep the api uniform, we hide this discrepancy by pretending the form element is like the others [TODO]:
 
-1.  Is that a bad design, just a quirk of history, like it was the first example of linking things through id's, and then with subsequent cases, we had wised up, and went with the mother ship approach?  or...
+```html
+<input id=field2 name=field2 form=myForm>
 
-2.  It's an arbitrary choice, and there were two conflicting approaches (left hand not knowing what the right hand was doing type thing), and consistency just on the mother ship approach.  or...
-
-3.  There is an advantage to the approach that form elements take, that isn't applicable to other scenarios?
-
-The form element already has an api to access the children, so if form is the only example where this is needed, no need for an extra generalized api call like above.  We just need to have logic that makes special exceptions for forms, when we we need to get such linked "children".
-
-What I like about the approach forms takes is it feels easier to lazy load new elements into the mix.  Even if the platform doesn't have any other support for this, maybe it would be a useful api for userland scenarios?
-
+<form id=myForm>
+   <input name="field1">
+</form>
+<script>
+   console.log(myForm.via.form.children);
+   // includes both field1 and field2
+   
+</script>
+```
 
 
 
