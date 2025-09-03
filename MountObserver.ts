@@ -533,11 +533,20 @@ export class MountObserver extends EventTarget implements IMountObserver{
         //getting into a catch-22 scenario frequently, blocking the code for resuming.
         //This was observed with per-each package, demo/ScopeScript.html, clicking refresh a few times
         //one will see the inconsistent behavior if await is added below.
+        const genids = Array.from((within as DocumentFragment).querySelectorAll('[genids]'))
+        if(genids[0]){
+            const {genIds} = await import('./refid/genIds.js');
+            for(const el of genids){
+                genIds(el);
+                el.removeAttribute('genid');
+            }
+        }
         bindish(within as DocumentFragment, within, {assigner: this.#mountInit.assigner});
         await this.composeFragment(within as DocumentFragment, 0);
         const match = await this.#selector();
         const els = Array.from((within as Element).querySelectorAll(match));
         this.#filterAndMount(els, within, false, initializing);
+
     }
 
 }

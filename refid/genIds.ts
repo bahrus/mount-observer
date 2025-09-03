@@ -44,7 +44,7 @@ export function genIds(enhancedElement: Element){
     allChildren.push(parentElement);
 
     const idLookup: {[key: string]: string}  = {};
-    const base = 'gen-id-';
+    const base = 'gid';
     for(const child of allChildren){
         const attrs = child.attributes;
         for(const attr of attrs){
