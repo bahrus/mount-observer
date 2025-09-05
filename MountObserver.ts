@@ -9,6 +9,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 import {bindish, bindishIt} from './bindish.js';
+import 'refid/hostish.js';
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
