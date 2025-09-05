@@ -4,14 +4,14 @@ Element.prototype.hostish = async function () {
     if (closest === null)
         return this.getRootNode().host;
     const { localName } = closest;
-    if (localName.includes('-')) {
-        await customElements.whenDefined(localName);
-        return closest;
-    }
     const itemScopeAttr = closest.getAttribute('itemscope');
     if (itemScopeAttr) {
         const { waitForIsh } = await import('mount-observer/waitForIsh.js');
         return await waitForIsh(closest);
+    }
+    if (localName.includes('-')) {
+        await customElements.whenDefined(localName);
+        return closest;
     }
     return this.getRootNode().host;
 };
