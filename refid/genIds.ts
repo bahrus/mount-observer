@@ -6,12 +6,23 @@ const attrMap = {
     '|': 'itemprop',
 };
 
+const scopeMatches = '[itemscope],fieldset';
+
+export function inScope(scopeFragment: DocumentFragment | Element, el: Element){
+    const closest = el.closest(scopeMatches);//TODO account for itemref?
+    if(closest === null) return true;
+    if(scopeFragment === closest) return true;
+    if(scopeFragment.contains(closest)) return false;
+    return true;
+}
+
 export function genIds(enhancedElement: Element){
-    const {parentElement} = enhancedElement;
-    if(parentElement === null) throw 404;
+    // const {parentElement} = enhancedElement;
+    // if(parentElement === null) throw 404;
+    const scopeFragment = (enhancedElement.closest(scopeMatches) || enhancedElement.getRootNode()) as DocumentFragment | Element;
 
     //first find all elements with attribute #
-    const hashIds = Array.from(parentElement.querySelectorAll('[\\#]'));
+    const hashIds = Array.from(scopeFragment.querySelectorAll('[\\#]')).filter(x => inScope(scopeFragment, x));
     const uniqueCheck = new Set();
     for(const hi of hashIds){
         if(!(hi instanceof HTMLElement)) continue;
@@ -27,7 +38,7 @@ export function genIds(enhancedElement: Element){
         hi.removeAttribute('#');
     }
 
-    const dataIds = Array.from(parentElement.querySelectorAll('[data-id^="{{"][data-id$="}}"]'));
+    const dataIds = Array.from(scopeFragment.querySelectorAll('[data-id^="{{"][data-id$="}}"]')).filter(x => inScope(scopeFragment, x));
     const ids: Array<string> = [];
     for(const di of dataIds){
         if(!(di instanceof HTMLElement)) continue;
@@ -40,8 +51,8 @@ export function genIds(enhancedElement: Element){
         ids.push(id);
     }
 
-    const allChildren = Array.from(parentElement.querySelectorAll('*'));
-    allChildren.push(parentElement);
+    const allChildren = Array.from(scopeFragment.querySelectorAll('*')).filter(x => inScope(scopeFragment, x));
+    if(scopeFragment instanceof Element) allChildren.push(scopeFragment);
 
     const idLookup: {[key: string]: string}  = {};
     const base = 'gid';
@@ -120,7 +131,7 @@ export function genIds(enhancedElement: Element){
             nudge(child, name);
         }
     }
-    if('disabled' in parentElement){
-        nudge(parentElement);
+    if(scopeFragment instanceof Element && 'disabled' in scopeFragment){
+        nudge(scopeFragment);
     }
 }
