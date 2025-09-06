@@ -57,6 +57,10 @@
       "default": "./refid/getAdjRefs.js",
       "types": "./refid/getAdjRefs.ts"
     },
+    "./refid/getCount.js":{
+      "default": "./refid/getCount.js",
+      "types": "./refid/getCount.ts"
+    },
     "./refid/joinMatching.js": {
       "default": "./refid/joinMatching.js",
       "types": "./refid/joinMatching.ts"
