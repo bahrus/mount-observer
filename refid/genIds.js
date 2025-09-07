@@ -37,6 +37,22 @@ export function genIds(enhancedElement) {
         hi.dataset.id = `{{${sideEffects}${localName}}}`;
         hi.removeAttribute('#');
     }
+    //now find all elements with attribute @
+    const names = Array.from(scopeFragment.querySelectorAll('[name]:not([name=""])[\\@]')).filter(x => inScope(scopeFragment, x));
+    for (const nameEl of names) {
+        if (!(nameEl instanceof HTMLElement))
+            continue;
+        const val = nameEl.getAttribute('name');
+        if (uniqueCheck.has(val))
+            throw 500;
+        uniqueCheck.add(val);
+        let sideEffects = '';
+        const nameValue = nameEl.getAttribute('@');
+        if (nameValue) {
+            sideEffects = `${nameValue} `;
+        }
+        nameEl.dataset.id = `{{${sideEffects}${val}}}`;
+    }
     const dataIds = Array.from(scopeFragment.querySelectorAll('[data-id^="{{"][data-id$="}}"]')).filter(x => inScope(scopeFragment, x));
     const ids = [];
     for (const di of dataIds) {
