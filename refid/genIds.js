@@ -52,6 +52,7 @@ export function genIds(enhancedElement) {
             sideEffects = `${nameValue} `;
         }
         nameEl.dataset.id = `{{${sideEffects}${val}}}`;
+        nameEl.removeAttribute('@');
     }
     const dataIds = Array.from(scopeFragment.querySelectorAll('[data-id^="{{"][data-id$="}}"]')).filter(x => inScope(scopeFragment, x));
     const ids = [];
