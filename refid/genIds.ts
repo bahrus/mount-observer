@@ -26,15 +26,15 @@ export function genIds(enhancedElement: Element){
     const uniqueCheck = new Set();
     for(const hi of hashIds){
         if(!(hi instanceof HTMLElement)) continue;
-        const {localName} = hi;
-        if(uniqueCheck.has(localName)) throw 500;
-        uniqueCheck.add(localName);
+        const idName = hi.getAttribute('itemscope') || hi.localName;
+        if(uniqueCheck.has(idName)) throw 500;
+        uniqueCheck.add(idName);
         let sideEffects = '';
         const hashValue = hi.getAttribute('#');
         if(hashValue){
             sideEffects = `${hashValue} `;
         }
-        hi.dataset.id = `{{${sideEffects}${localName}}}`;
+        hi.dataset.id = `{{${sideEffects}${idName}}}`;
         hi.removeAttribute('#');
     }
 
@@ -52,6 +52,22 @@ export function genIds(enhancedElement: Element){
         }
         nameEl.dataset.id = `{{${sideEffects}${val}}}`;
         nameEl.removeAttribute('@');
+    }
+
+    //now find all elements with attribute |
+    const itemprops = Array.from(scopeFragment.querySelectorAll('[itemprop]:not([itemprop=""])[\\|]')).filter(x => inScope(scopeFragment, x));
+    for(const itempropEl of itemprops){
+        if(!(itempropEl instanceof HTMLElement)) continue;
+        const val = itempropEl.getAttribute('itemprop');
+        if(uniqueCheck.has(val)) throw 500;
+        uniqueCheck.add(val);
+        let sideEffects = '';
+        const nameValue = itempropEl.getAttribute('|');
+        if(nameValue){
+            sideEffects = `${nameValue} `;
+        }
+        itempropEl.dataset.id = `{{${sideEffects}${val}}}`;
+        itempropEl.removeAttribute('|');
     }
 
     const dataIds = Array.from(scopeFragment.querySelectorAll('[data-id^="{{"][data-id$="}}"]')).filter(x => inScope(scopeFragment, x));
