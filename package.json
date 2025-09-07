@@ -57,6 +57,10 @@
       "default": "./refid/getAdjRefs.js",
       "types": "./refid/getAdjRefs.ts"
     },
+    "./refid/getContext.js": {
+      "default": "./refid/getContext.js",
+      "types": "./refid/getContext.ts"
+    },
     "./refid/getCount.js": {
       "default": "./refid/getCount.js",
       "types": "./refid/getCount.ts"

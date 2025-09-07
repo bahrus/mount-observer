@@ -13,6 +13,7 @@
 		"Synthesizer.ts",
 		"waitForIsh.ts",
 		"refid/camelToKebab.ts",
+		"refid/getContext.ts",
 		"refid/genIds.ts",
 		"refid/joinMatching.ts",
 		"refid/splitRefs.ts",
