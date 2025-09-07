@@ -66,7 +66,7 @@ export function genIds(enhancedElement: Element){
         if(ids.includes(id)) throw 500;
         ids.push(id);
     }
-
+    if(ids.length === 0) return;
     const allChildren = Array.from(scopeFragment.querySelectorAll('*')).filter(x => inScope(scopeFragment, x));
     if(scopeFragment instanceof Element) allChildren.push(scopeFragment);
 
