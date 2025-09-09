@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.98",
+  "version": "0.0.99",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
@@ -69,7 +69,7 @@
       "default": "./refid/joinMatching.js",
       "types": "./refid/joinMatching.ts"
     },
-    "./refid/nudge.js":{
+    "./refid/nudge.js": {
       "default": "./refid/nudge.js",
       "types": "./refid/nudge.ts"
     },
