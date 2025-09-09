@@ -69,6 +69,10 @@
       "default": "./refid/joinMatching.js",
       "types": "./refid/joinMatching.ts"
     },
+    "./refid/nudge.js":{
+      "default": "./refid/nudge.js",
+      "types": "./refid/nudge.ts"
+    },
     "./refid/refs.js": {
       "default": "./refid/refs.js",
       "types": "./refid/refs.ts"
