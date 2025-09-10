@@ -20,7 +20,10 @@ export function genIds(enhancedElement) {
     // if(parentElement === null) throw 404;
     const scopeFragment = (enhancedElement.closest(scopeMatches) || enhancedElement.getRootNode());
     //first find all elements with attribute #
-    const hashIds = Array.from(scopeFragment.querySelectorAll('[\\#]')).filter(x => inScope(scopeFragment, x));
+    const hashTest = '[\\#]';
+    const hashIds = Array.from(scopeFragment.querySelectorAll(hashTest)).filter(x => inScope(scopeFragment, x));
+    if (scopeFragment instanceof Element && scopeFragment.matches(hashTest))
+        hashIds.push(scopeFragment);
     const uniqueCheck = new Set();
     for (const hi of hashIds) {
         if (!(hi instanceof HTMLElement))
@@ -38,7 +41,10 @@ export function genIds(enhancedElement) {
         hi.removeAttribute('#');
     }
     //now find all elements with attribute @
-    const names = Array.from(scopeFragment.querySelectorAll('[name]:not([name=""])[\\@]')).filter(x => inScope(scopeFragment, x));
+    const nameTest = '[name]:not([name=""])[\\@]';
+    const names = Array.from(scopeFragment.querySelectorAll(nameTest)).filter(x => inScope(scopeFragment, x));
+    if (scopeFragment instanceof Element && scopeFragment.matches(nameTest))
+        names.push(scopeFragment);
     for (const nameEl of names) {
         if (!(nameEl instanceof HTMLElement))
             continue;
@@ -55,7 +61,10 @@ export function genIds(enhancedElement) {
         nameEl.removeAttribute('@');
     }
     //now find all elements with attribute |
-    const itemprops = Array.from(scopeFragment.querySelectorAll('[itemprop]:not([itemprop=""])[\\|]')).filter(x => inScope(scopeFragment, x));
+    const itemScopeTest = '[itemprop]:not([itemprop=""])[\\|]';
+    const itemprops = Array.from(scopeFragment.querySelectorAll(itemScopeTest)).filter(x => inScope(scopeFragment, x));
+    if (scopeFragment instanceof Element && scopeFragment.matches(itemScopeTest))
+        itemprops.push(scopeFragment);
     for (const itempropEl of itemprops) {
         if (!(itempropEl instanceof HTMLElement))
             continue;
@@ -71,7 +80,10 @@ export function genIds(enhancedElement) {
         itempropEl.dataset.id = `{{${sideEffects}${val}}}`;
         itempropEl.removeAttribute('|');
     }
-    const dataIds = Array.from(scopeFragment.querySelectorAll('[data-id^="{{"][data-id$="}}"]')).filter(x => inScope(scopeFragment, x));
+    const dataIdTest = '[data-id^="{{"][data-id$="}}"]';
+    const dataIds = Array.from(scopeFragment.querySelectorAll(dataIdTest)).filter(x => inScope(scopeFragment, x));
+    if (scopeFragment instanceof Element && scopeFragment.matches(dataIdTest))
+        dataIds.push(scopeFragment);
     const ids = [];
     for (const di of dataIds) {
         if (!(di instanceof HTMLElement))
