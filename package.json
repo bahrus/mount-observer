@@ -6,7 +6,7 @@
   "module": "MountObserver.js",
   "devDependencies": {
     "@playwright/test": "1.55.0",
-    "ssi-server": "0.0.1"
+    "spa-ssi": "0.0.9"
   },
   "exports": {
     ".": {
@@ -115,7 +115,7 @@
   ],
   "types": "./ts-refs/mount-observer/types.d.ts",
   "scripts": {
-    "serve": "python ./node_modules/ssi-server/ssi_server.py",
+    "serve": "node ./node_modules/spa-ssi/serve.js",
     "test": "playwright test",
     "safari": "npx playwright wk http://localhost:8000",
     "update": "ncu -u && npm install"
