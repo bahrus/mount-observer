@@ -1,3 +1,5 @@
+# Auto generated id polyfill
+
 *mount-observer* has a polyfill for [this proposal](https://github.com/whatwg/html/issues/11585), but with some differences due to the limited ability a polyfill can provide compared to the platform.
 
 ## Installation
