@@ -57,6 +57,46 @@ adjusts the DOM so as to become:
 
 Note that the numbers after gid- will vary depending on previous DOM elements that may have been processed by the ID generator.
 
+## Side Effects
+
+```html
+<form>
+    <fieldset disabled>
+        <label>
+            LHS: <input class=my-class data-id={{@. lhs}}>
+        </label>
+        
+        <label for=rhs>
+            RHS: <span contenteditable part=my-part data-id={{|% rhs}}>
+        </label>
+        
+        <template -id defer-🎚️ 🎚️='on if isEqual, based on #{{lhs}} and #{{rhs}}.'>
+            <div>LHS === RHS</div>
+        </template>
+    </fieldset>
+</form>
+```
+
+results in
+
+```html
+<form>
+    <fieldset>
+        <label>
+            LHS: <input name=lhs class="my-part lhs" id=gid-0  data-id=lhs>
+        </label>
+        
+        <label for=rhs>
+            RHS: <span itemprop=rhs part="my-part rhs" data-id=rhs>
+        </label>
+        
+        <template 🎚️='on if isEqual, based on #gid-0 and #gid-1.'>
+            <div>LHS === RHS</div>
+        </template>
+    </fieldset>
+</form>
+```
+
 ## Example 2
 
 Id's based on the element name
