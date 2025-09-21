@@ -53,6 +53,10 @@
       "default": "./refid/camelToKebab.js",
       "types": "./refid/camelToKebab.ts"
     },
+    "./refid/refid/genIds.js": {
+      "default": "./refid/refid/genIds.js",
+      "types": "./refid/refid/genIds.ts"
+    },
     "./refid/getAdjRefs.js": {
       "default": "./refid/getAdjRefs.js",
       "types": "./refid/getAdjRefs.ts"
