@@ -59,7 +59,7 @@ Note that the numbers after gid- will vary depending on previous DOM elements th
 
 Note the use of the "disabled" attribute on the fieldset element, and the defer-🎚️ attributes, both of which get removed after the id auto generation completes.  The idea is that while the live DOM tree has these attributes, allowing user interactivity could be problematic before the id's are generated, so at a minimum, we should disable input elements, and prevent [enhancements from loading](https://github.com/WICG/webcomponents/issues/1000) until the id connection is established, scoped preferably by fieldset elements, or itemscope attibutes, or the root document as a last resort.
 
-The reason why we keep the names lhs, rhs in the data-id attribute after stripping way curly braces and other side-effect inducing symbols, is that some libraries will want to refer to the name that was used to generate the id's.
+The reason why we keep the names lhs, rhs in the data-id attribute after stripping away curly braces and other side-effect inducing symbols, is that some libraries will want to refer to the name that was used to generate the id's.
 
 It is often the case that the name we want to use to auto generate the unique id's will match the "name" attribute we want to assign the element, and/or the itemprop and/or the class and/or the part.  This can be done in a few ways.
 
