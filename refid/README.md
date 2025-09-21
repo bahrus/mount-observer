@@ -93,7 +93,7 @@ results in
         </label>
         
         <label for=rhs>
-            RHS: <span itemprop=rhs part="my-part rhs" data-id=rhs>
+            RHS: <span itemprop=rhs part="my-part rhs" id=gid-1 data-id=rhs>
         </label>
         
         <template 🎚️='on if isEqual, based on #gid-0 and #gid-1.'>
@@ -116,7 +116,9 @@ So we are using some special symbols to correspond with key attributes:
 
 These match the symbols used in the [template instantiation productivity proposal](https://github.com/WICG/webcomponents/issues/1013#issuecomment-2257557589).
 
-## Example 2
+The exaples that follow go in the opposite direction -- we "infer" the id generating name based on either the name of the element, or one of the key attributes
+
+## By tag name
 
 Id's based on the element name
 
@@ -194,7 +196,7 @@ results in:
 ```html
 <form>
     <fieldset>
-        <data value=true data-id=isHappy id=gid-0 itemprop=isHappy hidden |></data>
+        <data value=true data-id=isHappy id=gid-0 itemprop=isHappy hidden></data>
         <template 🎚️='on when #gid-0.'>
             <my-content></my-content>
         </template>
@@ -202,3 +204,15 @@ results in:
 </form>
 ```
 
+<!--
+## By Itemscope
+
+```html
+<table>
+    <tbody>
+        <tr itemscope=myRowHandler #>
+        </tr>
+    </tbody>
+</table>
+```
+-->
