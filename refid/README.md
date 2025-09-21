@@ -17,7 +17,7 @@ genIds(oElementContainer);
 
 To activate a scoped id generation, add attribute -id to the last streamed element inside either the fieldset element, or an element adorned by the itemscope attribute, or the (Shadow) root.  
 
-If the -id attribute is not added to the last streamed element, but elsewhere, then the functionality will likely work the same, but may possible miss some elements after the attribute, in the unlikely event that the auto generated id's are created prior to additional elements streaming in.
+If the -id attribute is not added to the last streamed element, but elsewhere, then the functionality will likely work the same, but may possibly miss some elements after the attribute, in the unlikely event that the auto generated id's are created prior to some additional elements streaming in.
 
 ## Example 1
 
@@ -57,17 +57,23 @@ adjusts the DOM so as to become:
 
 Note that the numbers after gid- will vary depending on previous DOM elements that may have been processed by the ID generator.
 
-## Side Effects
+The reason why keep the names lhs, rhs in the data-id attribute, is that some libraries, will want to refer to the name that was used to generate the id's.
+
+
+
+It is often the case that the name we want use to auto generate the unique id's will match the "name" attribute we want to assign the element, and/or the itemprop and/or the class and/or the part.  This can be done in a few ways.
+
+## Side Effects from dynamic data-id attribute
 
 ```html
 <form>
     <fieldset disabled>
         <label>
-            LHS: <input class=my-class data-id={{@. lhs}}>
+            LHS: <input class=my-class data-id="{{@. lhs}}">
         </label>
         
         <label for=rhs>
-            RHS: <span contenteditable part=my-part data-id={{|% rhs}}>
+            RHS: <span contenteditable part=my-part data-id="{{|% rhs}}">
         </label>
         
         <template -id defer-🎚️ 🎚️='on if isEqual, based on #{{lhs}} and #{{rhs}}.'>
@@ -96,6 +102,19 @@ results in
     </fieldset>
 </form>
 ```
+
+So we are using some special symbols to correspond with key attributes:
+
+ Symbol | Translates to         | Connection / meaning                                                                                                                             |
+|--------|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| #      | id                    | # used by css for id, also bookmarks in urls that points to id's                                                                                 |
+| \|     | itemprop              | "Pipe" is kind of close to itemprop, and is half of a dollar sign, and it kind of looks like an I                                                |
+| @      | name                  | Second letter of name. Also, common in social media sites/github to type this letter in order to select someone's name.                          |
+| $      | itemscope + itemprop  | Combination of S for Scope and Pipe which resembles itemprop a bit                                                                               |
+| %      | part                  | Starts with p, percent is used for indicating what proportion something is.                                                                      |
+| .      | class                 | css selector                                                                                                                                     |
+
+These match the symbols used in the [template instantiation productivity proposal](https://github.com/WICG/webcomponents/issues/1013#issuecomment-2257557589).
 
 ## Example 2
 
