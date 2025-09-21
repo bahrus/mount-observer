@@ -61,9 +61,7 @@ Note the use of the "disabled" attribute on the fieldset element, and the defer-
 
 The reason why we keep the names lhs, rhs in the data-id attribute after stripping way curly braces and other side-effect inducing symbols, is that some libraries will want to refer to the name that was used to generate the id's.
 
-
-
-It is often the case that the name we want use to auto generate the unique id's will match the "name" attribute we want to assign the element, and/or the itemprop and/or the class and/or the part.  This can be done in a few ways.
+It is often the case that the name we want to use to auto generate the unique id's will match the "name" attribute we want to assign the element, and/or the itemprop and/or the class and/or the part.  This can be done in a few ways.
 
 ## Side Effects from dynamic data-id attribute
 
