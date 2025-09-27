@@ -57,11 +57,53 @@ adjusts the DOM so as to become:
 
 Note that the numbers after gid- will vary depending on previous DOM elements that may have been processed by the ID generator.
 
-Note the use of the "disabled" attribute on the fieldset element, and the defer-🎚️ attributes, both of which get removed after the id auto generation completes.  The idea is that while the live DOM tree has these attributes, allowing user interactivity could be problematic before the id's are generated, so at a minimum, we should disable input elements, and prevent [enhancements from loading](https://github.com/WICG/webcomponents/issues/1000) until the id connection is established, scoped preferably by fieldset elements, or itemscope attibutes, or the root document as a last resort.
+Note the use of the "disabled" attribute on the fieldset element, and the defer-🎚️ attributes, both of which get removed after the id auto generation completes.  The idea is that while the live DOM tree has these attributes, allowing user interactivity could be problematic before the id's are generated, so at a minimum, we should disable input elements, and prevent [enhancements from loading](https://github.com/WICG/webcomponents/issues/1000) until the id connection is established, scoped preferably by fieldset elements, or itemscope attributes, or the root document as a last resort.
 
 The reason why we keep the names lhs, rhs in the data-id attribute after stripping away curly braces and other side-effect inducing symbols, is that some libraries will want to refer to the name that was used to generate the id's.
 
 It is often the case that the name we want to use to auto generate the unique id's will match the "name" attribute we want to assign the element, and/or the itemprop and/or the class and/or the part.  This can be done in a few ways.
+
+## Creating id references with global or built in attributes
+
+Again, because 1. unlike the platform, we can't manipulate the server-streamed DOM before the browser sees it, and 2.  we don't want to "confuse" the browser by creating nonsensical id reference connections that aren't valid, even temporarily, this polyfill opts to use data-* attributes as a way of staging the dynamic attribute adjustments.  So for example:
+
+```html
+<fieldset disabled>
+    <scratch-box>
+        <label slot=label data-for={{createDemo}}>Create demo</label>
+        <input data-id="{{@ createDemo}}" type=checkbox>
+    </scratch-box>
+    <scratch-box>
+        <label slot=label data-for={{writeArticle}}>Write article</label>
+        <input data-id="{{@ writeArticle}}" type=checkbox>
+    </scratch-box>
+    <scratch-box>
+        <label slot=label data-for={{exercise}}>Exercise</label>
+        <input -id data-id="{{@ exercise}}" type=checkbox>
+    </scratch-box>
+</fieldset>
+```
+
+becomes
+
+```html
+<fieldset disabled>
+    <scratch-box enh-be-importing=scratch-box/root.mjs>
+        <label slot=label data-for=gid-0>Create demo</label>
+        <input id=gid-0 name=createDemo data-id=createDemo type=checkbox>
+    </scratch-box>
+    <scratch-box>
+        <label slot=label data-for=gid-1>Write article</label>
+        <input id=gid-1 name=writeArticle data-id=writeArticle type=checkbox>
+    </scratch-box>
+    <scratch-box>
+        <label slot=label for=gid-2>Exercise</label>
+        <input id=gid-2 name=exercise data-id=exercise type=checkbox>
+    </scratch-box>
+</fieldset>
+```
+
+
 
 ## Side Effects from dynamic data-id attribute
 
