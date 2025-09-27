@@ -89,11 +89,11 @@ becomes
 ```html
 <fieldset disabled>
     <scratch-box enh-be-importing=scratch-box/root.mjs>
-        <label slot=label data-for=gid-0>Create demo</label>
+        <label slot=label for=gid-0>Create demo</label>
         <input id=gid-0 name=createDemo data-id=createDemo type=checkbox>
     </scratch-box>
     <scratch-box>
-        <label slot=label data-for=gid-1>Write article</label>
+        <label slot=label for=gid-1>Write article</label>
         <input id=gid-1 name=writeArticle data-id=writeArticle type=checkbox>
     </scratch-box>
     <scratch-box>
