@@ -40,7 +40,7 @@ Object.defineProperty(Element.prototype, 'itemprops', {
         }
 
 
-        return refLookup.get(this); 
+        return proxies.get(this); 
     }
 });
 

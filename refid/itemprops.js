@@ -40,7 +40,7 @@ Object.defineProperty(Element.prototype, 'itemprops', {
             };
             proxies.set(this, new Proxy(this, handler));
         }
-        return refLookup.get(this);
+        return proxies.get(this);
     }
 });
 class ItempropManager extends EventTarget {
