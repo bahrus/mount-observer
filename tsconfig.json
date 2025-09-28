@@ -16,6 +16,7 @@
 		"refid/getContext.ts",
 		"refid/genIds.ts",
 		"refid/joinMatching.ts",
+		"refid/itemprops.ts",
 		"refid/splitRefs.ts",
 		"refid/via.ts",
 		"slotkin/beKindred.ts",

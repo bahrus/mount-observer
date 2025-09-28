@@ -5,8 +5,8 @@
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "devDependencies": {
-    "@playwright/test": "1.55.0",
-    "spa-ssi": "0.0.9"
+    "@playwright/test": "1.55.1",
+    "spa-ssi": "0.0.23"
   },
   "exports": {
     ".": {
@@ -68,6 +68,10 @@
     "./refid/getCount.js": {
       "default": "./refid/getCount.js",
       "types": "./refid/getCount.ts"
+    },
+    "./refid/itemprops.js": {
+      "default": "./refid/itemprops.js",
+      "types": "./refid/itemprops.ts"
     },
     "./refid/joinMatching.js": {
       "default": "./refid/joinMatching.js",
