@@ -291,6 +291,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }
 
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element) as Array<Element>;
+                const {DisconnectEvent} = await import('./Events.js');
                 for(const deletedElement of deletedElements){
                     this.#disconnected.add(deletedElement);
                     if(doDisconnect !== undefined){
@@ -301,6 +302,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
             }
             if(attrChangeInfosMap !== undefined){
+                const {AttrChangeEvent} = await import('./Events.js');
                 for(const [key, value] of attrChangeInfosMap){
                     this.dispatchEvent(new AttrChangeEvent(key, value))
                 }
@@ -381,6 +383,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
                 }
                 (<any>match)[guid].add(this);
             }
+            const {MountEvent} = await import('./Events.js');
             this.dispatchEvent(new MountEvent(match, initializing));
             //should we automatically call readAttrs?
             //the thinking is it might make more sense to call that after mounting
@@ -445,7 +448,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #dismount(unmatching: Array<Element>){
-        const onDismount = this.#mountInit.do?.dismount
+        const onDismount = this.#mountInit.do?.dismount;
+        const {DismountEvent} = await import('./Events.js');
         for(const unmatch of unmatching){
             if(onDismount !== undefined){
                 onDismount(unmatch, this, {});
@@ -603,42 +607,6 @@ export const inclTemplQry = 'template[src^="#"]:not([hidden]),template[src^="!"]
 
 export interface MountObserver extends IMountObserver{}
 
-//TODO:  make thes external
-// https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
-/**
- * The `mutation-event` event represents something that happened.
- * We can document it here.
- */
-export class MountEvent extends Event implements IMountEvent {
-    static eventName: mountEventName = 'mount';
-  
-    constructor(public mountedElement: Element, public initializing: boolean) {
-      super(MountEvent.eventName);
-    }
-}
-
-export class DismountEvent extends Event implements IDismountEvent{
-    static eventName: dismountEventName = 'dismount';
-
-    constructor(public dismountedElement: Element){
-        super(DismountEvent.eventName);
-    }
-}
-
-export class DisconnectEvent extends Event implements IDisconnectEvent{
-    static eventName: disconnectedEventName = 'disconnect';
-
-    constructor(public disconnectedElement: Element){
-        super(DisconnectEvent.eventName);
-    }
-}
-
-export class AttrChangeEvent extends Event implements IAttrChangeEvent{
-    static eventName: attrChangeEventName = 'attrChange';
-    constructor(public mountedElement: Element, public attrChangeInfos: Array<AttrChangeInfo>){
-        super(AttrChangeEvent.eventName);
-    }
-}
 
 
 

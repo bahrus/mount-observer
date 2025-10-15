@@ -1,6 +1,6 @@
 import { RootMutObs } from './RootMutObs.js';
 import { bindish, bindishIt } from './bindish.js';
-import './refid/hostish.js';
+import './refid/hostish.js'; // gets embedded even if not used
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
 export const mutationObserverLookup = new WeakMap();
@@ -73,6 +73,7 @@ export class MountObserver extends EventTarget {
         }
     }
     async #compose(el, level) {
+        //[TODO]: load async, not used often
         const src = el.getAttribute('src');
         if (src === null || src.length < 2)
             return;
@@ -84,6 +85,7 @@ export class MountObserver extends EventTarget {
     }
     #templLookUp = new Map();
     #searchForComment(refName, fragment) {
+        //get rid of
         const iterator = document.evaluate(`//comment()[.="${refName}"]`, fragment, null, XPathResult.ANY_TYPE, null);
         //console.log({xpathResult})
         try {
@@ -94,7 +96,9 @@ export class MountObserver extends EventTarget {
             return null;
         }
     }
-    async findByID(refName, fragment, refType) {
+    async findByID(
+    //[TODO]: make external, not always used
+    refName, fragment, refType) {
         if (this.#templLookUp.has(refName))
             return this.#templLookUp.get(refName);
         let templ = null;
@@ -262,6 +266,7 @@ export class MountObserver extends EventTarget {
                     elsToInspect.push(target);
                 }
                 const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element);
+                const { DisconnectEvent } = await import('./Events.js');
                 for (const deletedElement of deletedElements) {
                     this.#disconnected.add(deletedElement);
                     if (doDisconnect !== undefined) {
@@ -271,6 +276,7 @@ export class MountObserver extends EventTarget {
                 }
             }
             if (attrChangeInfosMap !== undefined) {
+                const { AttrChangeEvent } = await import('./Events.js');
                 for (const [key, value] of attrChangeInfosMap) {
                     this.dispatchEvent(new AttrChangeEvent(key, value));
                 }
@@ -283,6 +289,7 @@ export class MountObserver extends EventTarget {
         await this.#inspectWithin(within, true);
     }
     static synthesize(within, customElement, mose) {
+        //TODO:  make external
         mose.type = 'mountobserver';
         const name = customElements.getName(customElement);
         if (name === null)
@@ -350,6 +357,7 @@ export class MountObserver extends EventTarget {
                 }
                 match[guid].add(this);
             }
+            const { MountEvent } = await import('./Events.js');
             this.dispatchEvent(new MountEvent(match, initializing));
             //should we automatically call readAttrs?
             //the thinking is it might make more sense to call that after mounting
@@ -357,6 +365,7 @@ export class MountObserver extends EventTarget {
         }
     }
     readAttrs(match, branchIndexes) {
+        //TODO:  externalize
         const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
         const attrChangeInfos = [];
         const oldValue = null;
@@ -409,6 +418,7 @@ export class MountObserver extends EventTarget {
     }
     async #dismount(unmatching) {
         const onDismount = this.#mountInit.do?.dismount;
+        const { DismountEvent } = await import('./Events.js');
         for (const unmatch of unmatching) {
             if (onDismount !== undefined) {
                 onDismount(unmatch, this, {});
@@ -519,6 +529,7 @@ export class MountObserver extends EventTarget {
         this.#filterAndMount(els, within, false, initializing);
     }
 }
+//ToDO:  make external
 export function waitForIdleNodes(nodes, idleTimeout) {
     const mountInit = {
         idleTimeout
@@ -550,6 +561,7 @@ export function waitForIdleNodes(nodes, idleTimeout) {
         }
     });
 }
+//make external
 function areAllIdle(mutObs) {
     for (const mo of mutObs) {
         if (!mo.isIdle)
@@ -559,45 +571,4 @@ function areAllIdle(mutObs) {
 }
 const refCountErr = 'mount-observer ref count mismatch';
 export const inclTemplQry = 'template[src^="#"]:not([hidden]),template[src^="!"]:not([hidden])';
-// https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
-/**
- * The `mutation-event` event represents something that happened.
- * We can document it here.
- */
-export class MountEvent extends Event {
-    mountedElement;
-    initializing;
-    static eventName = 'mount';
-    constructor(mountedElement, initializing) {
-        super(MountEvent.eventName);
-        this.mountedElement = mountedElement;
-        this.initializing = initializing;
-    }
-}
-export class DismountEvent extends Event {
-    dismountedElement;
-    static eventName = 'dismount';
-    constructor(dismountedElement) {
-        super(DismountEvent.eventName);
-        this.dismountedElement = dismountedElement;
-    }
-}
-export class DisconnectEvent extends Event {
-    disconnectedElement;
-    static eventName = 'disconnect';
-    constructor(disconnectedElement) {
-        super(DisconnectEvent.eventName);
-        this.disconnectedElement = disconnectedElement;
-    }
-}
-export class AttrChangeEvent extends Event {
-    mountedElement;
-    attrChangeInfos;
-    static eventName = 'attrChange';
-    constructor(mountedElement, attrChangeInfos) {
-        super(AttrChangeEvent.eventName);
-        this.mountedElement = mountedElement;
-        this.attrChangeInfos = attrChangeInfos;
-    }
-}
 //const hasRootInDefault =  ['data', 'enh', 'data-enh']
