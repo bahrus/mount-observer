@@ -392,60 +392,60 @@ export class MountObserver extends EventTarget implements IMountObserver{
         }
     }
 
-    readAttrs(match: Element, branchIndexes?: Set<number>){
-        //TODO:  externalize
-        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
-        const attrChangeInfos: Array<AttrChangeInfo> = [];
-        const oldValue = null;
-        if(fullListOfAttrs !== undefined){
-            const attrParts = this.#attrParts
+    // readAttrs(match: Element, branchIndexes?: Set<number>){
+    //     //TODO:  externalize
+    //     const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
+    //     const attrChangeInfos: Array<AttrChangeInfo> = [];
+    //     const oldValue = null;
+    //     if(fullListOfAttrs !== undefined){
+    //         const attrParts = this.#attrParts
             
-            for(let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++){
-                const parts = attrParts![idx];
-                const {branchIdx} = parts;
-                if(branchIndexes !== undefined){
-                    if(!branchIndexes.has(branchIdx)) continue;
-                }
-                const name = fullListOfAttrs[idx];
+    //         for(let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++){
+    //             const parts = attrParts![idx];
+    //             const {branchIdx} = parts;
+    //             if(branchIndexes !== undefined){
+    //                 if(!branchIndexes.has(branchIdx)) continue;
+    //             }
+    //             const name = fullListOfAttrs[idx];
                 
-                const newValue = match.getAttribute(name);
+    //             const newValue = match.getAttribute(name);
                 
-                attrChangeInfos.push({
-                    idx,
-                    isSOfTAttr: false,
-                    newValue,
-                    oldValue,
-                    name,
-                    parts
-                });
-            }
+    //             attrChangeInfos.push({
+    //                 idx,
+    //                 isSOfTAttr: false,
+    //                 newValue,
+    //                 oldValue,
+    //                 name,
+    //                 parts
+    //             });
+    //         }
 
-        }
-        const {observedAttrsWhenMounted} = this.#mountInit;
-        if(observedAttrsWhenMounted !== undefined){
-            for(const observedAttr of observedAttrsWhenMounted){
-                const attrIsString = typeof observedAttr === 'string';
-                const name = attrIsString ? observedAttr : observedAttr.name;
-                let mapsTo: string | undefined;
-                let newValue = match.getAttribute(name);
-                if(!attrIsString){
-                    const {customParser, instanceOf, mapsTo: mt, valIfNull} = observedAttr;
-                    if(instanceOf || customParser) throw 'NI';
-                    if(newValue === null) newValue = valIfNull;
-                    mapsTo = mt;
-                }
-                attrChangeInfos.push({
-                    isSOfTAttr: true,
-                    newValue,
-                    oldValue,
-                    name,
-                    mapsTo
-                });
-            }
-        }
+    //     }
+    //     const {observedAttrsWhenMounted} = this.#mountInit;
+    //     if(observedAttrsWhenMounted !== undefined){
+    //         for(const observedAttr of observedAttrsWhenMounted){
+    //             const attrIsString = typeof observedAttr === 'string';
+    //             const name = attrIsString ? observedAttr : observedAttr.name;
+    //             let mapsTo: string | undefined;
+    //             let newValue = match.getAttribute(name);
+    //             if(!attrIsString){
+    //                 const {customParser, instanceOf, mapsTo: mt, valIfNull} = observedAttr;
+    //                 if(instanceOf || customParser) throw 'NI';
+    //                 if(newValue === null) newValue = valIfNull;
+    //                 mapsTo = mt;
+    //             }
+    //             attrChangeInfos.push({
+    //                 isSOfTAttr: true,
+    //                 newValue,
+    //                 oldValue,
+    //                 name,
+    //                 mapsTo
+    //             });
+    //         }
+    //     }
 
-        return attrChangeInfos;
-    }
+    //     return attrChangeInfos;
+    // }
 
     async #dismount(unmatching: Array<Element>){
         const onDismount = this.#mountInit.do?.dismount;
