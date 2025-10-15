@@ -9,7 +9,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
 } from './ts-refs/mount-observer/types';
 import {RootMutObs} from './RootMutObs.js';
 import {bindish, bindishIt} from './bindish.js';
-import './refid/hostish.js';
+import './refid/hostish.js';  // gets embedded even if not used
 export {MOSE} from './ts-refs/mount-observer/types';
 export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
 export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
@@ -88,6 +88,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
 
     async #compose(el: HTMLTemplateElement, level: number){
+        //[TODO]: load async, not used often
         const src = el.getAttribute('src');
         if(src === null || src.length < 2) return;
         const refType = src[0] as RefType;
@@ -99,6 +100,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
     #templLookUp: Map<string, HTMLElement> = new Map();
     #searchForComment(refName: string, fragment: Node){
+        //get rid of
         const iterator = document.evaluate(
         `//comment()[.="${refName}"]`,
         fragment,
@@ -115,6 +117,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         }
     }
     async findByID(
+        //[TODO]: make external, not always used
         refName: string, fragment: DocumentFragment, 
         refType: RefType): Promise<HTMLElement | DocumentFragment | null>{
         if(this.#templLookUp.has(refName)) return this.#templLookUp.get(refName)!;
@@ -312,6 +315,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     static synthesize(within: Document | ShadowRoot, customElement: {new(): HTMLElement}, mose: MOSE){
+        //TODO:  make external
         mose.type = 'mountobserver';
         const name = customElements.getName(customElement);
         if(name === null) throw 400;
@@ -386,6 +390,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     readAttrs(match: Element, branchIndexes?: Set<number>){
+        //TODO:  externalize
         const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
         const attrChangeInfos: Array<AttrChangeInfo> = [];
         const oldValue = null;
@@ -552,6 +557,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
 }
 
+//ToDO:  make external
 export function waitForIdleNodes(nodes: Array<Node>, idleTimeout?: number): Promise<void>{
     const mountInit: MountInit = {
         idleTimeout
@@ -583,6 +589,7 @@ export function waitForIdleNodes(nodes: Array<Node>, idleTimeout?: number): Prom
     });
 }
 
+//make external
 function areAllIdle(mutObs: Array<RootMutObs>){
     for(const mo of mutObs){
         if(!mo.isIdle) return false;
@@ -596,6 +603,7 @@ export const inclTemplQry = 'template[src^="#"]:not([hidden]),template[src^="!"]
 
 export interface MountObserver extends IMountObserver{}
 
+//TODO:  make thes external
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**
  * The `mutation-event` event represents something that happened.
