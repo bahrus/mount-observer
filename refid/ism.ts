@@ -9,9 +9,11 @@ Object.defineProperty(HTMLElement.prototype, 'ishm', {
     }
 });
 
+type ItemscopeMap = {[key: string] : any[]}
+
 const parsedItempropmaps = new WeakMap<HTMLScriptElement, any>();
 
-export function parse(el: HTMLElement, obj: any = {}){
+export function parse(el: HTMLElement, obj: any = {}, itemscopeMap: ItemscopeMap = {}){
     const itemprop = el.getAttribute('itemprop');
     if(itemprop){
         obj[itemprop] = stdVal(el); //TODO full logic
@@ -56,14 +58,15 @@ export function parse(el: HTMLElement, obj: any = {}){
     //el.ish = obj;
     const children = Array.from(el.children);
     const isItemScoped = el.hasAttribute('itemscope');
-    let itemscopeMap: {[key: string] : any[]} | undefined;
-    if(isItemScoped){
-        itemscopeMap = {};
-    }
+    let itemscopeMapToPass = itemscopeMap;
     for(const child of children){ 
         if(!(child instanceof HTMLElement)) continue;
-        const objToPass = child.hasAttribute('itemscope') ? {} : obj;
-        parse(child, objToPass);
+        const childHasItemScopeAttr = child.hasAttribute('itemscope')
+        const objToPass = childHasItemScopeAttr ? {} : obj;
+        if(childHasItemScopeAttr) {
+            itemscopeMapToPass = {};
+        }
+        parse(child, objToPass, itemscopeMapToPass);
         const isItemScopeAndChildHasBothItempropAndItemscope = itemscopeMap && child.hasAttribute('itemprop') && child.hasAttribute('itemscope');
         if(isItemScopeAndChildHasBothItempropAndItemscope){
             const itemprops = child.getAttribute('itemprop')!.split(" ").filter(x => x);

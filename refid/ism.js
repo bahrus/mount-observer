@@ -9,7 +9,7 @@ Object.defineProperty(HTMLElement.prototype, 'ishm', {
     }
 });
 const parsedItempropmaps = new WeakMap();
-export function parse(el, obj = {}) {
+export function parse(el, obj = {}, itemscopeMap = {}) {
     const itemprop = el.getAttribute('itemprop');
     if (itemprop) {
         obj[itemprop] = stdVal(el); //TODO full logic
@@ -53,15 +53,16 @@ export function parse(el, obj = {}) {
     //el.ish = obj;
     const children = Array.from(el.children);
     const isItemScoped = el.hasAttribute('itemscope');
-    let itemscopeMap;
-    if (isItemScoped) {
-        itemscopeMap = {};
-    }
+    let itemscopeMapToPass = itemscopeMap;
     for (const child of children) {
         if (!(child instanceof HTMLElement))
             continue;
-        const objToPass = child.hasAttribute('itemscope') ? {} : obj;
-        parse(child, objToPass);
+        const childHasItemScopeAttr = child.hasAttribute('itemscope');
+        const objToPass = childHasItemScopeAttr ? {} : obj;
+        if (childHasItemScopeAttr) {
+            itemscopeMapToPass = {};
+        }
+        parse(child, objToPass, itemscopeMapToPass);
         const isItemScopeAndChildHasBothItempropAndItemscope = itemscopeMap && child.hasAttribute('itemprop') && child.hasAttribute('itemscope');
         if (isItemScopeAndChildHasBothItempropAndItemscope) {
             const itemprops = child.getAttribute('itemprop').split(" ").filter(x => x);
