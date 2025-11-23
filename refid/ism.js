@@ -1,6 +1,6 @@
 import { upShadowSearch } from '../upShadowSearch.js';
 import { stdVal } from './stdVal.js';
-Object.defineProperty(HTMLElement.prototype, 'ishm', {
+Object.defineProperty(HTMLElement.prototype, 'ism', {
     get() {
         const el = this;
         if (!el.hasAttribute('itemscope'))
