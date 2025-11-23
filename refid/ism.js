@@ -3,6 +3,8 @@ import { stdVal } from './stdVal.js';
 Object.defineProperty(HTMLElement.prototype, 'ishm', {
     get() {
         const el = this;
+        if (!el.hasAttribute('itemscope'))
+            return;
         return parse(el);
     }
 });
