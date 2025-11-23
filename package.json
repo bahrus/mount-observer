@@ -69,6 +69,10 @@
       "default": "./refid/getCount.js",
       "types": "./refid/getCount.ts"
     },
+    "./refid/ism.js":{
+      "default": "./refid/ism.js",
+      "types": "./refid/ism.ts"
+    },
     "./refid/itemprops.js": {
       "default": "./refid/itemprops.js",
       "types": "./refid/itemprops.ts"
