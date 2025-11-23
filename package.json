@@ -5,8 +5,8 @@
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "devDependencies": {
-    "@playwright/test": "1.55.1",
-    "spa-ssi": "0.0.23"
+    "@playwright/test": "1.56.1",
+    "spa-ssi": "0.0.25"
   },
   "exports": {
     ".": {
