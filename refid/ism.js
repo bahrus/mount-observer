@@ -8,7 +8,7 @@ Object.defineProperty(HTMLElement.prototype, 'ism', {
         return parse(el);
     }
 });
-const parsedItempropmaps = new WeakMap();
+const parsedItempropMaps = new WeakMap();
 export function parse(el, obj = {}, scopedLists = {}) {
     const itemprop = el.getAttribute('itemprop');
     if (itemprop) {
@@ -20,10 +20,10 @@ export function parse(el, obj = {}, scopedLists = {}) {
         const jsonEl = upShadowSearch(el, itempropmap);
         if (!jsonEl)
             throw 500;
-        if (!parsedItempropmaps.has(jsonEl)) {
-            parsedItempropmaps.set(jsonEl, JSON.parse(jsonEl.innerHTML));
+        if (!parsedItempropMaps.has(jsonEl)) {
+            parsedItempropMaps.set(jsonEl, JSON.parse(jsonEl.innerHTML));
         }
-        const parsed = /** @type {ItemPropMap} */ (parsedItempropmaps.get(jsonEl));
+        const parsed = /** @type {ItemPropMap} */ (parsedItempropMaps.get(jsonEl));
         for (const key in parsed) {
             const attr = el.getAttribute(key);
             if (attr === null)

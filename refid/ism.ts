@@ -11,7 +11,7 @@ Object.defineProperty(HTMLElement.prototype, 'ism', {
 
 type ScopedLists = {[key: string] : any[]}
 
-const parsedItempropmaps = new WeakMap<HTMLScriptElement, any>();
+const parsedItempropMaps = new WeakMap<HTMLScriptElement, any>();
 
 export function parse(el: HTMLElement, obj: any = {}, scopedLists: ScopedLists = {}){
     const itemprop = el.getAttribute('itemprop');
@@ -23,10 +23,10 @@ export function parse(el: HTMLElement, obj: any = {}, scopedLists: ScopedLists =
         //const el = document.getElementById(itempropmap);
         const jsonEl = upShadowSearch(el, itempropmap)
         if(!jsonEl) throw 500;
-        if(!parsedItempropmaps.has(jsonEl)){
-            parsedItempropmaps.set(jsonEl, JSON.parse(jsonEl.innerHTML));
+        if(!parsedItempropMaps.has(jsonEl)){
+            parsedItempropMaps.set(jsonEl, JSON.parse(jsonEl.innerHTML));
         }
-        const parsed =/** @type {ItemPropMap} */  (parsedItempropmaps.get(jsonEl));
+        const parsed =/** @type {ItemPropMap} */  (parsedItempropMaps.get(jsonEl));
         for(const key in parsed){
             const attr = el.getAttribute(key);
             if(attr === null) continue;
