@@ -55,9 +55,7 @@ export function parse(el: HTMLElement, obj: any = {}, scopedLists: ScopedLists =
         }
 
     }
-    //el.ish = obj;
     const children = Array.from(el.children);
-    //const isItemScoped = el.hasAttribute('itemscope');
     let itemscopeMapToPass = scopedLists;
     for(const child of children){ 
         if(!(child instanceof HTMLElement)) continue;
@@ -76,9 +74,6 @@ export function parse(el: HTMLElement, obj: any = {}, scopedLists: ScopedLists =
             }
         }
     }
-    // if(itemscopeMap){
-    //     el.ism = itemscopeMap;
-    // }
     return {
         obj,
         scopedLists
