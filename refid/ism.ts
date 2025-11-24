@@ -9,11 +9,11 @@ Object.defineProperty(HTMLElement.prototype, 'ism', {
     }
 });
 
-type ItemscopeMap = {[key: string] : any[]}
+type ScopedLists = {[key: string] : any[]}
 
 const parsedItempropmaps = new WeakMap<HTMLScriptElement, any>();
 
-export function parse(el: HTMLElement, obj: any = {}, itemscopeMap: ItemscopeMap = {}){
+export function parse(el: HTMLElement, obj: any = {}, scopedLists: ScopedLists = {}){
     const itemprop = el.getAttribute('itemprop');
     if(itemprop){
         obj[itemprop] = stdVal(el); //TODO full logic
@@ -57,8 +57,8 @@ export function parse(el: HTMLElement, obj: any = {}, itemscopeMap: ItemscopeMap
     }
     //el.ish = obj;
     const children = Array.from(el.children);
-    const isItemScoped = el.hasAttribute('itemscope');
-    let itemscopeMapToPass = itemscopeMap;
+    //const isItemScoped = el.hasAttribute('itemscope');
+    let itemscopeMapToPass = scopedLists;
     for(const child of children){ 
         if(!(child instanceof HTMLElement)) continue;
         const childHasItemScopeAttr = child.hasAttribute('itemscope')
@@ -67,12 +67,12 @@ export function parse(el: HTMLElement, obj: any = {}, itemscopeMap: ItemscopeMap
             itemscopeMapToPass = {};
         }
         parse(child, objToPass, itemscopeMapToPass);
-        const isItemScopeAndChildHasBothItempropAndItemscope = itemscopeMap && child.hasAttribute('itemprop') && child.hasAttribute('itemscope');
+        const isItemScopeAndChildHasBothItempropAndItemscope = scopedLists && child.hasAttribute('itemprop') && child.hasAttribute('itemscope');
         if(isItemScopeAndChildHasBothItempropAndItemscope){
             const itemprops = child.getAttribute('itemprop')!.split(" ").filter(x => x);
             for(const itemprop of itemprops){
-                if(!itemscopeMap![itemprop]) itemscopeMap![itemprop] = [];
-                itemscopeMap![itemprop].push(objToPass);
+                if(!scopedLists![itemprop]) scopedLists![itemprop] = [];
+                scopedLists![itemprop].push(objToPass);
             }
         }
     }
@@ -81,6 +81,6 @@ export function parse(el: HTMLElement, obj: any = {}, itemscopeMap: ItemscopeMap
     // }
     return {
         obj,
-        itemscopeMap
+        itemscopeMap: scopedLists
     };
 }

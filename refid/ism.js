@@ -9,7 +9,7 @@ Object.defineProperty(HTMLElement.prototype, 'ism', {
     }
 });
 const parsedItempropmaps = new WeakMap();
-export function parse(el, obj = {}, itemscopeMap = {}) {
+export function parse(el, obj = {}, scopedLists = {}) {
     const itemprop = el.getAttribute('itemprop');
     if (itemprop) {
         obj[itemprop] = stdVal(el); //TODO full logic
@@ -52,8 +52,8 @@ export function parse(el, obj = {}, itemscopeMap = {}) {
     }
     //el.ish = obj;
     const children = Array.from(el.children);
-    const isItemScoped = el.hasAttribute('itemscope');
-    let itemscopeMapToPass = itemscopeMap;
+    //const isItemScoped = el.hasAttribute('itemscope');
+    let itemscopeMapToPass = scopedLists;
     for (const child of children) {
         if (!(child instanceof HTMLElement))
             continue;
@@ -63,13 +63,13 @@ export function parse(el, obj = {}, itemscopeMap = {}) {
             itemscopeMapToPass = {};
         }
         parse(child, objToPass, itemscopeMapToPass);
-        const isItemScopeAndChildHasBothItempropAndItemscope = itemscopeMap && child.hasAttribute('itemprop') && child.hasAttribute('itemscope');
+        const isItemScopeAndChildHasBothItempropAndItemscope = scopedLists && child.hasAttribute('itemprop') && child.hasAttribute('itemscope');
         if (isItemScopeAndChildHasBothItempropAndItemscope) {
             const itemprops = child.getAttribute('itemprop').split(" ").filter(x => x);
             for (const itemprop of itemprops) {
-                if (!itemscopeMap[itemprop])
-                    itemscopeMap[itemprop] = [];
-                itemscopeMap[itemprop].push(objToPass);
+                if (!scopedLists[itemprop])
+                    scopedLists[itemprop] = [];
+                scopedLists[itemprop].push(objToPass);
             }
         }
     }
@@ -78,6 +78,6 @@ export function parse(el, obj = {}, itemscopeMap = {}) {
     // }
     return {
         obj,
-        itemscopeMap
+        itemscopeMap: scopedLists
     };
 }
