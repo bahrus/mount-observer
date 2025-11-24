@@ -78,6 +78,6 @@ export function parse(el, obj = {}, scopedLists = {}) {
     // }
     return {
         obj,
-        itemscopeMap: scopedLists
+        scopedLists
     };
 }

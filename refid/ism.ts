@@ -81,6 +81,6 @@ export function parse(el: HTMLElement, obj: any = {}, scopedLists: ScopedLists =
     // }
     return {
         obj,
-        itemscopeMap: scopedLists
+        scopedLists
     };
 }
