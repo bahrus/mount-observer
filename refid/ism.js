@@ -9,10 +9,10 @@ Object.defineProperty(HTMLElement.prototype, 'ism', {
     }
 });
 const parsedItempropMaps = new WeakMap();
-export function parse(el, obj = {}, scopedLists = {}) {
+export function parse(el, scope = {}, scopedLists = {}) {
     const itemprop = el.getAttribute('itemprop');
     if (itemprop) {
-        obj[itemprop] = stdVal(el); //TODO full logic
+        scope[itemprop] = stdVal(el); //TODO full logic
     }
     const itempropmap = el.getAttribute('itempropmap');
     if (itempropmap) {
@@ -31,20 +31,20 @@ export function parse(el, obj = {}, scopedLists = {}) {
             const rhs = parsed[key];
             switch (typeof rhs) {
                 case 'string':
-                    obj[rhs] = attr;
+                    scope[rhs] = attr;
                     break;
                 case 'object':
                     const { instanceOf, mapsTo } = rhs;
                     switch (instanceOf) {
                         case 'Number':
                         case Number:
-                            obj[mapsTo] = Number(attr);
+                            scope[mapsTo] = Number(attr);
                             break;
                         case 'Object':
                         case Object:
                         case 'Boolean':
                         case Boolean:
-                            obj[mapsTo] = JSON.parse(attr);
+                            scope[mapsTo] = JSON.parse(attr);
                             break;
                     }
             }
@@ -56,7 +56,7 @@ export function parse(el, obj = {}, scopedLists = {}) {
         if (!(child instanceof HTMLElement))
             continue;
         const childHasItemScopeAttr = child.hasAttribute('itemscope');
-        const objToPass = childHasItemScopeAttr ? {} : obj;
+        const objToPass = childHasItemScopeAttr ? {} : scope;
         if (childHasItemScopeAttr) {
             itemscopeMapToPass = {};
         }
@@ -72,7 +72,7 @@ export function parse(el, obj = {}, scopedLists = {}) {
         }
     }
     return {
-        obj,
+        scope,
         scopedLists
     };
 }
