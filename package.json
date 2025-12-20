@@ -1,6 +1,6 @@
 {
   "name": "mount-observer",
-  "version": "0.0.111",
+  "version": "0.0.112",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
@@ -109,7 +109,6 @@
       "default": "./refid/via.js",
       "types": "./refid/via.ts"
     },
-
     "./slotkin/beKindred.js": {
       "default": "./slotkin/beKindred.js",
       "types": "./slotkin/beKindred.ts"
