@@ -2,7 +2,7 @@ export function upShadowSearch(ref: Element, id: string){
     let rn = ref.getRootNode() as any;
     while(rn){
         let test = rn.getElementById(id);
-        if(test) return test;
+        if(test) return test as Element;
         if(rn.host){
             test = (<any>rn.host)[id];
             if(test instanceof HTMLElement) return test;

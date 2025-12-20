@@ -97,14 +97,19 @@
       "default": "./refid/regIsh.js",
       "types": "./refid/regIsh.ts"
     },
-    "./refid/via.js": {
-      "default": "./refid/via.js",
-      "types": "./refid/via.ts"
-    },
     "./refid/splitRefs.js": {
       "default": "./refid/splitRefs.js",
       "types": "./refid/splitRefs.ts"
     },
+    "./refid/stdVal.js": {
+      "default": "./refid/stdVal.js",
+      "types": "./refid/stdVal.ts"
+    },
+    "./refid/via.js": {
+      "default": "./refid/via.js",
+      "types": "./refid/via.ts"
+    },
+
     "./slotkin/beKindred.js": {
       "default": "./slotkin/beKindred.js",
       "types": "./slotkin/beKindred.ts"
