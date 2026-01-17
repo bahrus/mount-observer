@@ -74,24 +74,24 @@ To specify the equivalent of what the alternative proposal linked to above would
 const observer = new MountObserver({
    on:'my-element',
    import: './my-element.js',
-   do: {
-      mount: ({localName}, {modules, observer}) => {
-        if(!customElements.get(localName)) {
-            customElements.define(localName, modules[0].MyElement);
-        }
-        observer.disconnectedSignal.abort();
-      },
-   },
-   disconnectedSignal: new AbortController().signal
-});
+   do: ({localName}, {modules, observer, observeInfo}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyElement);
+      }
+      observer.disconnectedSignal.abort();
+   }
+   
+}, {disconnectedSignal: new AbortController().signal});
 observer.observe(document);
 ```
 
 The constructor argument can also be an array of objects that fit the pattern shown above.
 
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "on" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.
+
 In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
 
-If no imports are specified, it would go straight to do.* (if any such callbacks are specified), and it will also dispatch events as discussed below.
+If no imports are specified, it would go straight to do (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
 This only searches for elements matching 'my-element' outside any shadow DOM.
 
@@ -110,13 +110,11 @@ const observer = new MountObserver({
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
    ],
-   do: {
-      mount: ({localName}, {modules, observer}) => {
-        if(!customElements.get(localName)) {
-            customElements.define(localName, modules[1].MyElement);
-        }
-        observer.disconnectedSignal.abort();
+   do: ({localName}, {modules, observer}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[1].MyElement);
       }
+      observer.disconnectedSignal.abort();
    }
 });
 observer.observe(document);
