@@ -109,7 +109,7 @@ So the developer could use:
 ```JavaScript
 const observer = new MountObserver({
    import: './my-element.js',
-   whereElementMatcheses:'my-element',
+   whereElementMatches:'my-element',
    do: ({localName}, {modules, observer, observeInfo}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
