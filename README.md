@@ -83,7 +83,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-The do function will *only be called once per matching element* -- i.e. if the element stops matching the "on" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, some events discussed below, as well as inline functions can be continue to be called.
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "on" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, as well as more structured inline functions can be continue to be called repeatedly.
 
 The constructor argument can also be an array of objects that fit the pattern shown above.
 
@@ -121,7 +121,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-and perhaps expect faster binding.
+and could perhaps expect faster binding as a result of the more limited supported expressions.
 
 ##  The import key
 
