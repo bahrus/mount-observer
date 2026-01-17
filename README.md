@@ -85,9 +85,9 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-The constructor argument can also be an array of objects that fit the pattern shown above.
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "on" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, some events discussed below, as well as inline functions can be continue to be called.
 
-The do function will *only be called once per matching element* -- i.e. if the element stops matching the "on" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.
+The constructor argument can also be an array of objects that fit the pattern shown above.
 
 In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
 
@@ -122,11 +122,11 @@ observer.observe(document);
 
 Once again, the key can accept either a single import, but alternatively it can also support multiple imports (via an array).
 
-The do event won't be invoked until all the imports have been successfully completed and inserted into the modules array.
+The do function won't be invoked until all the imports have been successfully completed and inserted into the modules array.
 
 Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
 
-This proposal would also include support for JSON and HTML module imports. 
+This proposal would also include support for JSON and HTML module imports (really, all types). 
 
 ## Preemptive downloading
 
@@ -135,7 +135,7 @@ There are two significant steps to imports, each of which imposes a cost:
 1.  Downloading the resource.
 2.  Loading the resource into memory.
 
-What if we want to download the resource ahead of time, but only load into memory when needed?
+What if we want to *download* the resource ahead of time, but only load into memory when needed?
 
 The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
 
@@ -146,10 +146,8 @@ const observer = new MountObserver({
    on: 'my-element',
    loadingEagerness: 'eager',
    import: './my-element.js',
-   do:{
-      mount: (matchingElement, {modules}) => customElements.define(modules[0].MyElement)
-   }
-})
+   do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
+});
 ```
 
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
@@ -265,6 +263,8 @@ const observer = new MountObserver({
 ```
 
 ... would work.
+
+Note that in this example, "do" no longer points to a function.  When it did (above), we mentioned this would only be called once per element.  **Now it will be called every the conditions flip from not all satisfied to satisfied"**.
 
 This would allow developers to create "stylesheet" like capabilities.
 
