@@ -274,7 +274,7 @@ We will come back to some important [additional features](#creating-frameworks-t
 
 ## Binding from a distance
 
-It is important to note that "on" is a css query with no restrictions.  So something like:
+It is important to note that "select" is a css query with no restrictions.  So something like:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -283,6 +283,9 @@ const observer = new MountObserver({
       mount: (matchingElement) => {
          //attach some behavior or set some property value or add an event listener, etc.
          matchingElement.textContent = 'hello';
+      },
+      dismount: (matchingElement) => {
+         matchingElement.textContent = 'bye';
       }
    }
 })
