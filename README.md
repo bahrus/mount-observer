@@ -70,7 +70,7 @@ To specify the equivalent of what the alternative proposal linked to above would
 
 ```JavaScript
 const observer = new MountObserver({
-   on:'my-element',
+   select:'my-element',
    import: './my-element.js',
    do: ({localName}, {modules, observer, observeInfo}) => {
       if(!customElements.get(localName)) {
@@ -83,11 +83,11 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-The do function will *only be called once per matching element* -- i.e. if the element stops matching the "on" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, as well as more structured inline functions can be continue to be called repeatedly.
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, as well as more structured inline functions also as discussed below, will continue to be called repeatedly.
 
 The constructor argument can also be an array of objects that fit the pattern shown above.
 
-In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "on" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
+In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "select" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
 
 If no imports are specified, it would go straight to do (if any such callbacks are specified), and it will also dispatch events as discussed below.
 
@@ -121,7 +121,9 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-and could perhaps expect faster binding as a result of the more limited supported expressions.
+and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*"
+
+This polyfill in fact only supports this latter option ("whreElementMatches"), and leaves "select" for such a time as when a selector observer is available in the platform.
 
 ##  The import key
 
@@ -129,7 +131,7 @@ This proposal has been amended to support multiple imports, including of differe
 
 ```JavaScript
 const observer = new MountObserver({
-   on:'my-element',
+   select:'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
@@ -163,11 +165,11 @@ What if we want to *download* the resource ahead of time, but only load into mem
 
 The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
 
-So for this we add option:
+So for this we add loadingEagerness:
 
 ```JavaScript
 const observer = new MountObserver({
-   on: 'my-element',
+   select: 'my-element',
    loadingEagerness: 'eager',
    import: './my-element.js',
    do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
@@ -195,7 +197,7 @@ Following an approach similar to the [speculation api](https://developer.chrome.
    observer.disconnectedSignal.abort();
 }">
 {
-   "on":"my-element",
+   "select":"my-element",
    "import": [
       ["./my-element-small.css", {type: "css"}],
       "./my-element.js",
@@ -226,7 +228,7 @@ The syntax below is just one, "spit-balling" way this could be done, as an examp
 ```html
 <script type="mountobserver">
 {
-   "on":"my-element",
+   "select":"my-element",
    "import": [
       ["./my-element-small.css", {type: "css"}],
       "./my-element.js",
@@ -253,7 +255,7 @@ Inside a shadow root, we can plop a script element, also with type "mountobserve
 #shadowRoot
 <script id=myMountObserver type=mountobserver>
 {
-   "on":"your-element"
+   "select":"your-element"
 }
 </script>
 ```
@@ -276,7 +278,7 @@ It is important to note that "on" is a css query with no restrictions.  So somet
 
 ```JavaScript
 const observer = new MountObserver({
-   on:'div > p + p ~ span[class$="name"]',
+   select:'div > p + p ~ span[class$="name"]',
    do:{
       mount: (matchingElement) => {
          //attach some behavior or set some property value or add an event listener, etc.
@@ -301,7 +303,7 @@ However, we could make the loading even more lazy by specifying intersection opt
 
 ```JavaScript
 const observer = new MountObserver({
-   on: 'my-element',
+   select: 'my-element',
    whereElementIntersectsWith:{
       rootMargin: "0px",
       threshold: 1.0,
@@ -316,13 +318,13 @@ Unlike traditional CSS @import, CSS Modules don't support specifying different i
 
 ```JavaScript
 const observer = new MountObserver({
-   on: 'div > p + p ~ span[class$="name"]',
+   select: 'div > p + p ~ span[class$="name"]',
    whereMediaMatches: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
    whereContainerHas: '[itemprop=isActive][value="true"]',
    whereInstanceOf: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
    whereLangIn: ['en-GB'],
-   whereConnection:{
+   whereConnectiselect:{
       effectiveTypeIn: ["slow-2g"],
    },
    import: ['./my-element-small.css', {type: 'css'}],
@@ -438,9 +440,9 @@ So the dismount event should provide a "checklist" of all the conditions, and th
 ```JavaScript
 mediaMatches: true,
 containerMatches: true,
-satisfiesCustomCondition: true,
+satisfiesCustomConditiselect: true,
 whereLangIn: ['en-GB'],
-whereConnection:{
+whereConnectiselect:{
    effectiveTypeMatches: true
 },
 isIntersecting: false,
@@ -481,7 +483,7 @@ For the polyfill, we need to support it as follows:
 ```JavaScript
 const oElement = document.getElementById('myTest');
 const observer = new MountObserver({
-   on:'[itemprop]',
+   select:'[itemprop]',
    outside: '[itemscope]'
    do: {
       mount: ({localName}, {modules, observer}) => {
@@ -553,7 +555,7 @@ Let's focus on the first scenario.  It doesn't make sense to use the word "where
 ```JavaScript
 import {MountObserver} from 'mount-observer/MountObserver.js';
 const mo = new MountObserver({
-   on: '*',
+   select: '*',
    observedAttrsWhenMounted: ['lang', 'contenteditable']
 });
 
@@ -635,7 +637,7 @@ Using the same expression structure as above, we would end up with this avalanch
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
-   on: '*',
+   select: '*',
    whereAttr:{
       isIn: [
          'data-my-enhancement',
@@ -671,7 +673,7 @@ This seems like a much better approach, and is supported by this proposal:
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
-   on: '*',
+   select: '*',
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: 'my-enhancement',
@@ -692,7 +694,7 @@ MountObserver provides a breakdown of the matching attribute when encountered:
 <script type=module>
    import {MountObserver} from '../MountObserver.js';
    const mo = new MountObserver({
-      on: '*',
+      select: '*',
       whereAttr:{
          hasRootIn: ['data', 'enh', 'data-enh'],
          hasBase: 'my-enhancement',
@@ -749,7 +751,7 @@ An example of this in the real world can be found with [HTMX](https://htmx.org/d
 
 ```html
 <button hx-post="/example"
-        hx-on:htmx:config-request="event.detail.parameters.example = 'Hello Scripting!'">
+        hx-select:htmx:config-request="event.detail.parameters.example = 'Hello Scripting!'">
     Post Me!
 </button>
 ```
@@ -758,7 +760,7 @@ To support such syntax, specify the delimiters thusly:
 
 ```JavaScript
 const mo = new MountObserver({
-   on: '*',
+   select: '*',
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: ['-', 'my-enhancement'],
@@ -780,7 +782,7 @@ Thus the mountObserver does provide that information to the consumer as well:
 
 ```JavaScript
 const mo = new MountObserver({
-   on: '*',
+   select: '*',
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: ['-', 'my-enhancement'],
@@ -1037,7 +1039,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
 <template id=source-template rel=conditional-stream>
 
    <template mount='{
-      "on": ":not([defer-loading])",
+      "select": ":not([defer-loading])",
       "loadingEagerness": "eager",
       "whereMediaMatches": "(min-width: 700px)",
       "whereLangIn": ["en-GB"],
@@ -1046,7 +1048,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    </template>
 
    <template mount='{
-      "on": ":not([defer-loading])",
+      "select": ":not([defer-loading])",
       "loadingEagerness": "lazy",
       "whereMediaMatches": "(max-width: 700px)",
       "whereLangIn": ["fr"],
