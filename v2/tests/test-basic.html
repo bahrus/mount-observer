@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MountObserver v2 - Basic Test</title>
+</head>
+<body>
+    <h1>MountObserver v2 - Basic Test</h1>
+    
+    <div id="container">
+        <my-element id="existing">Existing Element</my-element>
+    </div>
+
+    <button id="addBtn">Add my-element</button>
+    <button id="removeBtn">Remove my-element</button>
+
+    <div id="log"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        const log = document.getElementById('log');
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.appendChild(p);
+        }
+
+        // Create observer
+        const observer = new MountObserver({
+            whereElementMatches: 'my-element',
+            do: (element, { modules, observer }) => {
+                addLog(`Do callback: ${element.id || 'unnamed'} mounted`);
+                element.style.border = '2px solid green';
+                element.style.padding = '10px';
+                element.style.margin = '5px';
+            }
+        });
+
+        // Listen to events
+        observer.addEventListener('mount', (e) => {
+            addLog(`Mount event: ${e.detail.matchingElement.id || 'unnamed'}`);
+        });
+
+        observer.addEventListener('dismount', (e) => {
+            addLog(`Dismount event: ${e.detail.matchingElement.id || 'unnamed'}`);
+        });
+
+        observer.addEventListener('disconnect', (e) => {
+            addLog(`Disconnect event: ${e.detail.matchingElement.id || 'unnamed'}`);
+        });
+
+        // Start observing
+        observer.observe(document.body);
+        addLog('Observer started');
+
+        // Add button handler
+        let counter = 1;
+        document.getElementById('addBtn').addEventListener('click', () => {
+            const el = document.createElement('my-element');
+            el.id = `dynamic-${counter++}`;
+            el.textContent = `Dynamic Element ${counter - 1}`;
+            document.getElementById('container').appendChild(el);
+            addLog(`Added element: ${el.id}`);
+        });
+
+        // Remove button handler
+        document.getElementById('removeBtn').addEventListener('click', () => {
+            const elements = document.querySelectorAll('my-element');
+            if (elements.length > 0) {
+                const el = elements[elements.length - 1];
+                addLog(`Removing element: ${el.id}`);
+                el.remove();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -106,6 +106,8 @@ If the developer has a simple query in mind that needs no such nuance, I'm think
 
 So the developer could use:
 
+## Polyfill Supported Scenario I
+
 ```JavaScript
 const observer = new MountObserver({
    import: './my-element.js',
