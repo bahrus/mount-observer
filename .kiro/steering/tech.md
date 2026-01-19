@@ -76,6 +76,41 @@ async #loadImports(): Promise<void> {
 - Optional API surface areas
 - Heavy dependencies used conditionally
 
+## Memory Management
+
+**WeakRef for DOM Nodes**: Store references to DOM nodes (especially observed root nodes) as `WeakRef<Node>` to prevent memory leaks when nodes are removed from the document.
+
+**Why this matters**:
+- If a MountObserver instance outlives the observed DOM subtree, a strong reference would prevent garbage collection
+- Shadow roots and detached fragments are particularly vulnerable
+- WeakRef allows the DOM to be GC'd even if the observer is still referenced
+
+**Pattern**:
+```typescript
+class MountObserver {
+    #rootNode: WeakRef<Node> | undefined;
+    
+    observe(rootNode: Node): void {
+        this.#rootNode = new WeakRef(rootNode);
+        // Use rootNode directly here while it's in scope
+    }
+    
+    someMethod(): void {
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Node was garbage collected, handle gracefully
+            return;
+        }
+        // Use rootNode
+    }
+}
+```
+
+**When to apply**:
+- Storing references to observed DOM nodes
+- Caching DOM elements that might be removed
+- Any long-lived object holding DOM references
+
 ## Package Exports
 
 The package uses conditional exports in package.json, providing both default (JS) and types (TS) for each module. Main entry point is `MountObserver.js`.

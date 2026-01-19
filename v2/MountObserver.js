@@ -31,7 +31,7 @@ export class MountObserver extends EventTarget {
         if (this.#rootNode) {
             throw new Error('Already observing');
         }
-        this.#rootNode = rootNode;
+        this.#rootNode = new WeakRef(rootNode);
         // Process existing elements
         this.#processNode(rootNode);
         // Set up mutation observer
@@ -104,11 +104,16 @@ export class MountObserver extends EventTarget {
         }
         this.#processedElements.add(element);
         this.#mountedElements.add(element);
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Root node was garbage collected
+            return;
+        }
         const context = {
             modules: this.#modules,
             observer: this,
             observeInfo: {
-                rootNode: this.#rootNode
+                rootNode
             }
         };
         // Call do callback
@@ -133,11 +138,16 @@ export class MountObserver extends EventTarget {
             return;
         }
         this.#mountedElements.delete(element);
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Root node was garbage collected
+            return;
+        }
         const context = {
             modules: this.#modules,
             observer: this,
             observeInfo: {
-                rootNode: this.#rootNode
+                rootNode
             }
         };
         // Call dismount callback
@@ -153,7 +163,7 @@ export class MountObserver extends EventTarget {
         // Check if element is being moved within the same root
         // If it's truly disconnected, dispatch disconnect event
         setTimeout(() => {
-            if (!this.#rootNode?.contains(element)) {
+            if (!rootNode.contains(element)) {
                 if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.disconnect) {
                     this.#init.do.disconnect(element, context);
                 }

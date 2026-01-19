@@ -17,7 +17,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #mountedElements = new WeakSet<Element>();
     #processedElements = new WeakSet<Element>();
     #mutationObserver: MutationObserver | undefined;
-    #rootNode: Node | undefined;
+    #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
 
     constructor(init: MountInit, options: MountObserverOptions = {}) {
@@ -47,7 +47,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             throw new Error('Already observing');
         }
 
-        this.#rootNode = rootNode;
+        this.#rootNode = new WeakRef(rootNode);
 
         // Process existing elements
         this.#processNode(rootNode);
@@ -136,11 +136,17 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#processedElements.add(element);
         this.#mountedElements.add(element);
 
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Root node was garbage collected
+            return;
+        }
+
         const context: MountContext = {
             modules: this.#modules,
             observer: this,
             observeInfo: {
-                rootNode: this.#rootNode!
+                rootNode
             }
         };
 
@@ -169,11 +175,17 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         this.#mountedElements.delete(element);
 
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Root node was garbage collected
+            return;
+        }
+
         const context: MountContext = {
             modules: this.#modules,
             observer: this,
             observeInfo: {
-                rootNode: this.#rootNode!
+                rootNode
             }
         };
 
@@ -192,7 +204,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Check if element is being moved within the same root
         // If it's truly disconnected, dispatch disconnect event
         setTimeout(() => {
-            if (!this.#rootNode?.contains(element)) {
+            if (!rootNode.contains(element)) {
                 if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.disconnect) {
                     this.#init.do.disconnect(element, context);
                 }
