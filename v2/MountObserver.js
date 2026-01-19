@@ -68,55 +68,13 @@ export class MountObserver extends EventTarget {
         if (this.#importsLoaded || !this.#init.import) {
             return;
         }
-        const imports = Array.isArray(this.#init.import)
-            ? this.#init.import
-            : [this.#init.import];
-        const promises = imports.map(imp => this.#loadSingleImport(imp));
-        this.#modules = await Promise.all(promises);
+        // Dynamically load the import utilities only when needed
+        const { loadImports } = await import('./loadImports.js');
+        this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
         this.dispatchEvent(new CustomEvent(loadEventName, {
             detail: { modules: this.#modules }
         }));
-    }
-    async #loadSingleImport(imp) {
-        let url;
-        let type = 'js';
-        if (typeof imp === 'string') {
-            url = imp;
-        }
-        else if (Array.isArray(imp)) {
-            url = imp[0];
-            type = imp[1]?.type || 'js';
-        }
-        else {
-            url = imp.url;
-            type = imp.type || 'js';
-        }
-        switch (type) {
-            case 'css':
-                return this.#loadCSS(url);
-            case 'json':
-                return this.#loadJSON(url);
-            case 'html':
-                return this.#loadHTML(url);
-            default:
-                return import(url);
-        }
-    }
-    async #loadCSS(url) {
-        const response = await fetch(url);
-        const text = await response.text();
-        const sheet = new CSSStyleSheet();
-        await sheet.replace(text);
-        return sheet;
-    }
-    async #loadJSON(url) {
-        const response = await fetch(url);
-        return response.json();
-    }
-    async #loadHTML(url) {
-        const response = await fetch(url);
-        return response.text();
     }
     #processNode(node) {
         if (node.nodeType !== Node.ELEMENT_NODE) {

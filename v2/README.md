@@ -76,7 +76,8 @@ These features from the full spec are not in v2:
 
 - `types.ts` - TypeScript type definitions
 - `MountObserver.ts` - Main implementation
-- `types.js`, `MountObserver.js` - Compiled JavaScript
+- `loadImports.ts` - Import loading utilities (loaded dynamically when needed)
+- `types.js`, `MountObserver.js`, `loadImports.js` - Compiled JavaScript
 - `index.ts`, `index.js` - Main entry point
 - `tests/test-basic.html` - Basic functionality test
 - `tests/test-import.html` - Import/lazy loading test
@@ -134,3 +135,10 @@ observer.observe(document);
 3. **Type-safe**: Full TypeScript support
 4. **Zero dependencies**: No runtime dependencies
 5. **Event-driven**: EventTarget-based for extensibility
+6. **Code-split**: Conditional features loaded dynamically to minimize bundle size
+
+### Code Splitting Strategy
+
+The v2 implementation follows a strict code-splitting principle: any code block >6 lines that only executes based on optional configuration is extracted to a separate module and loaded dynamically.
+
+**Example**: The `loadImports.ts` module (handling CSS, JSON, HTML imports) is only loaded when `MountInit.import` is specified. Users who don't use the import feature pay zero bytes for that functionality.
