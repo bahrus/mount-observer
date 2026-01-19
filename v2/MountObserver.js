@@ -84,11 +84,9 @@ export class MountObserver extends EventTarget {
         if (this.#matchesSelector(element)) {
             this.#handleMatch(element);
         }
-        // Process children
-        element.querySelectorAll('*').forEach(child => {
-            if (this.#matchesSelector(child)) {
-                this.#handleMatch(child);
-            }
+        // Process children using native selector engine
+        element.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+            this.#handleMatch(child);
         });
     }
     #matchesSelector(element) {
