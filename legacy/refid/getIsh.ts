@@ -31,7 +31,7 @@ export async function getIsh(scope: Element | ShadowRoot | Document | Node, name
 }
 
 async function watch(scope: Element | ShadowRoot | Document | Node, name: string){
-    const {waitForEvent} = await import('../waitForEvent.js');
+    const {waitForEvent} = await import('../legacy/waitForEvent.js');
     await waitForEvent(document, guid);
     return await getIsh(scope, name);
 }

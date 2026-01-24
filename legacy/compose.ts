@@ -1,4 +1,4 @@
-import { ILoadEvent, loadEventName, RefType } from './ts-refs/mount-observer/types';
+import { ILoadEvent, loadEventName, RefType } from '../ts-refs/mount-observer/types';
 import { MountObserver, inclTemplQry, wasItemReffed } from './MountObserver.js';
 //import {prep} from './slotkin/affine.js';
 
@@ -23,7 +23,7 @@ export async function compose(
     const templ = await self.findByID(refName, fragment, refType);
     if (!(templ instanceof HTMLTemplateElement)) throw 404;
     if (refType === '#') {
-        (await import('./slotkin/wrap.js')).wrap(templ, refName);
+        (await import('../slotkin/wrap.js')).wrap(templ, refName);
     }
 
     const clone = templ.content.cloneNode(true) as DocumentFragment;
@@ -62,7 +62,7 @@ export async function compose(
 
     }
     if (el.content.childElementCount > 0) {
-        const { affine } = await import('./slotkin/affine.js');
+        const { affine } = await import('../slotkin/affine.js');
         const children = Array.from(el.content.children);
         for (const child of children) {
             //TODO support clean up

@@ -50,7 +50,7 @@ export interface IDismountEvent extends Event {
     matchingElement: Element;
 }
 
-export const mountEventName = 'mount';
-export const dismountEventName = 'dismount';
-export const disconnectEventName = 'disconnect';
-export const loadEventName = 'load';
+export type mountEventName = 'mount';
+export type dismountEventName = 'dismount';
+export type disconnectEventName = 'disconnect';
+export type loadEventName = 'load';

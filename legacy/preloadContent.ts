@@ -1,4 +1,4 @@
-import {TemplateWithRemoteContent} from './ts-refs/mount-observer/types.js';
+import {TemplateWithRemoteContent} from '../ts-refs/mount-observer/types.js';
 import {upShadowSearch} from './upShadowSearch.js';
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
 

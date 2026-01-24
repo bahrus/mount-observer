@@ -1,10 +1,10 @@
-import { BindishOptions, HasIsh, Ishcycle } from './ts-refs/mount-observer/types.js';
+import { BindishOptions, HasIsh, Ishcycle } from '../ts-refs/mount-observer/types.js';
 
 export {waitForEvent} from './waitForEvent.js';
 import {ObsAttr} from './ObsAttr.js';
-import {splitRefs} from './refid/splitRefs.js';
-import {getIsh} from './refid/getIsh.js';
-import {arr} from './refid/secretKeys.js';
+import {splitRefs} from '../refid/splitRefs.js';
+import {getIsh} from '../refid/getIsh.js';
+import {arr} from '../refid/secretKeys.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish implements EventListenerObject {
     queue: Array<any> = [];
@@ -89,7 +89,7 @@ export class Newish implements EventListenerObject {
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
         if('<inScope>' in (<any>this.#ce) && enhancedElement.hasAttribute('itemref')){
-            await import('./refid/via.js');
+            await import('../refid/via.js');
             const itemref = (<any>enhancedElement).via.itemref
             const refs = itemref.children as Element[];
             for(const ref of refs){

@@ -19,7 +19,7 @@ export async function compose(self, el, level, refName, refType) {
     if (!(templ instanceof HTMLTemplateElement))
         throw 404;
     if (refType === '#') {
-        (await import('./slotkin/wrap.js')).wrap(templ, refName);
+        (await import('../slotkin/wrap.js')).wrap(templ, refName);
     }
     const clone = templ.content.cloneNode(true);
     const dataLd = el.dataset.ld;
@@ -56,7 +56,7 @@ export async function compose(self, el, level, refName, refType) {
         }
     }
     if (el.content.childElementCount > 0) {
-        const { affine } = await import('./slotkin/affine.js');
+        const { affine } = await import('../slotkin/affine.js');
         const children = Array.from(el.content.children);
         for (const child of children) {
             //TODO support clean up

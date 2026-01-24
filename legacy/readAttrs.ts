@@ -1,4 +1,4 @@
-import { AttrChangeInfo, AttrParts, MountInit } from "./ts-refs/mount-observer/types";
+import { AttrChangeInfo, AttrParts, MountInit } from "../ts-refs/mount-observer/types";
 
 export function readAttrs(
     match: Element, mountInit: MountInit, branchIndexes?: Set<number>,

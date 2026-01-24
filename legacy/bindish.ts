@@ -1,4 +1,4 @@
-import { Assigner, BindishOptions } from './ts-refs/mount-observer/types.js';
+import { Assigner, BindishOptions } from '../ts-refs/mount-observer/types.js';
 
 export const itemscopeQry = '[itemscope]:not([itemscope=""])';
 export async function bindish(

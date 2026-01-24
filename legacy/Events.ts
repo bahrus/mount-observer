@@ -6,7 +6,7 @@ import {MountInit, IMountObserver, AddMutationEventListener,
     MountObserverOptions,
     Assigner,
     RefType
-} from './ts-refs/mount-observer/types';
+} from '../ts-refs/mount-observer/types';
 //TODO:  make thes external
 // https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
 /**

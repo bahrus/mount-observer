@@ -1,7 +1,7 @@
 export { waitForEvent } from './waitForEvent.js';
 import { ObsAttr } from './ObsAttr.js';
-import { getIsh } from './refid/getIsh.js';
-import { arr } from './refid/secretKeys.js';
+import { getIsh } from '../refid/getIsh.js';
+import { arr } from '../refid/secretKeys.js';
 export const attached = Symbol.for('xyyspnstnU+CDrNVa0VnxA');
 export class Newish {
     queue = [];
@@ -78,7 +78,7 @@ export class Newish {
         //TODO:  watch for already attached itemrefs to be removed and remove them from the set
         // and call outOfScopeCallback on them
         if ('<inScope>' in this.#ce && enhancedElement.hasAttribute('itemref')) {
-            await import('./refid/via.js');
+            await import('../refid/via.js');
             const itemref = enhancedElement.via.itemref;
             const refs = itemref.children;
             for (const ref of refs) {

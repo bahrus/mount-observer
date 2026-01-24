@@ -1,5 +1,5 @@
 import {splitRefs} from './splitRefs.js';
-import {MountObserver} from '../MountObserver.js';
+import {MountObserver} from '../legacy/MountObserver.js';
 import {camelToKebab} from './camelToKebab.js';
 const proxies = new WeakMap<Element, ProxyConstructor>();
 const refLookup = new WeakMap<Element, RefLookup>();
