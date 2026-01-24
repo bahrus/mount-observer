@@ -20,6 +20,10 @@ test.describe('MountObserver - assignGingerly', () => {
         const title = await existingInput.getAttribute('title');
         expect(title).toBe('This is a test');
         
+        // Check dataset attribute
+        const dataTest = await existingInput.getAttribute('data-test');
+        expect(dataTest).toBe('data-test value');
+        
         // Check log
         const log = page.locator('#log');
         await expect(log).toContainText('Observer started');
@@ -47,6 +51,10 @@ test.describe('MountObserver - assignGingerly', () => {
         const title = await dynamicInput.getAttribute('title');
         expect(title).toBe('This is a test');
         
+        // Check dataset attribute
+        const dataTest = await dynamicInput.getAttribute('data-test');
+        expect(dataTest).toBe('data-test value');
+        
         // Check log
         const log = page.locator('#log');
         await expect(log).toContainText('Added input: dynamic-input-1');
@@ -73,6 +81,9 @@ test.describe('MountObserver - assignGingerly', () => {
             
             const title = await input.getAttribute('title');
             expect(title).toBe('This is a test');
+            
+            const dataTest = await input.getAttribute('data-test');
+            expect(dataTest).toBe('data-test value');
         }
         
         // Check log
