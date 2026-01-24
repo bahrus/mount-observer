@@ -114,6 +114,11 @@ export class MountObserver extends EventTarget {
                 rootNode
             }
         };
+        // Apply assignGingerly if specified
+        if (this.#init.assignGingerly) {
+            const { assignGingerly } = await import('assign-gingerly/index.js');
+            assignGingerly(element, this.#init.assignGingerly);
+        }
         // Call do callback
         if (this.#init.do) {
             if (typeof this.#init.do === 'function') {

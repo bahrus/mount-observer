@@ -5,6 +5,7 @@ export interface MountInit {
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: DoCallback | DoCallbacks;
     loadingEagerness?: 'eager' | 'lazy';
+    assignGingerly?: Record<string, any>;
 }
 
 export interface ImportSpec {

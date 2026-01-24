@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssignGingerly Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>AssignGingerly Test</h1>
+    
+    <div id="container">
+        <input type="text" placeholder="Initial input">
+    </div>
+    
+    <button id="addInput">Add Input</button>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        // Create observer that will disable all input elements
+        const observer = new MountObserver({
+            whereElementMatches: 'input',
+            assignGingerly: {
+                disabled: true,
+                value: 'This input is disabled'
+            }
+        });
+        
+        observer.observe(document);
+        
+        // Add button to dynamically add inputs
+        document.getElementById('addInput').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Dynamically added input';
+            document.getElementById('container').appendChild(input);
+        });
+        
+        console.log('Observer started. All inputs should be disabled.');
+    </script>
+</body>
+</html>
