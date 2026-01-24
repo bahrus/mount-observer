@@ -16,4 +16,4 @@ export {
     dismountEventName,
     disconnectEventName,
     loadEventName
-} from './types.js';
+} from './constants.js';
