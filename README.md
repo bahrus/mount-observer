@@ -299,6 +299,74 @@ Note that in this example, "do" no longer points to a function.  When it did (ab
 
 This would allow developers to create "stylesheet" like capabilities.
 
+## Applying properties with assignGingerly
+
+For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows you to declaratively specify properties to apply to elements without writing custom mount callbacks:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'input',
+   assignGingerly: {
+      disabled: true,
+      value: 'Default value',
+      title: 'This is a tooltip'
+   }
+});
+observer.observe(document);
+```
+
+This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
+
+### Nested properties with dataset
+
+The `assignGingerly` library supports nested property assignment using the `?.` notation. This is particularly useful for setting data attributes:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'button',
+   assignGingerly: {
+      disabled: false,
+      '?.dataset.action': 'submit',
+      '?.dataset.trackingId': '12345'
+   }
+});
+observer.observe(document);
+```
+
+The `?.` prefix tells assignGingerly to create nested properties if they don't exist. In this example, `?.dataset.action` will set the `data-action` attribute on the button elements.
+
+### Combining with imports
+
+You can combine `assignGingerly` with lazy loading to both import resources and set properties:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'my-element',
+   import: './my-element.js',
+   assignGingerly: {
+      theme: 'dark',
+      '?.dataset.initialized': 'true'
+   },
+   do: ({localName}, {modules}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyElement);
+      }
+   }
+});
+observer.observe(document);
+```
+
+The `assignGingerly` properties are applied after imports are loaded but before the `do` callback is invoked, ensuring that elements are properly configured before any custom initialization logic runs.
+
+### Performance benefits
+
+Using `assignGingerly` provides several benefits:
+
+1. **Lazy loading**: The assign-gingerly library is only loaded when needed (when the `assignGingerly` property is specified)
+2. **Bulk operations**: Properties are applied efficiently to all matching elements
+3. **Declarative**: No need to write custom mount callbacks for simple property assignments
+4. **Consistent**: The same property values are applied uniformly across all matching elements
+
 
 ##  Extra lazy loading
 
