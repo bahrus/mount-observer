@@ -4,9 +4,12 @@
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
+  "dependencies": {
+    "assign-gingerly": "0.0.2"
+  },
   "devDependencies": {
-    "@playwright/test": "1.57.0",
-    "spa-ssi": "0.0.25"
+    "@playwright/test": "1.58.0",
+    "spa-ssi": "0.0.26"
   },
   "exports": {
     ".": {
