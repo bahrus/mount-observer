@@ -27,6 +27,10 @@
             }
         });
         
+        observer.addEventListener('mount', (e) => {
+            console.log('Mount event:', e.detail.matchingElement);
+        });
+        
         observer.observe(document);
         
         // Add button to dynamically add inputs
@@ -38,6 +42,13 @@
         });
         
         console.log('Observer started. All inputs should be disabled.');
+        
+        // Check initial input after a delay
+        setTimeout(() => {
+            const initialInput = document.querySelector('input[placeholder="Initial input"]');
+            console.log('Initial input disabled?', initialInput?.disabled);
+            console.log('Initial input value:', initialInput?.value);
+        }, 100);
     </script>
 </body>
 </html>

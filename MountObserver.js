@@ -77,17 +77,21 @@ export class MountObserver extends EventTarget {
         }));
     }
     #processNode(node) {
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-        }
-        const element = node;
-        if (this.#matchesSelector(element)) {
-            this.#handleMatch(element);
+        // If it's an element node, check if it matches
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node;
+            if (this.#matchesSelector(element)) {
+                this.#handleMatch(element);
+            }
         }
         // Process children using native selector engine
-        element.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
-            this.#handleMatch(child);
-        });
+        // This works for both Document and Element nodes
+        if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_NODE) {
+            const root = node;
+            root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                this.#handleMatch(child);
+            });
+        }
     }
     #matchesSelector(element) {
         return element.matches(this.#init.whereElementMatches);

@@ -103,20 +103,23 @@ export class MountObserver extends EventTarget implements IMountObserver {
     }
 
     #processNode(node: Node): void {
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-        }
-
-        const element = node as Element;
-        
-        if (this.#matchesSelector(element)) {
-            this.#handleMatch(element);
+        // If it's an element node, check if it matches
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            
+            if (this.#matchesSelector(element)) {
+                this.#handleMatch(element);
+            }
         }
 
         // Process children using native selector engine
-        element.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
-            this.#handleMatch(child);
-        });
+        // This works for both Document and Element nodes
+        if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_NODE) {
+            const root = node as Element | Document;
+            root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                this.#handleMatch(child);
+            });
+        }
     }
 
     #matchesSelector(element: Element): boolean {
