@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"sourceMap": false,
+		"experimentalDecorators": false,
+		"newLine": "LF",
+		"strict": true,
+		"skipLibCheck": true
+	},
+	"files": [
+		"MountObserver.ts",
+	],
+	"exclude":[
+		"node_modules"
+	]
+
+}

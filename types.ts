@@ -49,8 +49,3 @@ export interface IMountEvent extends Event {
 export interface IDismountEvent extends Event {
     matchingElement: Element;
 }
-
-export type mountEventName = 'mount';
-export type dismountEventName = 'dismount';
-export type disconnectEventName = 'disconnect';
-export type loadEventName = 'load';

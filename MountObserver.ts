@@ -2,12 +2,14 @@ import {
     MountInit,
     MountObserverOptions,
     IMountObserver,
-    MountContext,
+    MountContext
+} from './types.js';
+import {
     mountEventName,
     dismountEventName,
     disconnectEventName,
     loadEventName
-} from './types.js';
+} from './constants.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     #init: MountInit;

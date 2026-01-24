@@ -1,4 +1,4 @@
-import { mountEventName, dismountEventName, disconnectEventName, loadEventName } from './types.js';
+import { mountEventName, dismountEventName, disconnectEventName, loadEventName } from './constants.js';
 export class MountObserver extends EventTarget {
     #init;
     #options;

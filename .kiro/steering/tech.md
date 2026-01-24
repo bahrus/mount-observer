@@ -51,6 +51,40 @@ npm run update
 
 TypeScript files are compiled to JavaScript using `tsc`. Both `.ts` and `.js` files are committed to the repository. The JavaScript files are the actual runtime artifacts.
 
+## Type Definition Files
+
+**Type-Only Files**: Files containing only TypeScript type definitions should use the `.d.ts` extension and must not generate a `.js` file when compiled.
+
+**Key Rules**:
+- Type definition files must end with `.d.ts` (e.g., `types.d.ts`)
+- `.d.ts` files should contain only types, interfaces, and type aliases
+- Never include runtime values (constants, functions, classes) in `.d.ts` files
+- Constants and runtime values belong in separate `.ts` files that compile to `.js`
+
+**Pattern**:
+```typescript
+// types.d.ts - Type definitions only
+export interface MountInit {
+    whereElementMatches: string;
+}
+export type mountEventName = 'mount';
+
+// constants.ts - Runtime values
+export const mountEventName = 'mount';
+export const dismountEventName = 'dismount';
+```
+
+**Why this matters**:
+- Prevents unnecessary `.js` files from being generated for type-only code
+- Keeps type definitions separate from runtime code
+- Follows TypeScript best practices for library distribution
+- Reduces bundle size by excluding type-only code from runtime
+
+**When to apply**:
+- Creating files that only contain TypeScript types, interfaces, or type aliases
+- Separating type definitions from implementation
+- Defining public API types for library consumers
+
 ## Code Splitting Principle
 
 **Conditional Code Loading**: If a significant block of code (>6 lines) only executes based on optional configuration settings, extract it to a separate module and load it dynamically using `import()`.
@@ -114,3 +148,53 @@ class MountObserver {
 ## Package Exports
 
 The package uses conditional exports in package.json, providing both default (JS) and types (TS) for each module. Main entry point is `MountObserver.js`.
+
+## Bare Specifier Imports & Import Maps
+
+**Import Pattern for Node Dependencies**: This package uses bare specifiers with explicit `.js` extensions when importing from node_modules dependencies.
+
+**Example**:
+```typescript
+import { assignGingerly } from 'assign-gingerly/index.js';
+```
+
+**Key Rules**:
+- Always include the `.js` extension in bare specifier imports
+- Use the full path including the file (e.g., `/index.js`)
+- This works natively in browsers via import maps
+
+**Import Map Setup**: The project uses server-side includes (SSI) to inject import maps into HTML files during development.
+
+**Pattern**:
+```html
+<!-- In demo/test HTML files -->
+<!-- #include virtual="/imports.html" -->
+```
+
+**What this does**:
+- The `spa-ssi` development server (configured in `package.json` scripts) processes SSI directives
+- The `imports.html` file at the project root contains the import map
+- The import map maps bare specifiers to `/node_modules/` paths
+- This enables native browser support for bare imports without bundling
+
+**Import Map Structure** (`imports.html`):
+```html
+<script type=importmap>
+{
+    "imports": {
+        "assign-gingerly/": "/node_modules/assign-gingerly/"
+    }
+}
+</script>
+```
+
+**Benefits**:
+- No build step required for development
+- Native ES modules work directly in the browser
+- Dependencies resolve naturally via import maps
+- Matches production CDN patterns (e.g., unpkg, esm.sh)
+
+**When to apply**:
+- All imports from node_modules dependencies
+- Demo and test HTML files need the SSI include directive
+- Import map must be updated when adding new dependencies
