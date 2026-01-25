@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhereAttr Performance Test</title>
+</head>
+<body>
+    <h1>WhereAttr Performance Test</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        // Current implementation using hasAttribute
+        function matchesWithHasAttribute(element, attributes) {
+            for (const attr of attributes) {
+                if (element.hasAttribute(attr)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Alternative implementation using matches()
+        function matchesWithCSSSelector(element, cssSelector) {
+            return element.matches(cssSelector);
+        }
+
+        // Build CSS selector from attribute list with proper escaping
+        function buildCSSSelector(attributes) {
+            return attributes.map(attr => `[${CSS.escape(attr)}]`).join(',');
+        }
+
+        // Create test elements
+        const testContainer = document.createElement('div');
+        document.body.appendChild(testContainer);
+
+        // Test scenario 1: Simple case (5 attributes)
+        const simpleAttrs = [
+            'my-custom',
+            'my-custom-hello',
+            'my-custom-hello--how-are-you',
+            'my-custom--goodbye',
+            'my-custom--goodbye---last-words'
+        ];
+        const simpleCSSSelector = buildCSSSelector(simpleAttrs);
+
+        // Test scenario 2: Complex case (20 attributes)
+        const complexAttrs = [];
+        for (let i = 0; i < 20; i++) {
+            complexAttrs.push(`attr-${i}`);
+            complexAttrs.push(`attr-${i}-branch-a`);
+            complexAttrs.push(`attr-${i}-branch-b`);
+        }
+        const complexCSSSelector = buildCSSSelector(complexAttrs);
+
+        // Create test elements
+        const elements = [];
+        for (let i = 0; i < 1000; i++) {
+            const el = document.createElement('div');
+            // Mix of matching and non-matching elements
+            if (i % 3 === 0) {
+                el.setAttribute('my-custom--goodbye---last-words', 'test');
+            } else if (i % 3 === 1) {
+                el.setAttribute('attr-10-branch-b', 'test');
+            } else {
+                el.setAttribute('non-matching-attr', 'test');
+            }
+            testContainer.appendChild(el);
+            elements.push(el);
+        }
+
+        // Performance test function
+        function runTest(name, testFn, iterations = 10000) {
+            const start = performance.now();
+            for (let i = 0; i < iterations; i++) {
+                testFn();
+            }
+            const end = performance.now();
+            return end - start;
+        }
+
+        // Run tests
+        const results = [];
+
+        // Test 1: Simple case with hasAttribute
+        const simpleHasAttrTime = runTest('Simple hasAttribute', () => {
+            elements.forEach(el => matchesWithHasAttribute(el, simpleAttrs));
+        });
+        results.push(`Simple case - hasAttribute: ${simpleHasAttrTime.toFixed(2)}ms`);
+
+        // Test 2: Simple case with matches()
+        const simpleMatchesTime = runTest('Simple matches()', () => {
+            elements.forEach(el => matchesWithCSSSelector(el, simpleCSSSelector));
+        });
+        results.push(`Simple case - matches(): ${simpleMatchesTime.toFixed(2)}ms`);
+
+        // Test 3: Complex case with hasAttribute
+        const complexHasAttrTime = runTest('Complex hasAttribute', () => {
+            elements.forEach(el => matchesWithHasAttribute(el, complexAttrs));
+        });
+        results.push(`Complex case - hasAttribute: ${complexHasAttrTime.toFixed(2)}ms`);
+
+        // Test 4: Complex case with matches()
+        const complexMatchesTime = runTest('Complex matches()', () => {
+            elements.forEach(el => matchesWithCSSSelector(el, complexCSSSelector));
+        });
+        results.push(`Complex case - matches(): ${complexMatchesTime.toFixed(2)}ms`);
+
+        // Test 5: CSS selector construction overhead
+        const constructionTime = runTest('CSS selector construction', () => {
+            buildCSSSelector(complexAttrs);
+        }, 100000);
+        results.push(`CSS selector construction (100k iterations): ${constructionTime.toFixed(2)}ms`);
+
+        // Display results
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+            <h2>Results (lower is better)</h2>
+            <pre>${results.join('\n')}</pre>
+            
+            <h3>Analysis</h3>
+            <p><strong>Simple case speedup:</strong> ${(simpleHasAttrTime / simpleMatchesTime).toFixed(2)}x ${simpleMatchesTime < simpleHasAttrTime ? '(matches() faster)' : '(hasAttribute faster)'}</p>
+            <p><strong>Complex case speedup:</strong> ${(complexHasAttrTime / complexMatchesTime).toFixed(2)}x ${complexMatchesTime < complexHasAttrTime ? '(matches() faster)' : '(hasAttribute faster)'}</p>
+            
+            <h3>CSS.escape() Examples</h3>
+            <pre>${[
+                'my-custom:hello → ' + CSS.escape('my-custom:hello'),
+                'my-custom::nested → ' + CSS.escape('my-custom::nested'),
+                'my-custom.branch → ' + CSS.escape('my-custom.branch'),
+                'my-custom[test] → ' + CSS.escape('my-custom[test]'),
+                'my-custom#id → ' + CSS.escape('my-custom#id')
+            ].join('\n')}</pre>
+            
+            <h3>Recommendation</h3>
+            <p id="recommendation"></p>
+        `;
+
+        // Provide recommendation
+        const recommendation = document.getElementById('recommendation');
+        if (simpleMatchesTime < simpleHasAttrTime && complexMatchesTime < complexHasAttrTime) {
+            recommendation.textContent = '✅ matches() is consistently faster. Consider refactoring to use CSS selectors.';
+            recommendation.style.color = 'green';
+        } else if (simpleHasAttrTime < simpleMatchesTime && complexHasAttrTime < complexMatchesTime) {
+            recommendation.textContent = '✅ hasAttribute() is consistently faster. Keep current implementation.';
+            recommendation.style.color = 'green';
+        } else {
+            recommendation.textContent = '⚠️ Results are mixed. Performance may depend on use case. Consider caching strategy.';
+            recommendation.style.color = 'orange';
+        }
+
+        // Cleanup
+        testContainer.remove();
+    </script>
+</body>
+</html>

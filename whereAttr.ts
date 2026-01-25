@@ -1,9 +1,29 @@
 import { WhereAttr } from './types.js';
 
 /**
- * Checks if an element matches the whereAttr configuration
+ * Cache for compiled CSS selectors to avoid rebuilding them on every check
+ */
+const selectorCache = new WeakMap<WhereAttr, string>();
+
+/**
+ * Checks if an element matches the whereAttr configuration using CSS selector matching
  */
 export function matchesWhereAttr(element: Element, whereAttr: WhereAttr): boolean {
+    // Get or build the CSS selector for this whereAttr config
+    let selector = selectorCache.get(whereAttr);
+    if (!selector) {
+        selector = buildWhereAttrSelector(element, whereAttr);
+        selectorCache.set(whereAttr, selector);
+    }
+
+    // Use native CSS matching - optimized in Chrome/Blink
+    return element.matches(selector);
+}
+
+/**
+ * Builds a CSS selector string from the whereAttr configuration
+ */
+function buildWhereAttrSelector(element: Element, whereAttr: WhereAttr): string {
     const isCustomElement = element.tagName.toLowerCase().includes('-');
     const rootPrefixes = isCustomElement 
         ? (whereAttr.hasCERootIn || [])
@@ -12,171 +32,150 @@ export function matchesWhereAttr(element: Element, whereAttr: WhereAttr): boolea
     // Parse base attribute for custom delimiter
     const { delimiter: baseDelimiter, name: baseName } = parseDelimiter(whereAttr.hasBase);
 
-    // Try each valid prefix to see if element matches
+    const selectors: string[] = [];
+
+    // Build selectors for each valid prefix
     for (const prefix of rootPrefixes) {
         const baseAttrName = buildAttributeName(prefix, baseName, baseDelimiter);
-        const hasBaseAttr = element.hasAttribute(baseAttrName);
+        const escapedBaseAttr = escapeAttributeName(baseAttrName);
 
         // If no branches specified, just having the base attribute is enough
         if (!whereAttr.hasBranchIn || whereAttr.hasBranchIn.length === 0) {
-            if (hasBaseAttr) {
-                return true;
-            }
+            selectors.push(`[${escapedBaseAttr}]`);
             continue;
         }
 
-        // Check if any branch combination matches
-        const branchMatches = whereAttr.hasBranchIn.some(branch => {
+        // Build selectors for each branch combination
+        for (const branch of whereAttr.hasBranchIn) {
             if (branch === '') {
                 // Empty string means base attribute alone is valid (no branch attributes)
-                if (hasBaseAttr && !hasAnyBranchAttributes(element, prefix, baseName, baseDelimiter, whereAttr.hasBranchIn!)) {
-                    return true;
-                }
-                return false;
+                // This requires base attr AND none of the branch attrs
+                // For CSS, we can only check for base attr presence
+                // The "no branch attrs" check needs to be done separately
+                selectors.push(`[${escapedBaseAttr}]`);
+                continue;
             }
 
             if (typeof branch === 'object') {
-                // Check if any key in the branch object matches
-                // Note: base attribute is optional when branch attributes are present
-                return Object.entries(branch).some(([key, subBranches]) => {
-                    return checkBranch(element, prefix, baseName, baseDelimiter, key, subBranches);
-                });
-            }
-
-            return false;
-        });
-
-        if (branchMatches) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * Checks if element has any branch attributes defined in hasBranchIn
- */
-function hasAnyBranchAttributes(
-    element: Element,
-    prefix: string,
-    baseName: string,
-    baseDelimiter: string,
-    hasBranchIn: any[]
-): boolean {
-    const baseAttrName = buildAttributeName(prefix, baseName, baseDelimiter);
-    
-    // Check all branch definitions to see if element has any of those attributes
-    for (const branch of hasBranchIn) {
-        if (branch === '') continue;
-        
-        if (typeof branch === 'object') {
-            for (const [key] of Object.entries(branch)) {
-                const { delimiter: branchDelimiter, name: branchName } = parseDelimiter(key);
-                const branchAttrName = baseAttrName + branchDelimiter + branchName;
-                if (element.hasAttribute(branchAttrName)) {
-                    return true;
+                // Build selectors for each branch path
+                for (const [key, subBranches] of Object.entries(branch)) {
+                    const branchSelectors = buildBranchSelectors(baseAttrName, key, subBranches);
+                    selectors.push(...branchSelectors);
                 }
             }
         }
     }
-    
-    return false;
+
+    // Join all selectors with comma (OR logic)
+    return selectors.join(',');
 }
 
 /**
- * Recursively checks if a branch path exists on the element.
- * Returns true if ANY valid path in the branch tree exists on the element.
+ * Builds CSS selectors for a branch and its sub-branches
  */
-function checkBranch(
-    element: Element,
-    prefix: string,
-    baseName: string,
-    baseDelimiter: string,
+function buildBranchSelectors(
+    baseAttrName: string,
     branchKey: string,
     subBranches: any[]
-): boolean {
+): string[] {
     const { delimiter: branchDelimiter, name: branchName } = parseDelimiter(branchKey);
-    const baseAttrName = buildAttributeName(prefix, baseName, baseDelimiter);
     const branchAttrName = baseAttrName + branchDelimiter + branchName;
+    const escapedBranchAttr = escapeAttributeName(branchAttrName);
 
-    const hasBranchAttr = element.hasAttribute(branchAttrName);
+    const selectors: string[] = [];
 
-    // If no sub-branches specified, just check if this branch attribute exists
+    // If no sub-branches specified, just the branch attribute itself
     if (!subBranches || subBranches.length === 0) {
-        return hasBranchAttr;
+        selectors.push(`[${escapedBranchAttr}]`);
+        return selectors;
     }
 
-    // Check sub-branches - they form an OR condition
-    const subBranchMatches = subBranches.some(subBranch => {
+    // Build selectors for each sub-branch - they form an OR condition
+    for (const subBranch of subBranches) {
         if (subBranch === '') {
             // Empty string means this branch level alone is valid
-            return hasBranchAttr;
+            selectors.push(`[${escapedBranchAttr}]`);
+            continue;
         }
 
         if (typeof subBranch === 'string') {
-            // Simple string sub-branch - check if the full path exists
+            // Simple string sub-branch - build the full path
             const { delimiter: subDelimiter, name: subName } = parseDelimiter(subBranch);
             const subAttrName = branchAttrName + subDelimiter + subName;
-            return element.hasAttribute(subAttrName);
+            const escapedSubAttr = escapeAttributeName(subAttrName);
+            selectors.push(`[${escapedSubAttr}]`);
+            continue;
         }
 
         if (typeof subBranch === 'object') {
-            // Nested object sub-branch - recursively check deeper paths
-            return Object.entries(subBranch).some(([key, nestedBranches]) => {
-                return checkNestedBranch(element, branchAttrName, key, nestedBranches as any[]);
-            });
+            // Nested object sub-branch - recursively build deeper paths
+            for (const [key, nestedBranches] of Object.entries(subBranch)) {
+                const nestedSelectors = buildNestedBranchSelectors(branchAttrName, key, nestedBranches as any[]);
+                selectors.push(...nestedSelectors);
+            }
         }
+    }
 
-        return false;
-    });
-
-    return subBranchMatches;
+    return selectors;
 }
 
 /**
- * Checks nested branches recursively.
- * Returns true if ANY valid path in the nested branch tree exists on the element.
+ * Builds CSS selectors for nested branches recursively
  */
-function checkNestedBranch(
-    element: Element,
+function buildNestedBranchSelectors(
     parentAttrName: string,
     branchKey: string,
     subBranches: any[]
-): boolean {
+): string[] {
     const { delimiter, name } = parseDelimiter(branchKey);
     const attrName = parentAttrName + delimiter + name;
+    const escapedAttr = escapeAttributeName(attrName);
 
-    const hasAttr = element.hasAttribute(attrName);
+    const selectors: string[] = [];
 
-    // If no sub-branches specified, just check if this attribute exists
+    // If no sub-branches specified, just this attribute
     if (!subBranches || subBranches.length === 0) {
-        return hasAttr;
+        selectors.push(`[${escapedAttr}]`);
+        return selectors;
     }
 
-    // Check sub-branches - they form an OR condition
-    return subBranches.some(subBranch => {
+    // Build selectors for each sub-branch - they form an OR condition
+    for (const subBranch of subBranches) {
         if (subBranch === '') {
             // Empty string means this level alone is valid
-            return hasAttr;
+            selectors.push(`[${escapedAttr}]`);
+            continue;
         }
 
         if (typeof subBranch === 'string') {
-            // Simple string sub-branch - check if the full path exists
+            // Simple string sub-branch - build the full path
             const { delimiter: subDelimiter, name: subName } = parseDelimiter(subBranch);
             const subAttrName = attrName + subDelimiter + subName;
-            return element.hasAttribute(subAttrName);
+            const escapedSubAttr = escapeAttributeName(subAttrName);
+            selectors.push(`[${escapedSubAttr}]`);
+            continue;
         }
 
         if (typeof subBranch === 'object') {
-            // Nested object - recursively check deeper paths
-            return Object.entries(subBranch).some(([key, nestedBranches]) => {
-                return checkNestedBranch(element, attrName, key, nestedBranches as any[]);
-            });
+            // Nested object - recursively build deeper paths
+            for (const [key, nestedBranches] of Object.entries(subBranch)) {
+                const nestedSelectors = buildNestedBranchSelectors(attrName, key, nestedBranches as any[]);
+                selectors.push(...nestedSelectors);
+            }
         }
+    }
 
-        return false;
-    });
+    return selectors;
+}
+
+/**
+ * Escapes special characters in attribute names for CSS selectors
+ * Uses CSS.escape() API which handles all special characters including :
+ */
+function escapeAttributeName(attrName: string): string {
+    // CSS.escape() is available in all modern browsers
+    // It properly escapes special characters like : . [ ] etc.
+    return CSS.escape(attrName);
 }
 
 /**

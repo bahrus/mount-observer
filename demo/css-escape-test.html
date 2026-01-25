@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Escape Test for Colon in Attributes</title>
+</head>
+<body>
+    <h1>CSS Escape Test for Colon in Attributes</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        // Test CSS escaping for special characters in attribute names
+        const testContainer = document.createElement('div');
+        document.body.appendChild(testContainer);
+
+        // Create test elements with various special characters
+        const tests = [
+            { attr: 'my-custom:hello', escaped: 'my-custom\\:hello', char: ':' },
+            { attr: 'my-custom::hello', escaped: 'my-custom\\:\\:hello', char: '::' },
+            { attr: 'my-custom.hello', escaped: 'my-custom\\.hello', char: '.' },
+            { attr: 'my-custom[hello]', escaped: 'my-custom\\[hello\\]', char: '[]' },
+        ];
+
+        const results = [];
+
+        tests.forEach(({ attr, escaped, char }) => {
+            // Create element with the attribute
+            const el = document.createElement('div');
+            el.setAttribute(attr, 'test-value');
+            testContainer.appendChild(el);
+
+            // Test 1: Direct attribute selector (unescaped) - should fail
+            let matchesUnescaped = false;
+            try {
+                matchesUnescaped = el.matches(`[${attr}]`);
+            } catch (e) {
+                results.push(`❌ Unescaped [${attr}]: Syntax error (${e.message})`);
+            }
+            if (matchesUnescaped) {
+                results.push(`✅ Unescaped [${attr}]: Matched (no escape needed!)`);
+            }
+
+            // Test 2: Escaped attribute selector - should work
+            let matchesEscaped = false;
+            try {
+                matchesEscaped = el.matches(`[${escaped}]`);
+                if (matchesEscaped) {
+                    results.push(`✅ Escaped [${escaped}]: Matched correctly`);
+                } else {
+                    results.push(`❌ Escaped [${escaped}]: Did not match`);
+                }
+            } catch (e) {
+                results.push(`❌ Escaped [${escaped}]: Syntax error (${e.message})`);
+            }
+
+            // Test 3: CSS.escape() API
+            try {
+                const cssEscaped = CSS.escape(attr);
+                const matchesCSSEscape = el.matches(`[${cssEscaped}]`);
+                if (matchesCSSEscape) {
+                    results.push(`✅ CSS.escape("${attr}") = "${cssEscaped}": Matched correctly`);
+                } else {
+                    results.push(`❌ CSS.escape("${attr}") = "${cssEscaped}": Did not match`);
+                }
+            } catch (e) {
+                results.push(`❌ CSS.escape("${attr}"): Error (${e.message})`);
+            }
+
+            results.push(''); // Blank line between tests
+        });
+
+        // Display results
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `<pre>${results.join('\n')}</pre>`;
+
+        // Cleanup
+        testContainer.remove();
+    </script>
+</body>
+</html>
