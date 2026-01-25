@@ -85,6 +85,48 @@ export const dismountEventName = 'dismount';
 - Separating type definitions from implementation
 - Defining public API types for library consumers
 
+## Custom Event Classes
+
+**Event Classes over CustomEvent**: When dispatching events, define custom classes that extend the Event class rather than using CustomEvent with detail objects.
+
+**Key Rules**:
+- Create dedicated event classes that extend Event
+- Define event properties as public class members
+- Include a static eventName property for the event type string
+- Export corresponding interfaces for type safety
+
+**Pattern**:
+```typescript
+// Events.ts - Event class definitions
+export class MountEvent extends Event implements IMountEvent {
+    static eventName: mountEventName = 'mount';
+    
+    constructor(public matchingElement: Element, public modules: any[]) {
+        super(MountEvent.eventName);
+    }
+}
+
+// Usage in code
+this.dispatchEvent(new MountEvent(element, modules));
+
+// Listening with proper typing
+observer.addEventListener('mount', (e: MountEvent) => {
+    console.log(e.matchingElement, e.modules);
+});
+```
+
+**Why this matters**:
+- CustomEvent is a legacy approach that uses untyped detail objects
+- Custom event classes provide better type safety and IDE autocomplete
+- Properties are directly accessible without going through event.detail
+- Follows modern JavaScript/TypeScript best practices
+- Makes the API more discoverable and self-documenting
+
+**When to apply**:
+- All event dispatching in the library
+- When defining public event APIs
+- When you need strongly-typed event data
+
 ## Code Splitting Principle
 
 **Conditional Code Loading**: If a significant block of code (>6 lines) only executes based on optional configuration settings, extract it to a separate module and load it dynamically using `import()`.

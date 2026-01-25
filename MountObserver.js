@@ -1,4 +1,4 @@
-import { mountEventName, dismountEventName, disconnectEventName, loadEventName } from './constants.js';
+import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent } from './Events.js';
 export class MountObserver extends EventTarget {
     #init;
     #options;
@@ -72,9 +72,7 @@ export class MountObserver extends EventTarget {
         const { loadImports } = await import('./loadImports.js');
         this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
-        this.dispatchEvent(new CustomEvent(loadEventName, {
-            detail: { modules: this.#modules }
-        }));
+        this.dispatchEvent(new LoadEvent(this.#modules));
     }
     #processNode(node) {
         // If it's an element node, check if it matches
@@ -133,12 +131,7 @@ export class MountObserver extends EventTarget {
             }
         }
         // Dispatch mount event
-        this.dispatchEvent(new CustomEvent(mountEventName, {
-            detail: {
-                matchingElement: element,
-                modules: this.#modules
-            }
-        }));
+        this.dispatchEvent(new MountEvent(element, this.#modules));
     }
     #handleRemoval(element) {
         if (!this.#mountedElements.has(element)) {
@@ -162,11 +155,7 @@ export class MountObserver extends EventTarget {
             this.#init.do.dismount(element, context);
         }
         // Dispatch dismount event
-        this.dispatchEvent(new CustomEvent(dismountEventName, {
-            detail: {
-                matchingElement: element
-            }
-        }));
+        this.dispatchEvent(new DismountEvent(element));
         // Check if element is being moved within the same root
         // If it's truly disconnected, dispatch disconnect event
         setTimeout(() => {
@@ -174,11 +163,7 @@ export class MountObserver extends EventTarget {
                 if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.disconnect) {
                     this.#init.do.disconnect(element, context);
                 }
-                this.dispatchEvent(new CustomEvent(disconnectEventName, {
-                    detail: {
-                        matchingElement: element
-                    }
-                }));
+                this.dispatchEvent(new DisconnectEvent(element));
             }
         }, 0);
     }

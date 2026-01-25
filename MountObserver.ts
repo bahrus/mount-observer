@@ -10,6 +10,12 @@ import {
     disconnectEventName,
     loadEventName
 } from './constants.js';
+import {
+    MountEvent,
+    DismountEvent,
+    DisconnectEvent,
+    LoadEvent
+} from './Events.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     #init: MountInit;
@@ -97,9 +103,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
 
-        this.dispatchEvent(new CustomEvent(loadEventName, {
-            detail: { modules: this.#modules }
-        }));
+        this.dispatchEvent(new LoadEvent(this.#modules));
     }
 
     #processNode(node: Node): void {
@@ -169,12 +173,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Dispatch mount event
-        this.dispatchEvent(new CustomEvent(mountEventName, {
-            detail: {
-                matchingElement: element,
-                modules: this.#modules
-            }
-        }));
+        this.dispatchEvent(new MountEvent(element, this.#modules));
     }
 
     #handleRemoval(element: Element): void {
@@ -204,11 +203,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Dispatch dismount event
-        this.dispatchEvent(new CustomEvent(dismountEventName, {
-            detail: {
-                matchingElement: element
-            }
-        }));
+        this.dispatchEvent(new DismountEvent(element));
 
         // Check if element is being moved within the same root
         // If it's truly disconnected, dispatch disconnect event
@@ -218,11 +213,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
                     this.#init.do.disconnect(element, context);
                 }
 
-                this.dispatchEvent(new CustomEvent(disconnectEventName, {
-                    detail: {
-                        matchingElement: element
-                    }
-                }));
+                this.dispatchEvent(new DisconnectEvent(element));
             }
         }, 0);
     }

@@ -746,7 +746,6 @@ This seems like a much better approach, and is supported by this proposal:
 ```JavaScript
 import {MountObserver} from '../MountObserver.js';
 const mo = new MountObserver({
-   select: '*',
    whereAttr:{
       hasRootIn: ['data', 'enh', 'data-enh'],
       hasBase: 'my-enhancement',
