@@ -1,6 +1,6 @@
-Please add to the steering document that each of the "where*" conditions in the mountInit object forms an and condition with other where* conditions if present.
+Please add to the steering document(s) that each of the "where*" conditions in the mountInit object forms an "and" condition with other where* conditions if present.
 
-So we already have *whereElementMatches
+So we already have *whereElementMatches.
 
 On top of that, we want to add the following and condition:
 
@@ -35,6 +35,8 @@ The meaning of "hasBuiltInRootIn" vs "hasCERootIn" is this:
 ```
 
 will all mount.
+
+Within the whereAttr, each valid combination of the has* values form a valid "or" conition.  The empty string '' indicates that the additional branch is not required for a valid match.
 
 However, when it comes to custom elements (CE)'s:
 
