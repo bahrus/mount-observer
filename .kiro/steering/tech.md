@@ -58,6 +58,8 @@ tsc
 
 Do NOT use `tsc` with individual file arguments or custom flags. The `tsconfig.json` contains the correct compiler settings for the entire project.
 
+**Legacy Folder**: The `legacy/` folder contains old code that is not maintained. Do not expect files in the `legacy/` folder to compile or pass tests. Focus only on the root-level code and tests.
+
 ## Type Definition Files
 
 **Type-Only Files**: Files containing only TypeScript type definitions should use the `.d.ts` extension and must not generate a `.js` file when compiled.
