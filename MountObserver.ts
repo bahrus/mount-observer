@@ -16,7 +16,6 @@ import {
     DisconnectEvent,
     LoadEvent
 } from './Events.js';
-import { matchesWhereAttr } from './whereAttr.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     #init: MountInit;
@@ -62,14 +61,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#processNode(rootNode);
 
         // Set up mutation observer
-        this.#mutationObserver = new MutationObserver((mutations) => {
+        this.#mutationObserver = new MutationObserver(async (mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
+                    for (const node of mutation.addedNodes) {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            this.#processNode(node);
+                            await this.#processNode(node);
                         }
-                    });
+                    }
                     mutation.removedNodes.forEach(node => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             this.#handleRemoval(node as Element);
@@ -107,13 +106,13 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.dispatchEvent(new LoadEvent(this.#modules));
     }
 
-    #processNode(node: Node): void {
+    async #processNode(node: Node): Promise<void> {
         // If it's an element node, check if it matches
         if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
             
-            if (this.#matchesSelector(element)) {
-                this.#handleMatch(element);
+            if (await this.#matchesSelector(element)) {
+                await this.#handleMatch(element);
             }
         }
 
@@ -125,21 +124,23 @@ export class MountObserver extends EventTarget implements IMountObserver {
             // since we can't use querySelectorAll for complex attribute matching
             if (this.#init.whereAttr) {
                 // Get all elements matching the CSS selector first
-                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
-                    if (this.#matchesSelector(child)) {
-                        this.#handleMatch(child);
+                const elements = Array.from(root.querySelectorAll(this.#init.whereElementMatches));
+                for (const child of elements) {
+                    if (await this.#matchesSelector(child)) {
+                        await this.#handleMatch(child);
                     }
-                });
+                }
             } else {
                 // Optimize: use querySelectorAll directly when no whereAttr
-                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
-                    this.#handleMatch(child);
-                });
+                const elements = Array.from(root.querySelectorAll(this.#init.whereElementMatches));
+                for (const child of elements) {
+                    await this.#handleMatch(child);
+                }
             }
         }
     }
 
-    #matchesSelector(element: Element): boolean {
+    async #matchesSelector(element: Element): Promise<boolean> {
         // Check whereElementMatches condition
         const matchesElement = element.matches(this.#init.whereElementMatches);
         
@@ -147,6 +148,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (!this.#init.whereAttr) {
             return matchesElement;
         }
+        
+        // Dynamically load whereAttr utilities only when needed
+        const { matchesWhereAttr } = await import('./whereAttr.js');
         
         // Both conditions must be true (AND logic)
         return matchesElement && matchesWhereAttr(element, this.#init.whereAttr);
