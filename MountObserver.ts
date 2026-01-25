@@ -16,6 +16,7 @@ import {
     DisconnectEvent,
     LoadEvent
 } from './Events.js';
+import { matchesWhereAttr } from './whereAttr.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     #init: MountInit;
@@ -116,18 +117,39 @@ export class MountObserver extends EventTarget implements IMountObserver {
             }
         }
 
-        // Process children using native selector engine
-        // This works for both Document and Element nodes
+        // Process children
         if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_NODE) {
             const root = node as Element | Document;
-            root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
-                this.#handleMatch(child);
-            });
+            
+            // If whereAttr is specified, we need to check all elements
+            // since we can't use querySelectorAll for complex attribute matching
+            if (this.#init.whereAttr) {
+                // Get all elements matching the CSS selector first
+                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                    if (this.#matchesSelector(child)) {
+                        this.#handleMatch(child);
+                    }
+                });
+            } else {
+                // Optimize: use querySelectorAll directly when no whereAttr
+                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                    this.#handleMatch(child);
+                });
+            }
         }
     }
 
     #matchesSelector(element: Element): boolean {
-        return element.matches(this.#init.whereElementMatches);
+        // Check whereElementMatches condition
+        const matchesElement = element.matches(this.#init.whereElementMatches);
+        
+        // If whereAttr is not specified, only check whereElementMatches
+        if (!this.#init.whereAttr) {
+            return matchesElement;
+        }
+        
+        // Both conditions must be true (AND logic)
+        return matchesElement && matchesWhereAttr(element, this.#init.whereAttr);
     }
 
     async #handleMatch(element: Element): Promise<void> {

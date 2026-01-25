@@ -1,28 +1,36 @@
-export class MountEvent extends CustomEvent {
+// Event classes for MountObserver
+import { mountEventName, dismountEventName, disconnectEventName, loadEventName } from './constants.js';
+export class MountEvent extends Event {
+    matchingElement;
+    modules;
+    static eventName = mountEventName;
     constructor(matchingElement, modules) {
-        super('mount', {
-            detail: { matchingElement, modules }
-        });
+        super(MountEvent.eventName);
+        this.matchingElement = matchingElement;
+        this.modules = modules;
     }
 }
-export class DismountEvent extends CustomEvent {
+export class DismountEvent extends Event {
+    matchingElement;
+    static eventName = dismountEventName;
     constructor(matchingElement) {
-        super('dismount', {
-            detail: { matchingElement }
-        });
+        super(DismountEvent.eventName);
+        this.matchingElement = matchingElement;
     }
 }
-export class DisconnectEvent extends CustomEvent {
+export class DisconnectEvent extends Event {
+    matchingElement;
+    static eventName = disconnectEventName;
     constructor(matchingElement) {
-        super('disconnect', {
-            detail: { matchingElement }
-        });
+        super(DisconnectEvent.eventName);
+        this.matchingElement = matchingElement;
     }
 }
-export class LoadEvent extends CustomEvent {
+export class LoadEvent extends Event {
+    modules;
+    static eventName = loadEventName;
     constructor(modules) {
-        super('load', {
-            detail: { modules }
-        });
+        super(LoadEvent.eventName);
+        this.modules = modules;
     }
 }

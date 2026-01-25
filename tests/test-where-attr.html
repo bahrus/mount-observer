@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhereAttr Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>WhereAttr Test</h1>
+    
+    <!-- Test 1: Built-in elements with various prefixes -->
+    <section id="test1">
+        <h2>Test 1: Built-in Elements</h2>
+        <input id="input1" my-greetings="hello">
+        <input id="input2" data-my-greetings="hello">
+        <input id="input3" enh-my-greetings="hello">
+        <input id="input4" data-enh-my-greetings="hello">
+        <input id="input5" other-attr="hello">
+    </section>
+
+    <!-- Test 2: Custom elements with prefixes -->
+    <section id="test2">
+        <h2>Test 2: Custom Elements</h2>
+        <my-element id="ce1" my-greetings="hello"></my-element>
+        <my-element id="ce2" data-my-greetings="hello"></my-element>
+        <my-element id="ce3" enh-my-greetings="hello"></my-element>
+        <my-element id="ce4" data-enh-my-greetings="hello"></my-element>
+    </section>
+
+    <!-- Test 3: Branch attributes -->
+    <section id="test3">
+        <h2>Test 3: Branch Attributes</h2>
+        <input id="branch1" my-greetings="base only">
+        <input id="branch2" my-greetings="with hello" my-greetings-hello="hi">
+        <input id="branch3" my-greetings="with nested" my-greetings-hello-how-are-you="good">
+        <input id="branch4" my-greetings="goodbye" my-greetings-goodbye="bye">
+        <input id="branch5" my-greetings="nested goodbye" my-greetings-goodbye-last-words="farewell">
+    </section>
+
+    <!-- Test 4: Custom delimiters -->
+    <section id="test4">
+        <h2>Test 4: Custom Delimiters</h2>
+        <input id="delim1" my-custom="base">
+        <input id="delim2" my-custom:hello="hi">
+        <input id="delim3" my-custom:hello--how-are-you="good">
+        <input id="delim4" my-custom--goodbye="bye">
+        <input id="delim5" my-custom--goodbye---last-words="farewell">
+    </section>
+
+    <!-- Test 5: AND condition with whereElementMatches -->
+    <section id="test5">
+        <h2>Test 5: AND Condition</h2>
+        <input id="and1" class="target" my-greetings="should match">
+        <button id="and2" class="target" my-greetings="should match">
+        <div id="and3" class="target" my-greetings="should NOT match">
+        <input id="and4" my-greetings="should NOT match (no class)">
+    </section>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        // Store results for test assertions
+        window.testResults = {
+            test1: [],
+            test2: [],
+            test3: [],
+            test4: [],
+            test5: []
+        };
+
+        // Test 1: Built-in elements with various prefixes
+        const mo1 = new MountObserver({
+            whereElementMatches: 'input',
+            whereAttr: {
+                hasBuiltInRootIn: ['', 'data', 'enh', 'data-enh'],
+                hasCERootIn: ['data', 'enh', 'data-enh'],
+                hasBase: 'my-greetings'
+            }
+        });
+
+        mo1.addEventListener('mount', (e) => {
+            window.testResults.test1.push(e.matchingElement.id);
+        });
+
+        mo1.observe(document.getElementById('test1'));
+
+        // Test 2: Custom elements (should NOT match unprefixed)
+        const mo2 = new MountObserver({
+            whereElementMatches: 'my-element',
+            whereAttr: {
+                hasBuiltInRootIn: ['', 'data', 'enh', 'data-enh'],
+                hasCERootIn: ['data', 'enh', 'data-enh'],
+                hasBase: 'my-greetings'
+            }
+        });
+
+        mo2.addEventListener('mount', (e) => {
+            window.testResults.test2.push(e.matchingElement.id);
+        });
+
+        mo2.observe(document.getElementById('test2'));
+
+        // Test 3: Branch attributes
+        const mo3 = new MountObserver({
+            whereElementMatches: 'input',
+            whereAttr: {
+                hasBuiltInRootIn: [''],
+                hasBase: 'my-greetings',
+                hasBranchIn: [
+                    '',
+                    {
+                        'hello': ['', 'how-are-you']
+                    },
+                    {
+                        'goodbye': ['', 'last-words']
+                    }
+                ]
+            }
+        });
+
+        mo3.addEventListener('mount', (e) => {
+            window.testResults.test3.push(e.matchingElement.id);
+        });
+
+        mo3.observe(document.getElementById('test3'));
+
+        // Test 4: Custom delimiters
+        const mo4 = new MountObserver({
+            whereElementMatches: 'input',
+            whereAttr: {
+                hasBuiltInRootIn: [''],
+                hasBase: '[_]my-custom',
+                hasBranchIn: [
+                    '',
+                    {
+                        '[:]hello': ['', '[--]how-are-you']
+                    },
+                    {
+                        '[--]goodbye': ['', '[---]last-words']
+                    }
+                ]
+            }
+        });
+
+        mo4.addEventListener('mount', (e) => {
+            window.testResults.test4.push(e.matchingElement.id);
+        });
+
+        mo4.observe(document.getElementById('test4'));
+
+        // Test 5: AND condition
+        const mo5 = new MountObserver({
+            whereElementMatches: 'input.target, button.target',
+            whereAttr: {
+                hasBuiltInRootIn: [''],
+                hasBase: 'my-greetings'
+            }
+        });
+
+        mo5.addEventListener('mount', (e) => {
+            window.testResults.test5.push(e.matchingElement.id);
+        });
+
+        mo5.observe(document.getElementById('test5'));
+
+        // Signal test completion
+        setTimeout(() => {
+            window.testComplete = true;
+        }, 100);
+    </script>
+</body>
+</html>

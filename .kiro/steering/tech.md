@@ -51,6 +51,13 @@ npm run update
 
 TypeScript files are compiled to JavaScript using `tsc`. Both `.ts` and `.js` files are committed to the repository. The JavaScript files are the actual runtime artifacts.
 
+**CRITICAL**: Always compile TypeScript using the configuration in `tsconfig.json`:
+```bash
+tsc
+```
+
+Do NOT use `tsc` with individual file arguments or custom flags. The `tsconfig.json` contains the correct compiler settings for the entire project.
+
 ## Type Definition Files
 
 **Type-Only Files**: Files containing only TypeScript type definitions should use the `.d.ts` extension and must not generate a `.js` file when compiled.

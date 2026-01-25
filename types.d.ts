@@ -2,10 +2,20 @@
 
 export interface MountInit {
     whereElementMatches: string;
+    whereAttr?: WhereAttr;
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: DoCallback | DoCallbacks;
     loadingEagerness?: 'eager' | 'lazy';
     assignGingerly?: Record<string, any>;
+}
+
+export type BranchValue = string | { [key: string]: BranchValue[] };
+
+export interface WhereAttr {
+    hasBuiltInRootIn?: string[];
+    hasCERootIn?: string[];
+    hasBase: string;
+    hasBranchIn?: BranchValue[];
 }
 
 export interface ImportSpec {
