@@ -44,11 +44,11 @@
 
         // Listen to events
         observer.addEventListener('load', (e) => {
-            addLog(`Load event: ${e.detail.modules.length} module(s) loaded`);
+            addLog(`Load event: ${e.modules.length} module(s) loaded`);
         });
 
         observer.addEventListener('mount', (e) => {
-            addLog(`Mount event: ${e.detail.matchingElement.id || 'unnamed'}`);
+            addLog(`Mount event: ${e.matchingElement.id || 'unnamed'}`);
         });
 
         // Start observing

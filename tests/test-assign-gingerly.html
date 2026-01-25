@@ -39,7 +39,7 @@
         });
         
         observer.addEventListener('mount', (e) => {
-            addLog(`Mount event: ${e.detail.matchingElement.id}`);
+            addLog(`Mount event: ${e.matchingElement.id}`);
         });
         
         observer.observe(document);

@@ -41,15 +41,15 @@
 
         // Listen to events
         observer.addEventListener('mount', (e) => {
-            addLog(`Mount event: ${e.detail.matchingElement.id || 'unnamed'}`);
+            addLog(`Mount event: ${e.matchingElement.id || 'unnamed'}`);
         });
 
         observer.addEventListener('dismount', (e) => {
-            addLog(`Dismount event: ${e.detail.matchingElement.id || 'unnamed'}`);
+            addLog(`Dismount event: ${e.matchingElement.id || 'unnamed'}`);
         });
 
         observer.addEventListener('disconnect', (e) => {
-            addLog(`Disconnect event: ${e.detail.matchingElement.id || 'unnamed'}`);
+            addLog(`Disconnect event: ${e.matchingElement.id || 'unnamed'}`);
         });
 
         // Start observing
