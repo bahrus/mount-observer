@@ -29,8 +29,9 @@ export function matchesWhereAttr(element, whereAttr) {
     // Check if any branch combination matches
     return whereAttr.hasBranchIn.some(branch => {
         if (branch === '') {
-            // Empty string means base attribute alone is valid
-            return true;
+            // Empty string means base attribute alone is valid (no branch attributes)
+            // Check that element doesn't have any branch attributes
+            return !hasAnyBranchAttributes(element, matchedPrefix, baseName, baseDelimiter, whereAttr.hasBranchIn);
         }
         if (typeof branch === 'object') {
             // Check if any key in the branch object matches
@@ -40,6 +41,27 @@ export function matchesWhereAttr(element, whereAttr) {
         }
         return false;
     });
+}
+/**
+ * Checks if element has any branch attributes defined in hasBranchIn
+ */
+function hasAnyBranchAttributes(element, prefix, baseName, baseDelimiter, hasBranchIn) {
+    const baseAttrName = buildAttributeName(prefix, baseName, baseDelimiter);
+    // Check all branch definitions to see if element has any of those attributes
+    for (const branch of hasBranchIn) {
+        if (branch === '')
+            continue;
+        if (typeof branch === 'object') {
+            for (const [key] of Object.entries(branch)) {
+                const { delimiter: branchDelimiter, name: branchName } = parseDelimiter(key);
+                const branchAttrName = baseAttrName + branchDelimiter + branchName;
+                if (element.hasAttribute(branchAttrName)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 /**
  * Recursively checks if a branch path exists on the element
