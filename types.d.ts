@@ -7,6 +7,17 @@ export interface MountInit {
     do?: DoCallback | DoCallbacks;
     loadingEagerness?: 'eager' | 'lazy';
     assignGingerly?: Record<string, any>;
+    map?: MapConfig;
+}
+
+export interface MapConfig {
+    [coordinate: string]: MapEntry;
+}
+
+export interface MapEntry {
+    instanceOf?: string;
+    mapsTo?: string;
+    [key: string]: any;
 }
 
 export type BranchValue = string | { [key: string]: BranchValue[] };
@@ -59,4 +70,17 @@ export interface IMountEvent extends Event {
 
 export interface IDismountEvent extends Event {
     matchingElement: Element;
+}
+
+export interface IAttrChangeEvent extends Event {
+    changes: AttrChange[];
+}
+
+export interface AttrChange {
+    value: string | null;
+    attrNode: Attr | null;
+    mapEntry: MapEntry | null;
+    attrName: string;
+    coordinate: string;
+    element: Element;
 }

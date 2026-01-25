@@ -3,9 +3,10 @@ import {
     mountEventName,
     dismountEventName,
     disconnectEventName,
-    loadEventName
+    loadEventName,
+    attrchangeEventName
 } from './constants.js';
-import type { IMountEvent, IDismountEvent } from './types.js';
+import type { IMountEvent, IDismountEvent, IAttrChangeEvent, AttrChange } from './types.js';
 
 export class MountEvent extends Event implements IMountEvent {
     static eventName: typeof mountEventName = mountEventName;
@@ -36,5 +37,13 @@ export class LoadEvent extends Event {
     
     constructor(public modules: any[]) {
         super(LoadEvent.eventName);
+    }
+}
+
+export class AttrChangeEvent extends Event implements IAttrChangeEvent {
+    static eventName: typeof attrchangeEventName = attrchangeEventName;
+    
+    constructor(public changes: AttrChange[]) {
+        super(AttrChangeEvent.eventName);
     }
 }

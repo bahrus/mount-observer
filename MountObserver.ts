@@ -2,19 +2,15 @@ import {
     MountInit,
     MountObserverOptions,
     IMountObserver,
-    MountContext
+    MountContext,
+    AttrChange
 } from './types.js';
-import {
-    mountEventName,
-    dismountEventName,
-    disconnectEventName,
-    loadEventName
-} from './constants.js';
 import {
     MountEvent,
     DismountEvent,
     DisconnectEvent,
-    LoadEvent
+    LoadEvent,
+    AttrChangeEvent
 } from './Events.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
@@ -27,6 +23,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #mutationObserver: MutationObserver | undefined;
     #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
+    #elementAttrStates = new WeakMap<Element, Map<string, string | null>>();
+    #matchesWhereAttrFn: ((element: Element, whereAttr: any) => boolean) | null = null;
+    #buildAttrCoordinateMapFn: ((whereAttr: any, isCustomElement: boolean) => any) | null = null;
 
     constructor(init: MountInit, options: MountObserverOptions = {}) {
         super();
@@ -40,9 +39,25 @@ export class MountObserver extends EventTarget implements IMountObserver {
             });
         }
 
+        // Preload whereAttr utilities if needed
+        if (init.whereAttr) {
+            this.#preloadWhereAttrUtilities();
+        }
+
         // Start loading imports if eager
         if (init.loadingEagerness === 'eager' && init.import) {
             this.#loadImports();
+        }
+    }
+    
+    async #preloadWhereAttrUtilities(): Promise<void> {
+        if (!this.#matchesWhereAttrFn) {
+            const { matchesWhereAttr } = await import('./whereAttr.js');
+            this.#matchesWhereAttrFn = matchesWhereAttr;
+        }
+        if (!this.#buildAttrCoordinateMapFn) {
+            const { buildAttrCoordinateMap } = await import('./attrCoordinates.js');
+            this.#buildAttrCoordinateMapFn = buildAttrCoordinateMap;
         }
     }
 
@@ -57,16 +72,25 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         this.#rootNode = new WeakRef(rootNode);
 
-        // Process existing elements
-        this.#processNode(rootNode);
+        // Wait for whereAttr utilities to load if needed, then process
+        if (this.#init.whereAttr && !this.#matchesWhereAttrFn) {
+            this.#preloadWhereAttrUtilities().then(() => {
+                this.#processNode(rootNode);
+            });
+        } else {
+            // Process existing elements
+            this.#processNode(rootNode);
+        }
 
         // Set up mutation observer
-        this.#mutationObserver = new MutationObserver(async (mutations) => {
+        this.#mutationObserver = new MutationObserver((mutations) => {
+            const attrChanges: AttrChange[] = [];
+            
             for (const mutation of mutations) {
                 if (mutation.type === 'childList') {
                     for (const node of mutation.addedNodes) {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            await this.#processNode(node);
+                            this.#processNode(node);
                         }
                     }
                     mutation.removedNodes.forEach(node => {
@@ -74,14 +98,34 @@ export class MountObserver extends EventTarget implements IMountObserver {
                             this.#handleRemoval(node as Element);
                         }
                     });
+                } else if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
+                    // Handle attribute changes for mounted elements
+                    const element = mutation.target as Element;
+                    if (this.#mountedElements.has(element) && this.#init.whereAttr) {
+                        const changes = this.#checkAttrChanges(element);
+                        attrChanges.push(...changes);
+                    }
                 }
+            }
+            
+            // Batch and dispatch attribute changes
+            if (attrChanges.length > 0) {
+                this.dispatchEvent(new AttrChangeEvent(attrChanges));
             }
         });
 
-        this.#mutationObserver.observe(rootNode, {
+        const observerConfig: MutationObserverInit = {
             childList: true,
             subtree: true
-        });
+        };
+        
+        // Add attribute observation if whereAttr is configured
+        if (this.#init.whereAttr) {
+            observerConfig.attributes = true;
+            observerConfig.attributeOldValue = true;
+        }
+
+        this.#mutationObserver.observe(rootNode, observerConfig);
     }
 
     disconnect(): void {
@@ -106,13 +150,13 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.dispatchEvent(new LoadEvent(this.#modules));
     }
 
-    async #processNode(node: Node): Promise<void> {
+    #processNode(node: Node): void {
         // If it's an element node, check if it matches
         if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
             
-            if (await this.#matchesSelector(element)) {
-                await this.#handleMatch(element);
+            if (this.#matchesSelector(element)) {
+                this.#handleMatch(element);
             }
         }
 
@@ -124,23 +168,21 @@ export class MountObserver extends EventTarget implements IMountObserver {
             // since we can't use querySelectorAll for complex attribute matching
             if (this.#init.whereAttr) {
                 // Get all elements matching the CSS selector first
-                const elements = Array.from(root.querySelectorAll(this.#init.whereElementMatches));
-                for (const child of elements) {
-                    if (await this.#matchesSelector(child)) {
-                        await this.#handleMatch(child);
+                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                    if (this.#matchesSelector(child)) {
+                        this.#handleMatch(child);
                     }
-                }
+                });
             } else {
                 // Optimize: use querySelectorAll directly when no whereAttr
-                const elements = Array.from(root.querySelectorAll(this.#init.whereElementMatches));
-                for (const child of elements) {
-                    await this.#handleMatch(child);
-                }
+                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                    this.#handleMatch(child);
+                });
             }
         }
     }
 
-    async #matchesSelector(element: Element): Promise<boolean> {
+    #matchesSelector(element: Element): boolean {
         // Check whereElementMatches condition
         const matchesElement = element.matches(this.#init.whereElementMatches);
         
@@ -149,11 +191,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return matchesElement;
         }
         
-        // Dynamically load whereAttr utilities only when needed
-        const { matchesWhereAttr } = await import('./whereAttr.js');
+        // Use cached function (should be loaded by now from constructor)
+        if (!this.#matchesWhereAttrFn) {
+            console.warn('whereAttr utilities not loaded yet');
+            return false;
+        }
         
         // Both conditions must be true (AND logic)
-        return matchesElement && matchesWhereAttr(element, this.#init.whereAttr);
+        return matchesElement && this.#matchesWhereAttrFn(element, this.#init.whereAttr);
     }
 
     async #handleMatch(element: Element): Promise<void> {
@@ -200,6 +245,71 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         // Dispatch mount event
         this.dispatchEvent(new MountEvent(element, this.#modules));
+        
+        // Check for initial attribute changes if whereAttr is configured
+        if (this.#init.whereAttr) {
+            const changes = this.#checkAttrChanges(element);
+            if (changes.length > 0) {
+                this.dispatchEvent(new AttrChangeEvent(changes));
+            }
+        }
+    }
+    
+    #checkAttrChanges(element: Element): AttrChange[] {
+        if (!this.#init.whereAttr || !this.#buildAttrCoordinateMapFn) {
+            return [];
+        }
+        
+        const isCustomElement = element.tagName.toLowerCase().includes('-');
+        const attrCoordMap = this.#buildAttrCoordinateMapFn(this.#init.whereAttr, isCustomElement);
+        
+        // Get or create the attribute state for this element
+        let attrState = this.#elementAttrStates.get(element);
+        if (!attrState) {
+            attrState = new Map<string, string | null>();
+            this.#elementAttrStates.set(element, attrState);
+        }
+        
+        const changes: AttrChange[] = [];
+        const currentAttrs = new Set<string>();
+        
+        // Check all possible attributes from the coordinate map
+        for (const attrName of Object.keys(attrCoordMap)) {
+            const coordinate = attrCoordMap[attrName];
+            const currentValue = element.getAttribute(attrName);
+            const previousValue = attrState.get(attrName);
+            
+            if (currentValue !== null) {
+                currentAttrs.add(attrName);
+            }
+            
+            // Include if: currently has value OR previously had value but now removed
+            if (currentValue !== null || (previousValue !== undefined && currentValue === null)) {
+                // Check if value changed
+                if (currentValue !== previousValue) {
+                    const attrNode = currentValue !== null ? element.getAttributeNode(attrName) : null;
+                    const mapEntry = this.#init.map?.[coordinate] || null;
+                    
+                    changes.push({
+                        value: currentValue,
+                        attrNode,
+                        mapEntry,
+                        attrName,
+                        coordinate,
+                        element
+                    });
+                    
+                    // Update state
+                    if (currentValue !== null) {
+                        attrState.set(attrName, currentValue);
+                    } else {
+                        attrState.delete(attrName);
+                    }
+                }
+            }
+        }
+        
+        return changes;
     }
 
     #handleRemoval(element: Element): void {

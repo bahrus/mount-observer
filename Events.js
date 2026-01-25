@@ -1,5 +1,5 @@
 // Event classes for MountObserver
-import { mountEventName, dismountEventName, disconnectEventName, loadEventName } from './constants.js';
+import { mountEventName, dismountEventName, disconnectEventName, loadEventName, attrchangeEventName } from './constants.js';
 export class MountEvent extends Event {
     matchingElement;
     modules;
@@ -32,5 +32,13 @@ export class LoadEvent extends Event {
     constructor(modules) {
         super(LoadEvent.eventName);
         this.modules = modules;
+    }
+}
+export class AttrChangeEvent extends Event {
+    changes;
+    static eventName = attrchangeEventName;
+    constructor(changes) {
+        super(AttrChangeEvent.eventName);
+        this.changes = changes;
     }
 }
