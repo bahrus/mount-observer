@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('MountObserver v2', () => {
     test('should mount existing elements', async ({ page }) => {
-        await page.goto('http://localhost:8000/v2/tests/test-basic.html');
+        await page.goto('http://localhost:8000/tests/test-basic.html');
         
         // Wait for observer to process existing element
         await page.waitForTimeout(100);
@@ -19,7 +19,7 @@ test.describe('MountObserver v2', () => {
     });
 
     test('should mount dynamically added elements', async ({ page }) => {
-        await page.goto('http://localhost:8000/v2/tests/test-basic.html');
+        await page.goto('http://localhost:8000/tests/test-basic.html');
         await page.waitForTimeout(100);
         
         // Add a new element
@@ -38,7 +38,7 @@ test.describe('MountObserver v2', () => {
     });
 
     test('should dismount removed elements', async ({ page }) => {
-        await page.goto('http://localhost:8000/v2/tests/test-basic.html');
+        await page.goto('http://localhost:8000/tests/test-basic.html');
         await page.waitForTimeout(100);
         
         // Add an element
@@ -56,10 +56,25 @@ test.describe('MountObserver v2', () => {
     });
 
     test('should lazy load imports', async ({ page }) => {
-        await page.goto('http://localhost:8000/v2/tests/test-import.html');
+        // Listen for console errors
+        page.on('console', msg => {
+            if (msg.type() === 'error') {
+                console.log('Browser error:', msg.text());
+            }
+        });
         
-        // Wait for import to load
-        await page.waitForTimeout(500);
+        page.on('pageerror', error => {
+            console.log('Page error:', error.message);
+        });
+        
+        await page.goto('http://localhost:8000/tests/test-import.html');
+        
+        // Wait for import to load - give it more time
+        await page.waitForTimeout(1000);
+        
+        // Check the log to see what happened
+        const logText = await page.locator('#log').textContent();
+        console.log('Log content:', logText);
         
         // Check that custom element was defined
         const isDefined = await page.evaluate(() => {
@@ -74,7 +89,7 @@ test.describe('MountObserver v2', () => {
     });
 
     test('should handle multiple elements', async ({ page }) => {
-        await page.goto('http://localhost:8000/v2/tests/test-basic.html');
+        await page.goto('http://localhost:8000/tests/test-basic.html');
         await page.waitForTimeout(100);
         
         // Add multiple elements

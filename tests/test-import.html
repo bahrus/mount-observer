@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MountObserver v2 - Import Test</title>
+    <!-- #include virtual="/imports.html" -->
 </head>
 <body>
     <h1>MountObserver v2 - Import Test</h1>
@@ -12,7 +13,7 @@
         <fancy-button id="btn1">Click Me</fancy-button>
     </div>
 
-    <button id="addBtn">Add fancy-button</button>
+    <button id="addBtn" type="button">Add fancy-button</button>
 
     <div id="log"></div>
 
@@ -29,7 +30,7 @@
         // Create observer with import
         const observer = new MountObserver({
             whereElementMatches: 'fancy-button',
-            import: './fancy-button.js',
+            import: '/tests/fancy-button.js',
             do: (element, { modules, observer }) => {
                 const { localName } = element;
                 addLog(`Do callback: Defining ${localName}`);
