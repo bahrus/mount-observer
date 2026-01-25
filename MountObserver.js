@@ -44,21 +44,17 @@ export class MountObserver extends EventTarget {
     get disconnectedSignal() {
         return this.#abortController.signal;
     }
-    observe(rootNode) {
+    async observe(rootNode) {
         if (this.#rootNode) {
             throw new Error('Already observing');
         }
         this.#rootNode = new WeakRef(rootNode);
-        // Wait for whereAttr utilities to load if needed, then process
+        // Wait for whereAttr utilities to load if needed
         if (this.#init.whereAttr && !this.#matchesWhereAttrFn) {
-            this.#preloadWhereAttrUtilities().then(() => {
-                this.#processNode(rootNode);
-            });
+            await this.#preloadWhereAttrUtilities();
         }
-        else {
-            // Process existing elements
-            this.#processNode(rootNode);
-        }
+        // Process existing elements
+        this.#processNode(rootNode);
         // Set up mutation observer
         this.#mutationObserver = new MutationObserver((mutations) => {
             const attrChanges = [];

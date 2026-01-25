@@ -65,22 +65,20 @@ export class MountObserver extends EventTarget implements IMountObserver {
         return this.#abortController.signal;
     }
 
-    observe(rootNode: Node): void {
+    async observe(rootNode: Node): Promise<void> {
         if (this.#rootNode) {
             throw new Error('Already observing');
         }
 
         this.#rootNode = new WeakRef(rootNode);
 
-        // Wait for whereAttr utilities to load if needed, then process
+        // Wait for whereAttr utilities to load if needed
         if (this.#init.whereAttr && !this.#matchesWhereAttrFn) {
-            this.#preloadWhereAttrUtilities().then(() => {
-                this.#processNode(rootNode);
-            });
-        } else {
-            // Process existing elements
-            this.#processNode(rootNode);
+            await this.#preloadWhereAttrUtilities();
         }
+        
+        // Process existing elements
+        this.#processNode(rootNode);
 
         // Set up mutation observer
         this.#mutationObserver = new MutationObserver((mutations) => {

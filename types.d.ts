@@ -58,7 +58,7 @@ export interface MountObserverOptions {
 }
 
 export interface IMountObserver extends EventTarget {
-    observe(rootNode: Node): void;
+    observe(rootNode: Node): Promise<void>;
     disconnect(): void;
     disconnectedSignal: AbortSignal;
 }
