@@ -2,19 +2,32 @@ import { WhereAttr } from './types.js';
 
 /**
  * Cache for compiled CSS selectors to avoid rebuilding them on every check
+ * Stores both built-in and custom element selectors
  */
-const selectorCache = new WeakMap<WhereAttr, string>();
+interface CachedSelectors {
+    builtIn: string;
+    custom: string;
+}
+
+const selectorCache = new WeakMap<WhereAttr, CachedSelectors>();
 
 /**
  * Checks if an element matches the whereAttr configuration using CSS selector matching
  */
 export function matchesWhereAttr(element: Element, whereAttr: WhereAttr): boolean {
-    // Get or build the CSS selector for this whereAttr config
-    let selector = selectorCache.get(whereAttr);
-    if (!selector) {
-        selector = buildWhereAttrSelector(element, whereAttr);
-        selectorCache.set(whereAttr, selector);
+    // Get or build the CSS selectors for this whereAttr config
+    let selectors = selectorCache.get(whereAttr);
+    if (!selectors) {
+        selectors = {
+            builtIn: buildWhereAttrSelector(false, whereAttr),
+            custom: buildWhereAttrSelector(true, whereAttr)
+        };
+        selectorCache.set(whereAttr, selectors);
     }
+
+    // Determine which selector to use based on element type
+    const isCustomElement = element.tagName.toLowerCase().includes('-');
+    const selector = isCustomElement ? selectors.custom : selectors.builtIn;
 
     // Use native CSS matching - optimized in Chrome/Blink
     return element.matches(selector);
@@ -22,9 +35,9 @@ export function matchesWhereAttr(element: Element, whereAttr: WhereAttr): boolea
 
 /**
  * Builds a CSS selector string from the whereAttr configuration
+ * @param isCustomElement - Whether to build selector for custom elements (true) or built-in elements (false)
  */
-function buildWhereAttrSelector(element: Element, whereAttr: WhereAttr): string {
-    const isCustomElement = element.tagName.toLowerCase().includes('-');
+function buildWhereAttrSelector(isCustomElement: boolean, whereAttr: WhereAttr): string {
     const rootPrefixes = isCustomElement 
         ? (whereAttr.hasCERootIn || [])
         : (whereAttr.hasBuiltInRootIn || []);

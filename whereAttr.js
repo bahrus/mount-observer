@@ -1,25 +1,28 @@
-/**
- * Cache for compiled CSS selectors to avoid rebuilding them on every check
- */
 const selectorCache = new WeakMap();
 /**
  * Checks if an element matches the whereAttr configuration using CSS selector matching
  */
 export function matchesWhereAttr(element, whereAttr) {
-    // Get or build the CSS selector for this whereAttr config
-    let selector = selectorCache.get(whereAttr);
-    if (!selector) {
-        selector = buildWhereAttrSelector(element, whereAttr);
-        selectorCache.set(whereAttr, selector);
+    // Get or build the CSS selectors for this whereAttr config
+    let selectors = selectorCache.get(whereAttr);
+    if (!selectors) {
+        selectors = {
+            builtIn: buildWhereAttrSelector(false, whereAttr),
+            custom: buildWhereAttrSelector(true, whereAttr)
+        };
+        selectorCache.set(whereAttr, selectors);
     }
+    // Determine which selector to use based on element type
+    const isCustomElement = element.tagName.toLowerCase().includes('-');
+    const selector = isCustomElement ? selectors.custom : selectors.builtIn;
     // Use native CSS matching - optimized in Chrome/Blink
     return element.matches(selector);
 }
 /**
  * Builds a CSS selector string from the whereAttr configuration
+ * @param isCustomElement - Whether to build selector for custom elements (true) or built-in elements (false)
  */
-function buildWhereAttrSelector(element, whereAttr) {
-    const isCustomElement = element.tagName.toLowerCase().includes('-');
+function buildWhereAttrSelector(isCustomElement, whereAttr) {
     const rootPrefixes = isCustomElement
         ? (whereAttr.hasCERootIn || [])
         : (whereAttr.hasBuiltInRootIn || []);
