@@ -84,7 +84,12 @@ Matches: `my-enhancement`, `data-my-enhancement`, `enh-my-enhancement`, etc. (ba
 
 The `hasBranchIn` property defines optional hierarchical attribute branches. Each valid combination forms an OR condition within the `whereAttr` context.
 
-**Empty String Meaning**: The empty string `''` indicates that branch is optional (not required for a match).
+**Important**: The base attribute is optional when branch attributes are present. An element can match with:
+- Just the base attribute (if `''` is in `hasBranchIn`)
+- Just branch attributes without the base attribute
+- Both base and branch attributes together
+
+**Empty String Meaning**: The empty string `''` in `hasBranchIn` indicates that the base attribute alone (without any branch attributes) is a valid match.
 
 **Basic Example**:
 ```javascript
@@ -101,20 +106,26 @@ hasBranchIn: [
 
 This matches:
 ```html
-<!-- Base only -->
+<!-- Base only (no branch attributes) -->
 <input my-greetings>
 
 <!-- Base + hello branch -->
 <input my-greetings my-greetings-hello>
 
+<!-- Just hello branch (no base attribute) -->
+<input my-greetings-hello>
+
 <!-- Base + hello + sub-branch -->
 <input my-greetings my-greetings-hello-how-are-you>
+
+<!-- Just nested branch (no base attribute) -->
+<input my-greetings-hello-how-are-you>
 
 <!-- Base + goodbye branch -->
 <input my-greetings my-greetings-goodbye>
 
-<!-- Base + goodbye + sub-branch -->
-<input my-greetings my-greetings-goodbye-last-words>
+<!-- Just goodbye + sub-branch (no base attribute) -->
+<input my-greetings-goodbye-last-words>
 ```
 
 **Nested Branches**:
@@ -135,11 +146,18 @@ This enables deeply nested attributes:
 
 **Complete Example**:
 ```html
+<!-- All base and branch attributes present -->
 <your-custom-element 
     enh-my-greetings="courtesy of hallmark" 
     enh-my-greetings-hello="select from gloomy section"
     enh-my-greetings-hello-how-are-you="one day closer to death"
     enh-my-greetings-goodbye="select from funny section"
+    enh-my-greetings-goodbye-last-words="smell you later"
+>
+</your-custom-element>
+
+<!-- Just nested branch attribute (no base) - also valid -->
+<your-custom-element 
     enh-my-greetings-goodbye-last-words="smell you later"
 >
 </your-custom-element>

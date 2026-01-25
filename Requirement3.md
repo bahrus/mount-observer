@@ -36,7 +36,7 @@ The meaning of "hasBuiltInRootIn" vs "hasCERootIn" is this:
 
 will all mount.
 
-Within the whereAttr, each valid combination of the has* values form a valid "or" conition.  The empty string '' indicates that the additional branch is not required for a valid match.
+Within the whereAttr, each valid combination of the has* values form a valid "or" condition.  The empty string '' indicates that the additional branch is not required for a valid match.
 
 However, when it comes to custom elements (CE)'s:
 
@@ -108,6 +108,16 @@ So this won't mount on the html above, but will instead mount on:
 ```
 
 Keep in mind that in the next requirement (not yet specified), once an element mounts due to attributes such as these, we will need to dispatch a different event anytime any of the attributes go away or change in value, but that is outside of the scope if this requirement, but it would be good to keep that in mind as it may affect the design of this requirement.
+
+Note that the presence of the base attribute is also an or condition, so this should also mount:
+
+```html
+<your-custom-element 
+    enh_my-greetings::good-bye----ps-pps="bon voyage"
+>
+...
+</your-custom-element>
+```
 
 
 

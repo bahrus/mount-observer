@@ -52,13 +52,14 @@ test.describe('WhereAttr Tests', () => {
         const results = await page.evaluate(() => window.testResults.test4);
         
         // All should match with custom delimiters
-        expect(results).toContain('delim1'); // my_custom
-        expect(results).toContain('delim2'); // my_custom:hello
-        expect(results).toContain('delim3'); // my_custom:hello--how-are-you
-        expect(results).toContain('delim4'); // my_custom--goodbye
-        expect(results).toContain('delim5'); // my_custom--goodbye---last-words
+        expect(results).toContain('delim1'); // my-custom (base only)
+        expect(results).toContain('delim2'); // my-custom + my-custom:hello
+        expect(results).toContain('delim3'); // my-custom + my-custom:hello--how-are-you
+        expect(results).toContain('delim4'); // my-custom + my-custom--goodbye
+        expect(results).toContain('delim5'); // my-custom + my-custom--goodbye---last-words
+        expect(results).toContain('delim6'); // my-custom--goodbye---last-words (branch only, no base)
         
-        expect(results.length).toBe(5);
+        expect(results.length).toBe(6);
     });
 
     test('Test 5: AND condition with whereElementMatches', async ({ page }) => {
