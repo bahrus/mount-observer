@@ -12,6 +12,11 @@ import {
     LoadEvent,
     AttrChangeEvent
 } from './Events.js';
+import {
+    registerSharedObserver,
+    unregisterSharedObserver,
+    type MutationCallback
+} from './SharedMutationObserver.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     #init: MountInit;
@@ -20,7 +25,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #modules: any[] = [];
     #mountedElements = new WeakSet<Element>();
     #processedElements = new WeakSet<Element>();
-    #mutationObserver: MutationObserver | undefined;
+    #mutationCallback: MutationCallback | undefined;
     #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
     #elementAttrStates = new WeakMap<Element, Map<string, string | null>>();
@@ -80,8 +85,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Process existing elements
         this.#processNode(rootNode);
 
-        // Set up mutation observer
-        this.#mutationObserver = new MutationObserver((mutations) => {
+        // Create mutation callback
+        this.#mutationCallback = (mutations) => {
             const attrChanges: AttrChange[] = [];
             
             for (const mutation of mutations) {
@@ -110,7 +115,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             if (attrChanges.length > 0) {
                 this.dispatchEvent(new AttrChangeEvent(attrChanges));
             }
-        });
+        };
 
         const observerConfig: MutationObserverInit = {
             childList: true,
@@ -123,14 +128,19 @@ export class MountObserver extends EventTarget implements IMountObserver {
             observerConfig.attributeOldValue = true;
         }
 
-        this.#mutationObserver.observe(rootNode, observerConfig);
+        // Register with shared mutation observer
+        registerSharedObserver(rootNode, this.#mutationCallback, observerConfig);
     }
 
     disconnect(): void {
-        if (this.#mutationObserver) {
-            this.#mutationObserver.disconnect();
-            this.#mutationObserver = undefined;
+        const rootNode = this.#rootNode?.deref();
+        
+        // Unregister from shared mutation observer
+        if (rootNode && this.#mutationCallback) {
+            unregisterSharedObserver(rootNode, this.#mutationCallback);
+            this.#mutationCallback = undefined;
         }
+        
         this.#abortController.abort();
         this.#rootNode = undefined;
     }

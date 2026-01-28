@@ -1,0 +1,70 @@
+/**
+ * Manages shared MutationObserver instances for multiple MountObserver instances
+ * observing the same root node. This reduces overhead when multiple observers
+ * are watching the same DOM fragment.
+ */
+/**
+ * Global registry of shared observers, keyed by root node
+ */
+const sharedObservers = new WeakMap();
+/**
+ * Registers a callback with the shared MutationObserver for the given root node.
+ * Creates a new shared observer if one doesn't exist for this root.
+ */
+export function registerSharedObserver(rootNode, callback, config) {
+    let sharedData = sharedObservers.get(rootNode);
+    if (!sharedData) {
+        // Create new shared observer for this root node
+        const observer = new MutationObserver((mutations) => {
+            // Distribute mutations to all registered callbacks
+            const callbacks = sharedData.callbacks;
+            for (const cb of callbacks) {
+                cb(mutations);
+            }
+        });
+        observer.observe(rootNode, config);
+        sharedData = {
+            observer,
+            callbacks: new Set(),
+            config
+        };
+        sharedObservers.set(rootNode, sharedData);
+    }
+    else {
+        // Verify config matches (for safety)
+        // In practice, all MountObservers should use the same config
+        if (!configsMatch(sharedData.config, config)) {
+            console.warn('MutationObserver config mismatch detected. Using existing config.');
+        }
+    }
+    // Register the callback
+    sharedData.callbacks.add(callback);
+}
+/**
+ * Unregisters a callback from the shared MutationObserver.
+ * If this was the last callback, disconnects and removes the shared observer.
+ */
+export function unregisterSharedObserver(rootNode, callback) {
+    const sharedData = sharedObservers.get(rootNode);
+    if (!sharedData) {
+        return;
+    }
+    // Remove the callback
+    sharedData.callbacks.delete(callback);
+    // If no more callbacks, disconnect and cleanup
+    if (sharedData.callbacks.size === 0) {
+        sharedData.observer.disconnect();
+        sharedObservers.delete(rootNode);
+    }
+}
+/**
+ * Checks if two MutationObserverInit configs are equivalent
+ */
+function configsMatch(a, b) {
+    return a.childList === b.childList &&
+        a.subtree === b.subtree &&
+        a.attributes === b.attributes &&
+        a.attributeOldValue === b.attributeOldValue &&
+        a.characterData === b.characterData &&
+        a.characterDataOldValue === b.characterDataOldValue;
+}

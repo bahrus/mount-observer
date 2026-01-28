@@ -1,4 +1,5 @@
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent } from './Events.js';
+import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
 export class MountObserver extends EventTarget {
     #init;
     #options;
@@ -6,7 +7,7 @@ export class MountObserver extends EventTarget {
     #modules = [];
     #mountedElements = new WeakSet();
     #processedElements = new WeakSet();
-    #mutationObserver;
+    #mutationCallback;
     #rootNode;
     #importsLoaded = false;
     #elementAttrStates = new WeakMap();
@@ -55,8 +56,8 @@ export class MountObserver extends EventTarget {
         }
         // Process existing elements
         this.#processNode(rootNode);
-        // Set up mutation observer
-        this.#mutationObserver = new MutationObserver((mutations) => {
+        // Create mutation callback
+        this.#mutationCallback = (mutations) => {
             const attrChanges = [];
             for (const mutation of mutations) {
                 if (mutation.type === 'childList') {
@@ -84,7 +85,7 @@ export class MountObserver extends EventTarget {
             if (attrChanges.length > 0) {
                 this.dispatchEvent(new AttrChangeEvent(attrChanges));
             }
-        });
+        };
         const observerConfig = {
             childList: true,
             subtree: true
@@ -94,12 +95,15 @@ export class MountObserver extends EventTarget {
             observerConfig.attributes = true;
             observerConfig.attributeOldValue = true;
         }
-        this.#mutationObserver.observe(rootNode, observerConfig);
+        // Register with shared mutation observer
+        registerSharedObserver(rootNode, this.#mutationCallback, observerConfig);
     }
     disconnect() {
-        if (this.#mutationObserver) {
-            this.#mutationObserver.disconnect();
-            this.#mutationObserver = undefined;
+        const rootNode = this.#rootNode?.deref();
+        // Unregister from shared mutation observer
+        if (rootNode && this.#mutationCallback) {
+            unregisterSharedObserver(rootNode, this.#mutationCallback);
+            this.#mutationCallback = undefined;
         }
         this.#abortController.abort();
         this.#rootNode = undefined;
