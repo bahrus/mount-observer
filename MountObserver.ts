@@ -172,21 +172,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_NODE) {
             const root = node as Element | Document;
             
-            // If whereAttr is specified, we need to check all elements
-            // since we can't use querySelectorAll for complex attribute matching
-            if (this.#init.whereAttr) {
-                // Get all elements matching the CSS selector first
-                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
-                    if (this.#matchesSelector(child)) {
-                        this.#handleMatch(child);
-                    }
-                });
-            } else {
-                // Optimize: use querySelectorAll directly when no whereAttr
-                root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+            // Get all elements matching the CSS selector first
+            root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+                if (this.#matchesSelector(child)) {
                     this.#handleMatch(child);
-                });
-            }
+                }
+            });
         }
     }
 
@@ -194,19 +185,39 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Check whereElementMatches condition
         const matchesElement = element.matches(this.#init.whereElementMatches);
         
-        // If whereAttr is not specified, only check whereElementMatches
-        if (!this.#init.whereAttr) {
-            return matchesElement;
-        }
-        
-        // Use cached function (should be loaded by now from constructor)
-        if (!this.#matchesWhereAttrFn) {
-            console.warn('whereAttr utilities not loaded yet');
+        if (!matchesElement) {
             return false;
         }
         
-        // Both conditions must be true (AND logic)
-        return matchesElement && this.#matchesWhereAttrFn(element, this.#init.whereAttr);
+        // Check whereAttr condition if specified
+        if (this.#init.whereAttr) {
+            // Use cached function (should be loaded by now from constructor)
+            if (!this.#matchesWhereAttrFn) {
+                console.warn('whereAttr utilities not loaded yet');
+                return false;
+            }
+            
+            if (!this.#matchesWhereAttrFn(element, this.#init.whereAttr)) {
+                return false;
+            }
+        }
+        
+        // Check whereInstanceOf condition if specified
+        if (this.#init.whereInstanceOf) {
+            const constructors = Array.isArray(this.#init.whereInstanceOf) 
+                ? this.#init.whereInstanceOf 
+                : [this.#init.whereInstanceOf];
+            
+            // Element must be an instance of at least one constructor (OR logic for array)
+            const matchesInstanceOf = constructors.some(constructor => element instanceof constructor);
+            
+            if (!matchesInstanceOf) {
+                return false;
+            }
+        }
+        
+        // All conditions passed
+        return true;
     }
 
     async #handleMatch(element: Element): Promise<void> {

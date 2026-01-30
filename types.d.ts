@@ -1,8 +1,11 @@
 // Core types for MountObserver v2 - Polyfill Supported Scenario I
 
+export type Constructor = new (...args: any[]) => any;
+
 export interface MountInit {
     whereElementMatches: string;
     whereAttr?: WhereAttr;
+    whereInstanceOf?: Constructor | Constructor[];
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: DoCallback | DoCallbacks;
     loadingEagerness?: 'eager' | 'lazy';
