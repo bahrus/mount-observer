@@ -214,6 +214,102 @@ Within the `whereAttr` configuration, each valid combination of the `has*` value
 
 All these combinations are ORed together to determine if an element matches.
 
+### map Configuration
+
+The optional `map` property provides metadata for each attribute coordinate in the `whereAttr` hierarchy. This metadata is passed along with `attrchange` events.
+
+#### Structure
+
+```javascript
+{
+    whereAttr: {
+        hasBase: 'my-greetings',
+        hasBranchIn: [
+            '',
+            { 'hello': ['', 'how-are-you'] },
+            { 'goodbye': [''] }
+        ]
+    },
+    map: {
+        '0': { instanceOf: 'Object', mapsTo: '.' },
+        '1': { instanceOf: 'Boolean', mapsTo: 'isHello' },
+        '1.1': { instanceOf: 'String', mapsTo: 'firstHelloGreeting' },
+        '2': { instanceOf: 'Boolean', mapsTo: 'isGoodbye' }
+    }
+}
+```
+
+#### Coordinate System
+
+Coordinates use a zero-based decimal notation:
+- `'0'` or `'0.0'` - Base attribute (first item in `hasBranchIn`)
+- `'1'` - First branch object
+- `'1.1'` - First sub-branch within first branch
+- `'2.2.1'` - Third branch, third sub-branch, second sub-sub-branch
+
+The trailing `.0` is optional and assumed if not present.
+
+#### MapEntry Properties
+
+Each map entry can contain:
+- `instanceOf?: string` - Type hint for the attribute value
+- `mapsTo?: string` - Property name to map to
+- `once?: boolean` - Only fire `attrchange` event once for this attribute
+- Any custom properties you need
+
+#### The "once" Feature
+
+When `once: true` is set for an attribute coordinate, the `attrchange` event will only fire the first time that attribute is detected on an element. Subsequent changes, removals, or re-additions of that attribute on the same element will be ignored.
+
+**Use case**: Initialization scenarios where you only care about the initial presence of an attribute.
+
+**Example**:
+```javascript
+map: {
+    '0': {
+        instanceOf: 'Object',
+        mapsTo: '.',
+        once: true  // Only fire event on first detection
+    }
+}
+```
+
+**Behavior with `once: true`**:
+- Initial mount with attribute present → Event fires ✓
+- Attribute value changes → No event
+- Attribute removed → No event
+- Attribute re-added → No event
+
+The "once" tracking is per-element, per-attribute. Different elements can each have their own "first time" event for the same attribute.
+
+## Events
+
+### attrchange Event
+
+Fires when attributes matching the `whereAttr` configuration are added, changed, or removed on mounted elements.
+
+**When it fires**:
+- Immediately on mount if matching attributes are present
+- When any matching attribute value changes
+- When any matching attribute is added or removed
+
+**Event properties**:
+- `changes: AttrChange[]` - Array of attribute changes
+
+**AttrChange object**:
+```typescript
+{
+    value: string | null,        // Current value (null if removed)
+    attrNode: Attr | null,       // Attribute node (null if removed)
+    mapEntry: MapEntry | null,   // Corresponding map entry (null if no map)
+    attrName: string,            // Full attribute name
+    coordinate: string,          // Coordinate (e.g., '0', '1.1', '2.2.1')
+    element: Element             // The element whose attribute changed
+}
+```
+
+**Event batching**: Multiple simultaneous attribute changes result in a single event with all changes in the array.
+
 ## Future Considerations
 
 In upcoming requirements, when elements mount due to attribute matching, the system will need to dispatch events when:

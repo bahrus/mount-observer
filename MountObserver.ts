@@ -29,6 +29,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
     #elementAttrStates = new WeakMap<Element, Map<string, string | null>>();
+    #elementOnceAttrs = new WeakMap<Element, Set<string>>();
     #matchesWhereAttrFn: ((element: Element, whereAttr: any) => boolean) | null = null;
     #buildAttrCoordinateMapFn: ((whereAttr: any, isCustomElement: boolean) => any) | null = null;
 
@@ -302,12 +303,34 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 currentAttrs.add(attrName);
             }
             
+            // Check if this attribute has "once: true" in its map entry
+            const mapEntry = this.#init.map?.[coordinate] || null;
+            const isOnce = mapEntry?.once === true;
+            
+            // If "once" is true, check if we've already seen this attribute
+            if (isOnce) {
+                let onceAttrs = this.#elementOnceAttrs.get(element);
+                if (!onceAttrs) {
+                    onceAttrs = new Set<string>();
+                    this.#elementOnceAttrs.set(element, onceAttrs);
+                }
+                
+                // If we've already seen this attribute, skip it
+                if (onceAttrs.has(attrName)) {
+                    continue;
+                }
+                
+                // Mark this attribute as seen if it currently has a value
+                if (currentValue !== null) {
+                    onceAttrs.add(attrName);
+                }
+            }
+            
             // Include if: currently has value OR previously had value but now removed
             if (currentValue !== null || (previousValue !== undefined && currentValue === null)) {
                 // Check if value changed
                 if (currentValue !== previousValue) {
                     const attrNode = currentValue !== null ? element.getAttributeNode(attrName) : null;
-                    const mapEntry = this.#init.map?.[coordinate] || null;
                     
                     changes.push({
                         value: currentValue,

@@ -25,7 +25,8 @@ const mo = new MountObserver({
         //base attribute my-greetings
         '0': {
             instanceOf: 'Object',
-            mapsTo: '.'
+            mapsTo: '.',
+            once: true  // Optional: only fire attrchange event once for this attribute
         },
         //my-greetings-hello
         '1': {
@@ -85,3 +86,28 @@ Only one Event type for all these scenarios should be defined in Events.ts.  Pro
 *Exclude from the event array:*
 
 - Attributes that don't exist and never existed (weren't present before and still aren't)
+
+## Optional "once" Feature
+
+Each map entry can optionally include a `once: boolean` property. When set to `true`, the attribute will only trigger an `attrchange` event the first time it's seen on an element. Subsequent changes, removals, or re-additions of that attribute on the same element will be ignored and will not trigger any events.
+
+**Use case**: This is useful for initialization scenarios where you only care about the initial presence of an attribute, not subsequent modifications.
+
+**Example**:
+```JavaScript
+map: {
+    '0': {
+        instanceOf: 'Object',
+        mapsTo: '.',
+        once: true  // Only fire event on first detection
+    }
+}
+```
+
+**Behavior**:
+- Initial mount with attribute present → Event fires ✓
+- Attribute value changes → No event (once=true)
+- Attribute removed → No event (once=true)
+- Attribute re-added → No event (once=true)
+
+The "once" tracking is per-element, per-attribute. Different elements can each have their own "first time" event for the same attribute.

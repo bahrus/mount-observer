@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Once Feature Test</title>
+</head>
+<body>
+    <h1>Once Feature Test</h1>
+
+    <!-- Test element with initial attribute -->
+    <input id="input1" type="text" class="test" my-attr="value1">
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        window.eventLog = [];
+
+        // Test: once attribute should only trigger event on first presence
+        const observer = new MountObserver({
+            whereElementMatches: '.test',
+            whereAttr: {
+                hasBuiltInRootIn: ['', 'data'],
+                hasCERootIn: ['data'],
+                hasBase: 'my-attr',
+                hasBranchIn: ['']
+            },
+            map: {
+                '0': { once: true }  // Base attribute has once: true
+            }
+        });
+
+        observer.addEventListener('attrchange', (e) => {
+            e.changes.forEach(change => {
+                window.eventLog.push({
+                    attrName: change.attrName,
+                    value: change.value,
+                    coordinate: change.coordinate
+                });
+            });
+        });
+
+        const input = document.getElementById('input1');
+        
+        await observer.observe(document.body);
+
+        // Test sequence
+        setTimeout(() => {
+            // Step 1: Change attribute value (should NOT trigger event because once=true)
+            input.setAttribute('my-attr', 'value2');
+        }, 100);
+
+        setTimeout(() => {
+            // Step 2: Remove attribute (should NOT trigger event because once=true)
+            input.removeAttribute('my-attr');
+        }, 200);
+
+        setTimeout(() => {
+            // Step 3: Add attribute again (should NOT trigger event because once=true)
+            input.setAttribute('my-attr', 'value3');
+        }, 300);
+
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            // Expected: Only 1 event (the initial mount with the attribute)
+            const expectedCount = 1;
+            const actualCount = window.eventLog.length;
+            
+            const testPass = actualCount === expectedCount && 
+                           window.eventLog[0]?.attrName === 'my-attr' &&
+                           window.eventLog[0]?.value === 'value1';
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <p>Test: ${testPass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Expected events: ${expectedCount}</p>
+                <p>Actual events: ${actualCount}</p>
+                
+                <h3>Event Log</h3>
+                <pre>${JSON.stringify(window.eventLog, null, 2)}</pre>
+                
+                <h3>Expected Behavior</h3>
+                <ul>
+                    <li>Initial mount: Should trigger event (first time seeing attribute)</li>
+                    <li>Step 1: Change value → Should NOT trigger event (once=true)</li>
+                    <li>Step 2: Remove attribute → Should NOT trigger event (once=true)</li>
+                    <li>Step 3: Add again → Should NOT trigger event (once=true)</li>
+                </ul>
+            `;
+            
+            // Set test result for Playwright
+            window.testResult = testPass;
+        }, 400);
+    </script>
+</body>
+</html>

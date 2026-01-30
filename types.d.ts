@@ -20,6 +20,11 @@ export interface MapConfig {
 export interface MapEntry {
     instanceOf?: string;
     mapsTo?: string;
+    /**
+     * Only notify the presence of this attribute
+     * the first time it is seen
+     */
+    once?: boolean;
     [key: string]: any;
 }
 
