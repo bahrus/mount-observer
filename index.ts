@@ -15,5 +15,6 @@ export {
     mountEventName,
     dismountEventName,
     disconnectEventName,
-    loadEventName
-} from './constants.js';
+    loadEventName,
+    attrchangeEventName
+} from './Events.js';
