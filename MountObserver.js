@@ -138,6 +138,7 @@ export class MountObserver extends EventTarget {
         }
     }
     #matchesSelector(element) {
+        //TODO:  reduce redundncy with this.#init?
         // Check whereElementMatches condition
         const matchesElement = element.matches(this.#init.whereElementMatches);
         if (!matchesElement) {
