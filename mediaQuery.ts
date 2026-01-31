@@ -1,11 +1,11 @@
 // Media query handling for MountObserver
-import type { MountInit, MountContext } from './types.js';
+import type { MountInit, MountContext, WeakDual } from './types.js';
 import { MediaMatchEvent, MediaUnmatchEvent, DismountEvent } from './Events.js';
 
 export function setupMediaQuery(
     init: MountInit,
     rootNodeRef: WeakRef<Node>,
-    mountedElements: WeakSet<Element>,
+    mountedElements: WeakDual<Element>,
     modules: any[],
     observer: EventTarget,
     processNode: (node: Node) => void
@@ -74,22 +74,25 @@ export function setupMediaQuery(
             }
         };
         
-        // Get all mounted elements (we need to iterate through the DOM to find them)
+        // Get all mounted elements from the WeakDual setWeak
         const mountedElementsList: Element[] = [];
-        const collectMountedElements = (node: Node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node as Element;
-                if (mountedElements.has(element)) {
-                    mountedElementsList.push(element);
-                }
+        for (const ref of mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element) {
+                mountedElementsList.push(element);
             }
-            node.childNodes.forEach(child => collectMountedElements(child));
-        };
-        collectMountedElements(rootNode);
+        }
         
         // Dismount each element
         for (const element of mountedElementsList) {
-            mountedElements.delete(element);
+            // Remove from both structures
+            mountedElements.weakSet.delete(element);
+            for (const ref of mountedElements.setWeak) {
+                if (ref.deref() === element) {
+                    mountedElements.setWeak.delete(ref);
+                    break;
+                }
+            }
             
             // Call dismount callback
             if (init.do && typeof init.do !== 'function' && init.do.dismount) {

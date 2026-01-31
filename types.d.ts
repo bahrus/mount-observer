@@ -72,10 +72,16 @@ export interface MountObserverOptions {
     disconnectedSignal?: AbortSignal;
 }
 
+export interface WeakDual<T extends Object>{
+    weakSet: WeakSet<T>,
+    setWeak: Set<WeakRef<T>>
+}
+
 export interface IMountObserver extends EventTarget {
     observe(rootNode: Node): Promise<void>;
     disconnect(): void;
     disconnectedSignal: AbortSignal;
+    assignGingerly(config: Record<string, any> | undefined): Promise<void>;
 }
 
 export interface IMountEvent extends Event {

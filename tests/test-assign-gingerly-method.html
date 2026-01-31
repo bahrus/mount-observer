@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssignGingerly Method Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>AssignGingerly Method Test</h1>
+    
+    <div id="container">
+        <input id="input1" type="text" placeholder="Input 1">
+        <input id="input2" type="text" placeholder="Input 2">
+    </div>
+    
+    <button id="updateBtn" type="button">Update Config</button>
+    <button id="addBtn" type="button">Add Input</button>
+    
+    <div id="log"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const log = document.getElementById('log');
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            log.appendChild(p);
+        }
+        
+        // Create observer with initial assignGingerly config
+        const observer = new MountObserver({
+            whereElementMatches: 'input',
+            assignGingerly: {
+                disabled: true,
+                value: 'Initial value'
+            }
+        });
+        
+        observer.addEventListener('mount', (e) => {
+            addLog(`Mount event: ${e.matchingElement.id}`);
+        });
+        
+        observer.observe(document);
+        addLog('Observer started');
+        
+        // Test updating config via public method
+        document.getElementById('updateBtn').addEventListener('click', async () => {
+            addLog('Calling assignGingerly method...');
+            await observer.assignGingerly({
+                title: 'Updated via method',
+                placeholder: 'New placeholder'
+            });
+            addLog('Config updated - check existing inputs');
+        });
+        
+        // Add button to dynamically add inputs
+        let counter = 0;
+        document.getElementById('addBtn').addEventListener('click', () => {
+            counter++;
+            const input = document.createElement('input');
+            input.id = `dynamic-input-${counter}`;
+            input.type = 'text';
+            input.placeholder = `Dynamic input ${counter}`;
+            document.getElementById('container').appendChild(input);
+            addLog(`Added input: dynamic-input-${counter}`);
+        });
+        
+        // Expose for testing
+        window.observer = observer;
+        window.testPassed = false;
+        
+        // Wait a bit then verify
+        setTimeout(() => {
+            const input1 = document.getElementById('input1');
+            const input2 = document.getElementById('input2');
+            
+            // Check initial state
+            if (input1.disabled && input1.value === 'Initial value' &&
+                input2.disabled && input2.value === 'Initial value') {
+                addLog('✓ Initial assignGingerly applied correctly');
+                window.testPassed = true;
+            } else {
+                addLog('✗ Initial assignGingerly failed');
+            }
+        }, 100);
+    </script>
+</body>
+</html>

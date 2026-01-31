@@ -6,7 +6,10 @@ export class MountObserver extends EventTarget {
     #options;
     #abortController;
     #modules = [];
-    #mountedElements = new WeakSet();
+    #mountedElements = {
+        weakSet: new WeakSet(),
+        setWeak: new Set()
+    };
     #processedElements = new WeakSet();
     #mutationCallback;
     #rootNode;
@@ -17,11 +20,16 @@ export class MountObserver extends EventTarget {
     #buildAttrCoordinateMapFn = null;
     #mediaQueryCleanup;
     #mediaMatches = true;
+    #assignGingerlySource;
     constructor(init, options = {}) {
         super();
         this.#init = init;
         this.#options = options;
         this.#abortController = new AbortController();
+        // Make a copy of assignGingerly config using structuredClone
+        if (init.assignGingerly !== undefined) {
+            this.#assignGingerlySource = structuredClone(init.assignGingerly);
+        }
         if (options.disconnectedSignal) {
             options.disconnectedSignal.addEventListener('abort', () => {
                 this.disconnect();
@@ -98,7 +106,7 @@ export class MountObserver extends EventTarget {
                 else if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
                     // Handle attribute changes for mounted elements
                     const element = mutation.target;
-                    if (this.#mountedElements.has(element) && this.#init.whereAttr) {
+                    if (this.#mountedElements.weakSet.has(element) && this.#init.whereAttr) {
                         const changes = this.#checkAttrChanges(element);
                         attrChanges.push(...changes);
                     }
@@ -213,7 +221,11 @@ export class MountObserver extends EventTarget {
             await this.#loadImports();
         }
         this.#processedElements.add(element);
-        this.#mountedElements.add(element);
+        // Add to both WeakSet and Set<WeakRef> for efficient operations
+        if (!this.#mountedElements.weakSet.has(element)) {
+            this.#mountedElements.weakSet.add(element);
+            this.#mountedElements.setWeak.add(new WeakRef(element));
+        }
         const rootNode = this.#rootNode?.deref();
         if (!rootNode) {
             // Root node was garbage collected
@@ -227,9 +239,9 @@ export class MountObserver extends EventTarget {
             }
         };
         // Apply assignGingerly if specified
-        if (this.#init.assignGingerly) {
+        if (this.#assignGingerlySource) {
             const { assignGingerly } = await import('assign-gingerly/index.js');
-            assignGingerly(element, this.#init.assignGingerly);
+            assignGingerly(element, this.#assignGingerlySource);
         }
         // Call do callback
         if (this.#init.do) {
@@ -316,11 +328,42 @@ export class MountObserver extends EventTarget {
         }
         return changes;
     }
-    #handleRemoval(element) {
-        if (!this.#mountedElements.has(element)) {
+    async assignGingerly(config) {
+        // Handle undefined case
+        if (config === undefined) {
+            this.#assignGingerlySource = undefined;
             return;
         }
-        this.#mountedElements.delete(element);
+        const { assignGingerly } = await import('assign-gingerly/index.js');
+        // Update the source config for future mounted elements
+        if (this.#assignGingerlySource === undefined) {
+            // No existing config, just clone the passed in object
+            this.#assignGingerlySource = structuredClone(config);
+        }
+        else {
+            // Merge into existing config using assignGingerly
+            assignGingerly(this.#assignGingerlySource, config);
+        }
+        // Apply to already mounted elements using setWeak for iteration
+        for (const ref of this.#mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element) {
+                assignGingerly(element, config);
+            }
+        }
+    }
+    #handleRemoval(element) {
+        if (!this.#mountedElements.weakSet.has(element)) {
+            return;
+        }
+        // Remove from both structures
+        this.#mountedElements.weakSet.delete(element);
+        for (const ref of this.#mountedElements.setWeak) {
+            if (ref.deref() === element) {
+                this.#mountedElements.setWeak.delete(ref);
+                break;
+            }
+        }
         const rootNode = this.#rootNode?.deref();
         if (!rootNode) {
             // Root node was garbage collected

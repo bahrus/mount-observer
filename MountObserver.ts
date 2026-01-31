@@ -3,7 +3,8 @@ import {
     MountObserverOptions,
     IMountObserver,
     MountContext,
-    AttrChange
+    AttrChange,
+    WeakDual
 } from './types.js';
 import {
     MountEvent,
@@ -11,8 +12,6 @@ import {
     DisconnectEvent,
     LoadEvent,
     AttrChangeEvent,
-    MediaMatchEvent,
-    MediaUnmatchEvent
 } from './Events.js';
 import {
     registerSharedObserver,
@@ -26,7 +25,10 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #options: MountObserverOptions;
     #abortController: AbortController;
     #modules: any[] = [];
-    #mountedElements = new WeakSet<Element>();
+    #mountedElements: WeakDual<Element> = {
+        weakSet: new WeakSet(),
+        setWeak: new Set()
+    };
     #processedElements = new WeakSet<Element>();
     #mutationCallback: MutationCallback | undefined;
     #rootNode: WeakRef<Node> | undefined;
@@ -37,12 +39,18 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #buildAttrCoordinateMapFn: ((whereAttr: any, isCustomElement: boolean) => any) | null = null;
     #mediaQueryCleanup?: () => void;
     #mediaMatches: boolean = true;
+    #assignGingerlySource: Record<string, any> | undefined;
 
     constructor(init: MountInit, options: MountObserverOptions = {}) {
         super();
         this.#init = init;
         this.#options = options;
         this.#abortController = new AbortController();
+
+        // Make a copy of assignGingerly config using structuredClone
+        if (init.assignGingerly !== undefined) {
+            this.#assignGingerlySource = structuredClone(init.assignGingerly);
+        }
 
         if (options.disconnectedSignal) {
             options.disconnectedSignal.addEventListener('abort', () => {
@@ -141,7 +149,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 } else if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
                     // Handle attribute changes for mounted elements
                     const element = mutation.target as Element;
-                    if (this.#mountedElements.has(element) && this.#init.whereAttr) {
+                    if (this.#mountedElements.weakSet.has(element) && this.#init.whereAttr) {
                         const changes = this.#checkAttrChanges(element);
                         attrChanges.push(...changes);
                     }
@@ -282,7 +290,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         this.#processedElements.add(element);
-        this.#mountedElements.add(element);
+        
+        // Add to both WeakSet and Set<WeakRef> for efficient operations
+        if (!this.#mountedElements.weakSet.has(element)) {
+            this.#mountedElements.weakSet.add(element);
+            this.#mountedElements.setWeak.add(new WeakRef(element));
+        }
 
         const rootNode = this.#rootNode?.deref();
         if (!rootNode) {
@@ -299,9 +312,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
         };
 
         // Apply assignGingerly if specified
-        if (this.#init.assignGingerly) {
+        if (this.#assignGingerlySource) {
             const { assignGingerly } = await import('assign-gingerly/index.js');
-            assignGingerly(element, this.#init.assignGingerly);
+            assignGingerly(element, this.#assignGingerlySource);
         }
 
         // Call do callback
@@ -404,12 +417,46 @@ export class MountObserver extends EventTarget implements IMountObserver {
         return changes;
     }
 
-    #handleRemoval(element: Element): void {
-        if (!this.#mountedElements.has(element)) {
+    async assignGingerly(config: Record<string, any> | undefined): Promise<void> {
+        // Handle undefined case
+        if (config === undefined) {
+            this.#assignGingerlySource = undefined;
             return;
         }
 
-        this.#mountedElements.delete(element);
+        const { assignGingerly } = await import('assign-gingerly/index.js');
+
+        // Update the source config for future mounted elements
+        if (this.#assignGingerlySource === undefined) {
+            // No existing config, just clone the passed in object
+            this.#assignGingerlySource = structuredClone(config);
+        } else {
+            // Merge into existing config using assignGingerly
+            assignGingerly(this.#assignGingerlySource, config);
+        }
+
+        // Apply to already mounted elements using setWeak for iteration
+        for (const ref of this.#mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element) {
+                assignGingerly(element, config);
+            }
+        }
+    }
+
+    #handleRemoval(element: Element): void {
+        if (!this.#mountedElements.weakSet.has(element)) {
+            return;
+        }
+
+        // Remove from both structures
+        this.#mountedElements.weakSet.delete(element);
+        for (const ref of this.#mountedElements.setWeak) {
+            if (ref.deref() === element) {
+                this.#mountedElements.setWeak.delete(ref);
+                break;
+            }
+        }
 
         const rootNode = this.#rootNode?.deref();
         if (!rootNode) {

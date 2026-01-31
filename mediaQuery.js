@@ -52,21 +52,24 @@ export function setupMediaQuery(init, rootNodeRef, mountedElements, modules, obs
                 rootNode
             }
         };
-        // Get all mounted elements (we need to iterate through the DOM to find them)
+        // Get all mounted elements from the WeakDual setWeak
         const mountedElementsList = [];
-        const collectMountedElements = (node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node;
-                if (mountedElements.has(element)) {
-                    mountedElementsList.push(element);
-                }
+        for (const ref of mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element) {
+                mountedElementsList.push(element);
             }
-            node.childNodes.forEach(child => collectMountedElements(child));
-        };
-        collectMountedElements(rootNode);
+        }
         // Dismount each element
         for (const element of mountedElementsList) {
-            mountedElements.delete(element);
+            // Remove from both structures
+            mountedElements.weakSet.delete(element);
+            for (const ref of mountedElements.setWeak) {
+                if (ref.deref() === element) {
+                    mountedElements.setWeak.delete(ref);
+                    break;
+                }
+            }
             // Call dismount callback
             if (init.do && typeof init.do !== 'function' && init.do.dismount) {
                 init.do.dismount(element, context);
