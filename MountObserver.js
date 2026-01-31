@@ -1,5 +1,6 @@
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
+import { whereOutside } from './whereOutside.js';
 export class MountObserver extends EventTarget {
     #init;
     #options;
@@ -173,7 +174,8 @@ export class MountObserver extends EventTarget {
         }
         // Check whereOutside condition if specified (donut hole scoping)
         if (this.#init.whereOutside) {
-            if (!this.#checkOutside(element)) {
+            const rootNode = this.#rootNode?.deref();
+            if (!rootNode || !whereOutside(rootNode, element, this.#init.whereOutside)) {
                 return false;
             }
         }
@@ -201,24 +203,6 @@ export class MountObserver extends EventTarget {
         }
         // All conditions passed
         return true;
-    }
-    #checkOutside(element) {
-        // Check if element is outside (not inside) any ancestor matching whereOutside
-        // This implements "donut hole" scoping
-        const rootNode = this.#rootNode?.deref();
-        if (!rootNode) {
-            return true;
-        }
-        const outsideSelector = this.#init.whereOutside;
-        let current = element.parentElement;
-        // Traverse upward from element to root (exclusive of root)
-        while (current && current !== rootNode) {
-            if (current.matches(outsideSelector)) {
-                return false; // Found an excluding ancestor
-            }
-            current = current.parentElement;
-        }
-        return true; // No excluding ancestors found
     }
     async #handleMatch(element) {
         if (this.#processedElements.has(element)) {

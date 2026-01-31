@@ -19,6 +19,10 @@
     "./MountObserver.js": {
       "default": "./MountObserver.js",
       "types": "./MountObserver.ts"
+    },
+    "./whereOutside.js": {
+      "default": "./whereOutside.js",
+      "types": "./whereOutside.ts"
     }
   },
   "files": [
