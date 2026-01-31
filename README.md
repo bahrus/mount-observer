@@ -417,7 +417,7 @@ Using `assignGingerly` provides several benefits:
 
 ### Dynamically updating assignGingerly configuration
 
-The `MountObserver` class provides a public `assignGingerly()` method that allows you to dynamically update the property configuration after the observer has been created. This is useful for responding to user actions or application state changes:
+The `MountObserver` class provides a public `assignGingerly()` method that allows you to merge new updates into the  observer. This is useful for responding to user actions or application state changes:
 
 ```JavaScript
 const observer = new MountObserver({
