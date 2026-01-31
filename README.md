@@ -5,6 +5,43 @@
 
 Note that much of what is described below has not yet been polyfilled.
 
+## Implementation Status
+
+The following features have been implemented and tested:
+
+### Core Functionality
+- ✅ **whereElementMatches**: CSS selector-based element matching
+- ✅ **whereAttr**: Complex attribute-based matching with:
+  - Built-in vs custom element distinction
+  - Attribute prefix variations (data-, enh-, data-enh-)
+  - Hierarchical attribute branches with customizable delimiters
+  - Coordinate system for attribute mapping
+- ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
+- ✅ **whereMediaMatches**: Media query-based conditional mounting (string or MediaQueryList)
+
+### Lifecycle & Events
+- ✅ **mount/dismount/disconnect events**: Element lifecycle tracking
+- ✅ **attrchange event**: Attribute change notifications with batching
+- ✅ **mediamatch/mediaunmatch events**: Media query state change notifications (with `getPlayByPlay` option)
+- ✅ **load event**: Import completion notification
+
+### Advanced Features
+- ✅ **Dynamic imports**: Lazy loading of JavaScript modules
+- ✅ **assignGingerly**: Property assignment on mount
+- ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
+- ✅ **map configuration**: Metadata mapping for attribute coordinates
+- ✅ **once option**: Fire attrchange event only once per attribute
+- ✅ **Shared MutationObserver**: Efficient observer sharing across instances
+- ✅ **Code splitting**: Conditional features loaded on-demand
+- ✅ **Memory management**: WeakRef usage for DOM node references
+
+### Not Yet Implemented
+- ❌ Intersection observer integration
+- ❌ Container query support
+- ❌ Shadow DOM traversal utilities
+- ❌ Reconnect event handling
+- ❌ Multiple import types (CSS, JSON, HTML)
+
 # The MountObserver api.
 
 Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
