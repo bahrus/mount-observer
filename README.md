@@ -470,7 +470,7 @@ const observer = new MountObserver({
 
 [whereInstanceOf implemented as [Requirement5](Requirement5.md)]
 
-[whereMediaMatches implemented as [Requirement6(Requirement6.md)]]
+[whereMediaMatches implemented as [Requirement6](Requirement6.md)]
 
 ## InstanceOf checks in detail
 
