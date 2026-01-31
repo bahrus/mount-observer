@@ -362,21 +362,25 @@ This will automatically apply the specified properties to all matching input ele
 
 ### Nested properties with dataset
 
-The `assignGingerly` library supports nested property assignment using the `?.` notation. This is particularly useful for setting data attributes:
+The `assignGingerly` library supports nested property assignment using the `?.` notation. This is particularly useful for setting data attributes and style:
 
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'button',
    assignGingerly: {
       disabled: false,
-      '?.dataset.action': 'submit',
-      '?.dataset.trackingId': '12345'
+      '?.dataset?.action': 'submit',
+      '?.dataset?.trackingId': '12345',
+      '?.style': {
+         color: 'white',
+         height: '25px',
+      }
    }
 });
 observer.observe(document);
 ```
 
-The `?.` prefix tells assignGingerly to create nested properties if they don't exist. In this example, `?.dataset.action` will set the `data-action` attribute on the button elements.
+The `?.` prefix tells assignGingerly to create nested properties if they don't exist. In this example, `?.dataset?.action` will set the `data-action` attribute on the button elements.
 
 ### Combining with imports
 
@@ -388,7 +392,7 @@ const observer = new MountObserver({
    import: './my-element.js',
    assignGingerly: {
       theme: 'dark',
-      '?.dataset.initialized': 'true'
+      '?.dataset?.initialized': 'true'
    },
    do: ({localName}, {modules}) => {
       if(!customElements.get(localName)) {
@@ -419,7 +423,7 @@ However, we could make the loading even more lazy by specifying intersection opt
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'my-element',
+   select: 'my-element', //not supported by polyfill
    whereElementIntersectsWith:{
       rootMargin: "0px",
       threshold: 1.0,
@@ -440,7 +444,7 @@ const observer = new MountObserver({
    whereContainerHas: '[itemprop=isActive][value="true"]',
    whereInstanceOf: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
    whereLangIn: ['en-GB'],
-   whereConnectiselect:{
+   whereConnectionHas:{
       effectiveTypeIn: ["slow-2g"],
    },
    import: ['./my-element-small.css', {type: 'css'}],
@@ -463,6 +467,10 @@ const observer = new MountObserver({
    }
 });
 ```
+
+[whereInstanceOf implemented as [Requirement5](Requirement5.md)]
+
+[whereMediaMatches implemented as [Requirement6(Requirement6.md)]]
 
 ## InstanceOf checks in detail
 
