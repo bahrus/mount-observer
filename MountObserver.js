@@ -1,4 +1,4 @@
-import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent } from './Events.js';
+import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent, } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
 import { whereOutside } from './whereOutside.js';
 export class MountObserver extends EventTarget {

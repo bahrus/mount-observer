@@ -415,6 +415,67 @@ Using `assignGingerly` provides several benefits:
 3. **Declarative**: No need to write custom mount callbacks for simple property assignments
 4. **Consistent**: The same property values are applied uniformly across all matching elements
 
+### Dynamically updating assignGingerly configuration
+
+The `MountObserver` class provides a public `assignGingerly()` method that allows you to dynamically update the property configuration after the observer has been created. This is useful for responding to user actions or application state changes:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'input',
+   assignGingerly: {
+      disabled: true,
+      value: 'Initial value'
+   }
+});
+observer.observe(document);
+
+// Later, update the configuration
+await observer.assignGingerly({
+   title: 'Updated tooltip',
+   placeholder: 'New placeholder'
+});
+```
+
+**Key behaviors:**
+
+1. **Merging**: New properties are merged with existing configuration. In the example above, future elements will receive all properties: `disabled`, `value`, `title`, and `placeholder`.
+
+2. **Applies to existing elements**: The new properties are immediately applied to all currently mounted elements.
+
+3. **Applies to future elements**: Future elements that mount will receive the merged configuration.
+
+4. **Starting without initial config**: You can call the method even if no `assignGingerly` was specified in the constructor:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'input'
+});
+observer.observe(document);
+
+// Set configuration later
+await observer.assignGingerly({
+   disabled: true,
+   value: 'Set via method'
+});
+```
+
+5. **Clearing configuration**: Pass `undefined` to clear the configuration for future elements (already-mounted elements keep their properties):
+
+```JavaScript
+await observer.assignGingerly(undefined);
+// Future elements will not have properties applied
+// Existing elements retain their current properties
+```
+
+**Method signature:**
+```TypeScript
+async assignGingerly(config: Record<string, any> | undefined): Promise<void>
+```
+
+The method is async because the assign-gingerly library is loaded dynamically when needed.
+
+[Implemented as [Requirement9](Requirement9.md)]
+
 
 ##  Extra lazy loading
 
