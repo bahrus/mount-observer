@@ -139,7 +139,7 @@ The "observer" constant above is a class instance that inherits from EventTarget
 
 In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but has to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable.
 
-If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support.
+If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors every provide a selector-observer (if ever).
 
 So the developer could use:
 
@@ -147,8 +147,8 @@ So the developer could use:
 
 ```JavaScript
 const observer = new MountObserver({
-   import: './my-element.js',
    whereElementMatches:'my-element',
+   import: './my-element.js',
    do: ({localName}, {modules, observer, observeInfo}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
@@ -160,9 +160,11 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*"
+and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*".
 
 This polyfill in fact only supports this latter option ("whreElementMatches"), and leaves "select" for such a time as when a selector observer is available in the platform.
+
+[Implemented as Requirement 1](Requirement1.md).
 
 ##  The import key
 
@@ -191,7 +193,9 @@ The do function won't be invoked until all the imports have been successfully co
 
 Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
 
-This proposal would also include support for JSON and HTML module imports (really, all types). 
+This proposal would also include support for JSON and HTML module imports (really, all types).
+
+[Implemented as Requirement 1](Requirement1.md).
 
 ## Preemptive downloading
 
@@ -338,7 +342,7 @@ This would allow developers to create "stylesheet" like capabilities.
 
 ## Applying properties with assignGingerly
 
-For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows you to declaratively specify properties to apply to elements without writing custom mount callbacks:
+For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows us to declaratively specify properties to apply to elements without writing custom mount callbacks:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -353,6 +357,8 @@ observer.observe(document);
 ```
 
 This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
+
+[Implemented as [Requirement2](Requirment2.md)]
 
 ### Nested properties with dataset
 
