@@ -1,4 +1,4 @@
-import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent, MediaMatchEvent, MediaUnmatchEvent } from './Events.js';
+import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
 export class MountObserver extends EventTarget {
     #init;
@@ -14,9 +14,8 @@ export class MountObserver extends EventTarget {
     #elementOnceAttrs = new WeakMap();
     #matchesWhereAttrFn = null;
     #buildAttrCoordinateMapFn = null;
-    #mediaQueryList;
+    #mediaQueryCleanup;
     #mediaMatches = true;
-    #mediaChangeHandler;
     constructor(init, options = {}) {
         super();
         this.#init = init;
@@ -26,10 +25,6 @@ export class MountObserver extends EventTarget {
             options.disconnectedSignal.addEventListener('abort', () => {
                 this.disconnect();
             });
-        }
-        // Set up media query if specified
-        if (init.whereMediaMatches) {
-            this.#setupMediaQuery();
         }
         // Preload whereAttr utilities if needed
         if (init.whereAttr) {
@@ -50,82 +45,14 @@ export class MountObserver extends EventTarget {
             this.#buildAttrCoordinateMapFn = buildAttrCoordinateMap;
         }
     }
-    #setupMediaQuery() {
-        const { whereMediaMatches } = this.#init;
-        // Create or use MediaQueryList
-        if (typeof whereMediaMatches === 'string') {
-            this.#mediaQueryList = window.matchMedia(whereMediaMatches);
+    async #setupMediaQuery() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup media query before observe() is called');
         }
-        else {
-            this.#mediaQueryList = whereMediaMatches;
-        }
-        // Set initial state
-        this.#mediaMatches = this.#mediaQueryList.matches;
-        // Set up change listener
-        this.#mediaChangeHandler = (e) => {
-            const previousMatches = this.#mediaMatches;
-            this.#mediaMatches = e.matches;
-            if (e.matches && !previousMatches) {
-                // Media query now matches - wake up and process elements
-                this.#handleMediaMatch();
-            }
-            else if (!e.matches && previousMatches) {
-                // Media query no longer matches - dismount all elements
-                this.#handleMediaUnmatch();
-            }
-        };
-        this.#mediaQueryList.addEventListener('change', this.#mediaChangeHandler);
-    }
-    #handleMediaMatch() {
-        // Dispatch mediamatch event if requested
-        if (this.#init.getPlayByPlay) {
-            this.dispatchEvent(new MediaMatchEvent(this.#init));
-        }
-        // Process all elements in the observed node
-        const rootNode = this.#rootNode?.deref();
-        if (rootNode) {
-            this.#processNode(rootNode);
-        }
-    }
-    #handleMediaUnmatch() {
-        // Dispatch mediaunmatch event if requested
-        if (this.#init.getPlayByPlay) {
-            this.dispatchEvent(new MediaUnmatchEvent(this.#init));
-        }
-        // Dismount all currently mounted elements
-        const rootNode = this.#rootNode?.deref();
-        if (!rootNode) {
-            return;
-        }
-        const context = {
-            modules: this.#modules,
-            observer: this,
-            observeInfo: {
-                rootNode
-            }
-        };
-        // Get all mounted elements (we need to iterate through the DOM to find them)
-        const mountedElements = [];
-        const collectMountedElements = (node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node;
-                if (this.#mountedElements.has(element)) {
-                    mountedElements.push(element);
-                }
-            }
-            node.childNodes.forEach(child => collectMountedElements(child));
-        };
-        collectMountedElements(rootNode);
-        // Dismount each element
-        for (const element of mountedElements) {
-            this.#mountedElements.delete(element);
-            // Call dismount callback
-            if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.dismount) {
-                this.#init.do.dismount(element, context);
-            }
-            // Dispatch dismount event with reason
-            this.dispatchEvent(new DismountEvent(element, 'media-query-failed', this.#init));
-        }
+        const { setupMediaQuery } = await import('./mediaQuery.js');
+        const result = setupMediaQuery(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (node) => this.#processNode(node));
+        this.#mediaMatches = result.mediaMatches;
+        this.#mediaQueryCleanup = result.cleanup;
     }
     get disconnectedSignal() {
         return this.#abortController.signal;
@@ -135,6 +62,10 @@ export class MountObserver extends EventTarget {
             throw new Error('Already observing');
         }
         this.#rootNode = new WeakRef(rootNode);
+        // Set up media query if specified (needs rootNode to be set first)
+        if (this.#init.whereMediaMatches) {
+            await this.#setupMediaQuery();
+        }
         // Wait for whereAttr utilities to load if needed
         if (this.#init.whereAttr && !this.#matchesWhereAttrFn) {
             await this.#preloadWhereAttrUtilities();
@@ -197,9 +128,9 @@ export class MountObserver extends EventTarget {
             this.#mutationCallback = undefined;
         }
         // Remove media query listener
-        if (this.#mediaQueryList && this.#mediaChangeHandler) {
-            this.#mediaQueryList.removeEventListener('change', this.#mediaChangeHandler);
-            this.#mediaChangeHandler = undefined;
+        if (this.#mediaQueryCleanup) {
+            this.#mediaQueryCleanup();
+            this.#mediaQueryCleanup = undefined;
         }
         this.#abortController.abort();
         this.#rootNode = undefined;
