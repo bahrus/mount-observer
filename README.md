@@ -634,7 +634,8 @@ observer.observe(oContainerNode);
 The check for "whereOutside" is done via script:
 
 ```JavaScript
-outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
+import {whereOutside} from 'mount-observer/whereOutside.js';
+whereOutside(oContainerNode: Node, matchCandidate: Element, outside: string){
     let current = matchCandidate.parentElement;
     
     while (current && current !== oContainerNode) {
@@ -649,7 +650,7 @@ outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
 
 ```
 
-[Implement with [Requirement7](Requirement7.md)]
+[Implemented as [Requirement7](Requirement7.md)]
 
 ## A tribute to attributes
 

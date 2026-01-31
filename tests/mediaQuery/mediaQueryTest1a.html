@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaQuery Test 1</title>
+</head>
+<body>
+    <div id=div>
+        <span id=span></span>
+    </div>
+    <div id=target mark=good></div>
+    <script type=module>
+        import {MountObserver} from '/MountObserver.js';
+        const mo = new MountObserver({
+            on: '#span',
+            whereMediaMatches: '(max-width: 600px)',
+            do:{
+                mount: (el, ctx) => {
+                    console.log({el, ctx});
+                    target.removeAttribute('mark');
+                }
+            }
+        });
+        mo.addEventListener('mount', e => {
+            console.log(e);
+        });
+        mo.observe(div);
+    </script>
+</body>
+</html>
