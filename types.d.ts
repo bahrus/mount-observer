@@ -2,15 +2,21 @@
 
 export type Constructor = new (...args: any[]) => any;
 
+export type DismountReason = 
+    | 'media-query-failed'
+    | 'where-element-matches-failed';
+
 export interface MountInit {
     whereElementMatches: string;
     whereAttr?: WhereAttr;
     whereInstanceOf?: Constructor | Constructor[];
+    whereMediaMatches?: string | MediaQueryList;
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: DoCallback | DoCallbacks;
     loadingEagerness?: 'eager' | 'lazy';
     assignGingerly?: Record<string, any>;
     map?: MapConfig;
+    getPlayByPlay?: boolean;
 }
 
 export interface MapConfig {
@@ -74,14 +80,18 @@ export interface IMountObserver extends EventTarget {
 export interface IMountEvent extends Event {
     matchingElement: Element;
     modules: any[];
+    mountInit: MountInit;
 }
 
 export interface IDismountEvent extends Event {
     matchingElement: Element;
+    reason: DismountReason;
+    mountInit: MountInit;
 }
 
 export interface IAttrChangeEvent extends Event {
     changes: AttrChange[];
+    mountInit: MountInit;
 }
 
 export interface AttrChange {

@@ -10,7 +10,9 @@ import {
     DismountEvent,
     DisconnectEvent,
     LoadEvent,
-    AttrChangeEvent
+    AttrChangeEvent,
+    MediaMatchEvent,
+    MediaUnmatchEvent
 } from './Events.js';
 import {
     registerSharedObserver,
@@ -32,6 +34,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #elementOnceAttrs = new WeakMap<Element, Set<string>>();
     #matchesWhereAttrFn: ((element: Element, whereAttr: any) => boolean) | null = null;
     #buildAttrCoordinateMapFn: ((whereAttr: any, isCustomElement: boolean) => any) | null = null;
+    #mediaQueryList?: MediaQueryList;
+    #mediaMatches: boolean = true;
+    #mediaChangeHandler?: (e: MediaQueryListEvent) => void;
 
     constructor(init: MountInit, options: MountObserverOptions = {}) {
         super();
@@ -43,6 +48,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
             options.disconnectedSignal.addEventListener('abort', () => {
                 this.disconnect();
             });
+        }
+
+        // Set up media query if specified
+        if (init.whereMediaMatches) {
+            this.#setupMediaQuery();
         }
 
         // Preload whereAttr utilities if needed
@@ -66,6 +76,96 @@ export class MountObserver extends EventTarget implements IMountObserver {
             this.#buildAttrCoordinateMapFn = buildAttrCoordinateMap;
         }
     }
+    
+    #setupMediaQuery(): void {
+        const { whereMediaMatches } = this.#init;
+        
+        // Create or use MediaQueryList
+        if (typeof whereMediaMatches === 'string') {
+            this.#mediaQueryList = window.matchMedia(whereMediaMatches);
+        } else {
+            this.#mediaQueryList = whereMediaMatches;
+        }
+        
+        // Set initial state
+        this.#mediaMatches = this.#mediaQueryList!.matches;
+        
+        // Set up change listener
+        this.#mediaChangeHandler = (e: MediaQueryListEvent) => {
+            const previousMatches = this.#mediaMatches;
+            this.#mediaMatches = e.matches;
+            
+            if (e.matches && !previousMatches) {
+                // Media query now matches - wake up and process elements
+                this.#handleMediaMatch();
+            } else if (!e.matches && previousMatches) {
+                // Media query no longer matches - dismount all elements
+                this.#handleMediaUnmatch();
+            }
+        };
+        
+        this.#mediaQueryList!.addEventListener('change', this.#mediaChangeHandler);
+    }
+    
+    #handleMediaMatch(): void {
+        // Dispatch mediamatch event if requested
+        if (this.#init.getPlayByPlay) {
+            this.dispatchEvent(new MediaMatchEvent(this.#init));
+        }
+        
+        // Process all elements in the observed node
+        const rootNode = this.#rootNode?.deref();
+        if (rootNode) {
+            this.#processNode(rootNode);
+        }
+    }
+    
+    #handleMediaUnmatch(): void {
+        // Dispatch mediaunmatch event if requested
+        if (this.#init.getPlayByPlay) {
+            this.dispatchEvent(new MediaUnmatchEvent(this.#init));
+        }
+        
+        // Dismount all currently mounted elements
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            return;
+        }
+        
+        const context: MountContext = {
+            modules: this.#modules,
+            observer: this,
+            observeInfo: {
+                rootNode
+            }
+        };
+        
+        // Get all mounted elements (we need to iterate through the DOM to find them)
+        const mountedElements: Element[] = [];
+        const collectMountedElements = (node: Node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as Element;
+                if (this.#mountedElements.has(element)) {
+                    mountedElements.push(element);
+                }
+            }
+            node.childNodes.forEach(child => collectMountedElements(child));
+        };
+        collectMountedElements(rootNode);
+        
+        // Dismount each element
+        for (const element of mountedElements) {
+            this.#mountedElements.delete(element);
+            
+            // Call dismount callback
+            if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.dismount) {
+                this.#init.do.dismount(element, context);
+            }
+            
+            // Dispatch dismount event with reason
+            this.dispatchEvent(new DismountEvent(element, 'media-query-failed', this.#init));
+        }
+    }
 
     get disconnectedSignal(): AbortSignal {
         return this.#abortController.signal;
@@ -83,11 +183,18 @@ export class MountObserver extends EventTarget implements IMountObserver {
             await this.#preloadWhereAttrUtilities();
         }
         
-        // Process existing elements
-        this.#processNode(rootNode);
+        // Process existing elements only if media matches
+        if (this.#mediaMatches) {
+            this.#processNode(rootNode);
+        }
 
         // Create mutation callback
         this.#mutationCallback = (mutations) => {
+            // Skip processing if media doesn't match
+            if (!this.#mediaMatches) {
+                return;
+            }
+            
             const attrChanges: AttrChange[] = [];
             
             for (const mutation of mutations) {
@@ -114,7 +221,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             
             // Batch and dispatch attribute changes
             if (attrChanges.length > 0) {
-                this.dispatchEvent(new AttrChangeEvent(attrChanges));
+                this.dispatchEvent(new AttrChangeEvent(attrChanges, this.#init));
             }
         };
 
@@ -142,6 +249,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
             this.#mutationCallback = undefined;
         }
         
+        // Remove media query listener
+        if (this.#mediaQueryList && this.#mediaChangeHandler) {
+            this.#mediaQueryList.removeEventListener('change', this.#mediaChangeHandler);
+            this.#mediaChangeHandler = undefined;
+        }
+        
         this.#abortController.abort();
         this.#rootNode = undefined;
     }
@@ -156,7 +269,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
 
-        this.dispatchEvent(new LoadEvent(this.#modules));
+        this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
     }
 
     #processNode(node: Node): void {
@@ -264,13 +377,13 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Dispatch mount event
-        this.dispatchEvent(new MountEvent(element, this.#modules));
+        this.dispatchEvent(new MountEvent(element, this.#modules, this.#init));
         
         // Check for initial attribute changes if whereAttr is configured
         if (this.#init.whereAttr) {
             const changes = this.#checkAttrChanges(element);
             if (changes.length > 0) {
-                this.dispatchEvent(new AttrChangeEvent(changes));
+                this.dispatchEvent(new AttrChangeEvent(changes, this.#init));
             }
         }
     }
@@ -381,7 +494,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Dispatch dismount event
-        this.dispatchEvent(new DismountEvent(element));
+        this.dispatchEvent(new DismountEvent(element, 'where-element-matches-failed', this.#init));
 
         // Check if element is being moved within the same root
         // If it's truly disconnected, dispatch disconnect event
@@ -391,7 +504,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
                     this.#init.do.disconnect(element, context);
                 }
 
-                this.dispatchEvent(new DisconnectEvent(element));
+                this.dispatchEvent(new DisconnectEvent(element, this.#init));
             }
         }, 0);
     }

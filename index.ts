@@ -16,5 +16,7 @@ export {
     dismountEventName,
     disconnectEventName,
     loadEventName,
-    attrchangeEventName
+    attrchangeEventName,
+    mediamatchEventName,
+    mediaunmatchEventName
 } from './Events.js';
