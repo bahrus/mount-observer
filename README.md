@@ -18,6 +18,7 @@ The following features have been implemented and tested:
   - Coordinate system for attribute mapping
 - ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
 - ✅ **whereMediaMatches**: Media query-based conditional mounting (string or MediaQueryList)
+- ✅ **whereOutside**: Donut hole scoping (exclude elements inside matching ancestors)
 
 ### Lifecycle & Events
 - ✅ **mount/dismount/disconnect events**: Element lifecycle tracking
@@ -474,7 +475,7 @@ const observer = new MountObserver({
 
 ## InstanceOf checks in detail
 
-Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic.  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
+Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
 The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that superclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each sub class, which might not always be all that high as a percentage, compared to the base class.
 
@@ -524,6 +525,8 @@ observer.addEventListener('forget', e => {
 });
 ```
 
+[mount, dismount, disconnect] events implemented
+
 ## Explanation of all states / events
 
 Normally, an element stays in its place in the DOM tree, but the conditions that the MountObserver instance is monitoring for can change for the element, based on modifications to the attributes of the element itself, or its custom state, or to other peer elements within the shadowRoot, if any, or window resizing, etc.  As the element meets or doesn't meet all the conditions, the mountObserver will first call the corresponding mount/dismount callback, and then dispatch event "mount" or "dismount" according to whether the criteria are all met or not.
@@ -557,6 +560,8 @@ I'm on the fence on that one.   I think the benefits either way to DX are so sma
 
 ## Dismounting
 
+[TODO] This section is out of date
+
 In many cases, it will be critical to inform the developer **why** the element no longer satisfies all the criteria.  For example, we may be using an intersection observer, and when we've scrolled away from view, we can "shut down" until the element is (nearly) scrolled back into view.  We may also be displaying things differently depending on the network speed.  How we should respond when one of the original conditions, but not the other, no longer applies, is of paramount importance.
 
 So the dismount event should provide a "checklist" of all the conditions, and their current value:
@@ -589,6 +594,8 @@ So I believe the prudent thing to do is wait for all the conditions to be satisf
 
 The alternative to providing this feature, which I'm leaning towards, is to just ask the developer to create "specialized" mountObserver construction arguments, that turn on and off precisely when the developer needs to know.
 
+[Implemented with [Requirement6](Requirement6.md)]
+
 
 ## Support for "donut hole scoping"
 
@@ -605,9 +612,9 @@ For the polyfill, we need to support it as follows:
 ```
 
 ```JavaScript
-const oElement = document.getElementById('myTest');
+const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
-   select:'[itemprop]',
+   whereElementMatches:'[itemprop]',
    outside: '[itemscope]'
    do: {
       mount: ({localName}, {modules, observer}) => {
@@ -616,13 +623,13 @@ const observer = new MountObserver({
    },
    disconnectedSignal: new AbortController().signal
 });
-observer.observe(oElement);
+observer.observe(oContainerNode);
 ```
 
 The check for "outside" is done via script:
 
 ```JavaScript
-outsideCheck(oElement: Element, matchCandidate: Element, outside: string){
+outsideCheck(oContainerNode: Element, matchCandidate: Element, outside: string){
    const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
    for(const elementToExclude of elementsToExclude){
       if(elementToExclude === matchCandidate || elementToExclude.contains(matchCandidate)) return false;

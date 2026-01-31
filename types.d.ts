@@ -11,6 +11,7 @@ export interface MountInit {
     whereAttr?: WhereAttr;
     whereInstanceOf?: Constructor | Constructor[];
     whereMediaMatches?: string | MediaQueryList;
+    whereOutside?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: DoCallback | DoCallbacks;
     loadingEagerness?: 'eager' | 'lazy';

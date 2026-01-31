@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>whereOutside Test</title>
+</head>
+<body>
+    <h1>whereOutside Test (Donut Hole Scoping)</h1>
+
+    <!-- Test structure matching the requirement example -->
+    <div id="myTest" itemscope>
+        <span itemprop="name" id="span1">Should Mount</span>
+        <div itemscope id="nested">
+            <data itemprop="ssn" id="data1">Should NOT Mount</data>
+            <span itemprop="address" id="span2">Should NOT Mount</span>
+        </div>
+        <p itemprop="description" id="p1">Should Mount</p>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        window.eventLog = [];
+
+        // Test: whereOutside should exclude elements inside nested itemscope
+        const observer = new MountObserver({
+            whereElementMatches: '[itemprop]',
+            whereOutside: '[itemscope]',
+            do: (el) => {
+                window.eventLog.push({ type: 'mount', id: el.id });
+            }
+        });
+
+        observer.addEventListener('mount', (e) => {
+            window.eventLog.push({ type: 'mount-event', id: e.matchingElement.id });
+        });
+
+        const container = document.getElementById('myTest');
+        await observer.observe(container);
+
+        // Wait a bit then check results
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            // Expected: span1 and p1 should mount (direct children of root itemscope)
+            // NOT expected: data1 and span2 (inside nested itemscope)
+            const mountedIds = window.eventLog
+                .filter(e => e.type === 'mount-event')
+                .map(e => e.id);
+            
+            const expectedMounts = ['span1', 'p1'];
+            const unexpectedMounts = ['data1', 'span2'];
+            
+            const hasExpected = expectedMounts.every(id => mountedIds.includes(id));
+            const hasNoUnexpected = unexpectedMounts.every(id => !mountedIds.includes(id));
+            
+            const testPass = hasExpected && hasNoUnexpected;
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <p>Test: ${testPass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Mounted elements: ${mountedIds.join(', ')}</p>
+                <p>Expected: ${expectedMounts.join(', ')}</p>
+                <p>Should NOT mount: ${unexpectedMounts.join(', ')}</p>
+                
+                <h3>Event Log</h3>
+                <pre>${JSON.stringify(window.eventLog, null, 2)}</pre>
+                
+                <h3>Expected Behavior</h3>
+                <ul>
+                    <li>span1 (itemprop=name): Should mount - direct child of root itemscope</li>
+                    <li>p1 (itemprop=description): Should mount - direct child of root itemscope</li>
+                    <li>data1 (itemprop=ssn): Should NOT mount - inside nested itemscope</li>
+                    <li>span2 (itemprop=address): Should NOT mount - inside nested itemscope</li>
+                </ul>
+                
+                <h3>Explanation</h3>
+                <p>The whereOutside condition creates a "donut hole" - elements matching [itemprop] 
+                are only mounted if they are NOT inside any [itemscope] element (except the root container itself).</p>
+            `;
+            
+            // Set test result for Playwright
+            window.testResult = testPass;
+        }, 100);
+    </script>
+</body>
+</html>

@@ -231,6 +231,13 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return false;
         }
         
+        // Check whereOutside condition if specified (donut hole scoping)
+        if (this.#init.whereOutside) {
+            if (!this.#checkOutside(element)) {
+                return false;
+            }
+        }
+        
         // Check whereAttr condition if specified
         if (this.#init.whereAttr) {
             // Use cached function (should be loaded by now from constructor)
@@ -260,6 +267,28 @@ export class MountObserver extends EventTarget implements IMountObserver {
         
         // All conditions passed
         return true;
+    }
+    
+    #checkOutside(element: Element): boolean {
+        // Check if element is outside (not inside) any ancestor matching whereOutside
+        // This implements "donut hole" scoping
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            return true;
+        }
+        
+        const outsideSelector = this.#init.whereOutside!;
+        let current = element.parentElement;
+        
+        // Traverse upward from element to root (exclusive of root)
+        while (current && current !== rootNode) {
+            if (current.matches(outsideSelector)) {
+                return false;  // Found an excluding ancestor
+            }
+            current = current.parentElement;
+        }
+        
+        return true;  // No excluding ancestors found
     }
 
     async #handleMatch(element: Element): Promise<void> {
