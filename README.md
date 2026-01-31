@@ -358,7 +358,7 @@ observer.observe(document);
 
 This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
 
-[Implemented as [Requirement2](Requirment2.md)]
+[Implemented as [Requirement2](Requirement2.md)]
 
 ### Nested properties with dataset
 
