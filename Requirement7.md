@@ -1,6 +1,6 @@
 # Donut Hole Support
 
-For the polyfill, we need to support donut hole scopeing.
+For the polyfill, we need to support donut hole scoping.
 
 For example:
 

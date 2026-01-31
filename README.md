@@ -608,14 +608,19 @@ For the polyfill, we need to support it as follows:
 ```html
 <div id=myTest itemscope>
    <span itemprop=name>
+    <div itemscope>
+        <data itemprop=ssn>
+    </div>
 </div>
 ```
+
+We want to find all elements with attribute itemprop outside any itemscope, so the span and not the data element.
 
 ```JavaScript
 const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
    whereElementMatches:'[itemprop]',
-   outside: '[itemscope]'
+   whereOutside: '[itemscope]'
    do: {
       mount: ({localName}, {modules, observer}) => {
         ...
@@ -626,17 +631,25 @@ const observer = new MountObserver({
 observer.observe(oContainerNode);
 ```
 
-The check for "outside" is done via script:
+The check for "whereOutside" is done via script:
 
 ```JavaScript
-outsideCheck(oContainerNode: Element, matchCandidate: Element, outside: string){
-   const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
-   for(const elementToExclude of elementsToExclude){
-      if(elementToExclude === matchCandidate || elementToExclude.contains(matchCandidate)) return false;
-   }
-   return true;
+outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
+    let current = matchCandidate.parentElement;
+    
+    while (current && current !== oContainerNode) {
+        if (current.matches(outside)) {
+            return false;  // Found an excluding ancestor
+        }
+        current = current.parentElement;
+    }
+    
+    return true;  // No excluding ancestors found
 }
+
 ```
+
+[Implement with [Requirement7](Requirement7.md)]
 
 ## A tribute to attributes
 
