@@ -27,6 +27,10 @@
     "./emitEvents.js": {
       "default": "./emitEvents.js",
       "types": "./emitEvents.ts"
+    },
+    "./attrChanges.js": {
+      "default": "./attrChanges.js",
+      "types": "./attrChanges.ts"
     }
   },
   "files": [

@@ -19,6 +19,7 @@ export class MountObserver extends EventTarget {
     #elementOnceAttrs = new WeakMap();
     #matchesWhereAttrFn = null;
     #buildAttrCoordinateMapFn = null;
+    #checkAttrChangesFn = null;
     #mediaQueryCleanup;
     #mediaMatches = true;
     #assignGingerlySource;
@@ -53,6 +54,13 @@ export class MountObserver extends EventTarget {
         if (!this.#buildAttrCoordinateMapFn) {
             const { buildAttrCoordinateMap } = await import('./attrCoordinates.js');
             this.#buildAttrCoordinateMapFn = buildAttrCoordinateMap;
+        }
+        if (!this.#checkAttrChangesFn) {
+            const { checkAttrChanges } = await import('./attrChanges.js');
+            // Create a bound function that passes the required parameters
+            this.#checkAttrChangesFn = (element) => {
+                return checkAttrChanges(element, this.#init, this.#buildAttrCoordinateMapFn, this.#elementAttrStates, this.#elementOnceAttrs);
+            };
         }
     }
     async #setupMediaQuery() {
@@ -107,8 +115,8 @@ export class MountObserver extends EventTarget {
                 else if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
                     // Handle attribute changes for mounted elements
                     const element = mutation.target;
-                    if (this.#mountedElements.weakSet.has(element) && this.#init.whereAttr) {
-                        const changes = this.#checkAttrChanges(element);
+                    if (this.#mountedElements.weakSet.has(element) && this.#checkAttrChangesFn) {
+                        const changes = this.#checkAttrChangesFn(element);
                         attrChanges.push(...changes);
                     }
                 }
@@ -261,78 +269,12 @@ export class MountObserver extends EventTarget {
             await emitMountedElementEvents(element, this.#init, this.#processedEventsForElement);
         }
         // Check for initial attribute changes if whereAttr is configured
-        if (this.#init.whereAttr) {
-            const changes = this.#checkAttrChanges(element);
+        if (this.#checkAttrChangesFn) {
+            const changes = this.#checkAttrChangesFn(element);
             if (changes.length > 0) {
                 this.dispatchEvent(new AttrChangeEvent(changes, this.#init));
             }
         }
-    }
-    #checkAttrChanges(element) {
-        if (!this.#init.whereAttr || !this.#buildAttrCoordinateMapFn) {
-            return [];
-        }
-        const isCustomElement = element.tagName.toLowerCase().includes('-');
-        const attrCoordMap = this.#buildAttrCoordinateMapFn(this.#init.whereAttr, isCustomElement);
-        // Get or create the attribute state for this element
-        let attrState = this.#elementAttrStates.get(element);
-        if (!attrState) {
-            attrState = new Map();
-            this.#elementAttrStates.set(element, attrState);
-        }
-        const changes = [];
-        const currentAttrs = new Set();
-        // Check all possible attributes from the coordinate map
-        for (const attrName of Object.keys(attrCoordMap)) {
-            const coordinate = attrCoordMap[attrName];
-            const currentValue = element.getAttribute(attrName);
-            const previousValue = attrState.get(attrName);
-            if (currentValue !== null) {
-                currentAttrs.add(attrName);
-            }
-            // Check if this attribute has "once: true" in its map entry
-            const mapEntry = this.#init.map?.[coordinate] || null;
-            const isOnce = mapEntry?.once === true;
-            // If "once" is true, check if we've already seen this attribute
-            if (isOnce) {
-                let onceAttrs = this.#elementOnceAttrs.get(element);
-                if (!onceAttrs) {
-                    onceAttrs = new Set();
-                    this.#elementOnceAttrs.set(element, onceAttrs);
-                }
-                // If we've already seen this attribute, skip it
-                if (onceAttrs.has(attrName)) {
-                    continue;
-                }
-                // Mark this attribute as seen if it currently has a value
-                if (currentValue !== null) {
-                    onceAttrs.add(attrName);
-                }
-            }
-            // Include if: currently has value OR previously had value but now removed
-            if (currentValue !== null || (previousValue !== undefined && currentValue === null)) {
-                // Check if value changed
-                if (currentValue !== previousValue) {
-                    const attrNode = currentValue !== null ? element.getAttributeNode(attrName) : null;
-                    changes.push({
-                        value: currentValue,
-                        attrNode,
-                        mapEntry,
-                        attrName,
-                        coordinate,
-                        element
-                    });
-                    // Update state
-                    if (currentValue !== null) {
-                        attrState.set(attrName, currentValue);
-                    }
-                    else {
-                        attrState.delete(attrName);
-                    }
-                }
-            }
-        }
-        return changes;
     }
     async assignGingerly(config) {
         // Handle undefined case

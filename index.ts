@@ -2,6 +2,7 @@
 export { MountObserver } from './MountObserver.js';
 export { whereOutside } from './whereOutside.js';
 export { emitMountedElementEvents } from './emitEvents.js';
+export { checkAttrChanges } from './attrChanges.js';
 export type {
     MountInit,
     MountObserverOptions,
