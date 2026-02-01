@@ -476,6 +476,193 @@ The method is async because the assign-gingerly library is loaded dynamically wh
 
 [Implemented as [Requirement9](Requirement9.md)]
 
+## Emitting events from mounted elements
+
+MountObserver can automatically dispatch custom events from elements when they mount. This is useful for:
+
+1. **Signaling readiness**: Notify parent components or listeners that an element is ready
+2. **Initialization events**: Trigger workflows when elements appear in the DOM
+3. **Decoupled communication**: Allow elements to announce their presence without tight coupling
+
+### Basic event emission
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'button[data-action]',
+   mountedElemEmits: {
+      event: 'Event',
+      args: 'custom-ready'
+   }
+});
+observer.observe(document);
+```
+
+This dispatches a `custom-ready` event from each matching button element when it mounts. Events bubble by default, so you can listen at the document level:
+
+```JavaScript
+document.addEventListener('custom-ready', (e) => {
+   console.log('Button ready:', e.target);
+});
+```
+
+### Event constructors
+
+You can specify any event constructor available in `globalThis`:
+
+```JavaScript
+mountedElemEmits: {
+   event: 'CustomEvent',
+   args: ['element-ready', { detail: { timestamp: Date.now() } }]
+}
+```
+
+Or pass a constructor directly:
+
+```JavaScript
+mountedElemEmits: {
+   event: CustomEvent,
+   args: ['element-ready', { detail: { timestamp: Date.now() } }]
+}
+```
+
+### Magic string substitution
+
+Use magic strings to inject dynamic values into event data:
+
+- `{{mountedElement}}` - The element that just mounted
+- `{{mountInit}}` - The MountInit configuration object
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'button[data-test]',
+   mountedElemEmits: {
+      event: 'CustomEvent',
+      args: ['element-mounted', { 
+         detail: { 
+            element: '{{mountedElement}}',
+            config: '{{mountInit}}'
+         }
+      }]
+   }
+});
+```
+
+Magic strings work at any depth in nested objects and arrays:
+
+```JavaScript
+mountedElemEmits: {
+   event: 'CustomEvent',
+   args: ['data-ready', {
+      detail: {
+         nested: {
+            deep: {
+               element: '{{mountedElement}}'
+            }
+         }
+      }
+   }]
+}
+```
+
+### Multiple events
+
+Emit multiple events in sequence by providing an array:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'my-component',
+   mountedElemEmits: [
+      { event: 'Event', args: 'component-loading' },
+      { event: 'Event', args: 'component-ready' },
+      { event: 'CustomEvent', args: ['component-initialized', { detail: { version: '1.0' } }] }
+   ]
+});
+```
+
+Events are dispatched in the order specified.
+
+### Event properties with eventProps
+
+Apply additional properties to the event object using `eventProps`:
+
+```JavaScript
+mountedElemEmits: {
+   event: 'CustomEvent',
+   args: ['ready', { detail: {} }],
+   eventProps: {
+      timestamp: Date.now(),
+      source: 'mount-observer',
+      element: '{{mountedElement}}'
+   }
+}
+```
+
+Properties are applied using the [assignGingerly](https://github.com/bahrus/assign-gingerly) library, which supports nested property assignment with the `?.` notation.
+
+### Fire once per element
+
+Use `oncePerMountedElement` to ensure an event only fires the first time an element mounts:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'button[data-once]',
+   mountedElemEmits: {
+      event: 'Event',
+      args: 'initialized',
+      oncePerMountedElement: true
+   }
+});
+```
+
+If the element is removed and re-added to the DOM, the event will not fire again. This is useful for initialization events that should only happen once per element instance.
+
+### Performance considerations
+
+The event emission logic is code-split into a separate module (`emitEvents.js`) that is only loaded when `mountedElemEmits` is configured. This keeps the core MountObserver lean for users who don't need this feature.
+
+### Complete example
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'my-widget',
+   import: './my-widget.js',
+   mountedElemEmits: [
+      {
+         event: 'CustomEvent',
+         args: ['widget-loading', { 
+            detail: { 
+               element: '{{mountedElement}}',
+               timestamp: Date.now()
+            }
+         }],
+         oncePerMountedElement: true
+      },
+      {
+         event: 'Event',
+         args: 'widget-ready'
+      }
+   ],
+   do: ({localName}, {modules}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyWidget);
+      }
+   }
+});
+
+// Listen for events
+document.addEventListener('widget-loading', (e) => {
+   console.log('Widget loading:', e.detail.element);
+});
+
+document.addEventListener('widget-ready', (e) => {
+   console.log('Widget ready:', e.target);
+});
+
+observer.observe(document);
+```
+
+[Implemented as [Requirement10](Requirement10.md)]
+
 
 ##  Extra lazy loading
 
