@@ -1,6 +1,7 @@
 // Main entry point for MountObserver v2
 export { MountObserver } from './MountObserver.js';
 export { whereOutside } from './whereOutside.js';
+export { emitMountedElementEvents } from './emitEvents.js';
 export type {
     MountInit,
     MountObserverOptions,

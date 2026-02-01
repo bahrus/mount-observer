@@ -23,6 +23,10 @@
     "./whereOutside.js": {
       "default": "./whereOutside.js",
       "types": "./whereOutside.ts"
+    },
+    "./emitEvents.js": {
+      "default": "./emitEvents.js",
+      "types": "./emitEvents.ts"
     }
   },
   "files": [
