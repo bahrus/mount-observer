@@ -108,7 +108,7 @@ To specify the equivalent of what the alternative proposal linked to above would
 
 ```JavaScript
 const observer = new MountObserver({
-   select:'my-element',
+   select:'my-element', //not supported by this polyfill
    import: './my-element.js',
    do: ({localName}, {modules, observer, mountInit, rootNode}) => {
       if(!customElements.get(localName)) {
@@ -173,7 +173,7 @@ This proposal has been amended to support multiple imports, including of differe
 
 ```JavaScript
 const observer = new MountObserver({
-   select:'my-element',
+   select:'my-element', //not supported by this polyfill
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
@@ -213,7 +213,7 @@ So for this we add loadingEagerness:
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'my-element',
+   select: 'my-element', //not supported by this polyfill
    loadingEagerness: 'eager',
    import: './my-element.js',
    do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
@@ -225,7 +225,48 @@ So what this does is only check for the presence of an element with tag name "my
 > [!NOTE]
 > As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
 
+## Separating JS imperative code from JSON serializable config
 
+In order to support pure 100% syntax, we need to be able to import the do function.  This is done as follows:
+
+```JavaScript
+//module myActions.js
+export function do({localName}, {modules, observer, mountInit, rootNode}){
+   if(!customElements.get(localName)) {
+      customElements.define(localName, modules[1].MyElement);
+   }
+   observer.disconnectedSignal.abort();
+}
+
+const observer = new MountObserver({
+   whereElementMatches:'my-element',
+   import: [
+      ['./my-element-small.css', {type: 'css'}],
+      './my-element.js',
+      './myActions.js
+   ],
+   '...': 2
+});
+observer.observe(document);
+
+```
+
+Here "2" refers to the imported module index ('./myActions.js' in this case).
+
+If the imports setting isn't defined, or doesn't contain an element with index 2, or isn't a  JS error, an error is thrown.
+
+The rhs of '...' can also be array of numbers, referencing multiple module imports.  They must all be JS
+
+What this doesn't do: 
+
+1.  Mutate the passed in mountInfo object.
+2.  Anything before the the imports is done.
+
+What this does do:
+
+1.  Creates an object  {}, into which assignGingerly of the referenced modules is applied.
+2.  Saves the merged object to a private variable (say this.#importedInit)
+2.  Anytime this.#init.do is needed, if it is undefined, check if this.#importedActions has a do.  
 
 ## Mount Observer Script Elements (MOSEs)
 
