@@ -144,7 +144,7 @@ If the developer has a simple query in mind that needs no such nuance, I'm think
 
 So the developer could use:
 
-## Polyfill Supported Scenario I
+## Polyfill Supported Mount Observer
 
 ```JavaScript
 const observer = new MountObserver({
@@ -249,6 +249,8 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 }
 </script>
 ```
+
+To keep this proposal / polyfill of reasonable size, mount observer script elements has its own [repo / sub-proposal](https://github.com/bahrus/mount-observer-script-element).
 
 The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the i<sup>th</sup> "on" selector) would be accessible as properties of the script element:
 

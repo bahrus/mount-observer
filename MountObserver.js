@@ -243,9 +243,8 @@ export class MountObserver extends EventTarget {
         const context = {
             modules: this.#modules,
             observer: this,
-            observeInfo: {
-                rootNode
-            }
+            rootNode,
+            mountInit: this.#init,
         };
         // Apply assignGingerly if specified
         if (this.#assignGingerlySource) {
@@ -320,9 +319,8 @@ export class MountObserver extends EventTarget {
         const context = {
             modules: this.#modules,
             observer: this,
-            observeInfo: {
-                rootNode
-            }
+            rootNode,
+            mountInit: this.#init,
         };
         // Call dismount callback
         if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.dismount) {

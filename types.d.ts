@@ -62,12 +62,14 @@ export interface ImportSpec {
 export interface MountContext {
     modules: any[];
     observer: IMountObserver;
-    observeInfo: ObserveInfo;
+    rootNode: Node;
+    mountInit: MountInit
+    //observeInfo: ObserveInfo;
 }
 
-export interface ObserveInfo {
-    rootNode: Node;
-}
+// export interface ObserveInfo {
+//     rootNode: Node;
+// }
 
 export type DoCallback = (matchingElement: Element, context: MountContext) => void;
 

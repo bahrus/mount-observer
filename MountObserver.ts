@@ -323,9 +323,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
         const context: MountContext = {
             modules: this.#modules,
             observer: this,
-            observeInfo: {
-                rootNode
-            }
+            rootNode,
+            mountInit: this.#init,
         };
 
         // Apply assignGingerly if specified
@@ -411,9 +410,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
         const context: MountContext = {
             modules: this.#modules,
             observer: this,
-            observeInfo: {
-                rootNode
-            }
+            rootNode,
+            mountInit: this.#init,
         };
 
         // Call dismount callback
