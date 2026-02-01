@@ -2,6 +2,15 @@
 
 export type Constructor = new (...args: any[]) => any;
 
+export type EventConstructor = {new(...args: any[]): Event};
+
+export interface EventConfig {
+    event: string | EventConstructor;
+    args?: any | any[];
+    eventProps?: Record<string, any>;
+    oncePerMountedElement?: boolean;
+}
+
 export type DismountReason = 
     | 'media-query-failed'
     | 'where-element-matches-failed';
@@ -18,6 +27,7 @@ export interface MountInit {
     assignGingerly?: Record<string, any>;
     map?: MapConfig;
     getPlayByPlay?: boolean;
+    mountedElemEmits?: EventConfig | EventConfig[];
 }
 
 export interface MapConfig {

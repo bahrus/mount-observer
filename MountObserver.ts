@@ -4,7 +4,9 @@ import {
     IMountObserver,
     MountContext,
     AttrChange,
-    WeakDual
+    WeakDual,
+    EventConfig,
+    EventConstructor
 } from './types.js';
 import {
     MountEvent,
@@ -29,7 +31,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
         weakSet: new WeakSet(),
         setWeak: new Set()
     };
-    #processedElements = new WeakSet<Element>();
+    #processedDoForElement = new WeakSet<Element>();
+    #processedEventsForElement = new WeakMap<Element, Set<string>>();
     #mutationCallback: MutationCallback | undefined;
     #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
@@ -280,7 +283,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     }
 
     async #handleMatch(element: Element): Promise<void> {
-        if (this.#processedElements.has(element)) {
+        if (this.#processedDoForElement.has(element)) {
             return;
         }
 
@@ -289,7 +292,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             await this.#loadImports();
         }
 
-        this.#processedElements.add(element);
+        this.#processedDoForElement.add(element);
         
         // Add to both WeakSet and Set<WeakRef> for efficient operations
         if (!this.#mountedElements.weakSet.has(element)) {
@@ -329,6 +332,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Dispatch mount event
         this.dispatchEvent(new MountEvent(element, this.#modules, this.#init));
         
+        // Emit events from mounted element if configured
+        if (this.#init.mountedElemEmits) {
+            await this.#emitMountedElementEvents(element);
+        }
+        
         // Check for initial attribute changes if whereAttr is configured
         if (this.#init.whereAttr) {
             const changes = this.#checkAttrChanges(element);
@@ -336,6 +344,118 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 this.dispatchEvent(new AttrChangeEvent(changes, this.#init));
             }
         }
+    }
+
+    async #emitMountedElementEvents(element: Element): Promise<void> {
+        const configs = Array.isArray(this.#init.mountedElemEmits) 
+            ? this.#init.mountedElemEmits 
+            : [this.#init.mountedElemEmits!];
+
+        for (const config of configs) {
+            await this.#emitSingleEvent(element, config);
+        }
+    }
+
+    async #emitSingleEvent(element: Element, config: EventConfig): Promise<void> {
+        // Check if this event should only fire once per element
+        if (config.oncePerMountedElement) {
+            const eventId = this.#getEventId(config);
+            let processedEvents = this.#processedEventsForElement.get(element);
+            
+            if (!processedEvents) {
+                processedEvents = new Set<string>();
+                this.#processedEventsForElement.set(element, processedEvents);
+            }
+            
+            if (processedEvents.has(eventId)) {
+                return; // Already emitted for this element
+            }
+            
+            processedEvents.add(eventId);
+        }
+
+        // Resolve event constructor
+        const EventCtor = this.#resolveEventConstructor(config.event);
+
+        // Process args with magic string substitution
+        const processedArgs = config.args !== undefined 
+            ? this.#processMagicStrings(config.args, element)
+            : undefined;
+
+        // Construct the event
+        let event: Event;
+        if (processedArgs === undefined) {
+            event = new EventCtor();
+        } else if (Array.isArray(processedArgs)) {
+            // For array args, ensure bubbles is set if second arg is an options object
+            if (processedArgs.length === 2 && typeof processedArgs[0] === 'string' && typeof processedArgs[1] === 'object' && processedArgs[1] !== null) {
+                // Merge bubbles: true into the options object if not already set
+                const options = { bubbles: true, ...processedArgs[1] };
+                event = new EventCtor(processedArgs[0], options);
+            } else {
+                event = new EventCtor(...processedArgs);
+            }
+        } else {
+            // Single arg - if it's a string (event name), add bubbles: true by default
+            if (typeof processedArgs === 'string') {
+                event = new EventCtor(processedArgs, { bubbles: true });
+            } else {
+                event = new EventCtor(processedArgs);
+            }
+        }
+
+        // Apply eventProps if specified
+        if (config.eventProps) {
+            const { assignGingerly } = await import('assign-gingerly/index.js');
+            const processedProps = this.#processMagicStrings(config.eventProps, element);
+            assignGingerly(event, processedProps);
+        }
+
+        // Dispatch the event from the mounted element
+        element.dispatchEvent(event);
+    }
+
+    #resolveEventConstructor(event: string | EventConstructor): EventConstructor {
+        if (typeof event === 'string') {
+            const EventCtor = (globalThis as any)[event];
+            if (!EventCtor || typeof EventCtor !== 'function') {
+                throw new Error(`Event constructor "${event}" not found in globalThis`);
+            }
+            return EventCtor;
+        }
+        return event;
+    }
+
+    #getEventId(config: EventConfig): string {
+        const eventName = typeof config.event === 'string' ? config.event : config.event.name;
+        const argsStr = JSON.stringify(config.args || '');
+        return `${eventName}:${argsStr}`;
+    }
+
+    #processMagicStrings(value: any, element: Element): any {
+        if (typeof value === 'string') {
+            if (value === '{{mountedElement}}') {
+                return element;
+            }
+            if (value === '{{mountInit}}') {
+                return this.#init;
+            }
+            return value;
+        }
+
+        if (Array.isArray(value)) {
+            return value.map(item => this.#processMagicStrings(item, element));
+        }
+
+        if (value && typeof value === 'object') {
+            const processed: any = {};
+            for (const [key, val] of Object.entries(value)) {
+                processed[key] = this.#processMagicStrings(val, element);
+            }
+            return processed;
+        }
+
+        return value;
     }
     
     #checkAttrChanges(element: Element): AttrChange[] {

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Emit Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Minimal Test</h1>
+    <button id="btn1" data-test="true">Button</button>
+    <div id="log"></div>
+    
+    <script type="module">
+        console.log('Script starting...');
+        
+        window.eventsReceived = [];
+        
+        document.addEventListener('test-event', (e) => {
+            console.log('Received test-event');
+            window.eventsReceived.push({ type: 'test-event' });
+        });
+        
+        console.log('About to import...');
+        
+        import('../MountObserver.js').then(({ MountObserver }) => {
+            console.log('MountObserver imported');
+            
+            const observer = new MountObserver({
+                whereElementMatches: 'button[data-test]',
+                mountedElemEmits: {
+                    event: 'Event',
+                    args: 'test-event'
+                }
+            });
+            
+            console.log('Observer created');
+            
+            observer.observe(document).then(() => {
+                console.log('Observer observing');
+            }).catch(err => {
+                console.error('Observe error:', err);
+            });
+        }).catch(err => {
+            console.error('Import error:', err);
+        });
+    </script>
+</body>
+</html>
