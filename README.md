@@ -110,7 +110,7 @@ To specify the equivalent of what the alternative proposal linked to above would
 const observer = new MountObserver({
    select:'my-element',
    import: './my-element.js',
-   do: ({localName}, {modules, observer, observeInfo}) => {
+   do: ({localName}, {modules, observer, mountInit, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
       }
@@ -150,7 +150,7 @@ So the developer could use:
 const observer = new MountObserver({
    whereElementMatches:'my-element',
    import: './my-element.js',
-   do: ({localName}, {modules, observer, observeInfo}) => {
+   do: ({localName}, {modules, observer, mountInit, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
       }
@@ -178,7 +178,7 @@ const observer = new MountObserver({
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
    ],
-   do: ({localName}, {modules, observer}) => {
+   do: ({localName}, {modules, observer, mountInit, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[1].MyElement);
       }
