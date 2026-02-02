@@ -297,6 +297,49 @@ reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if 
 
 [Implemented as [Requirement11](requirements/Requirement11.md)]
 
+### Referenced whereInstanceOf
+
+Similar to the `do` function, the `whereInstanceOf` check can also be moved to imported modules for 100% JSON-serializable configuration:
+
+```javascript
+// module mySettings.js
+const doFunction = function({localName}, {modules, observer, mountInit, rootNode}) {
+   if(!customElements.get(localName)) {
+      customElements.define(localName, modules[1].MyElement);
+   }
+   observer.disconnectedSignal.abort();
+};
+
+const whereInstanceOf = [HTMLMarqueeElement, SVGElement];
+
+export { doFunction as do, whereInstanceOf };
+
+// my local module
+const observer = new MountObserver({
+   whereElementMatches: 'my-element',
+   import: [
+      ['./my-element-small.css', {type: 'css'}],
+      './my-element.js',
+      './mySettings.js'
+   ],
+   reference: 2
+});
+observer.observe(document);
+```
+
+**Behavior:**
+- **Combining checks**: If both inline `whereInstanceOf` and referenced `whereInstanceOf` exist, they are AND'd together (element must match both)
+- **Multiple references**: If multiple referenced modules export `whereInstanceOf`, the element must match ALL of them (AND logic)
+- **Validation**: Referenced `whereInstanceOf` is validated after imports load. Throws an error if not a Constructor or array of Constructors
+- **Optional export**: If a referenced module doesn't export `whereInstanceOf`, it's silently ignored
+- **Timing**: 
+  - With lazy loading (default): Inline `whereInstanceOf` is checked first (before imports), then referenced checks happen after imports load
+  - With `loadingEagerness: 'eager'`: Both inline and referenced checks happen together after imports are loaded
+
+This optimization ensures that with lazy loading, elements that don't match the inline `whereInstanceOf` won't trigger unnecessary imports.
+
+[Implemented as [Requirement12](requirements/Requirement12.md)]
+
 
 
 ## Mount Observer Script Elements (MOSEs)

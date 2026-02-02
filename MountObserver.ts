@@ -6,7 +6,8 @@ import {
     AttrChange,
     WeakDual,
     EventConfig,
-    EventConstructor
+    EventConstructor,
+    Constructor
 } from './types.js';
 import {
     MountEvent,
@@ -264,6 +265,28 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
 
+        // Validate referenced whereInstanceOf if reference is specified
+        if (this.#init.reference !== undefined) {
+            const references = Array.isArray(this.#init.reference) 
+                ? this.#init.reference 
+                : [this.#init.reference];
+
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.whereInstanceOf !== undefined) {
+                    // Validate that it's a Constructor or array of Constructors
+                    const whereInstanceOf = module.whereInstanceOf;
+                    const constructors = Array.isArray(whereInstanceOf) ? whereInstanceOf : [whereInstanceOf];
+                    
+                    for (const constructor of constructors) {
+                        if (typeof constructor !== 'function') {
+                            throw new Error(`Referenced module at index ${index} exports invalid whereInstanceOf: must be a Constructor or array of Constructors`);
+                        }
+                    }
+                }
+            }
+        }
+
         this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
     }
 
@@ -330,6 +353,29 @@ export class MountObserver extends EventTarget implements IMountObserver {
             
             if (!matchesInstanceOf) {
                 return false;
+            }
+        }
+        
+        // Check referenced whereInstanceOf if imports are loaded and reference is specified
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = Array.isArray(this.#init.reference) 
+                ? this.#init.reference 
+                : [this.#init.reference];
+
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.whereInstanceOf !== undefined) {
+                    const constructors = Array.isArray(module.whereInstanceOf) 
+                        ? module.whereInstanceOf 
+                        : [module.whereInstanceOf];
+                    
+                    // Element must be an instance of at least one constructor (OR logic within this module)
+                    const matchesInstanceOf = constructors.some((constructor: Constructor) => element instanceof constructor);
+                    
+                    if (!matchesInstanceOf) {
+                        return false;
+                    }
+                }
             }
         }
         
