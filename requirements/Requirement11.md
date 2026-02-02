@@ -3,7 +3,8 @@
 Please note that I have modified the types.d.ts and the code to handle:
 
 ```JavaScript
-export function do({localName}, {modules, observer, mountInit, rootNode})
+mountIni: {
+   do: function({localName}, {modules, observer, mountInit, rootNode}){...}
 ```
 
 rather than the deprecated:
