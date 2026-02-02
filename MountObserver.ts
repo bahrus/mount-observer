@@ -62,6 +62,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
             });
         }
 
+        // Validate reference property if present
+        if (init.reference !== undefined) {
+            this.#validateReference();
+        }
+
         // Preload whereAttr utilities if needed
         if (init.whereAttr) {
             this.#preloadWhereAttrUtilities();
@@ -70,6 +75,37 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Start loading imports if eager
         if (init.loadingEagerness === 'eager' && init.import) {
             this.#loadImports();
+        }
+    }
+    
+    #validateReference(): void {
+        if (!this.#init.import) {
+            throw new Error('reference property requires import to be defined');
+        }
+
+        // Normalize import to array
+        const imports = Array.isArray(this.#init.import) 
+            ? this.#init.import 
+            : [this.#init.import];
+
+        // Normalize reference to array
+        const references = Array.isArray(this.#init.reference) 
+            ? this.#init.reference 
+            : [this.#init.reference!];
+
+        // Validate each reference index
+        for (const index of references) {
+            // Check if index is within bounds
+            if (index < 0 || index >= imports.length) {
+                throw new Error(`reference index ${index} is out of bounds (import array length: ${imports.length})`);
+            }
+
+            const importItem = imports[index];
+
+            // Check if it's a JS module (not a 2D array with type option)
+            if (Array.isArray(importItem)) {
+                throw new Error(`reference index ${index} points to a non-JS module import (array with type option)`);
+            }
         }
     }
     
@@ -135,6 +171,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Wait for whereAttr utilities to load if needed
         if (this.#init.whereAttr && !this.#matchesWhereAttrFn) {
             await this.#preloadWhereAttrUtilities();
+        }
+        
+        // Wait for eager imports to complete if they were started in constructor
+        if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
+            await this.#loadImports();
         }
         
         // Process existing elements only if media matches
@@ -339,6 +380,20 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 this.#init.do(element, context);
             } else if (this.#init.do.mount) {
                 this.#init.do.mount(element, context);
+            }
+        }
+
+        // Call referenced do functions from imported modules
+        if (this.#init.reference !== undefined) {
+            const references = Array.isArray(this.#init.reference) 
+                ? this.#init.reference 
+                : [this.#init.reference];
+
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && typeof module.do === 'function') {
+                    module.do(element, context);
+                }
             }
         }
 

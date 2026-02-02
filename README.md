@@ -227,7 +227,9 @@ So what this does is only check for the presence of an element with tag name "my
 
 ## Separating JS imperative code from JSON serializable config
 
-In order to support pure 100% syntax, we need to be able to import the do function.  This is done as follows:
+
+
+In order to support pure 100% declarative syntax in mountInit, we need to be able to import the do function.  This is done as follows:
 
 ```JavaScript
 //module myActions.js
@@ -243,9 +245,9 @@ const observer = new MountObserver({
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
-      './myActions.js
+      './myActions.js'
    ],
-   '...': 2
+   reference: 2
 });
 observer.observe(document);
 
@@ -253,40 +255,72 @@ observer.observe(document);
 
 Here "2" refers to the imported module index ('./myActions.js' in this case).
 
-If the imports setting isn't defined, or doesn't contain an element with index 2, or isn't a  JS error, an error is thrown.
+### How the reference property works
 
-The rhs of '...' can also be array of numbers, referencing multiple module imports.  They must all be JS
+The `reference` property allows you to call `do` functions from imported modules, enabling 100% JSON-serializable configuration. This is useful when you want to separate imperative code from declarative configuration.
 
-What this doesn't do: 
+**Key behaviors:**
+- The `reference` property can be a single number or an array of numbers, each referring to an import index
+- Referenced modules must be JavaScript modules (not CSS, JSON, or HTML imports)
+- If a referenced module exports a `do` function, it will be called after the inline `do` callback (if present)
+- If a referenced module doesn't export a `do` function, it's silently skipped
+- The inline `do` callback runs first, then referenced `do` functions run in the order specified
 
-1.  Mutate the passed in mountInfo object.
-2.  Anything before the the imports is done.
+**Important:** Since `do` is a reserved keyword in JavaScript, you must export it using the syntax:
+```javascript
+const doFunction = function(element, context) { /* ... */ };
+export { doFunction as do };
+```
 
-What this does do:
+**Validation:** The `reference` property is validated in the constructor:
+- Throws an error if `import` is not defined
+- Throws an error if any index is out of bounds
+- Throws an error if any index points to a non-JS module (e.g., CSS or JSON import)
 
-1.  Creates an object  {}, into which assignGingerly of the referenced modules is applied.
-2.  Saves the merged object to a private variable (say this.#importedInit)
-2.  Anytime this.#init.do is needed, if it is undefined, check if this.#importedActions has a do.  
+Multiple references can also be made.
+
+So for example:
+
+```JavaScript
+
+import: [
+    ['./my-element-small.css', {type: 'css'}],
+    './component.js',
+    './actions1.js',
+    './actions2.js'
+],
+reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if present
+```
+
+[Implemented as [Requirement11](requirements/Requirement11.md)]
+
+
 
 ## Mount Observer Script Elements (MOSEs)
 
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
 
-```html
-<script type="mountobserver" onload="{...}"  onmount="{
-   const {matchingElement} = event;
-   const {localName} = matchingElement;
+```JavaScript
+// myPackage/myDefiner.js
+//my all powerful custom element definer
+export function do({localNme}, {modules, observer}){
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
    observer.disconnectedSignal.abort();
-}">
+}
+```
+
+```html
+<script type="mountobserver" >
 {
    "select":"my-element",
    "import": [
       ["./my-element-small.css", {type: "css"}],
       "./my-element.js",
-   ]
+      "myPackage/myDefiner.js
+   ],
+   reference: 2
 }
 </script>
 ```

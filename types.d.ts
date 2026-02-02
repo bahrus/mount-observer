@@ -28,6 +28,7 @@ export interface MountInit {
     map?: MapConfig;
     getPlayByPlay?: boolean;
     mountedElemEmits?: EventConfig | EventConfig[];
+    reference?: number | number[];
 }
 
 export interface MapConfig {

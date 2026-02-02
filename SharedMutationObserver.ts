@@ -29,6 +29,13 @@ export function registerSharedObserver(
     let sharedData = sharedObservers.get(rootNode);
     
     if (!sharedData) {
+        // Create shared data structure first
+        sharedData = {
+            observer: null as any, // Will be set immediately below
+            callbacks: new Set(),
+            config
+        };
+        
         // Create new shared observer for this root node
         const observer = new MutationObserver((mutations) => {
             // Distribute mutations to all registered callbacks
@@ -38,15 +45,11 @@ export function registerSharedObserver(
             }
         });
         
-        observer.observe(rootNode, config);
-        
-        sharedData = {
-            observer,
-            callbacks: new Set(),
-            config
-        };
-        
+        sharedData.observer = observer;
         sharedObservers.set(rootNode, sharedData);
+        
+        // Start observing after everything is set up
+        observer.observe(rootNode, config);
     } else {
         // Verify config matches (for safety)
         // In practice, all MountObservers should use the same config
