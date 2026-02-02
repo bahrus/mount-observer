@@ -239,6 +239,9 @@ const  doFunction = function({localName}, {modules, observer, mountInit, rootNod
    }
    observer.disconnectedSignal.abort();
 }
+export {doFunction as do}
+
+// observer setup
 
 const observer = new MountObserver({
    whereElementMatches:'my-element',
