@@ -1525,7 +1525,6 @@ Just as it is useful to be able lazy load external imports when needed, it would
 </compose>
 ```
 
-
 ## Creating an Element-To-RefID DOM traversal API
 
 The platform provides some nice help with managing forms, including IDREF dependency support:
