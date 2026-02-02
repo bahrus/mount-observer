@@ -233,12 +233,15 @@ In order to support pure 100% declarative syntax in the passed in mountInit argu
 
 ```JavaScript
 //module myActions.js
-export function do({localName}, {modules, observer, mountInit, rootNode}){
+const  doFunction = function({localName}, {modules, observer, mountInit, rootNode}){
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
    observer.disconnectedSignal.abort();
 }
+export {doFunction as do}
+
+// observer setup
 
 const observer = new MountObserver({
    whereElementMatches:'my-element',
