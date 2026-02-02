@@ -233,7 +233,7 @@ In order to support pure 100% declarative syntax in mountInit, we need to be abl
 
 ```JavaScript
 //module myActions.js
-export function do({localName}, {modules, observer, mountInit, rootNode}){
+const  doFunction = function({localName}, {modules, observer, mountInit, rootNode}){
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
