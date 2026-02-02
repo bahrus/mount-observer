@@ -229,7 +229,7 @@ So what this does is only check for the presence of an element with tag name "my
 
 
 
-In order to support pure 100% declarative syntax in mountInit, we need to be able to import the do function.  This is done as follows:
+In order to support pure 100% declarative syntax in the passed in mountInit argument, we need to be able to import the do function.  This is done as follows:
 
 ```JavaScript
 //module myActions.js
@@ -303,12 +303,13 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 ```JavaScript
 // myPackage/myDefiner.js
 //my all powerful custom element definer
-export function do({localNme}, {modules, observer}){
+const doFunction = function({localNme}, {modules, observer}){
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
    observer.disconnectedSignal.abort();
 }
+export { doFunction as do };
 ```
 
 ```html
