@@ -1,3 +1,4 @@
+import { arr } from './arr.js';
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent, } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
 import { whereOutside } from './whereOutside.js';
@@ -59,9 +60,7 @@ export class MountObserver extends EventTarget {
             ? this.#init.import
             : [this.#init.import];
         // Normalize reference to array
-        const references = Array.isArray(this.#init.reference)
-            ? this.#init.reference
-            : [this.#init.reference];
+        const references = arr(this.#init.reference);
         // Validate each reference index
         for (const index of references) {
             // Check if index is within bounds
@@ -196,15 +195,13 @@ export class MountObserver extends EventTarget {
         this.#importsLoaded = true;
         // Validate referenced whereInstanceOf if reference is specified
         if (this.#init.reference !== undefined) {
-            const references = Array.isArray(this.#init.reference)
-                ? this.#init.reference
-                : [this.#init.reference];
+            const references = arr(this.#init.reference);
             for (const index of references) {
                 const module = this.#modules[index];
                 if (module && module.whereInstanceOf !== undefined) {
                     // Validate that it's a Constructor or array of Constructors
                     const whereInstanceOf = module.whereInstanceOf;
-                    const constructors = Array.isArray(whereInstanceOf) ? whereInstanceOf : [whereInstanceOf];
+                    const constructors = arr(whereInstanceOf);
                     for (const constructor of constructors) {
                         if (typeof constructor !== 'function') {
                             throw new Error(`Referenced module at index ${index} exports invalid whereInstanceOf: must be a Constructor or array of Constructors`);
@@ -261,9 +258,7 @@ export class MountObserver extends EventTarget {
         }
         // Check whereInstanceOf condition if specified
         if (this.#init.whereInstanceOf) {
-            const constructors = Array.isArray(this.#init.whereInstanceOf)
-                ? this.#init.whereInstanceOf
-                : [this.#init.whereInstanceOf];
+            const constructors = arr(this.#init.whereInstanceOf);
             // Element must be an instance of at least one constructor (OR logic for array)
             const matchesInstanceOf = constructors.some(constructor => element instanceof constructor);
             if (!matchesInstanceOf) {
@@ -272,15 +267,11 @@ export class MountObserver extends EventTarget {
         }
         // Check referenced whereInstanceOf if imports are loaded and reference is specified
         if (this.#importsLoaded && this.#init.reference !== undefined) {
-            const references = Array.isArray(this.#init.reference)
-                ? this.#init.reference
-                : [this.#init.reference];
+            const references = arr(this.#init.reference);
             for (const index of references) {
                 const module = this.#modules[index];
                 if (module && module.whereInstanceOf !== undefined) {
-                    const constructors = Array.isArray(module.whereInstanceOf)
-                        ? module.whereInstanceOf
-                        : [module.whereInstanceOf];
+                    const constructors = arr(module.whereInstanceOf);
                     // Element must be an instance of at least one constructor (OR logic within this module)
                     const matchesInstanceOf = constructors.some((constructor) => element instanceof constructor);
                     if (!matchesInstanceOf) {
@@ -333,9 +324,7 @@ export class MountObserver extends EventTarget {
         }
         // Call referenced do functions from imported modules
         if (this.#init.reference !== undefined) {
-            const references = Array.isArray(this.#init.reference)
-                ? this.#init.reference
-                : [this.#init.reference];
+            const references = arr(this.#init.reference);
             for (const index of references) {
                 const module = this.#modules[index];
                 if (module && typeof module.do === 'function') {

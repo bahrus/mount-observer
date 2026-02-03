@@ -2,11 +2,12 @@
 // Only loaded when MountInit.import is specified
 
 import { ImportSpec } from './types.js';
+import { arr } from './arr.js';
 
 export async function loadImports(
     imports: string | ImportSpec | Array<string | ImportSpec | [string, any]>
 ): Promise<any[]> {
-    const importArray = Array.isArray(imports) ? imports : [imports];
+    const importArray = arr(imports);
     const promises = importArray.map(imp => loadSingleImport(imp));
     return Promise.all(promises);
 }

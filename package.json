@@ -31,6 +31,10 @@
     "./attrChanges.js": {
       "default": "./attrChanges.js",
       "types": "./attrChanges.ts"
+    },
+    "./arr.js": {
+      "default": "./arr.js",
+      "types": "./arr.ts"
     }
   },
   "files": [
