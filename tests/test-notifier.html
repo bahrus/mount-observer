@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Notifier Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Element Notifier Test</h1>
+    
+    <button id="existing-btn">Existing Button</button>
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const results = {
+            test1: {
+                mountFiredOnNotifier: false,
+                mountFiredOnObserver: false,
+                notifierCreatedDuringDo: false
+            },
+            test2: {
+                mountFiredOnNotifier: false,
+                dismountFiredOnNotifier: false,
+                disconnectFiredOnNotifier: false
+            },
+            test3: {
+                notifierCreatedBeforeMount: false,
+                mountFiredAfterCreation: false
+            },
+            test4: {
+                attrChangeFiredOnNotifier: false,
+                attrChangeFilteredCorrectly: false,
+                changesCount: 0
+            },
+            test5: {
+                firstMountFired: false,
+                dismountFired: false,
+                secondMountFired: false
+            }
+        };
+        
+        console.log('Starting Element Notifier Tests...');
+        
+        // Test 1: Notifier created during do callback should NOT fire mount event
+        console.log('Test 1: Notifier during do callback');
+        const observer1 = new MountObserver({
+            whereElementMatches: '#existing-btn',
+            do: (element, {observer}) => {
+                const notifier = observer.getNotifier(element);
+                results.test1.notifierCreatedDuringDo = true;
+                
+                notifier.addEventListener('mount', () => {
+                    results.test1.mountFiredOnNotifier = true;
+                    console.log('Test 1: Mount fired on notifier (should NOT happen)');
+                });
+            }
+        });
+        
+        observer1.addEventListener('mount', () => {
+            results.test1.mountFiredOnObserver = true;
+            console.log('Test 1: Mount fired on observer');
+        });
+        
+        await observer1.observe(document.body);
+        
+        // Wait a bit to ensure no mount event fires on notifier
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Test 2: Dismount and disconnect events
+        console.log('Test 2: Dismount and disconnect');
+        const btn2 = document.createElement('button');
+        btn2.id = 'test-btn-2';
+        btn2.textContent = 'Test Button 2';
+        
+        const observer2 = new MountObserver({
+            whereElementMatches: '#test-btn-2',
+            do: (element, {observer}) => {
+                const notifier = observer.getNotifier(element);
+                
+                notifier.addEventListener('dismount', (e) => {
+                    results.test2.dismountFiredOnNotifier = true;
+                    console.log('Test 2: Dismount fired on notifier', e.reason);
+                });
+                
+                notifier.addEventListener('disconnect', () => {
+                    results.test2.disconnectFiredOnNotifier = true;
+                    console.log('Test 2: Disconnect fired on notifier');
+                });
+            }
+        });
+        
+        await observer2.observe(document.body);
+        document.body.appendChild(btn2);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Remove element to trigger dismount and disconnect
+        btn2.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Test 3: Notifier created before mount should fire mount event
+        console.log('Test 3: Notifier before mount');
+        const btn3 = document.createElement('button');
+        btn3.id = 'test-btn-3';
+        btn3.textContent = 'Test Button 3';
+        
+        const observer3 = new MountObserver({
+            whereElementMatches: '#test-btn-3'
+        });
+        
+        await observer3.observe(document.body);
+        
+        // Create notifier BEFORE element is added
+        const notifier3 = observer3.getNotifier(btn3);
+        results.test3.notifierCreatedBeforeMount = true;
+        
+        notifier3.addEventListener('mount', () => {
+            results.test3.mountFiredAfterCreation = true;
+            console.log('Test 3: Mount fired on notifier created before mount');
+        });
+        
+        // Now add the element
+        document.body.appendChild(btn3);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Test 4: AttrChange events filtered correctly
+        console.log('Test 4: AttrChange filtering');
+        const input1 = document.createElement('input');
+        input1.id = 'input-1';
+        input1.setAttribute('data-test', 'initial1'); // Add attribute before mounting
+        const input2 = document.createElement('input');
+        input2.id = 'input-2';
+        input2.setAttribute('data-test', 'initial2'); // Add attribute before mounting
+        
+        const observer4 = new MountObserver({
+            whereElementMatches: 'input',
+            whereAttr: {
+                hasBuiltInRootIn: ['', 'data'],
+                hasCERootIn: ['data'],
+                hasBase: 'test',
+                hasBranchIn: ['']
+            },
+            do: (element, {observer}) => {
+                if (element.id === 'input-1') {
+                    const notifier = observer.getNotifier(element);
+                    
+                    notifier.addEventListener('attrchange', (e) => {
+                        results.test4.attrChangeFiredOnNotifier = true;
+                        results.test4.changesCount = e.changes.length;
+                        
+                        // Verify all changes are for input-1 only
+                        results.test4.attrChangeFilteredCorrectly = e.changes.every(
+                            change => change.element === element
+                        );
+                        
+                        console.log('Test 4: AttrChange on notifier', e.changes.length, 'changes');
+                    });
+                }
+            }
+        });
+        
+        await observer4.observe(document.body);
+        document.body.appendChild(input1);
+        document.body.appendChild(input2);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Change attributes on both inputs simultaneously
+        input1.setAttribute('data-test', 'value1');
+        input2.setAttribute('data-test', 'value2');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Test 5: Mount event fires on subsequent mounts (after dismount)
+        console.log('Test 5: Subsequent mount after dismount');
+        const btn5 = document.createElement('button');
+        btn5.id = 'test-btn-5';
+        btn5.textContent = 'Test Button 5';
+        
+        let mountCount = 0;
+        let doCallCount = 0;
+        let listenerAdded = false;
+        
+        const observer5 = new MountObserver({
+            whereElementMatches: '#test-btn-5',
+            do: (element, {observer}) => {
+                doCallCount++;
+                console.log('Test 5: do callback called, count:', doCallCount);
+                
+                // Only add listener once (not on every do callback)
+                if (!listenerAdded) {
+                    const notifier = observer.getNotifier(element);
+                    listenerAdded = true;
+                    
+                    notifier.addEventListener('mount', () => {
+                        mountCount++;
+                        console.log('Test 5: Mount event on notifier, count:', mountCount);
+                    });
+                    
+                    notifier.addEventListener('dismount', () => {
+                        results.test5.dismountFired = true;
+                        console.log('Test 5: Dismount fired');
+                    });
+                }
+            }
+        });
+        
+        await observer5.observe(document.body);
+        
+        // First mount - notifier created during do, should NOT fire
+        console.log('Test 5: Adding element first time');
+        document.body.appendChild(btn5);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        console.log('Test 5: After first mount - doCallCount:', doCallCount, 'mountCount:', mountCount);
+        results.test5.firstMountFired = (mountCount === 0);
+        
+        // Dismount
+        console.log('Test 5: Removing element');
+        btn5.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        console.log('Test 5: After dismount - doCallCount:', doCallCount, 'mountCount:', mountCount);
+        
+        // Second mount - notifier exists before do, SHOULD fire
+        console.log('Test 5: Adding element second time');
+        document.body.appendChild(btn5);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('Test 5: After second mount - doCallCount:', doCallCount, 'mountCount:', mountCount);
+        results.test5.secondMountFired = (mountCount === 1);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (No mount during do):', results.test1);
+        console.log('Test 2 (Dismount/Disconnect):', results.test2);
+        console.log('Test 3 (Notifier before mount):', results.test3);
+        console.log('Test 4 (AttrChange filtering):', results.test4);
+        console.log('Test 5 (Subsequent mount):', results.test5);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

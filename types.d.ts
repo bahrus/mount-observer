@@ -95,6 +95,7 @@ export interface IMountObserver extends EventTarget {
     disconnect(): void;
     disconnectedSignal: AbortSignal;
     assignGingerly(config: Record<string, any> | undefined): Promise<void>;
+    getNotifier(element: Element): EventTarget;
 }
 
 export interface IMountEvent extends Event {

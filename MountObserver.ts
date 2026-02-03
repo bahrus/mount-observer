@@ -46,6 +46,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #mediaQueryCleanup?: () => void;
     #mediaMatches: boolean = true;
     #assignGingerlySource: Record<string, any> | undefined;
+    #elementNotifiers = new WeakMap<Element, EventTarget>();
+    #notifierMountedElements = new WeakSet<Element>();
 
     constructor(init: MountInit, options: MountObserverOptions = {}) {
         super();
@@ -156,6 +158,19 @@ export class MountObserver extends EventTarget implements IMountObserver {
         return this.#abortController.signal;
     }
 
+    getNotifier(element: Element): EventTarget {
+        // Return cached notifier if it exists
+        let notifier = this.#elementNotifiers.get(element);
+        if (notifier) {
+            return notifier;
+        }
+
+        // Create new EventTarget for this element
+        notifier = new EventTarget();
+        this.#elementNotifiers.set(element, notifier);
+        return notifier;
+    }
+
     async observe(rootNode: Node): Promise<void> {
         if (this.#rootNode) {
             throw new Error('Already observing');
@@ -217,6 +232,22 @@ export class MountObserver extends EventTarget implements IMountObserver {
             // Batch and dispatch attribute changes
             if (attrChanges.length > 0) {
                 this.dispatchEvent(new AttrChangeEvent(attrChanges, this.#init));
+                
+                // Dispatch filtered attrchange events to element-specific notifiers
+                const changesByElement = new Map<Element, AttrChange[]>();
+                for (const change of attrChanges) {
+                    if (!changesByElement.has(change.element)) {
+                        changesByElement.set(change.element, []);
+                    }
+                    changesByElement.get(change.element)!.push(change);
+                }
+                
+                for (const [element, changes] of changesByElement) {
+                    const notifier = this.#elementNotifiers.get(element);
+                    if (notifier) {
+                        notifier.dispatchEvent(new AttrChangeEvent(changes, this.#init));
+                    }
+                }
             }
         };
 
@@ -411,6 +442,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
             assignGingerly(element, this.#assignGingerlySource);
         }
 
+        // Check if notifier exists BEFORE calling do callback
+        const notifierExistedBeforeDo = this.#elementNotifiers.has(element);
+
         // Call do callback
         if (this.#init.do) {
             if (typeof this.#init.do === 'function') {
@@ -433,7 +467,19 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Dispatch mount event
-        this.dispatchEvent(new MountEvent(element, this.#modules, this.#init));
+        const mountEvent = new MountEvent(element, this.#modules, this.#init);
+        this.dispatchEvent(mountEvent);
+        
+        // Dispatch to element-specific notifier only if:
+        // 1. Notifier existed before do callback (wasn't just created), AND
+        // 2. Element hasn't already received a mount event on its notifier
+        if (notifierExistedBeforeDo && !this.#notifierMountedElements.has(element)) {
+            const notifier = this.#elementNotifiers.get(element);
+            if (notifier) {
+                this.#notifierMountedElements.add(element);
+                notifier.dispatchEvent(new MountEvent(element, this.#modules, this.#init));
+            }
+        }
         
         // Emit events from mounted element if configured
         if (this.#init.mountedElemEmits) {
@@ -446,6 +492,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const changes = this.#checkAttrChangesFn(element);
             if (changes.length > 0) {
                 this.dispatchEvent(new AttrChangeEvent(changes, this.#init));
+                
+                // Also dispatch to element-specific notifier
+                const notifier = this.#elementNotifiers.get(element);
+                if (notifier) {
+                    notifier.dispatchEvent(new AttrChangeEvent(changes, this.#init));
+                }
             }
         }
     }
@@ -490,6 +542,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 break;
             }
         }
+        
+        // Remove from processed set so element can be re-mounted
+        this.#processedDoForElement.delete(element);
+        
+        // Remove from notifier mounted tracking so mount event can fire again
+        this.#notifierMountedElements.delete(element);
 
         const rootNode = this.#rootNode?.deref();
         if (!rootNode) {
@@ -510,7 +568,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Dispatch dismount event
-        this.dispatchEvent(new DismountEvent(element, 'where-element-matches-failed', this.#init));
+        const dismountEvent = new DismountEvent(element, 'where-element-matches-failed', this.#init);
+        this.dispatchEvent(dismountEvent);
+        
+        // Dispatch to element-specific notifier
+        const notifier = this.#elementNotifiers.get(element);
+        if (notifier) {
+            notifier.dispatchEvent(new DismountEvent(element, 'where-element-matches-failed', this.#init));
+        }
 
         // Check if element is being moved within the same root
         // If it's truly disconnected, dispatch disconnect event
@@ -520,7 +585,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
                     this.#init.do.disconnect(element, context);
                 }
 
-                this.dispatchEvent(new DisconnectEvent(element, this.#init));
+                const disconnectEvent = new DisconnectEvent(element, this.#init);
+                this.dispatchEvent(disconnectEvent);
+                
+                // Dispatch to element-specific notifier
+                const notifier = this.#elementNotifiers.get(element);
+                if (notifier) {
+                    notifier.dispatchEvent(new DisconnectEvent(element, this.#init));
+                }
             }
         }, 0);
     }

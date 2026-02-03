@@ -730,6 +730,131 @@ observer.observe(document);
 
 [Implemented as [Requirement10](requirements/Requirement10.md)]
 
+## Element-specific lifecycle notifications with getNotifier
+
+While the MountObserver dispatches lifecycle events (mount, dismount, disconnect, attrchange) at the observer level, sometimes you need to listen for events specific to a single element. The `getNotifier()` method returns an EventTarget that dispatches filtered events for only that element.
+
+### Basic usage
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'button',
+   do: (matchingElement, {observer}) => {
+      const notifier = observer.getNotifier(matchingElement);
+      
+      notifier.addEventListener('mount', (e) => {
+         console.log('This specific button mounted', e.matchingElement);
+      });
+      
+      notifier.addEventListener('dismount', (e) => {
+         console.log('This specific button dismounted', e.matchingElement, e.reason);
+      });
+      
+      notifier.addEventListener('disconnect', (e) => {
+         console.log('This specific button disconnected', e.matchingElement);
+      });
+   }
+});
+observer.observe(document);
+```
+
+### When mount events fire on notifiers
+
+The notifier follows a specific rule for mount events:
+
+- **First mount**: If `getNotifier()` is called during the `do` callback (when the element is mounting), the mount event does NOT fire on the notifier
+- **Subsequent mounts**: After the element dismounts and mounts again, the mount event WILL fire on the notifier
+
+This prevents duplicate mount notifications when setting up listeners during the initial mount.
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: '#my-button',
+   do: (element, {observer}) => {
+      const notifier = observer.getNotifier(element);
+      
+      // This listener won't fire for the current mount
+      // (since we're inside the do callback)
+      notifier.addEventListener('mount', () => {
+         console.log('Element re-mounted after being removed');
+      });
+   }
+});
+```
+
+### Creating notifiers before mounting
+
+You can call `getNotifier()` at any time, even before an element mounts:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: '#future-button'
+});
+observer.observe(document);
+
+// Get notifier before element exists
+const button = document.createElement('button');
+button.id = 'future-button';
+
+const notifier = observer.getNotifier(button);
+notifier.addEventListener('mount', () => {
+   console.log('Button mounted!'); // This WILL fire
+});
+
+// Add to DOM later
+document.body.appendChild(button);
+```
+
+When the notifier is created before the element mounts, the mount event fires normally.
+
+### Filtered attrchange events
+
+For `attrchange` events, the notifier receives a filtered version containing only changes for that specific element:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'input',
+   whereAttr: {
+      hasBuiltInRootIn: ['data'],
+      hasCERootIn: ['data'],
+      hasBase: 'value',
+      hasBranchIn: ['']
+   },
+   do: (element, {observer}) => {
+      const notifier = observer.getNotifier(element);
+      
+      notifier.addEventListener('attrchange', (e) => {
+         // e.changes only contains changes for this specific input
+         console.log('Attribute changed on this input:', e.changes);
+      });
+   }
+});
+```
+
+Even if multiple elements have attribute changes in the same mutation batch, each notifier only receives the changes relevant to its element.
+
+### Use cases
+
+Element-specific notifiers are useful for:
+
+1. **Progressive enhancement**: Attach/detach behaviors when elements mount/dismount
+2. **Cleanup on disconnect**: Remove event listeners or cancel timers when elements are removed
+3. **Peer element coordination**: React to changes in related elements
+4. **Lifecycle-aware components**: Build components that respond to their own mounting state
+
+### Performance notes
+
+- Notifiers are cached in a WeakMap, so calling `getNotifier()` multiple times for the same element returns the same EventTarget
+- No explicit cleanup is needed - notifiers are garbage collected when their elements are
+- The notifier continues to exist even after the element disconnects, allowing it to receive mount events if the element is re-added
+
+**Method signature:**
+```TypeScript
+getNotifier(element: Element): EventTarget
+```
+
+[Implemented as [Requirement13](requirements/Requirement13.md)]
+
 
 ##  Extra lazy loading
 
