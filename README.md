@@ -235,7 +235,13 @@ In order to support pure 100% declarative syntax in the passed in mountInit argu
 //module myActions.js
 const  doFunction = function({localName}, {modules, observer, mountInit, rootNode}){
    if(!customElements.get(localName)) {
-      customElements.define(localName, modules[1].MyElement);
+      // Find the first exported class constructor from the module
+      const ElementClass = Object.values(modules[0]).find(exp => 
+         typeof exp === 'function' && exp.prototype && exp.prototype.constructor === exp
+      );
+      if(ElementClass) {
+         customElements.define(localName, ElementClass);
+      }
    }
    observer.disconnectedSignal.abort();
 }
@@ -246,8 +252,8 @@ export {doFunction as do}
 const observer = new MountObserver({
    whereElementMatches:'my-element',
    import: [
-      ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
+      ['./my-element-small.css', {type: 'css'}],
       './myActions.js'
    ],
    reference: 2
