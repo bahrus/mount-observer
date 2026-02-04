@@ -417,6 +417,120 @@ Note that in this example, "do" no longer points to a function.  When it did (ab
 
 This would allow developers to create "stylesheet" like capabilities.
 
+## Registering reusable handlers with MountObserver.define
+
+To make MountInit configurations more JSON-serializable and encourage code reuse, you can register handler classes with string names and reference them by name:
+
+```JavaScript
+import {EvtRt} from 'mount-observer/EvtRt.js';
+
+class MyHandler extends EvtRt {
+   mount(mountedElement, mountInit, context){
+      mountedElement.textContent = 'hello';
+   }
+   dismount(mountedElement, mountInit){
+      mountedElement.textContent = 'bye';
+   }
+}
+
+// Register the handler with a string name
+MountObserver.define('myHandler', MyHandler);
+
+// Reference it by name in the configuration
+const observer = new MountObserver({
+   whereElementMatches: 'div > p + p ~ span[class$="name"]',
+   do: 'myHandler'  // String reference instead of inline function
+});
+observer.observe(document);
+```
+
+### Benefits of registered handlers
+
+1. **JSON serialization**: Configurations using string references can be serialized to JSON
+2. **Code reuse**: Define handlers once, use them in multiple observers
+3. **Separation of concerns**: Keep handler logic separate from configuration
+
+### Using arrays with mixed types
+
+The `do` property can be a string, a function, or an array mixing both:
+
+```JavaScript
+MountObserver.define('logger', LoggerHandler);
+MountObserver.define('validator', ValidatorHandler);
+
+const observer = new MountObserver({
+   whereElementMatches: 'input',
+   do: [
+      'logger',                    // Registered handler
+      (element, ctx) => {          // Inline function
+         element.dataset.processed = 'true';
+      },
+      'validator'                  // Another registered handler
+   ]
+});
+```
+
+Handlers execute in the order specified. If a handler constructor throws an error, execution stops and subsequent handlers won't run.
+
+### Interaction with the reference property
+
+When both `do` (with string/array) and `reference` are specified, the execution order is:
+
+1. Inline `do` functions and registered handlers (from `do` strings), in whatever order they appear
+2. Referenced `do` functions (from `reference` property)
+
+```JavaScript
+MountObserver.define('setup', SetupHandler);
+
+const observer = new MountObserver({
+   whereElementMatches: 'button',
+   import: './button-actions.js',
+   reference: 0,
+   do: ['setup', (el) => { el.dataset.ready = 'true'; }]
+});
+// Execution order: setup handler, inline function, then imported do function
+```
+
+### Handler requirements
+
+Registered handlers must be classes (constructors) that accept `(mountedElement: Element, ctx: MountContext)` as constructor parameters. They can be:
+
+- ES6 classes extending `EvtRt` (recommended)
+- ES6 classes with custom logic
+- ES5-style constructor functions
+
+```JavaScript
+// ES5-style constructor function
+function SimpleHandler(element, ctx) {
+   element.textContent = 'Handled!';
+}
+
+MountObserver.define('simple', SimpleHandler);
+```
+
+### Error handling
+
+**Validation at construction time**: If you reference an unregistered handler name, an error is thrown when creating the MountObserver:
+
+```JavaScript
+const observer = new MountObserver({
+   do: 'nonexistent'  // Error: No handler defined for nonexistent
+});
+```
+
+**Duplicate registration**: Attempting to register the same name twice throws an error:
+
+```JavaScript
+MountObserver.define('myHandler', Handler1);
+MountObserver.define('myHandler', Handler2);  // Error: myHandler already in use
+```
+
+### Global registry
+
+The handler registry is global and shared across all MountObserver instances, similar to the custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
+
+[Implemented as [Requirement14](requirements/Requirement14.md)]
+
 ## Applying properties with assignGingerly
 
 For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows us to declaratively specify properties to apply to elements without writing custom mount callbacks:

@@ -25,6 +25,16 @@ import {
 import { whereOutside } from './whereOutside.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
+    // Static registry for registered handlers
+    static #handlerRegistry = new Map<string, Constructor>();
+    
+    static define(name: string, handler: Constructor): void {
+        if (this.#handlerRegistry.has(name)) {
+            throw new Error(`${name} already in use`);
+        }
+        this.#handlerRegistry.set(name, handler);
+    }
+    
     #init: MountInit;
     #options: MountObserverOptions;
     #abortController: AbortController;
@@ -66,6 +76,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
             });
         }
 
+        // Validate do property if it contains string references
+        if (init.do !== undefined) {
+            this.#validateDoHandlers();
+        }
+
         // Validate reference property if present
         if (init.reference !== undefined) {
             this.#validateReference();
@@ -79,6 +94,21 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Start loading imports if eager
         if (init.loadingEagerness === 'eager' && init.import) {
             this.#loadImports();
+        }
+    }
+    
+    #validateDoHandlers(): void {
+        const doValue = this.#init.do;
+        if (doValue === undefined) return;
+        
+        const handlers = Array.isArray(doValue) ? doValue : [doValue];
+        
+        for (const handler of handlers) {
+            if (typeof handler === 'string') {
+                if (!MountObserver.#handlerRegistry.has(handler)) {
+                    throw new Error(`No handler defined for ${handler}`);
+                }
+            }
         }
     }
     
@@ -445,9 +475,22 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Check if notifier exists BEFORE calling do callback
         const notifierExistedBeforeDo = this.#elementNotifiers.has(element);
 
-        // Call do callback
-        if (this.#init.do) {
-            this.#init.do(element, context);
+        // Call do callback(s) - can be string, function, or array
+        if (this.#init.do !== undefined) {
+            const doHandlers = Array.isArray(this.#init.do) ? this.#init.do : [this.#init.do];
+            
+            for (const handler of doHandlers) {
+                if (typeof handler === 'string') {
+                    // Registered handler - instantiate it
+                    const HandlerClass = MountObserver.#handlerRegistry.get(handler);
+                    if (HandlerClass) {
+                        new HandlerClass(element, context);
+                    }
+                } else if (typeof handler === 'function') {
+                    // Inline function
+                    handler(element, context);
+                }
+            }
         }
 
         // Call referenced do functions from imported modules
