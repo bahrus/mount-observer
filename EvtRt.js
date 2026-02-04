@@ -19,16 +19,16 @@ export class EvtRt {
     }
     handleEvent(evt) {
         if (evt instanceof MountEvent) {
-            const { matchingElement, mountContext, mountInit } = evt;
-            this.mount(matchingElement, mountInit, mountContext);
+            const { mountedElement, mountContext, mountInit } = evt;
+            this.mount(mountedElement, mountInit, mountContext);
         }
         else if (evt instanceof DismountEvent) {
-            const { matchingElement, mountInit } = evt;
-            this.dismount(matchingElement, mountInit);
+            const { mountedElement, mountInit } = evt;
+            this.dismount(mountedElement, mountInit);
         }
         else if (evt instanceof DisconnectEvent) {
-            const { matchingElement, mountInit } = evt;
-            this.disconnect(matchingElement, mountInit);
+            const { mountedElement, mountInit } = evt;
+            this.disconnect(mountedElement, mountInit);
         }
     }
 }

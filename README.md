@@ -390,16 +390,16 @@ It is important to note that "select" is a css query with no restrictions.  So s
 ```JavaScript
 const observer = new MountObserver({
    select:'div > p + p ~ span[class$="name"]', //not supported by the polyfill
-   do: function({matchingElement, {observer}}){
+   do: function({mountedElement, {observer}}){
       
    }
    // do:{
-   //    mount: (matchingElement) => {
+   //    mount: (mountedElement) => {
    //       //attach some behavior or set some property value or add an event listener, etc.
-   //       matchingElement.textContent = 'hello';
+   //       mountedElement.textContent = 'hello';
    //    },
-   //    dismount: (matchingElement) => {
-   //       matchingElement.textContent = 'bye';
+   //    dismount: (mountedElement) => {
+   //       mountedElement.textContent = 'bye';
    //    }
    // }
 })
@@ -742,19 +742,19 @@ While the MountObserver dispatches lifecycle events (mount, dismount, disconnect
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'button',
-   do: (matchingElement, {observer}) => {
-      const notifier = observer.getNotifier(matchingElement);
+   do: (mountedElement, {observer}) => {
+      const notifier = observer.getNotifier(mountedElement);
       
       notifier.addEventListener('mount', (e) => {
-         console.log('This specific button mounted', e.matchingElement);
+         console.log('This specific button mounted', e.mountedElement);
       });
       
       notifier.addEventListener('dismount', (e) => {
-         console.log('This specific button dismounted', e.matchingElement, e.reason);
+         console.log('This specific button dismounted', e.mountedElement, e.reason);
       });
       
       notifier.addEventListener('disconnect', (e) => {
-         console.log('This specific button disconnected', e.matchingElement);
+         console.log('This specific button disconnected', e.mountedElement);
       });
    }
 });
@@ -893,7 +893,7 @@ const observer = new MountObserver({
    },
    import: ['./my-element-small.css', {type: 'css'}],
    do: {
-      confirm: (matchingElement, (e: MountObserverConfirmEvent) => {
+      confirm: (mountedElement, (e: MountObserverConfirmEvent) => {
          e.isSatisfied = true;
          e.preventDefault();
       }),
@@ -941,7 +941,7 @@ observer.addEventListener('confirm', e => {
 });
 observer.addEventListener('mount', e => {
   console.log({
-      matchingElement: e.matchingElement, 
+      mountedElement: e.mountedElement, 
       module: e.module
    });
 });
@@ -1150,7 +1150,7 @@ const mo = new MountObserver({
 mo.addEventListener('attrChange', e => {
    console.log(e);
    // {
-   //    matchingElement,
+   //    mountedElement,
    //    attrChangeInfo:[{
    //       idx: 0,
    //       name: 'lang'
@@ -1294,7 +1294,7 @@ MountObserver provides a breakdown of the matching attribute when encountered:
    mo.addEventListener('attrChange', e => {
       console.log(e);
       // {
-      //    matchingElement,
+      //    mountedElement,
       //    attrChangeInfo:[{
       //       idx: 0,
       //       oldValue: null,

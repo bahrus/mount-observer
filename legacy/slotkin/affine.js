@@ -27,13 +27,13 @@ export function prep(el) {
         elFragment, map
     };
 }
-export function clone(matchingElement, elFragment, map) {
+export function clone(mountedElement, elFragment, map) {
     const fragmentClone = elFragment.cloneNode(true);
-    matchingElement.replaceChildren(fragmentClone);
+    mountedElement.replaceChildren(fragmentClone);
     if (map !== null) {
         for (const key in map) {
             const value = map[key];
-            matchingElement.setAttribute(key, value);
+            mountedElement.setAttribute(key, value);
         }
     }
 }

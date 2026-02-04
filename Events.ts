@@ -14,7 +14,7 @@ export class MountEvent extends Event implements IMountEvent {
     static eventName: typeof mountEventName = mountEventName;
     
     constructor(
-        public matchingElement: Element, 
+        public mountedElement: Element, 
         public modules: any[], 
         public mountInit: MountInit,
         public mountContext: MountContext
@@ -26,7 +26,7 @@ export class MountEvent extends Event implements IMountEvent {
 export class DismountEvent extends Event implements IDismountEvent {
     static eventName: typeof dismountEventName = dismountEventName;
     
-    constructor(public matchingElement: Element, public reason: DismountReason, public mountInit: MountInit) {
+    constructor(public mountedElement: Element, public reason: DismountReason, public mountInit: MountInit) {
         super(DismountEvent.eventName);
     }
 }
@@ -34,7 +34,7 @@ export class DismountEvent extends Event implements IDismountEvent {
 export class DisconnectEvent extends Event {
     static eventName: typeof disconnectEventName = disconnectEventName;
     
-    constructor(public matchingElement: Element, public mountInit: MountInit) {
+    constructor(public mountedElement: Element, public mountInit: MountInit) {
         super(DisconnectEvent.eventName);
     }
 }

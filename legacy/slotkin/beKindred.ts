@@ -31,14 +31,14 @@ export function beKindred(
     const mo = new MountObserver({
         on: qry,
         do: {
-            mount: (matchingElement) => {
-                clone(matchingElement, elFragment, map);
+            mount: (mountedElement) => {
+                clone(mountedElement, elFragment, map);
                 // const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
-                // matchingElement.replaceChildren(fragmentClone);
+                // mountedElement.replaceChildren(fragmentClone);
                 // if(map !== null){
                 //     for(const key in map){
                 //         const value = map[key]!;
-                //         matchingElement.setAttribute(key, value);
+                //         mountedElement.setAttribute(key, value);
                 //     }
                 // }
             }

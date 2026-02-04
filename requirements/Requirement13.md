@@ -10,20 +10,20 @@ Please add a method to the MountObserver class called getNotifier:
 
 ```JavaScript
 const observer = new MountObserver({
-    do: function(matchingElement, {observer}){
-        const notifier = observer.getNotifier(matchingElement);
+    do: function(mountedElement, {observer}){
+        const notifier = observer.getNotifier(mountedElement);
         
         // Listen to lifecycle events for this specific element
         notifier.addEventListener('mount', (e) => {
-            console.log('This element mounted', e.matchingElement);
+            console.log('This element mounted', e.mountedElement);
         });
         
         notifier.addEventListener('dismount', (e) => {
-            console.log('This element dismounted', e.matchingElement, e.reason);
+            console.log('This element dismounted', e.mountedElement, e.reason);
         });
         
         notifier.addEventListener('disconnect', (e) => {
-            console.log('This element disconnected', e.matchingElement);
+            console.log('This element disconnected', e.mountedElement);
         });
     }
 });
@@ -33,13 +33,13 @@ Typically, I would think this would be called from the do function, but it shoul
 
 Because the element already "mounted", the notifier would not refire the mounted event until it first dismounts.
 
-The returned object, matchingElementObserver is an EventTarget that dispatches filtered events.
+The returned object, mountedElementObserver is an EventTarget that dispatches filtered events.
 
-All the events that the observer fires as far as mount/dismount/disconnect events would also fire from the matchingElementObserver, but only if the element being mounted / dismounted / disconnected / (reconnect in the future) is the passed in matchingElement.  No LoadEvent. It should use the same exact event classes with access to the same properties (including matchingElement)
+All the events that the observer fires as far as mount/dismount/disconnect events would also fire from the mountedElementObserver, but only if the element being mounted / dismounted / disconnected / (reconnect in the future) is the passed in mountedElement.  No LoadEvent. It should use the same exact event classes with access to the same properties (including mountedElement)
 
 Note that we have not yet implemented reconnect logic, so don't do anything about that yet. 
 
-I initially thought we didn't need it for the attrchange event because I thought that is already dispatched from the element, but that is not the case.  However, on inspecting the attrchange code more closely, that event contains an array of AttrChange object, spanning multiple elements.  So in this special case, we want a special AttrChange event instance, where the list is filtered to the ones for the passed in matchingElement. The filtered AttrChangeEvent should be a new instance with a filtered changes array.
+I initially thought we didn't need it for the attrchange event because I thought that is already dispatched from the element, but that is not the case.  However, on inspecting the attrchange code more closely, that event contains an array of AttrChange object, spanning multiple elements.  So in this special case, we want a special AttrChange event instance, where the list is filtered to the ones for the passed in mountedElement. The filtered AttrChangeEvent should be a new instance with a filtered changes array.
 
 I initially though we need a Requirement14 for this, but I no longer think so, so please disregard any mention of Requirement14.
 

@@ -32,15 +32,15 @@ export function prep(el: Element){
 }
 
 export function clone(
-    matchingElement: Element, 
+    mountedElement: Element, 
     elFragment: DocumentFragment, 
     map: {[key: string]: string} | null){
     const fragmentClone = elFragment.cloneNode(true) as DocumentFragment;
-    matchingElement.replaceChildren(fragmentClone);
+    mountedElement.replaceChildren(fragmentClone);
     if(map !== null){
         for(const key in map){
             const value = map[key]!;
-            matchingElement.setAttribute(key, value);
+            mountedElement.setAttribute(key, value);
         }
     }
 }

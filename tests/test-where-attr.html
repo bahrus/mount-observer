@@ -81,7 +81,7 @@
         });
 
         mo1.addEventListener('mount', (e) => {
-            window.testResults.test1.push(e.matchingElement.id);
+            window.testResults.test1.push(e.mountedElement.id);
         });
 
         mo1.observe(document.getElementById('test1'));
@@ -97,7 +97,7 @@
         });
 
         mo2.addEventListener('mount', (e) => {
-            window.testResults.test2.push(e.matchingElement.id);
+            window.testResults.test2.push(e.mountedElement.id);
         });
 
         mo2.observe(document.getElementById('test2'));
@@ -121,7 +121,7 @@
         });
 
         mo3.addEventListener('mount', (e) => {
-            window.testResults.test3.push(e.matchingElement.id);
+            window.testResults.test3.push(e.mountedElement.id);
         });
 
         mo3.observe(document.getElementById('test3'));
@@ -145,7 +145,7 @@
         });
 
         mo4.addEventListener('mount', (e) => {
-            window.testResults.test4.push(e.matchingElement.id);
+            window.testResults.test4.push(e.mountedElement.id);
         });
 
         mo4.observe(document.getElementById('test4'));
@@ -160,7 +160,7 @@
         });
 
         mo5.addEventListener('mount', (e) => {
-            window.testResults.test5.push(e.matchingElement.id);
+            window.testResults.test5.push(e.mountedElement.id);
         });
 
         mo5.observe(document.getElementById('test5'));

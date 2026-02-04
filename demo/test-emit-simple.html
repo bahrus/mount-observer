@@ -39,7 +39,7 @@
             addLog('Observer created');
             
             observer.addEventListener('mount', (e) => {
-                addLog(`Mount event for ${e.matchingElement.id}`);
+                addLog(`Mount event for ${e.mountedElement.id}`);
             });
             
             observer.observe(document);

@@ -110,7 +110,7 @@ export const dismountEventName = 'dismount';
 export class MountEvent extends Event implements IMountEvent {
     static eventName: mountEventName = 'mount';
     
-    constructor(public matchingElement: Element, public modules: any[]) {
+    constructor(public mountedElement: Element, public modules: any[]) {
         super(MountEvent.eventName);
     }
 }
@@ -120,7 +120,7 @@ this.dispatchEvent(new MountEvent(element, modules));
 
 // Listening with proper typing
 observer.addEventListener('mount', (e: MountEvent) => {
-    console.log(e.matchingElement, e.modules);
+    console.log(e.mountedElement, e.modules);
 });
 ```
 

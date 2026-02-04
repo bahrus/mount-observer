@@ -48,7 +48,7 @@
         });
 
         observer.addEventListener('mount', (e) => {
-            addLog(`Mount event: ${e.matchingElement.id || 'unnamed'}`);
+            addLog(`Mount event: ${e.mountedElement.id || 'unnamed'}`);
         });
 
         // Start observing

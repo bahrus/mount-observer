@@ -34,11 +34,11 @@
         });
 
         observer.addEventListener('mount', (e) => {
-            eventLog.push({ type: 'mount-event', id: e.matchingElement.id });
+            eventLog.push({ type: 'mount-event', id: e.mountedElement.id });
         });
 
         observer.addEventListener('dismount', (e) => {
-            eventLog.push({ type: 'dismount-event', id: e.matchingElement.id, reason: e.reason });
+            eventLog.push({ type: 'dismount-event', id: e.mountedElement.id, reason: e.reason });
         });
 
         observer.addEventListener('mediamatch', () => {

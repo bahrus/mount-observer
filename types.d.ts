@@ -72,13 +72,13 @@ export interface MountContext {
 //     rootNode: Node;
 // }
 
-export type DoCallback = (matchingElement: Element, context: MountContext) => void;
+export type DoCallback = (mountedElement: Element, context: MountContext) => void;
 
 export interface DoCallbacks {
-    mount?: (matchingElement: Element, context: MountContext) => void;
-    dismount?: (matchingElement: Element, context: MountContext) => void;
-    disconnect?: (matchingElement: Element, context: MountContext) => void;
-    reconnect?: (matchingElement: Element, context: MountContext) => void;
+    mount?: (mountedElement: Element, context: MountContext) => void;
+    dismount?: (mountedElement: Element, context: MountContext) => void;
+    disconnect?: (mountedElement: Element, context: MountContext) => void;
+    reconnect?: (mountedElement: Element, context: MountContext) => void;
 }
 
 export interface MountObserverOptions {
@@ -99,13 +99,13 @@ export interface IMountObserver extends EventTarget {
 }
 
 export interface IMountEvent extends Event {
-    matchingElement: Element;
+    mountedElement: Element;
     modules: any[];
     mountInit: MountInit;
 }
 
 export interface IDismountEvent extends Event {
-    matchingElement: Element;
+    mountedElement: Element;
     reason: DismountReason;
     mountInit: MountInit;
 }

@@ -35,7 +35,7 @@
         });
 
         observer.addEventListener('mount', (e) => {
-            window.eventLog.push({ type: 'mount-event', id: e.matchingElement.id });
+            window.eventLog.push({ type: 'mount-event', id: e.mountedElement.id });
         });
 
         const container = document.getElementById('myTest');

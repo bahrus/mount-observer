@@ -7,38 +7,38 @@ export const attrchangeEventName = 'attrchange';
 export const mediamatchEventName = 'mediamatch';
 export const mediaunmatchEventName = 'mediaunmatch';
 export class MountEvent extends Event {
-    matchingElement;
+    mountedElement;
     modules;
     mountInit;
     mountContext;
     static eventName = mountEventName;
-    constructor(matchingElement, modules, mountInit, mountContext) {
+    constructor(mountedElement, modules, mountInit, mountContext) {
         super(MountEvent.eventName);
-        this.matchingElement = matchingElement;
+        this.mountedElement = mountedElement;
         this.modules = modules;
         this.mountInit = mountInit;
         this.mountContext = mountContext;
     }
 }
 export class DismountEvent extends Event {
-    matchingElement;
+    mountedElement;
     reason;
     mountInit;
     static eventName = dismountEventName;
-    constructor(matchingElement, reason, mountInit) {
+    constructor(mountedElement, reason, mountInit) {
         super(DismountEvent.eventName);
-        this.matchingElement = matchingElement;
+        this.mountedElement = mountedElement;
         this.reason = reason;
         this.mountInit = mountInit;
     }
 }
 export class DisconnectEvent extends Event {
-    matchingElement;
+    mountedElement;
     mountInit;
     static eventName = disconnectEventName;
-    constructor(matchingElement, mountInit) {
+    constructor(mountedElement, mountInit) {
         super(DisconnectEvent.eventName);
-        this.matchingElement = matchingElement;
+        this.mountedElement = mountedElement;
         this.mountInit = mountInit;
     }
 }
