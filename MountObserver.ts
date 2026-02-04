@@ -574,7 +574,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Dispatch to element-specific notifier
         const notifier = this.#elementNotifiers.get(element);
         if (notifier) {
-            notifier.dispatchEvent(new DismountEvent(element, 'where-element-matches-failed', this.#init));
+            notifier.dispatchEvent(dismountEvent);
         }
 
         // Check if element is being moved within the same root
@@ -591,7 +591,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 // Dispatch to element-specific notifier
                 const notifier = this.#elementNotifiers.get(element);
                 if (notifier) {
-                    notifier.dispatchEvent(new DisconnectEvent(element, this.#init));
+                    notifier.dispatchEvent(disconnectEvent);
                 }
             }
         }, 0);
