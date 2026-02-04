@@ -38,16 +38,14 @@
                     }
                 ]
             },
-            do: {
-                mount: (el) => {
-                    mountedElements.push(el.id);
-                    results.push(`✅ Mounted: ${el.id} with attribute ${el.attributes[0].name}`);
-                    
-                    // Check if all elements are mounted
-                    const expected = ['test1', 'test2', 'test3', 'test4'];
-                    if (expected.every(id => mountedElements.includes(id))) {
-                        checkResults();
-                    }
+            do: (el) => {
+                mountedElements.push(el.id);
+                results.push(`✅ Mounted: ${el.id} with attribute ${el.attributes[0].name}`);
+                
+                // Check if all elements are mounted
+                const expected = ['test1', 'test2', 'test3', 'test4'];
+                if (expected.every(id => mountedElements.includes(id))) {
+                    checkResults();
                 }
             }
         });

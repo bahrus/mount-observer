@@ -22,7 +22,7 @@ export interface MountInit {
     whereMediaMatches?: string | MediaQueryList;
     whereOutside?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;
-    do?: DoCallback | DoCallbacks;
+    do?: DoCallback;
     loadingEagerness?: 'eager' | 'lazy';
     assignGingerly?: Record<string, any>;
     map?: MapConfig;
@@ -65,21 +65,18 @@ export interface MountContext {
     observer: IMountObserver;
     rootNode: Node;
     mountInit: MountInit
-    //observeInfo: ObserveInfo;
 }
 
-// export interface ObserveInfo {
-//     rootNode: Node;
-// }
+
 
 export type DoCallback = (mountedElement: Element, context: MountContext) => void;
 
-export interface DoCallbacks {
-    mount?: (mountedElement: Element, context: MountContext) => void;
-    dismount?: (mountedElement: Element, context: MountContext) => void;
-    disconnect?: (mountedElement: Element, context: MountContext) => void;
-    reconnect?: (mountedElement: Element, context: MountContext) => void;
-}
+// export interface DoCallbacks {
+//     mount?: (mountedElement: Element, context: MountContext) => void;
+//     dismount?: (mountedElement: Element, context: MountContext) => void;
+//     disconnect?: (mountedElement: Element, context: MountContext) => void;
+//     reconnect?: (mountedElement: Element, context: MountContext) => void;
+// }
 
 export interface MountObserverOptions {
     disconnectedSignal?: AbortSignal;

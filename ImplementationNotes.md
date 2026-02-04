@@ -30,18 +30,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-### Lifecycle Callbacks
 
-```typescript
-const observer = new MountObserver({
-   whereElementMatches: 'my-element',
-   do: {
-      mount: (element, context) => { /* element added */ },
-      dismount: (element, context) => { /* element removed */ },
-      disconnect: (element, context) => { /* element left root */ }
-   }
-});
-```
 
 ### Multiple Imports
 

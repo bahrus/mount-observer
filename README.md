@@ -405,7 +405,7 @@ const observer = new MountObserver({
 
 ... would work.
 
-EvtRt is a convenience class provided with this package, and should not be considered part of this proposal (for now).
+EvtRt is a convenience class provided with the polyfill package, and should not be considered part of this proposal (for now).
 
 Note that in this example, "do" no longer points to a function.  When it did (above), we mentioned this would only be called once per element.  **Now it will be called every time the conditions flip from not all satisfied to satisfied"**.
 
@@ -876,7 +876,7 @@ const observer = new MountObserver({
 });
 ```
 
-## Media / container queries / instanceOf / custom checks
+## Media / container queries / instanceOf / custom checks [TODO] out of date
 
 Unlike traditional CSS @import, CSS Modules don't support specifying different imports based on media queries.  That can be another condition we can attach (and why not throw in container queries, based on the rootNode?):
 

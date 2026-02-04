@@ -93,10 +93,6 @@ export function setupMediaQuery(
                 }
             }
             
-            // Call dismount callback
-            if (init.do && typeof init.do !== 'function' && init.do.dismount) {
-                init.do.dismount(element, context);
-            }
             
             // Dispatch dismount event with reason
             observer.dispatchEvent(new DismountEvent(element, 'media-query-failed', init));

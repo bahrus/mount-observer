@@ -344,12 +344,7 @@ export class MountObserver extends EventTarget {
         const notifierExistedBeforeDo = this.#elementNotifiers.has(element);
         // Call do callback
         if (this.#init.do) {
-            if (typeof this.#init.do === 'function') {
-                this.#init.do(element, context);
-            }
-            else if (this.#init.do.mount) {
-                this.#init.do.mount(element, context);
-            }
+            this.#init.do(element, context);
         }
         // Call referenced do functions from imported modules
         if (this.#init.reference !== undefined) {
@@ -443,10 +438,6 @@ export class MountObserver extends EventTarget {
             rootNode,
             mountInit: this.#init,
         };
-        // Call dismount callback
-        if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.dismount) {
-            this.#init.do.dismount(element, context);
-        }
         // Dispatch dismount event
         const dismountEvent = new DismountEvent(element, 'where-element-matches-failed', this.#init);
         this.dispatchEvent(dismountEvent);
@@ -459,9 +450,6 @@ export class MountObserver extends EventTarget {
         // If it's truly disconnected, dispatch disconnect event
         setTimeout(() => {
             if (!rootNode.contains(element)) {
-                if (this.#init.do && typeof this.#init.do !== 'function' && this.#init.do.disconnect) {
-                    this.#init.do.disconnect(element, context);
-                }
                 const disconnectEvent = new DisconnectEvent(element, this.#init);
                 this.dispatchEvent(disconnectEvent);
                 // Dispatch to element-specific notifier

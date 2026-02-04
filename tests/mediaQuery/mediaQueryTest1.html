@@ -15,11 +15,9 @@
         const mo = new MountObserver({
             whereElementMatches: '#span',
             whereMediaMatches: '(max-width: 600px)',
-            do:{
-                mount: (el, ctx) => {
-                    console.log({el, ctx});
-                    target.setAttribute('mark', 'good');
-                }
+            do:(el, ctx) => {
+                console.log({el, ctx});
+                target.setAttribute('mark', 'good');
             }
         });
         mo.addEventListener('mount', e => {

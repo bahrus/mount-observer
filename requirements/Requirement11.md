@@ -95,17 +95,6 @@ What this does do:
      - If it doesn't, skip to the next index
      - Continue until all referenced modules have been processed
 
-## Out of Scope
 
-MountObserver will eventually support DoCallBacks methods as well:
-
-```JavaScript
-export const do = {
-    mount: ...
-    dismount: ...
-}
-```
-
-However, I don't believe support for DoCallBacks has been done yet, that will be a future prerequisite for supporting reference DoCallBacks
 
 
