@@ -35,6 +35,10 @@
     "./arr.js": {
       "default": "./arr.js",
       "types": "./arr.ts"
+    },
+    "./EvtRt.js": {
+      "default": "./EvtRt.js",
+      "types": "./EvtRt.ts"
     }
   },
   "files": [

@@ -4,6 +4,7 @@ export { whereOutside } from './whereOutside.js';
 export { emitMountedElementEvents } from './emitEvents.js';
 export { checkAttrChanges } from './attrChanges.js';
 export { arr } from './arr.js';
+export { EvtRt } from './EvtRt.js';
 export type {
     MountInit,
     MountObserverOptions,

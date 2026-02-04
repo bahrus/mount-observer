@@ -99,6 +99,7 @@ export interface IMountEvent extends Event {
     mountedElement: Element;
     modules: any[];
     mountInit: MountInit;
+    mountContext: MountContext;
 }
 
 export interface IDismountEvent extends Event {

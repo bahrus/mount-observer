@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvtRt Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>EvtRt Test</h1>
+    
+    <div id="container">
+        <div>
+            <p>First paragraph</p>
+            <p>Second paragraph</p>
+            <span class="user-name">Original</span>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { EvtRt } from '../EvtRt.js';
+        
+        const results = {
+            mountCalled: false,
+            mountText: '',
+            dismountCalled: false,
+            dismountText: '',
+            disconnectCalled: false,
+            elementMatched: false
+        };
+        
+        console.log('Starting EvtRt Tests...');
+        
+        // Custom handler that extends EvtRt
+        class MyHandler extends EvtRt {
+            mount(mountedElement, mountInit, context) {
+                console.log('MyHandler.mount called', mountedElement);
+                results.mountCalled = true;
+                mountedElement.textContent = 'hello';
+                results.mountText = mountedElement.textContent;
+            }
+            
+            dismount(mountedElement, mountInit) {
+                console.log('MyHandler.dismount called', mountedElement);
+                results.dismountCalled = true;
+                mountedElement.textContent = 'bye';
+                results.dismountText = mountedElement.textContent;
+            }
+            
+            disconnect(mountedElement, mountInit) {
+                console.log('MyHandler.disconnect called', mountedElement);
+                results.disconnectCalled = true;
+            }
+        }
+        
+        // Test 1: Basic mount with EvtRt
+        const observer = new MountObserver({
+            whereElementMatches: 'span[class$="name"]',
+            do: (mountedElement, ctx) => {
+                console.log('do callback called', mountedElement);
+                results.elementMatched = true;
+                new MyHandler(mountedElement, ctx);
+            }
+        });
+        
+        await observer.observe(document.body);
+        
+        // Wait for mount to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get the span element
+        const span = document.querySelector('span.user-name');
+        console.log('Span text after mount:', span.textContent);
+        
+        // Test dismount by removing the element
+        span.remove();
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log('Span text after dismount:', span.textContent);
+        
+        // Test disconnect (should have fired after removal)
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Element matched:', results.elementMatched);
+        console.log('Mount called:', results.mountCalled);
+        console.log('Mount text:', results.mountText);
+        console.log('Dismount called:', results.dismountCalled);
+        console.log('Dismount text:', results.dismountText);
+        console.log('Disconnect called:', results.disconnectCalled);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

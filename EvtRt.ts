@@ -1,9 +1,9 @@
-import {MountContext, MountInit} from './types';
+import {MountContext, MountInit} from './types.js';
 
 import { 
     DismountEvent, MountEvent, DisconnectEvent,
     dismountEventName, disconnectEventName, mountEventName 
-} from './Events';
+} from './Events.js';
 export class EvtRt implements EventListenerObject{
     constructor(mountedElement: Element, ctx: MountContext ){
         const {observer, mountInit} = ctx;

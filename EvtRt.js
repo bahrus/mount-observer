@@ -1,4 +1,4 @@
-import { DismountEvent, MountEvent, DisconnectEvent, dismountEventName, disconnectEventName, mountEventName } from './Events';
+import { DismountEvent, MountEvent, DisconnectEvent, dismountEventName, disconnectEventName, mountEventName } from './Events.js';
 export class EvtRt {
     constructor(mountedElement, ctx) {
         const { observer, mountInit } = ctx;
