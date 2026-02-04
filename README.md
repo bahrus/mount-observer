@@ -140,7 +140,7 @@ The "observer" constant above is a class instance that inherits from EventTarget
 
 In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but has to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable.
 
-If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors every provide a selector-observer (if ever).
+If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors provide a selector-observer (if ever).
 
 So the developer could use:
 
