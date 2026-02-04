@@ -10,12 +10,14 @@ export class MountEvent extends Event {
     matchingElement;
     modules;
     mountInit;
+    mountContext;
     static eventName = mountEventName;
-    constructor(matchingElement, modules, mountInit) {
+    constructor(matchingElement, modules, mountInit, mountContext) {
         super(MountEvent.eventName);
         this.matchingElement = matchingElement;
         this.modules = modules;
         this.mountInit = mountInit;
+        this.mountContext = mountContext;
     }
 }
 export class DismountEvent extends Event {

@@ -10,6 +10,7 @@
 	},
 	"files": [
 		"MountObserver.ts",
+		"EvtRt.ts",
 	],
 	"exclude":[
 		"node_modules"

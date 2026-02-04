@@ -362,7 +362,7 @@ export class MountObserver extends EventTarget {
             }
         }
         // Dispatch mount event
-        const mountEvent = new MountEvent(element, this.#modules, this.#init);
+        const mountEvent = new MountEvent(element, this.#modules, this.#init, context);
         this.dispatchEvent(mountEvent);
         // Dispatch to element-specific notifier only if:
         // 1. Notifier existed before do callback (wasn't just created), AND
