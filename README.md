@@ -392,7 +392,7 @@ import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
    mount(mountedElement){mountedElement.textContent = 'hello';}
-   dismount(montedElement){mountedElement.textContent = 'bye';}
+   dismount(mountedElement){mountedElement.textContent = 'bye';}
 }
 
 const observer = new MountObserver({
