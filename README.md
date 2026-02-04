@@ -385,23 +385,29 @@ But I think it's important to think about this way of making the mount observer 
 
 ## Binding from a distance
 
-It is important to note that "select" is a css query with no restrictions.  So something like:
+It is important to note that "whereElementMatches" is a css query with no restrictions.  So something like:
 
 ```JavaScript
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
-   mount(mountedElement){mountedElement.textContent = 'hello';}
-   dismount(mountedElement){mountedElement.textContent = 'bye';}
+   mount(mountedElement, mountInit, context){
+      mountedElement.textContent = 'hello';
+   }
+   dismount(mountedElement, mountInit){
+      mountedElement.textContent = 'bye';
+   }
 }
 
 const observer = new MountObserver({
-   select:'div > p + p ~ span[class$="name"]', //not supported by the polyfill
-   do: function({mountedElement, ctx){
+   whereElementMatches: 'div > p + p ~ span[class$="name"]',
+   do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);
    }
-})
+});
+observer.observe(document);
 ```
+
 
 ... would work.
 
