@@ -477,7 +477,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const notifier = this.#elementNotifiers.get(element);
             if (notifier) {
                 this.#notifierMountedElements.add(element);
-                notifier.dispatchEvent(new MountEvent(element, this.#modules, this.#init));
+                notifier.dispatchEvent(mountEvent);
             }
         }
         
