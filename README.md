@@ -121,7 +121,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, as well as more structured inline functions also as discussed below, will continue to be called repeatedly.
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, will continue to be called repeatedly.
 
 The constructor argument can also be an array of objects that fit the pattern shown above.
 
@@ -173,7 +173,7 @@ This proposal has been amended to support multiple imports, including of differe
 
 ```JavaScript
 const observer = new MountObserver({
-   select:'my-element', //not supported by this polyfill
+   whereElementMatches:'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
@@ -390,15 +390,18 @@ It is important to note that "select" is a css query with no restrictions.  So s
 ```JavaScript
 const observer = new MountObserver({
    select:'div > p + p ~ span[class$="name"]', //not supported by the polyfill
-   do:{
-      mount: (matchingElement) => {
-         //attach some behavior or set some property value or add an event listener, etc.
-         matchingElement.textContent = 'hello';
-      },
-      dismount: (matchingElement) => {
-         matchingElement.textContent = 'bye';
-      }
+   do: function({matchingElement, {observer}}){
+      
    }
+   // do:{
+   //    mount: (matchingElement) => {
+   //       //attach some behavior or set some property value or add an event listener, etc.
+   //       matchingElement.textContent = 'hello';
+   //    },
+   //    dismount: (matchingElement) => {
+   //       matchingElement.textContent = 'bye';
+   //    }
+   // }
 })
 ```
 
