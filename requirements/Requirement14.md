@@ -53,7 +53,43 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-So we are expanding the do property in MountInit to allow for a string value (or an array of string values)
+So we are expanding the do property in MountInit to allow for a string value (or an array of string values), or a mix of string values and functions, which are run in sequence (fire and forget).   
 
-If any of the string values aren't previously registered via MountObserver.define, an error is thrown.
+```TypeScript
+export interface MountInit {
+    // ... other properties
+    do?: string | DoCallback | (string | DoCallback)[];
+}
+```
+
+Note that "DoCallbacks" has been removed.  Please remove any references to "DoCallbacks" wherever they may appear as part of this requirement.  I don't think this is a breaking change, just a future requirement that is no longer applicable.
+
+If the constructor is synchronous and throws an error, it will stop any more processing.
+
+If any of the string values aren't previously registered via MountObserver.define, an error is thrown with message `No handler defined for ${doName}`.
+
+define is a static method added to MountObserver class.  The registry is global and shared across all MountObserver instances, similar to the custom elements registry.
+
+What the define method does is:
+
+```JavaScript
+new MyHandler(mountedElement, ctx);
+```
+
+Similar to custom elements:
+
+1.  If the name specified has already been defined, throw an error `${doName} already in use`
+
+~2.  If the name wasn't used, set the constructor.name to the registered name:~  This is difficult to polyfill, so is not included with this polyfill.
+
+```JavaScript
+MyHandler.name = 'myObserver'; //not supported by this polyfill
+```
+
+Unlike custom elements, these custom classes are not required to extend EvtRt, and can even be an ES5 style function prototype that will still be invoked with new Fn(element, context), but the constructor will be expected to allow for these two parameters to be passed in (and no others). Extending EvtRt is recommended but not required.
+ 
+When both do (string/array) and reference are specified, the execution order is:
+
+1.  Inline do functions (if any), and registered handlers (from do strings), in whatever order they appear.
+2.  Referenced do functions (from reference property)
 
