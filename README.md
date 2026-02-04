@@ -388,24 +388,24 @@ But I think it's important to think about this way of making the mount observer 
 It is important to note that "select" is a css query with no restrictions.  So something like:
 
 ```JavaScript
+import {EvtRt} from 'mount-observer/EvtRt.js';
+
+class MyHandler extends EvtRt {
+   mount(mountedElement){mountedElement.textContent = 'hello';}
+   dismount(montedElement){mountedElement.textContent = 'bye';}
+}
+
 const observer = new MountObserver({
    select:'div > p + p ~ span[class$="name"]', //not supported by the polyfill
-   do: function({mountedElement, {observer}}){
-      
+   do: function({mountedElement, ctx){
+      new MyHandler(mountedElement, ctx);
    }
-   // do:{
-   //    mount: (mountedElement) => {
-   //       //attach some behavior or set some property value or add an event listener, etc.
-   //       mountedElement.textContent = 'hello';
-   //    },
-   //    dismount: (mountedElement) => {
-   //       mountedElement.textContent = 'bye';
-   //    }
-   // }
 })
 ```
 
 ... would work.
+
+EvtRt is a convenience class provided with this package, and should not be considered part of this proposal (for now).
 
 Note that in this example, "do" no longer points to a function.  When it did (above), we mentioned this would only be called once per element.  **Now it will be called every time the conditions flip from not all satisfied to satisfied"**.
 
