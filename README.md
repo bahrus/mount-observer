@@ -400,6 +400,9 @@ class MyHandler extends EvtRt {
 }
 
 const observer = new MountObserver({
+   // not supported by polyfill
+   //select: 'div > p + p ~ span[class$="name"]' 
+   // is supported:
    whereElementMatches: 'div > p + p ~ span[class$="name"]',
    do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);

@@ -29,6 +29,9 @@ export interface MountInit {
     getPlayByPlay?: boolean;
     mountedElemEmits?: EventConfig | EventConfig[];
     reference?: number | number[];
+    //allow handler classes or functions
+    //to be passed some custom information
+    customData?: unknown;
 }
 
 export interface MapConfig {
