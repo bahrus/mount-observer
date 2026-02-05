@@ -16,7 +16,7 @@ export class EvtRt implements EventListenerObject{
     }
 
     mount(mountedElement: Element, mountInit: MountInit, context: MountContext){
-        console.log({mountedElement, context});
+        console.log({mountedElement, mountInit, context});
     }
 
     disconnect(mountedElement: Element, mountInit: MountInit){

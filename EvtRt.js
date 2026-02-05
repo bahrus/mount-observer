@@ -9,7 +9,7 @@ export class EvtRt {
         this.mount(mountedElement, mountInit, ctx);
     }
     mount(mountedElement, mountInit, context) {
-        console.log({ mountedElement, context });
+        console.log({ mountedElement, mountInit, context });
     }
     disconnect(mountedElement, mountInit) {
         console.log({ mountedElement, mountInit });

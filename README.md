@@ -391,11 +391,21 @@ It is important to note that "whereElementMatches" is a css query with no restri
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
+   #helloMsg: string | undefined;
+   #byeMsg: string | undefined;
+   #didFirstMount = false;
    mount(mountedElement, mountInit, context){
-      mountedElement.textContent = 'hello';
+      if(!this.didFirstMount){
+         const {customData} = context;
+         const {helloMsg, byeMsg} = customData;
+         this.#helloMsg = helloMsg;
+         this.#byeMsg = byeMsg;
+         this.#didFirstMount = true;
+      }
+      mountedElement.textContent = this.#helloMsg;
    }
    dismount(mountedElement, mountInit){
-      mountedElement.textContent = 'bye';
+      mountedElement.textContent = this.#byeMsg;
    }
 }
 
@@ -406,7 +416,11 @@ const observer = new MountObserver({
    whereElementMatches: 'div > p + p ~ span[class$="name"]',
    do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);
-   }
+   },
+   customData: {
+      helloMsg: 'hello',
+      byeMsg: 'bye',
+   },
 });
 observer.observe(document);
 ```
@@ -414,7 +428,7 @@ observer.observe(document);
 
 ... would work.
 
-EvtRt is a convenience class provided with the polyfill package, and should not be considered part of this proposal (for now).
+EvtRt is a convenience class provided with the polyfill package, and is considered part of this proposal (see how it is used below  by built in handlers).
 
 Note that in this example, "do" no longer points to a function.  When it did (above), we mentioned this would only be called once per element.  **Now it will be called every time the conditions flip from not all satisfied to satisfied"**.
 
@@ -528,11 +542,33 @@ MountObserver.define('myHandler', Handler1);
 MountObserver.define('myHandler', Handler2);  // Error: myHandler already in use
 ```
 
+
+
 ### Global registry
 
 The handler registry is global and shared across all MountObserver instances, similar to the custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
 
 [Implemented as [Requirement14](requirements/Requirement14.md)]
+
+### Built in handlers
+
+This proposal advocates having the platform provide some built in handlers, that extend EvtRt, that is included with this Polyfill.
+
+#### Log to console handler
+
+const observer = new MountObserver({
+   // not supported by polyfill
+   //select: 'div > p + p ~ span[class$="name"]' 
+   // is supported:
+   whereElementMatches: 'div > p + p ~ span[class$="name"]',
+   do: 'builtIns.logToConsole'
+});
+observer.observe(document);
+```
+
+This logs to console all the events (mount, dismount, disconnect)
+
+
 
 ## Applying properties with assignGingerly
 
