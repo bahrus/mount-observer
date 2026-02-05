@@ -5,13 +5,13 @@ export { emitMountedElementEvents } from './emitEvents.js';
 export { checkAttrChanges } from './attrChanges.js';
 export { arr } from './arr.js';
 export { EvtRt } from './EvtRt.js';
+export { DefineCustomElementHandler } from './DefineCustomElementHandler.js';
 export type {
     MountInit,
     MountObserverOptions,
     IMountObserver,
     MountContext,
     DoCallback,
-    DoCallbacks,
     ImportSpec,
     IMountEvent,
     IDismountEvent
@@ -25,3 +25,11 @@ export {
     mediamatchEventName,
     mediaunmatchEventName
 } from './Events.js';
+
+// Register built-in handlers
+import { MountObserver } from './MountObserver.js';
+import { EvtRt } from './EvtRt.js';
+import { DefineCustomElementHandler } from './DefineCustomElementHandler.js';
+
+MountObserver.define('builtIns.logToConsole', EvtRt);
+MountObserver.define('builtIns.defineCustomElement', DefineCustomElementHandler);

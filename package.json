@@ -39,6 +39,10 @@
     "./EvtRt.js": {
       "default": "./EvtRt.js",
       "types": "./EvtRt.ts"
+    },
+    "./DefineCustomElementHandler.js": {
+      "default": "./DefineCustomElementHandler.js",
+      "types": "./DefineCustomElementHandler.ts"
     }
   },
   "files": [

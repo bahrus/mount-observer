@@ -11,6 +11,8 @@
 	"files": [
 		"MountObserver.ts",
 		"EvtRt.ts",
+		"index.ts",
+		"DefineCustomElementHandler.ts"
 	],
 	"exclude":[
 		"node_modules"

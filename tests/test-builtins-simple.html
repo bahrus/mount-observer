@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Built-in Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Simple Built-in Test</h1>
+    
+    <script type="module">
+        console.log('Script starting...');
+        
+        try {
+            console.log('Importing MountObserver...');
+            const { MountObserver } = await import('../index.js');
+            console.log('MountObserver imported:', MountObserver);
+            
+            console.log('Creating observer...');
+            const observer = new MountObserver({
+                whereElementMatches: '#test',
+                do: 'builtIns.logToConsole'
+            });
+            console.log('Observer created:', observer);
+            
+            console.log('Observing...');
+            await observer.observe(document.body);
+            console.log('Observing started');
+            
+            console.log('Creating element...');
+            const elem = document.createElement('div');
+            elem.id = 'test';
+            elem.textContent = 'Test element';
+            document.body.appendChild(elem);
+            console.log('Element added');
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            console.log('Test complete!');
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Error:', error);
+            window.testError = error.message;
+            window.testComplete = true;
+        }
+    </script>
+</body>
+</html>
