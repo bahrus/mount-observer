@@ -540,6 +540,7 @@ This proposal advocates having the platform provide some built in handlers, that
 
 #### Log to console handler
 
+```JavaScript
 const observer = new MountObserver({
    // not supported by polyfill
    //select: 'div > p + p ~ span[class$="name"]' 
