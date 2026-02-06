@@ -391,21 +391,11 @@ It is important to note that "whereElementMatches" is a css query with no restri
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
-   #helloMsg: string | undefined;
-   #byeMsg: string | undefined;
-   #didFirstMount = false;
    mount(mountedElement, mountInit, context){
-      if(!this.didFirstMount){
-         const {customData} = context;
-         const {helloMsg, byeMsg} = customData;
-         this.#helloMsg = helloMsg;
-         this.#byeMsg = byeMsg;
-         this.#didFirstMount = true;
-      }
-      mountedElement.textContent = this.#helloMsg;
+      mountedElement.textContent = 'hello';
    }
    dismount(mountedElement, mountInit){
-      mountedElement.textContent = this.#byeMsg;
+      mountedElement.textContent = 'goodbye';
    }
 }
 
@@ -416,10 +406,6 @@ const observer = new MountObserver({
    whereElementMatches: 'div > p + p ~ span[class$="name"]',
    do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);
-   },
-   customData: {
-      helloMsg: 'hello',
-      byeMsg: 'bye',
    },
 });
 observer.observe(document);
