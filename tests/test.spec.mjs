@@ -55,38 +55,38 @@ test.describe('MountObserver v2', () => {
         await expect(log).toContainText('Disconnect event: dynamic-1');
     });
 
-    // test('should lazy load imports', async ({ page }) => {
-    //     // Listen for console errors
-    //     page.on('console', msg => {
-    //         if (msg.type() === 'error') {
-    //             console.log('Browser error:', msg.text());
-    //         }
-    //     });
+    test('should lazy load imports', async ({ page }) => {
+        // Listen for console errors
+        page.on('console', msg => {
+            if (msg.type() === 'error') {
+                console.log('Browser error:', msg.text());
+            }
+        });
         
-    //     page.on('pageerror', error => {
-    //         console.log('Page error:', error.message);
-    //     });
+        page.on('pageerror', error => {
+            console.log('Page error:', error.message);
+        });
         
-    //     await page.goto('http://localhost:8000/tests/test-import.html');
+        await page.goto('http://localhost:8000/tests/test-import.html');
         
-    //     // Wait for import to load - give it more time
-    //     await page.waitForTimeout(1000);
+        // Wait for import to load - give it more time
+        await page.waitForTimeout(1000);
         
-    //     // Check the log to see what happened
-    //     const logText = await page.locator('#log').textContent();
-    //     console.log('Log content:', logText);
+        // Check the log to see what happened
+        const logText = await page.locator('#log').textContent();
+        console.log('Log content:', logText);
         
-    //     // Check that custom element was defined
-    //     const isDefined = await page.evaluate(() => {
-    //         return customElements.get('fancy-button') !== undefined;
-    //     });
-    //     expect(isDefined).toBe(true);
+        // Check that custom element was defined
+        const isDefined = await page.evaluate(() => {
+            return customElements.get('fancy-button') !== undefined;
+        });
+        expect(isDefined).toBe(true);
         
-    //     // Check log
-    //     const log = page.locator('#log');
-    //     await expect(log).toContainText('Load event: 1 module(s) loaded');
-    //     await expect(log).toContainText('Custom element fancy-button defined');
-    // });
+        // Check log
+        const log = page.locator('#log');
+        await expect(log).toContainText('Load event: 1 module(s) loaded');
+        await expect(log).toContainText('Custom element fancy-button defined');
+    });
 
     test('should handle multiple elements', async ({ page }) => {
         await page.goto('http://localhost:8000/tests/test-basic.html');

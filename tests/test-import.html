@@ -36,7 +36,7 @@
                 addLog(`Do callback: Defining ${localName}`);
                 
                 if (!customElements.get(localName)) {
-                    customElements.define(localName, modules[0].FancyButton);
+                    customElements.define(localName, modules[0].default);
                     addLog(`Custom element ${localName} defined`);
                 }
             }
