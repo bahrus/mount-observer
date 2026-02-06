@@ -373,7 +373,7 @@ export { doFunction as do };
       "./my-element.js",
       "myPackage/myDefiner.js
    ],
-   reference: 2
+   "reference": 2
 }
 </script>
 ```
