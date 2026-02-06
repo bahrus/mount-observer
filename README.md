@@ -416,9 +416,7 @@ observer.observe(document);
 
 EvtRt is a convenience class provided with the polyfill package, and is considered part of this proposal (see how it is used below  by built in handlers).
 
-Note that in this example, "do" no longer points to a function.  When it did (above), we mentioned this would only be called once per element.  **Now it will be called every time the conditions flip from not all satisfied to satisfied"**.
-
-This would allow developers to create "stylesheet" like capabilities.
+This allows developers to create "stylesheet" like capabilities.
 
 ## Registering reusable handlers with MountObserver.define
 
