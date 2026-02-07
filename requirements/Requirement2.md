@@ -4,7 +4,7 @@
 const observer = new MountObserver({
    import: './my-element.js',
    whereElementMatches:'input',
-   asgMt: {
+   assignOnMount: {
      disabled: true
    }
    
@@ -13,7 +13,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-This will conditionally, dynamically import [assignGingerly](https://github.com/bahrus/assign-gingerly), and when a new input element is found in the document, run asgMt:
+This will conditionally, dynamically import [assignGingerly](https://github.com/bahrus/assign-gingerly), and when a new input element is found in the document, run assignOnMount:
 
 ```JavaScript
 assignGingerly(oInput, {disabled: true});

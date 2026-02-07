@@ -9,7 +9,7 @@ When an element mounts, the following code demonstrates how to use the `MountObs
 ```javascript
 const observer = new MountObserver({
    whereElementMatches: '.valid',
-   asgMt: {
+   assignOnMount: {
       '?.style?.color': 'green' // Assigns the color green when the element mounts
    }
 });
@@ -24,7 +24,7 @@ To apply assignments when an element dismounts, the `asgDisMt` property can be u
 ```javascript
 const observer = new MountObserver({
    whereElementMatches: '.valid',
-   asgMt: {
+   assignOnMount: {
       '?.style?.color': 'green' // Assigns the color green when the element mounts
    },
    asgDisMt: {

@@ -11,7 +11,7 @@ What this means is:
 
 ```JavaScript
 // Constructor
-new MountObserver({ asgMt: { disabled: true, value: 'foo' } })
+new MountObserver({ assignOnMount: { disabled: true, value: 'foo' } })
 
 // Later, call method
 observer.assignGingerly({ title: 'bar' })

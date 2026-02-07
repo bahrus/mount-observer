@@ -587,7 +587,7 @@ For the common use case of setting properties on matching elements, MountObserve
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'input',
-   asgMt: {
+   assignOnMount: {
       disabled: true,
       value: 'Default value',
       title: 'This is a tooltip'
@@ -607,7 +607,7 @@ The `assignGingerly` library supports nested property assignment using the `?.` 
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'button',
-   asgMt: {
+   assignOnMount: {
       disabled: false,
       '?.dataset?.action': 'submit',
       '?.dataset?.trackingId': '12345',
@@ -630,7 +630,7 @@ You can combine `assignGingerly` with lazy loading to both import resources and 
 const observer = new MountObserver({
    whereElementMatches: 'my-element',
    import: './my-element.js',
-   asgMt: {
+   assignOnMount: {
       theme: 'dark',
       '?.dataset?.initialized': 'true'
    },
@@ -661,7 +661,7 @@ The `MountObserver` class provides a public `assignGingerly()` method that allow
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'input',
-   asgMt: {
+   assignOnMount: {
       disabled: true,
       value: 'Initial value'
    }

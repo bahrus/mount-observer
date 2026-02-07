@@ -83,7 +83,7 @@ test.describe('MountObserver - assignGingerly Method', () => {
             const { MountObserver } = await import('../MountObserver.js');
             const observer = new MountObserver({
                 whereElementMatches: 'input',
-                asgMt: {
+                assignOnMount: {
                     disabled: true
                 }
             });

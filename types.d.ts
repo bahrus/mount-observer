@@ -24,8 +24,8 @@ export interface MountInit {
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: string | DoCallback | (string | DoCallback)[];
     loadingEagerness?: 'eager' | 'lazy';
-    asgMt?: Record<string, any>;
-    asgDisMt?: Record<string, any>;
+    assignOnMount?: Record<string, any>;
+    assignOnDismount?: Record<string, any>;
     map?: MapConfig;
     getPlayByPlay?: boolean;
     mountedElemEmits?: EventConfig | EventConfig[];

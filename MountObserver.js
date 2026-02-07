@@ -40,7 +40,7 @@ export class MountObserver extends EventTarget {
         this.#init = init;
         this.#options = options;
         this.#abortController = new AbortController();
-        const { asgMt, asgDisMt, do: doValue, reference, whereAttr, loadingEagerness, import: imp } = init;
+        const { assignOnMount: asgMt, asgDisMt, do: doValue, reference, whereAttr, loadingEagerness, import: imp } = init;
         // Make a copy of assignGingerly config using structuredClone
         if (asgMt !== undefined) {
             this.#asgMtSource = structuredClone(asgMt);
