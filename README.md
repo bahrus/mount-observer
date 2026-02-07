@@ -28,7 +28,8 @@ The following features have been implemented and tested:
 
 ### Advanced Features
 - ✅ **Dynamic imports**: Lazy loading of JavaScript modules
-- ✅ **assignGingerly** (asgMt): Property assignment on mount
+- ✅ **assignOnMount**: Property assignment when elements mount
+- ✅ **assignOnDismount**: Property assignment when elements dismount
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **map configuration**: Metadata mapping for attribute coordinates
 - ✅ **once option**: Fire attrchange event only once per attribute
@@ -580,9 +581,9 @@ observer.observe(document);
 
 ```
 
-## Applying properties on mount with asgMt
+## Applying properties on mount and dismount
 
-For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows us to declaratively specify properties to apply to elements without writing custom mount callbacks:
+For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows us to declaratively specify properties to apply to elements during their lifecycle without writing custom mount callbacks:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -598,7 +599,66 @@ observer.observe(document);
 
 This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
 
-[Implemented as [Requirement2](requirements/Requirement2.md)]
+[Implemented as [Requirement2](requirements/Requirement2.md) and [Requirement16](requirements/Requirement16.md)]
+
+### Assigning properties on dismount
+
+You can also specify properties to apply when elements are removed from the DOM using `assignOnDismount`:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: '.status-indicator',
+   assignOnMount: {
+      '?.style?.color': 'green',
+      '?.dataset?.status': 'active'
+   },
+   assignOnDismount: {
+      '?.style?.color': 'red',
+      '?.dataset?.status': 'inactive'
+   }
+});
+observer.observe(document);
+```
+
+This is useful for cleanup operations, visual feedback, or maintaining state on elements that may be temporarily removed from the DOM but still referenced elsewhere in your code.
+
+**Note:** The `assignOnDismount` properties are applied before the element is removed from the mounted elements tracking, so the element still has access to its DOM context.
+
+#### Practical use case: Form validation feedback
+
+A common use case is providing visual feedback for form validation:
+
+```JavaScript
+const observer = new MountObserver({
+   whereElementMatches: 'input.validated',
+   assignOnMount: {
+      '?.style?.borderColor': 'green',
+      '?.style?.backgroundColor': '#f0fff0',
+      '?.setAttribute': ['aria-invalid', 'false']
+   },
+   assignOnDismount: {
+      '?.style?.borderColor': '',
+      '?.style?.backgroundColor': '',
+      '?.removeAttribute': 'aria-invalid'
+   }
+});
+observer.observe(document);
+```
+
+When an input gains the `validated` class, it gets green styling. When the class is removed (dismount), the styling is cleaned up.
+
+#### Remounting behavior
+
+If an element is removed and then re-added to the DOM, the `assignOnMount` properties will be reapplied:
+
+```JavaScript
+const input = document.querySelector('input');
+input.classList.add('validated');  // assignOnMount applied
+input.classList.remove('validated'); // assignOnDismount applied
+input.classList.add('validated');  // assignOnMount applied again
+```
+
+This ensures consistent behavior across the element's lifecycle.
 
 ### Nested properties with dataset
 
