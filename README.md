@@ -28,7 +28,7 @@ The following features have been implemented and tested:
 
 ### Advanced Features
 - ✅ **Dynamic imports**: Lazy loading of JavaScript modules
-- ✅ **assignGingerly (asgMt) **: Property assignment on mount
+- ✅ **assignGingerly** (asgMt): Property assignment on mount
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **map configuration**: Metadata mapping for attribute coordinates
 - ✅ **once option**: Fire attrchange event only once per attribute
