@@ -40,13 +40,13 @@ export class MountObserver extends EventTarget {
         this.#init = init;
         this.#options = options;
         this.#abortController = new AbortController();
-        const { assignOnMount: asgMt, asgDisMt, do: doValue, reference, whereAttr, loadingEagerness, import: imp } = init;
-        // Make a copy of assignGingerly config using structuredClone
-        if (asgMt !== undefined) {
-            this.#asgMtSource = structuredClone(asgMt);
+        const { assignOnMount, assignOnDismount, do: doValue, reference, whereAttr, loadingEagerness, import: imp } = init;
+        // Make a copy of assignOnMount config using structuredClone
+        if (assignOnMount !== undefined) {
+            this.#asgMtSource = structuredClone(assignOnMount);
         }
-        if (asgDisMt !== undefined) {
-            this.#asgDisMtSource = structuredClone(asgDisMt);
+        if (assignOnDismount !== undefined) {
+            this.#asgDisMtSource = structuredClone(assignOnDismount);
         }
         if (options.disconnectedSignal) {
             options.disconnectedSignal.addEventListener('abort', () => {
