@@ -56,6 +56,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #mediaQueryCleanup?: () => void;
     #mediaMatches: boolean = true;
     #asgMtSource: Record<string, any> | undefined;
+    #asgDisMtSource: Record<string, any> | undefined;
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
 
@@ -66,12 +67,15 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#abortController = new AbortController();
 
         const {
-            asgMt, do: doValue, reference, whereAttr, loadingEagerness,
+            asgMt, asgDisMt, do: doValue, reference, whereAttr, loadingEagerness,
             import: imp
         } = init;
         // Make a copy of assignGingerly config using structuredClone
         if (asgMt !== undefined) {
             this.#asgMtSource = structuredClone(asgMt);
+        }
+        if (asgDisMt !== undefined) {
+            this.#asgDisMtSource = structuredClone(asgDisMt);
         }
 
         if (options.disconnectedSignal) {
@@ -572,11 +576,18 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
     }
 
-    #handleRemoval(element: Element): void {
+    async #handleRemoval(element: Element): Promise<void> {
         if (!this.#mountedElements.weakSet.has(element)) {
             return;
         }
 
+        
+
+        // Apply assignGingerly if specified for dismount
+        if (this.#asgDisMtSource) {
+            const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
+            assignGingerly(element, this.#asgDisMtSource);
+        }
         // Remove from both structures
         this.#mountedElements.weakSet.delete(element);
         for (const ref of this.#mountedElements.setWeak) {
