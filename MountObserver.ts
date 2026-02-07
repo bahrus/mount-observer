@@ -55,7 +55,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #checkAttrChangesFn: ((element: Element) => AttrChange[]) | null = null;
     #mediaQueryCleanup?: () => void;
     #mediaMatches: boolean = true;
-    #assignGingerlySource: Record<string, any> | undefined;
+    #asgMtSource: Record<string, any> | undefined;
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
 
@@ -65,9 +65,13 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#options = options;
         this.#abortController = new AbortController();
 
+        const {
+            asgMt, do: doValue, reference, whereAttr, loadingEagerness,
+            import: imp
+        } = init;
         // Make a copy of assignGingerly config using structuredClone
-        if (init.assignGingerly !== undefined) {
-            this.#assignGingerlySource = structuredClone(init.assignGingerly);
+        if (asgMt !== undefined) {
+            this.#asgMtSource = structuredClone(asgMt);
         }
 
         if (options.disconnectedSignal) {
@@ -77,22 +81,22 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Validate do property if it contains string references
-        if (init.do !== undefined) {
+        if (doValue !== undefined) {
             this.#validateDoHandlers();
         }
 
         // Validate reference property if present
-        if (init.reference !== undefined) {
+        if (reference !== undefined) {
             this.#validateReference();
         }
 
         // Preload whereAttr utilities if needed
-        if (init.whereAttr) {
+        if (whereAttr) {
             this.#preloadWhereAttrUtilities();
         }
 
         // Start loading imports if eager
-        if (init.loadingEagerness === 'eager' && init.import) {
+        if (loadingEagerness === 'eager' && imp) {
             this.#loadImports();
         }
     }
@@ -467,9 +471,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
         };
 
         // Apply assignGingerly if specified
-        if (this.#assignGingerlySource) {
+        if (this.#asgMtSource) {
             const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-            assignGingerly(element, this.#assignGingerlySource);
+            assignGingerly(element, this.#asgMtSource);
         }
 
         // Check if notifier exists BEFORE calling do callback
@@ -544,19 +548,19 @@ export class MountObserver extends EventTarget implements IMountObserver {
     async assignGingerly(config: Record<string, any> | undefined): Promise<void> {
         // Handle undefined case
         if (config === undefined) {
-            this.#assignGingerlySource = undefined;
+            this.#asgMtSource = undefined;
             return;
         }
 
         const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
 
         // Update the source config for future mounted elements
-        if (this.#assignGingerlySource === undefined) {
+        if (this.#asgMtSource === undefined) {
             // No existing config, just clone the passed in object
-            this.#assignGingerlySource = structuredClone(config);
+            this.#asgMtSource = structuredClone(config);
         } else {
             // Merge into existing config using assignGingerly
-            assignGingerly(this.#assignGingerlySource, config);
+            assignGingerly(this.#asgMtSource, config);
         }
 
         // Apply to already mounted elements using setWeak for iteration

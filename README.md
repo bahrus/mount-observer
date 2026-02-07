@@ -28,7 +28,7 @@ The following features have been implemented and tested:
 
 ### Advanced Features
 - ✅ **Dynamic imports**: Lazy loading of JavaScript modules
-- ✅ **assignGingerly**: Property assignment on mount
+- ✅ **assignGingerly (asgMt) **: Property assignment on mount
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **map configuration**: Metadata mapping for attribute coordinates
 - ✅ **once option**: Fire attrchange event only once per attribute
@@ -580,14 +580,14 @@ observer.observe(document);
 
 ```
 
-## Applying properties with assignGingerly
+## Applying properties on mount with asgMt
 
 For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows us to declaratively specify properties to apply to elements without writing custom mount callbacks:
 
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'input',
-   assignGingerly: {
+   asgMt: {
       disabled: true,
       value: 'Default value',
       title: 'This is a tooltip'
@@ -607,7 +607,7 @@ The `assignGingerly` library supports nested property assignment using the `?.` 
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'button',
-   assignGingerly: {
+   asgMt: {
       disabled: false,
       '?.dataset?.action': 'submit',
       '?.dataset?.trackingId': '12345',
@@ -630,7 +630,7 @@ You can combine `assignGingerly` with lazy loading to both import resources and 
 const observer = new MountObserver({
    whereElementMatches: 'my-element',
    import: './my-element.js',
-   assignGingerly: {
+   asgMt: {
       theme: 'dark',
       '?.dataset?.initialized': 'true'
    },
@@ -661,7 +661,7 @@ The `MountObserver` class provides a public `assignGingerly()` method that allow
 ```JavaScript
 const observer = new MountObserver({
    whereElementMatches: 'input',
-   assignGingerly: {
+   asgMt: {
       disabled: true,
       value: 'Initial value'
    }
