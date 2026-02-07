@@ -362,7 +362,7 @@ export class MountObserver extends EventTarget {
         };
         // Apply assignGingerly if specified
         if (this.#assignGingerlySource) {
-            const { assignGingerly } = await import('assign-gingerly/index.js');
+            const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
             assignGingerly(element, this.#assignGingerlySource);
         }
         // Check if notifier exists BEFORE calling do callback
@@ -431,7 +431,7 @@ export class MountObserver extends EventTarget {
             this.#assignGingerlySource = undefined;
             return;
         }
-        const { assignGingerly } = await import('assign-gingerly/index.js');
+        const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
         // Update the source config for future mounted elements
         if (this.#assignGingerlySource === undefined) {
             // No existing config, just clone the passed in object

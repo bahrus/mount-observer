@@ -468,7 +468,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         // Apply assignGingerly if specified
         if (this.#assignGingerlySource) {
-            const { assignGingerly } = await import('assign-gingerly/index.js');
+            const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
             assignGingerly(element, this.#assignGingerlySource);
         }
 
@@ -548,7 +548,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return;
         }
 
-        const { assignGingerly } = await import('assign-gingerly/index.js');
+        const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
 
         // Update the source config for future mounted elements
         if (this.#assignGingerlySource === undefined) {

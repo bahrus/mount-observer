@@ -73,7 +73,7 @@ async function emitSingleEvent(
 
     // Apply eventProps if specified
     if (config.eventProps) {
-        const { assignGingerly } = await import('assign-gingerly/index.js');
+        const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
         const processedProps = processMagicStrings(config.eventProps, element, mountInit);
         assignGingerly(event, processedProps);
     }

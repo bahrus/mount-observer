@@ -206,7 +206,7 @@ The package uses conditional exports in package.json, providing both default (JS
 
 **Example**:
 ```typescript
-import { assignGingerly } from 'assign-gingerly/index.js';
+import { assignGingerly } from 'assign-gingerly/assignGingerly.js';
 ```
 
 **Key Rules**:
