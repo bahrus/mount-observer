@@ -115,7 +115,6 @@ customElements.define('my-element', wrapper);
 
 Creating a wrapper class allows the same base class to be reused for multiple custom element names, as each call to customElements.define() requires a unique constructor.
 
-[TODO]:  Add unit tests
 
 
 
