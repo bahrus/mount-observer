@@ -213,6 +213,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (this.#rootNode) {
             throw new Error('Already observing');
         }
+        if(this.#asgMtSource || this.#asgDisMtSource){
+            await import('assign-gingerly/object-extension.js');
+        }
 
         this.#rootNode = new WeakRef(rootNode);
 
@@ -476,8 +479,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
-            const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-            assignGingerly(element, this.#asgMtSource);
+            element.assignGingerly(this.#asgMtSource);
+            // const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
+            // assignGingerly(element, this.#asgMtSource);
         }
 
         // Check if notifier exists BEFORE calling do callback
@@ -556,7 +560,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return;
         }
 
-        const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
+        await import('assign-gingerly/object-extension.js');
+        //const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
 
         // Update the source config for future mounted elements
         if (this.#asgMtSource === undefined) {
@@ -564,14 +569,16 @@ export class MountObserver extends EventTarget implements IMountObserver {
             this.#asgMtSource = structuredClone(config);
         } else {
             // Merge into existing config using assignGingerly
-            assignGingerly(this.#asgMtSource, config);
+            this.#asgMtSource.assignGingerly(config);
+            //assignGingerly(this.#asgMtSource, config);
         }
 
         // Apply to already mounted elements using setWeak for iteration
         for (const ref of this.#mountedElements.setWeak) {
             const element = ref.deref();
             if (element) {
-                assignGingerly(element, config);
+                element.assignGingerly(config);
+                //assignGingerly(element, config);
             }
         }
     }
@@ -585,8 +592,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         // Apply assignGingerly if specified for dismount
         if (this.#asgDisMtSource) {
-            const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-            assignGingerly(element, this.#asgDisMtSource);
+            //const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
+            //assignGingerly(element, this.#asgDisMtSource);
+            element.assignGingerly(this.#asgDisMtSource);
         }
         // Remove from both structures
         this.#mountedElements.weakSet.delete(element);
