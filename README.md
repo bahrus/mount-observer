@@ -889,7 +889,7 @@ mountedElemEmits: {
    event: 'CustomEvent',
    args: ['ready', { detail: {} }],
    eventProps: {
-      timestamp: Date.now(),
+      timestamp: Date.now(),  //TODO:  magic string?
       source: 'mount-observer',
       element: '{{mountedElement}}'
    }
