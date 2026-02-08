@@ -371,8 +371,6 @@ export class MountObserver extends EventTarget {
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
             element.assignGingerly(this.#asgMtSource);
-            // const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-            // assignGingerly(element, this.#asgMtSource);
         }
         // Check if notifier exists BEFORE calling do callback
         const notifierExistedBeforeDo = this.#elementNotifiers.has(element);
@@ -441,7 +439,6 @@ export class MountObserver extends EventTarget {
             return;
         }
         await import('assign-gingerly/object-extension.js');
-        //const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
         // Update the source config for future mounted elements
         if (this.#asgMtSource === undefined) {
             // No existing config, just clone the passed in object
@@ -467,8 +464,6 @@ export class MountObserver extends EventTarget {
         }
         // Apply assignGingerly if specified for dismount
         if (this.#asgDisMtSource) {
-            //const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-            //assignGingerly(element, this.#asgDisMtSource);
             element.assignGingerly(this.#asgDisMtSource);
         }
         // Remove from both structures
