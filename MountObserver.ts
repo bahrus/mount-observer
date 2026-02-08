@@ -370,8 +370,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         // Process children
-        if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_NODE) {
-            const root = node as Element | Document;
+        if ('querySelectorAll' in node) {
+            const root = node as DocumentFragment;
             
             // Get all elements matching the CSS selector first
             root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {

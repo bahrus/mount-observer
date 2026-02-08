@@ -281,7 +281,7 @@ export class MountObserver extends EventTarget {
             }
         }
         // Process children
-        if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.DOCUMENT_NODE) {
+        if ('querySelectorAll' in node) {
             const root = node;
             // Get all elements matching the CSS selector first
             root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
