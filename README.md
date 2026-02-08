@@ -684,7 +684,7 @@ The `?.` prefix tells assignGingerly to create nested properties if they don't e
 
 ### Combining with imports
 
-You can combine `assignGingerly` with lazy loading to both import resources and set properties:
+You can combine `assignOn*` with lazy loading to both import resources and set properties:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -707,7 +707,7 @@ The `assignGingerly` properties are applied after imports are loaded but before 
 
 ### Performance benefits
 
-Using `assignGingerly` provides several benefits:
+Using `assignOn*` provides several benefits:
 
 1. **Lazy loading**: The assign-gingerly library is only loaded when needed (when the `assignGingerly` property is specified)
 2. **Bulk operations**: Properties are applied efficiently to all matching elements
@@ -1111,7 +1111,7 @@ Unlike traditional CSS @import, CSS Modules don't support specifying different i
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'div > p + p ~ span[class$="name"]',
+   select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
    whereMediaMatches: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
    whereContainerHas: '[itemprop=isActive][value="true"]',
@@ -1121,23 +1121,7 @@ const observer = new MountObserver({
       effectiveTypeIn: ["slow-2g"],
    },
    import: ['./my-element-small.css', {type: 'css'}],
-   do: {
-      confirm: (mountedElement, (e: MountObserverConfirmEvent) => {
-         e.isSatisfied = true;
-         e.preventDefault();
-      }),
-      mount: ({localName}, {modules}) => {
-        ...
-      },
-      dismount: ...,
-      disconnect: ...,
-      move: ...,
-      reconnect: ...,
-      confirm: ...,
-      reconfirm: ...,
-      exit: ...,
-      forget: ...,
-   }
+   do: ...
 });
 ```
 
@@ -1293,10 +1277,8 @@ const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
    whereElementMatches:'[itemprop]',
    whereOutside: '[itemscope]'
-   do: {
-      mount: ({localName}, {modules, observer}) => {
-        ...
-      },
+   do: ({localName}, {modules, observer}) => {
+      ...
    },
    disconnectedSignal: new AbortController().signal
 });
@@ -1376,7 +1358,7 @@ const mo = new MountObserver({
    observedAttrsWhenMounted: ['lang', 'contenteditable']
 });
 
-mo.addEventListener('attrChange', e => {
+mo.addEventListener('attrchange', e => {
    console.log(e);
    // {
    //    mountedElement,
