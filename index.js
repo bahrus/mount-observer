@@ -1,6 +1,6 @@
 // Main entry point for MountObserver v2
 export { MountObserver } from './MountObserver.js';
-export { whereOutside } from './whereOutside.js';
+export { withScopePerimeter } from './withScopePerimeter.js';
 export { emitMountedElementEvents } from './emitEvents.js';
 export { arr } from './arr.js';
 export { EvtRt } from './EvtRt.js';

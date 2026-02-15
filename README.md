@@ -13,7 +13,7 @@ The following features have been implemented and tested:
 - ✅ **whereElementMatches**: CSS selector-based element matching
 - ✅ **withInstance**: Constructor-based element filtering (single or array)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
-- ✅ **whereOutside**: Donut hole scoping (exclude elements inside matching ancestors)
+- ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
 
 ### Lifecycle & Events
 - ✅ **mount/dismount/disconnect events**: Element lifecycle tracking
@@ -1242,7 +1242,7 @@ We want to find all elements with attribute itemprop outside any itemscope, so t
 const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
    whereElementMatches:'[itemprop]',
-   whereOutside: '[itemscope]'
+   withScopePerimeter: '[itemscope]'
    do: ({localName}, {modules, observer}) => {
       ...
    },
@@ -1251,11 +1251,11 @@ const observer = new MountObserver({
 observer.observe(oContainerNode);
 ```
 
-The check for "whereOutside" is done via script:
+The check for "withScopePerimeter" is done via script:
 
 ```JavaScript
-import {whereOutside} from 'mount-observer/whereOutside.js';
-whereOutside(oContainerNode: Node, matchCandidate: Element, outside: string){
+import {withScopePerimeter} from 'mount-observer/withScopePerimeter.js';
+withScopePerimeter(oContainerNode: Node, matchCandidate: Element, outside: string){
     let current = matchCandidate.parentElement;
     
     while (current && current !== oContainerNode) {

@@ -120,4 +120,4 @@ This plan outlines the step-by-step removal of the whereAttr feature from the mo
 - This is a pure deletion task with no new functionality
 - Each step should be followed by compilation to catch any missed dependencies
 - The test suite should pass after all removals are complete
-- Manual testing should verify that other MountInit properties (withInstance, withMediaMatching, whereOutside) still work correctly
+- Manual testing should verify that other MountInit properties (withInstance, withMediaMatching, withScopePerimeter) still work correctly

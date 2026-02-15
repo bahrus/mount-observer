@@ -19,7 +19,7 @@ We want to find all elements with attribute itemprop outside any itemscope, so t
 const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
    whereElementMatches:'[itemprop]',
-   whereOutside: '[itemscope]'
+   withScopePerimeter: '[itemscope]'
    do: {
       mount: ({localName}, {modules, observer}) => {
         ...
@@ -34,15 +34,15 @@ The MountInit interface should amended:
 
 ```TypeScript
 interface MountInit {
-    whereOutside?: string
+    withScopePerimeter?: string
 }
 ```
 
-whereOutside should only support a string (or undefined), not an array of strings for now.
+withScopePerimeter should only support a string (or undefined), not an array of strings for now.
 
 
 
-The check for "whereOutside" is done via script:
+The check for "withScopePerimeter" is done via script:
 
 ```JavaScript
 outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
@@ -60,7 +60,7 @@ outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
 
 ```
 
-This is an AND condition, so that if an element matches whereElementMatches but its parent (between it and root) matches whereOutside it would not mount.
+This is an AND condition, so that if an element matches whereElementMatches but its parent (between it and root) matches withScopePerimeter it would not mount.
 
 The root node (oContainerNode) should not be checked against the outside selector
 
@@ -69,7 +69,7 @@ The root node (oContainerNode) should not be checked against the outside selecto
  The check order should be:
 
 - whereElementMatches (cheapest - CSS selector)
-- whereOutside (medium - upward traversal) add on to whereElementMatches
+- withScopePerimeter (medium - upward traversal) add on to whereElementMatches
 - whereAttr (expensive - complex logic)
 - withInstance (cheap - instanceof check)
 withMediaMatching (already checked globally)

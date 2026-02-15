@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>whereOutside Test</title>
+    <title>withScopePerimeter Test</title>
 </head>
 <body>
-    <h1>whereOutside Test (Donut Hole Scoping)</h1>
+    <h1>withScopePerimeter Test (Donut Hole Scoping)</h1>
 
     <!-- Test structure matching the requirement example -->
     <div id="myTest" itemscope>
@@ -25,10 +25,10 @@
 
         window.eventLog = [];
 
-        // Test: whereOutside should exclude elements inside nested itemscope
+        // Test: withScopePerimeter should exclude elements inside nested itemscope
         const observer = new MountObserver({
             withMatching: '[itemprop]',
-            whereOutside: '[itemscope]',
+            withScopePerimeter: '[itemscope]',
             do: (el) => {
                 window.eventLog.push({ type: 'mount', id: el.id });
             }
@@ -78,7 +78,7 @@
                 </ul>
                 
                 <h3>Explanation</h3>
-                <p>The whereOutside condition creates a "donut hole" - elements matching [itemprop] 
+                <p>The withScopePerimeter condition creates a "donut hole" - elements matching [itemprop] 
                 are only mounted if they are NOT inside any [itemscope] element (except the root container itself).</p>
             `;
             

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('whereOutside Tests', () => {
+test.describe('withScopePerimeter Tests', () => {
     test('should implement donut hole scoping', async ({ page }) => {
         await page.goto('/tests/test-where-outside.html');
         

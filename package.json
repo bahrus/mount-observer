@@ -20,9 +20,9 @@
       "default": "./MountObserver.js",
       "types": "./MountObserver.ts"
     },
-    "./whereOutside.js": {
-      "default": "./whereOutside.js",
-      "types": "./whereOutside.ts"
+    "./withScopePerimeter.js": {
+      "default": "./withScopePerimeter.js",
+      "types": "./withScopePerimeter.ts"
     },
     "./emitEvents.js": {
       "default": "./emitEvents.js",

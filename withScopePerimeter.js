@@ -7,7 +7,7 @@
  * @param outside - CSS selector for excluding ancestors
  * @returns true if element is outside all matching ancestors, false otherwise
  */
-export function whereOutside(rootNode, matchCandidate, outside) {
+export function withScopePerimeter(rootNode, matchCandidate, outside) {
     let current = matchCandidate.parentElement;
     while (current && current !== rootNode) {
         if (current.matches(outside)) {

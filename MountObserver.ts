@@ -20,7 +20,7 @@ import {
     unregisterSharedObserver,
     type MutationCallback
 } from './SharedMutationObserver.js';
-import { whereOutside } from './whereOutside.js';
+import { withScopePerimeter } from './withScopePerimeter.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
@@ -314,10 +314,10 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return false;
         }
         
-        // Check whereOutside condition if specified (donut hole scoping)
-        if (this.#init.whereOutside) {
+        // Check withScopePerimeter condition if specified (donut hole scoping)
+        if (this.#init.withScopePerimeter) {
             const rootNode = this.#rootNode?.deref();
-            if (!rootNode || !whereOutside(rootNode, element, this.#init.whereOutside)) {
+            if (!rootNode || !withScopePerimeter(rootNode, element, this.#init.withScopePerimeter)) {
                 return false;
             }
         }

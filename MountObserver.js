@@ -1,7 +1,7 @@
 import { arr } from './arr.js';
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
-import { whereOutside } from './whereOutside.js';
+import { withScopePerimeter } from './withScopePerimeter.js';
 export class MountObserver extends EventTarget {
     // Static registry for registered handlers
     static #handlerRegistry = new Map();
@@ -236,10 +236,10 @@ export class MountObserver extends EventTarget {
         if (!matchesElement) {
             return false;
         }
-        // Check whereOutside condition if specified (donut hole scoping)
-        if (this.#init.whereOutside) {
+        // Check withScopePerimeter condition if specified (donut hole scoping)
+        if (this.#init.withScopePerimeter) {
             const rootNode = this.#rootNode?.deref();
-            if (!rootNode || !whereOutside(rootNode, element, this.#init.whereOutside)) {
+            if (!rootNode || !withScopePerimeter(rootNode, element, this.#init.withScopePerimeter)) {
                 return false;
             }
         }

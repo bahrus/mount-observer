@@ -19,7 +19,7 @@ export interface MountInit {
     withMatching: string;
     withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
-    whereOutside?: string;
+    withScopePerimeter?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;
     do?: string | DoCallback | (string | DoCallback)[];
     loadingEagerness?: 'eager' | 'lazy';
