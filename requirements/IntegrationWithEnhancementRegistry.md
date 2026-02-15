@@ -2,7 +2,7 @@
 
 ## Overview
 
-This requirement integrates MountObserver with the enhancement registry system from assign-gingerly. The goal is to automatically register each `MountConfig` as an `EnhancementConfig` in the element's `customElementRegistry.enhancementRegistry`, enabling seamless integration between mount-observer and the enhancement ecosystem.
+This requirement integrates MountObserver with the enhancement registry system from assign-gingerly. When a `MountConfig` includes an optional `enhancementConfig` property, that configuration will be registered in the element's `customElementRegistry.enhancementRegistry`, enabling seamless integration between mount-observer and the enhancement ecosystem.
 
 ## Background
 
@@ -17,28 +17,30 @@ The enhancement registry (from assign-gingerly) is a system for managing element
 
 ### Why Integrate MountObserver?
 
-`MountConfig` already extends `EnhancementConfig`, which means it has all the properties needed to be a valid enhancement registry item:
+`MountConfig` now has an optional `enhancementConfig` field that can contain an `EnhancementConfig`:
 
 ```typescript
-export interface MountConfig extends EnhancementConfig {
+export interface MountConfig {
     matching: string;
     withInstance?: Constructor | Constructor[];
     // ... mount-observer specific properties
+    enhancementConfig?: EnhancementConfig;
 }
 ```
 
-By registering the `MountConfig` in the enhancement registry, we enable:
+By registering the `enhancementConfig` in the enhancement registry when provided, we enable:
 
-1. **Unified enhancement system**: MountObserver configurations become discoverable enhancements
+1. **Unified enhancement system**: MountObserver configurations can optionally participate in the enhancement ecosystem
 2. **Element.enh integration**: Elements can access mount-observer enhancements via `element.enh`
 3. **Lifecycle coordination**: Mount/dismount can trigger enhancement lifecycle methods
 4. **Attribute-driven enhancements**: `withAttrs` can be used to configure enhancements from HTML attributes
+5. **Clean separation**: MountObserver features remain independent; enhancement integration is opt-in
 
 ## Key Concepts
 
 ### EnhancementConfig Properties
 
-The `EnhancementConfig` interface (which `MountConfig` extends) includes:
+The `EnhancementConfig` interface (which can be optionally included in `MountConfig.enhancementConfig`) includes:
 
 ```typescript
 interface EnhancementConfig<T = any> {
@@ -55,12 +57,12 @@ interface EnhancementConfig<T = any> {
 }
 ```
 
-### MountConfig-Specific Properties
+### MountConfig Properties
 
-MountObserver adds these properties on top of `EnhancementConfig`:
+`MountConfig` is now independent with an optional enhancement integration:
 
 ```typescript
-interface MountConfig extends EnhancementConfig {
+interface MountConfig {
     matching: string;  // CSS selector for element matching
     withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
@@ -75,29 +77,30 @@ interface MountConfig extends EnhancementConfig {
     mountedElemEmits?: EventConfig | EventConfig[];
     reference?: number | number[];
     customData?: unknown;
+    enhancementConfig?: EnhancementConfig;  // Optional enhancement integration
 }
 ```
 
 ## Implementation Requirements
 
-### 1. Register MountConfig in Enhancement Registry
+### 1. Register EnhancementConfig in Enhancement Registry
 
-When `observe()` is called, the MountObserver should:
+When `observe()` is called and `MountConfig.enhancementConfig` is provided, the MountObserver should:
 
 1. Get the element's `customElementRegistry.enhancementRegistry`
-2. Push the `MountConfig` into the registry
-3. This makes the configuration discoverable by other enhancement-aware code
+2. Push the `enhancementConfig` into the registry (not the entire `MountConfig`)
+3. This makes the enhancement configuration discoverable by other enhancement-aware code
 
 **Example:**
 ```typescript
 async observe(rootNode: Node): Promise<void> {
     // ... existing code ...
     
-    // Register this MountConfig as an enhancement
-    if (rootNode instanceof Element) {
+    // Register the enhancementConfig if provided
+    if (this.#init.enhancementConfig && rootNode instanceof Element) {
         const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
         if (registry) {
-            registry.push(this.#init);
+            registry.push(this.#init.enhancementConfig);
         }
     }
     
@@ -107,14 +110,17 @@ async observe(rootNode: Node): Promise<void> {
 
 ### 2. Support for enhKey
 
-If the `MountConfig` includes an `enhKey`, mounted elements should be accessible via `element.enh[enhKey]`:
+If the `enhancementConfig` includes an `enhKey`, mounted elements should be accessible via `element.enh[enhKey]`:
 
 ```typescript
 const observer = new MountObserver({
     matching: 'button',
-    enhKey: 'myButton',  // NEW: Enhancement key
+    enhancementConfig: {
+        spawn: ButtonEnhancement,
+        enhKey: 'myButton',  // Enhancement key
+    },
     do: (element, ctx) => {
-        // Enhancement logic
+        // Additional mount logic
     }
 });
 
@@ -127,7 +133,7 @@ console.log(button.enh.myButton);  // Should be accessible
 
 ### 3. Support for spawn Property
 
-If the `MountConfig` includes a `spawn` class, it should be instantiated for each matching element:
+If the `enhancementConfig` includes a `spawn` class, it should be instantiated for each matching element:
 
 ```typescript
 class ButtonEnhancement {
@@ -140,8 +146,10 @@ class ButtonEnhancement {
 
 const observer = new MountObserver({
     matching: 'button',
-    enhKey: 'counter',
-    spawn: ButtonEnhancement  // NEW: Spawn class
+    enhancementConfig: {
+        spawn: ButtonEnhancement,
+        enhKey: 'counter',
+    }
 });
 
 observer.observe(document);
@@ -154,16 +162,18 @@ console.log(button.enh.counter.clickCount);  // 1
 
 ### 4. Lifecycle Integration with disposeOn
 
-The `disposeOn` property specifies when enhancements should be disposed:
+The `disposeOn` property in `enhancementConfig` specifies when enhancements should be disposed:
 
 ```typescript
 const observer = new MountObserver({
     matching: 'button',
-    enhKey: 'myButton',
-    spawn: ButtonEnhancement,
-    disposeOn: 'dismount',  // NEW: Dispose on dismount
-    lifecycleKeys: {
-        dispose: 'cleanup'  // Call cleanup() method on disposal
+    enhancementConfig: {
+        spawn: ButtonEnhancement,
+        enhKey: 'myButton',
+        disposeOn: 'dismount',  // Dispose on dismount
+        lifecycleKeys: {
+            dispose: 'cleanup'  // Call cleanup() method on disposal
+        }
     }
 });
 ```
@@ -175,17 +185,19 @@ When the element dismounts, MountObserver should:
 
 ### 5. Attribute Parsing with withAttrs
 
-The `withAttrs` property enables automatic attribute parsing:
+The `withAttrs` property in `enhancementConfig` enables automatic attribute parsing:
 
 ```typescript
 const observer = new MountObserver({
     matching: 'button',
-    enhKey: 'config',
-    spawn: ButtonConfig,
-    withAttrs: {
-        base: 'data-btn',  // Prefix for attributes
-        theme: 'theme',    // Maps data-btn-theme to config.theme
-        size: 'size'       // Maps data-btn-size to config.size
+    enhancementConfig: {
+        spawn: ButtonConfig,
+        enhKey: 'config',
+        withAttrs: {
+            base: 'data-btn',  // Prefix for attributes
+            theme: 'theme',    // Maps data-btn-theme to config.theme
+            size: 'size'       // Maps data-btn-size to config.size
+        }
     }
 });
 
@@ -200,7 +212,9 @@ const observer = new MountObserver({
 ```typescript
 const observer = new MountObserver({
     matching: 'button.enhanced',
-    enhKey: 'buttonEnh',
+    enhancementConfig: {
+        enhKey: 'buttonEnh',
+    },
     do: (element) => {
         element.dataset.enhanced = 'true';
     }
@@ -208,11 +222,11 @@ const observer = new MountObserver({
 
 observer.observe(document);
 
-// The MountConfig is now in the registry
+// The enhancementConfig is now in the registry
 const button = document.querySelector('button.enhanced');
 const registry = button.customElementRegistry.enhancementRegistry;
 const config = registry.findByEnhKey('buttonEnh');
-console.log(config.matching);  // 'button.enhanced'
+console.log(config.enhKey);  // 'buttonEnh'
 ```
 
 ### Use Case 2: Spawned Enhancement with Lifecycle
@@ -246,11 +260,13 @@ class TooltipEnhancement extends EventTarget {
 
 const observer = new MountObserver({
     matching: '[title]',
-    enhKey: 'tooltip',
-    spawn: TooltipEnhancement,
-    disposeOn: 'disconnect',
-    lifecycleKeys: {
-        dispose: 'dispose'
+    enhancementConfig: {
+        spawn: TooltipEnhancement,
+        enhKey: 'tooltip',
+        disposeOn: 'disconnect',
+        lifecycleKeys: {
+            dispose: 'dispose'
+        }
     }
 });
 
@@ -276,17 +292,19 @@ class FormFieldEnhancement {
 
 const observer = new MountObserver({
     matching: 'input',
-    enhKey: 'field',
-    spawn: FormFieldEnhancement,
-    withAttrs: {
-        base: 'data-field',
-        required: {
-            instanceOf: 'Boolean',
-            mapsTo: 'required'
-        },
-        minLength: {
-            instanceOf: 'Number',
-            mapsTo: 'minLength'
+    enhancementConfig: {
+        spawn: FormFieldEnhancement,
+        enhKey: 'field',
+        withAttrs: {
+            base: 'data-field',
+            required: {
+                instanceOf: 'Boolean',
+                mapsTo: 'required'
+            },
+            minLength: {
+                instanceOf: 'Number',
+                mapsTo: 'minLength'
+            }
         }
     }
 });
@@ -297,15 +315,17 @@ const observer = new MountObserver({
 
 ## Implementation Checklist
 
-- [ ] Register `MountConfig` in `customElementRegistry.enhancementRegistry` during `observe()`
+- [ ] Register `enhancementConfig` (when provided) in `customElementRegistry.enhancementRegistry` during `observe()`
 - [ ] Support `enhKey` property for `element.enh[enhKey]` access
 - [ ] Support `spawn` property to instantiate enhancement classes
-- [ ] Pass `SpawnContext` with `{ mountInfo: MountConfig }` to spawned constructors
+- [ ] Pass `SpawnContext` with `{ mountInfo: enhancementConfig }` to spawned constructors
 - [ ] Integrate `disposeOn` with mount/dismount/disconnect lifecycle
 - [ ] Call `dispose` method (from `lifecycleKeys`) when disposing enhancements
 - [ ] Support `withAttrs` for automatic attribute parsing
 - [ ] Store spawned instances in the global instance map (from assign-gingerly)
 - [ ] Clean up instances and references on disposal
+- [ ] Implement reference equality check to prevent duplicate registrations (Option 2)
+- [ ] Remove `enhancementConfig` from registry on `disconnect()`
 - [ ] Add tests for enhancement registry integration
 - [ ] Document the integration in README.md
 
@@ -313,310 +333,222 @@ const observer = new MountObserver({
 
 ### The Problem
 
-When `observe()` is called, we need to decide whether to add the `MountConfig` to the enhancement registry. But what if:
+When `observe()` is called with a `MountConfig` that includes an `enhancementConfig`, we need to decide whether to add it to the enhancement registry. The key question: should we prevent the same `enhancementConfig` object from being registered multiple times?
 
-1. The same `MountObserver` instance calls `observe()` multiple times on different root nodes?
-2. Multiple `MountObserver` instances are created with identical or similar `MountConfig` objects?
-3. A `MountObserver` is created with a `MountConfig` that has the same `enhKey` as an existing registry item?
+### Chosen Strategy: Option 2 - Reference Equality
 
-We need a clear strategy for detecting and handling duplicates.
-
-### Available Detection Methods
-
-The `BaseRegistry` class provides these methods for finding existing items:
-
-```typescript
-class BaseRegistry {
-  findBySymbol(symbol: symbol | string): EnhancementConfig | undefined;
-  findByEnhKey(enhKey: string | symbol): EnhancementConfig | undefined;
-  getItems(): EnhancementConfig[];
-}
-```
-
-### Strategy Options
-
-#### Option 1: Check by enhKey (Recommended)
-
-**Approach**: Before adding to registry, check if an item with the same `enhKey` already exists.
+**Approach**: Check if the exact same `enhancementConfig` object is already in the registry using reference equality.
 
 **Implementation**:
 ```typescript
 async observe(rootNode: Node): Promise<void> {
     // ... existing code ...
     
-    if (rootNode instanceof Element) {
-        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
-        if (registry && this.#init.enhKey) {
-            // Check for duplicate by enhKey
-            const existing = registry.findByEnhKey(this.#init.enhKey);
-            if (!existing) {
-                registry.push(this.#init);
-            }
-            // If exists, silently skip (or log warning)
-        }
-    }
-}
-```
-
-**Pros**:
-- Simple and efficient
-- Prevents `enhKey` collisions
-- Aligns with how enhancements are accessed (`element.enh[enhKey]`)
-- Clear semantic meaning: same key = same enhancement
-
-**Cons**:
-- Only works if `enhKey` is specified
-- Doesn't detect duplicates when `enhKey` is undefined
-- Multiple observers with same `enhKey` but different logic would conflict
-
-**When duplicates occur**:
-- Same `enhKey` used by different `MountObserver` instances
-- Re-observing with the same `MountObserver` instance
-
-**Behavior on duplicate**: Skip registration, use existing enhancement
-
-#### Option 2: Check by Reference Equality
-
-**Approach**: Check if the exact same `MountConfig` object is already in the registry.
-
-**Implementation**:
-```typescript
-async observe(rootNode: Node): Promise<void> {
-    // ... existing code ...
-    
-    if (rootNode instanceof Element) {
+    if (this.#init.enhancementConfig && rootNode instanceof Element) {
         const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
         if (registry) {
+            // Check if this exact object is already registered
             const items = registry.getItems();
-            const alreadyRegistered = items.includes(this.#init);
+            const alreadyRegistered = items.includes(this.#init.enhancementConfig);
             if (!alreadyRegistered) {
-                registry.push(this.#init);
+                registry.push(this.#init.enhancementConfig);
             }
         }
     }
+    
+    // ... rest of observe logic ...
 }
 ```
 
+**Why This Works**:
+
+1. **Simple and efficient**: Just a reference check using `Array.includes()`
+2. **Prevents exact duplicates**: Same `MountObserver` instance won't register multiple times
+3. **Allows intentional duplicates**: Different `MountObserver` instances with identical configs can coexist (they're different objects)
+4. **No false positives**: Won't accidentally block legitimate use cases
+5. **Clean architecture**: The `enhancementConfig` is a separate object that can be shared or unique as needed
+
 **Pros**:
+- Minimal performance overhead
+- No complex comparison logic needed
 - Works even without `enhKey`
-- Prevents exact duplicate registrations
-- Simple reference check (fast)
+- Prevents the most common mistake (re-observing with same instance)
+- Allows flexibility for advanced use cases
 
 **Cons**:
 - Doesn't detect "semantic duplicates" (different objects with same properties)
 - Multiple observers with identical configs would all register
-- Less useful for preventing logical conflicts
+- Doesn't prevent `enhKey` collisions (but that's handled by assign-gingerly)
 
-**When duplicates occur**:
-- Same `MountObserver` instance observes multiple times
-- Same `MountConfig` object passed to multiple observers
-
-**Behavior on duplicate**: Skip registration
-
-#### Option 3: Check by Matching Selector + Properties
-
-**Approach**: Consider two configs duplicates if they have the same `matching` selector and other key properties.
-
-**Implementation**:
-```typescript
-function configsMatch(a: MountConfig, b: MountConfig): boolean {
-    return a.matching === b.matching &&
-           a.enhKey === b.enhKey &&
-           a.withInstance === b.withInstance &&
-           a.withMediaMatching === b.withMediaMatching;
-}
-
-async observe(rootNode: Node): Promise<void> {
-    // ... existing code ...
-    
-    if (rootNode instanceof Element) {
-        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
-        if (registry) {
-            const items = registry.getItems();
-            const duplicate = items.find(item => configsMatch(item, this.#init));
-            if (!duplicate) {
-                registry.push(this.#init);
-            }
-        }
-    }
-}
-```
-
-**Pros**:
-- Detects semantic duplicates
-- Prevents redundant observers with same matching logic
-- More intelligent duplicate detection
-
-**Cons**:
-- Complex to implement (which properties to compare?)
-- Slower (requires deep comparison)
-- May prevent legitimate use cases (same selector, different `do` callbacks)
-- Unclear which properties should be compared
-
-**When duplicates occur**:
-- Different observers with same selector and key properties
-
-**Behavior on duplicate**: Skip registration
-
-#### Option 4: Allow All Duplicates
-
-**Approach**: Never check for duplicates; always add to registry.
-
-**Implementation**:
-```typescript
-async observe(rootNode: Node): Promise<void> {
-    // ... existing code ...
-    
-    if (rootNode instanceof Element) {
-        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
-        if (registry) {
-            registry.push(this.#init);  // Always add
-        }
-    }
-}
-```
-
-**Pros**:
-- Simplest implementation
-- No performance overhead
-- Allows maximum flexibility
-- No risk of preventing legitimate use cases
-
-**Cons**:
-- Registry can grow unbounded with duplicates
-- `enhKey` collisions cause last-one-wins behavior
-- Memory waste from duplicate configs
-- Confusing behavior when multiple configs have same `enhKey`
-
-**When duplicates occur**:
-- Always (duplicates are allowed)
-
-**Behavior on duplicate**: Add anyway, potential conflicts
-
-### Recommended Approach: Hybrid Strategy
-
-**Combine Option 1 (enhKey check) with Option 2 (reference check)**:
-
-```typescript
-async observe(rootNode: Node): Promise<void> {
-    // ... existing code ...
-    
-    if (rootNode instanceof Element) {
-        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
-        if (registry) {
-            // Check 1: Reference equality (prevents re-registration of same object)
-            const items = registry.getItems();
-            if (items.includes(this.#init)) {
-                return;  // Already registered
-            }
-            
-            // Check 2: enhKey collision (prevents key conflicts)
-            if (this.#init.enhKey) {
-                const existing = registry.findByEnhKey(this.#init.enhKey);
-                if (existing) {
-                    console.warn(
-                        `MountObserver: enhKey "${this.#init.enhKey}" already registered. ` +
-                        `Skipping duplicate registration.`
-                    );
-                    return;
-                }
-            }
-            
-            // No duplicates found, safe to register
-            registry.push(this.#init);
-        }
-    }
-}
-```
-
-**Why this works**:
-1. **Reference check** prevents the same `MountObserver` from registering multiple times
-2. **enhKey check** prevents different observers from conflicting on the same key
-3. **Warning message** helps developers debug configuration issues
-4. **Allows multiple observers** with different `enhKey` values or no `enhKey`
-
-### Edge Cases to Consider
+### Edge Cases
 
 #### Case 1: Same MountObserver, Multiple Root Nodes
 
 ```typescript
-const observer = new MountObserver({ matching: 'button', enhKey: 'btn' });
+const observer = new MountObserver({ 
+    matching: 'button',
+    enhancementConfig: { enhKey: 'btn', spawn: ButtonEnh }
+});
 observer.observe(document.body);
 observer.observe(document.querySelector('#container'));
 ```
 
 **Expected behavior**: Register once in each root node's registry (if they have different registries).
 
-**Implementation note**: Each root node may have its own `customElementRegistry`, so we register per-registry, not globally.
+**Rationale**: Each root node may have its own `customElementRegistry`, so we register per-registry, not globally.
 
-#### Case 2: Multiple Observers, Same enhKey
+#### Case 2: Multiple Observers, Same enhancementConfig Object
 
 ```typescript
-const observer1 = new MountObserver({ matching: 'button', enhKey: 'btn' });
-const observer2 = new MountObserver({ matching: 'input', enhKey: 'btn' });
+const sharedConfig = { enhKey: 'btn', spawn: ButtonEnh };
+const observer1 = new MountObserver({ matching: 'button', enhancementConfig: sharedConfig });
+const observer2 = new MountObserver({ matching: 'input', enhancementConfig: sharedConfig });
 observer1.observe(document);
 observer2.observe(document);
 ```
 
-**Expected behavior**: Second registration fails with warning (enhKey collision).
+**Expected behavior**: Register only once (same object reference).
 
-**Rationale**: `element.enh.btn` can only point to one enhancement.
+**Rationale**: Reference equality check prevents duplicate registration of the same object.
 
-#### Case 3: Multiple Observers, No enhKey
+#### Case 3: Multiple Observers, Different enhancementConfig Objects
 
 ```typescript
-const observer1 = new MountObserver({ matching: 'button', do: callback1 });
-const observer2 = new MountObserver({ matching: 'button', do: callback2 });
+const observer1 = new MountObserver({ 
+    matching: 'button',
+    enhancementConfig: { enhKey: 'btn', spawn: ButtonEnh }
+});
+const observer2 = new MountObserver({ 
+    matching: 'button',
+    enhancementConfig: { enhKey: 'btn', spawn: ButtonEnh }  // Different object, same properties
+});
 observer1.observe(document);
 observer2.observe(document);
 ```
 
-**Expected behavior**: Both register successfully (no collision).
+**Expected behavior**: Both register successfully (different object references).
 
-**Rationale**: Without `enhKey`, there's no namespace conflict. Both observers can coexist.
+**Note**: This creates an `enhKey` collision. The assign-gingerly library handles this - typically last-one-wins for `element.enh.btn` access.
 
 #### Case 4: Re-observing After Disconnect
 
 ```typescript
-const observer = new MountObserver({ matching: 'button', enhKey: 'btn' });
+const observer = new MountObserver({ 
+    matching: 'button',
+    enhancementConfig: { enhKey: 'btn', spawn: ButtonEnh }
+});
 observer.observe(document);
 observer.disconnect();
 observer.observe(document);  // Re-observe
 ```
 
-**Expected behavior**: Should we re-register, or is the old registration still valid?
+**Expected behavior**: Should re-register after disconnect.
 
-**Recommendation**: On `disconnect()`, remove the `MountConfig` from the registry. On re-observe, register again.
+**Implementation**: On `disconnect()`, remove the `enhancementConfig` from the registry. On re-observe, the reference check will pass and it will register again.
+
+#### Case 5: No enhancementConfig Provided
+
+```typescript
+const observer = new MountObserver({ 
+    matching: 'button',
+    do: (element) => { /* ... */ }
+});
+observer.observe(document);
+```
+
+**Expected behavior**: No registry interaction at all.
+
+**Rationale**: Enhancement integration is completely optional. MountObserver works independently without it.
+
+### Implementation Details
+
+**Store registry reference for cleanup**:
+```typescript
+class MountObserver {
+    #registryRef: WeakRef<BaseRegistry> | undefined;
+    
+    async observe(rootNode: Node): Promise<void> {
+        // ... existing code ...
+        
+        if (this.#init.enhancementConfig && rootNode instanceof Element) {
+            const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
+            if (registry) {
+                const items = registry.getItems();
+                if (!items.includes(this.#init.enhancementConfig)) {
+                    registry.push(this.#init.enhancementConfig);
+                    this.#registryRef = new WeakRef(registry);
+                }
+            }
+        }
+    }
+    
+    disconnect(): void {
+        // ... existing cleanup ...
+        
+        // Remove from registry
+        const registry = this.#registryRef?.deref();
+        if (registry && this.#init.enhancementConfig) {
+            const items = registry.getItems();
+            const index = items.indexOf(this.#init.enhancementConfig);
+            if (index !== -1) {
+                items.splice(index, 1);
+            }
+        }
+    }
+}
+```
+
+### Why Not Other Options?
+
+**Why not check by enhKey?**
+- `enhKey` is optional - many enhancements won't have one
+- Doesn't prevent re-registration of the same object
+- More complex logic for marginal benefit
+- assign-gingerly already handles `enhKey` collisions
+
+**Why not check by matching selector?**
+- Too restrictive - multiple observers with same selector are valid
+- Complex comparison logic (which properties to compare?)
+- Would prevent legitimate use cases
+- Doesn't align with the object-oriented design
+
+**Why not allow all duplicates?**
+- Would cause memory leaks when re-observing
+- Registry would grow unbounded
+- Confusing behavior for developers
 
 ### Implementation Checklist for Duplicate Detection
 
 - [ ] Implement reference equality check in `observe()`
-- [ ] Implement `enhKey` collision check in `observe()`
-- [ ] Add warning message for `enhKey` collisions
+- [ ] Store registry reference using `WeakRef` for cleanup
+- [ ] Remove `enhancementConfig` from registry on `disconnect()`
+- [ ] Handle case where `enhancementConfig` is undefined (skip registry logic)
 - [ ] Handle multiple root nodes with separate registries
-- [ ] Remove `MountConfig` from registry on `disconnect()`
 - [ ] Add tests for duplicate detection scenarios
 - [ ] Document duplicate detection behavior in README.md
 
 ## Questions to Resolve
 
-1. **Registry scope**: Should we register the MountConfig in the rootNode's registry, or in each matched element's registry?
-   - **Recommendation**: Register in rootNode's registry, as that's the scope of observation
+1. **Registry scope**: Should we register the enhancementConfig in the rootNode's registry, or in each matched element's registry?
+   - **Decision**: Register in rootNode's registry, as that's the scope of observation
 
 2. **Multiple observers**: If multiple MountObservers observe the same element with different configs, how should they coexist?
-   - **Recommendation**: Each MountConfig is a separate registry item with its own `enhKey`
+   - **Decision**: Each enhancementConfig is a separate registry item with its own `enhKey` (if specified)
 
 3. **Spawn timing**: When should the `spawn` class be instantiated?
-   - **Recommendation**: During `#handleMatch()`, after imports load but before `do` callbacks
+   - **Decision**: During `#handleMatch()`, after imports load but before `do` callbacks
 
 4. **Disposal timing**: When should enhancements be disposed?
-   - **Recommendation**: During `#handleRemoval()`, based on `disposeOn` configuration
+   - **Decision**: During `#handleRemoval()`, based on `disposeOn` configuration in enhancementConfig
 
 5. **Backward compatibility**: How do we ensure this doesn't break existing code that doesn't use enhancements?
-   - **Recommendation**: Make all enhancement features optional; only activate if `enhKey` or `spawn` is specified
+   - **Decision**: Enhancement integration is completely optional via `enhancementConfig` field. All existing code continues to work without changes.
 
-6. **Disconnect cleanup**: Should `disconnect()` remove the `MountConfig` from the enhancement registry?
-   - **Recommendation**: Yes, to allow clean re-observation and prevent stale registrations
+6. **Disconnect cleanup**: Should `disconnect()` remove the `enhancementConfig` from the enhancement registry?
+   - **Decision**: Yes, to allow clean re-observation and prevent stale registrations
+
+7. **Duplicate detection**: How should we handle duplicate registrations?
+   - **Decision**: Use reference equality (Option 2) - simple, efficient, prevents exact duplicates while allowing flexibility
 
 ## Related Files
 

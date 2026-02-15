@@ -17,7 +17,7 @@ export type DismountReason =
     | 'media-query-failed'
     | 'with-matching-failed';
 
-export interface MountConfig extends EnhancementConfig {
+export interface MountConfig {
     matching: string;
     withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
@@ -34,6 +34,7 @@ export interface MountConfig extends EnhancementConfig {
     //allow handler classes or functions
     //to be passed some custom information
     customData?: unknown;
+    enhancementConfig?: EnhancementConfig;
 }
 
 
