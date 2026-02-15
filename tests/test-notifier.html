@@ -43,7 +43,7 @@
         // Test 1: Notifier created during do callback should NOT fire mount event
         console.log('Test 1: Notifier during do callback');
         const observer1 = new MountObserver({
-            withMatching: '#existing-btn',
+            matching: '#existing-btn',
             do: (element, {observer}) => {
                 const notifier = observer.getNotifier(element);
                 results.test1.notifierCreatedDuringDo = true;
@@ -72,7 +72,7 @@
         btn2.textContent = 'Test Button 2';
         
         const observer2 = new MountObserver({
-            withMatching: '#test-btn-2',
+            matching: '#test-btn-2',
             do: (element, {observer}) => {
                 const notifier = observer.getNotifier(element);
                 
@@ -103,7 +103,7 @@
         btn3.textContent = 'Test Button 3';
         
         const observer3 = new MountObserver({
-            withMatching: '#test-btn-3'
+            matching: '#test-btn-3'
         });
         
         await observer3.observe(document.body);
@@ -132,7 +132,7 @@
         let listenerAdded = false;
         
         const observer5 = new MountObserver({
-            withMatching: '#test-btn-5',
+            matching: '#test-btn-5',
             do: (element, {observer}) => {
                 doCallCount++;
                 console.log('Test 5: do callback called, count:', doCallCount);

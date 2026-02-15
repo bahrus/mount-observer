@@ -13,7 +13,7 @@
     <script type=module>
         import {MountObserver} from '/MountObserver.js';
         const mo = new MountObserver({
-            withMatching: '#span',
+            matching: '#span',
             withMediaMatching: '(max-width: 600px)',
             do:(el, ctx) => {
                 console.log({el, ctx});

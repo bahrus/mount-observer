@@ -15,7 +15,7 @@ The `MountInit` object configures what elements the MountObserver should observe
 For example:
 ```javascript
 {
-    withMatching: 'input, button',
+    matching: 'input, button',
     withInstance: HTMLInputElement
 }
 ```

@@ -32,7 +32,7 @@
                 // Test 1: Single reference with inline do
                 addResult('Creating observer1...');
                 const observer1 = new MountObserver({
-                    withMatching: '.test-elem-1',
+                    matching: '.test-elem-1',
                     import: '/tests/test-actions.js',
                     reference: 0,
                     loadingEagerness: 'eager',
@@ -61,7 +61,7 @@
                 // Test 2: Multiple references
                 addResult('Creating observer2...');
                 const observer2 = new MountObserver({
-                    withMatching: '.test-elem-2',
+                    matching: '.test-elem-2',
                     import: [
                         '/tests/test-actions.js',
                         '/tests/test-actions2.js'

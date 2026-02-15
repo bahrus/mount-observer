@@ -32,7 +32,7 @@
                 // Test 1: Referenced withInstance with buttons and inputs
                 addResult('Test 1: Referenced withInstance filters correctly');
                 const observer1 = new MountObserver({
-                    withMatching: '.test1',
+                    matching: '.test1',
                     import: '/tests/test-instanceof-module.js',
                     reference: 0,
                     loadingEagerness: 'eager'
@@ -61,7 +61,7 @@
                 // Test 2: Combining inline and referenced withInstance (AND logic)
                 addResult('Test 2: Inline AND referenced withInstance');
                 const observer2 = new MountObserver({
-                    withMatching: '.test2',
+                    matching: '.test2',
                     withInstance: HTMLElement, // All elements match this
                     import: '/tests/test-instanceof-module2.js',
                     reference: 0,
@@ -86,7 +86,7 @@
                 // Test 3: Lazy loading with referenced withInstance
                 addResult('Test 3: Lazy loading with referenced withInstance');
                 const observer3 = new MountObserver({
-                    withMatching: '.test3',
+                    matching: '.test3',
                     import: '/tests/test-instanceof-module.js',
                     reference: 0
                     // No loadingEagerness - lazy loading

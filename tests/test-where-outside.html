@@ -27,7 +27,7 @@
 
         // Test: withScopePerimeter should exclude elements inside nested itemscope
         const observer = new MountObserver({
-            withMatching: '[itemprop]',
+            matching: '[itemprop]',
             withScopePerimeter: '[itemscope]',
             do: (el) => {
                 window.eventLog.push({ type: 'mount', id: el.id });

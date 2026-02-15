@@ -30,7 +30,7 @@
 
         // Create observer
         const observer = new MountObserver({
-            withMatching: 'my-element',
+            matching: 'my-element',
             do: (element, { modules, observer }) => {
                 addLog(`Do callback: ${element.id || 'unnamed'} mounted`);
                 element.style.border = '2px solid green';

@@ -298,7 +298,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const root = node as DocumentFragment;
             
             // Get all elements matching the CSS selector first
-            root.querySelectorAll(this.#init.withMatching).forEach(child => {
+            root.querySelectorAll(this.#init.matching).forEach(child => {
                 if (this.#matchesSelector(child)) {
                     this.#handleMatch(child);
                 }
@@ -308,8 +308,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
     #matchesSelector(element: Element): boolean {
         //TODO:  reduce redundncy with this.#init?
-        // Check withMatching condition
-        const matchesElement = element.matches(this.#init.withMatching);
+        // Check matching condition
+        const matchesElement = element.matches(this.#init.matching);
         if (!matchesElement) {
             return false;
         }

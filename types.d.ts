@@ -16,7 +16,7 @@ export type DismountReason =
     | 'with-matching-failed';
 
 export interface MountInit {
-    withMatching: string;
+    matching: string;
     withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
     withScopePerimeter?: string;

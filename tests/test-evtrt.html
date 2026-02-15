@@ -56,7 +56,7 @@
         
         // Test 1: Basic mount with EvtRt
         const observer = new MountObserver({
-            withMatching: 'span[class$="name"]',
+            matching: 'span[class$="name"]',
             do: (mountedElement, ctx) => {
                 console.log('do callback called', mountedElement);
                 results.elementMatched = true;

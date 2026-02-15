@@ -23,7 +23,7 @@
 
         // Test 1: Single constructor
         const observer1 = new MountObserver({
-            withMatching: '.test',
+            matching: '.test',
             withInstance: HTMLInputElement,
             do: (el) => {
                 results.push(`Test 1: Mounted ${el.id} (${el.constructor.name})`);
@@ -34,7 +34,7 @@
 
         // Test 2: Array of constructors
         const observer2 = new MountObserver({
-            withMatching: '.test',
+            matching: '.test',
             withInstance: [HTMLButtonElement, HTMLDivElement],
             do: (el) => {
                 results.push(`Test 2: Mounted ${el.id} (${el.constructor.name})`);

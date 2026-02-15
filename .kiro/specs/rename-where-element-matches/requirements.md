@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This specification defines the requirements for refactoring the `whereElementMatches` property name to `withMatching` throughout the mount-observer codebase. This is a breaking API change that affects the public interface of the MountInit configuration object.
+This specification defines the requirements for refactoring the `whereElementMatches` property name to `matching` throughout the mount-observer codebase. This is a breaking API change that affects the public interface of the MountInit configuration object.
 
 ## Glossary
 
@@ -18,8 +18,8 @@ This specification defines the requirements for refactoring the `whereElementMat
 
 #### Acceptance Criteria
 
-1. THE System SHALL rename `whereElementMatches` to `withMatching` in the MountInit interface in types.d.ts
-2. THE System SHALL rename `whereElementMatches` to `withMatching` in the DismountReason type literal in types.d.ts
+1. THE System SHALL rename `whereElementMatches` to `matching` in the MountInit interface in types.d.ts
+2. THE System SHALL rename `whereElementMatches` to `matching` in the DismountReason type literal in types.d.ts
 3. WHEN the type definitions are updated, THE System SHALL maintain all other interface properties unchanged
 4. WHEN the type definitions are updated, THE System SHALL preserve the property type as `string`
 
@@ -30,9 +30,9 @@ This specification defines the requirements for refactoring the `whereElementMat
 #### Acceptance Criteria
 
 1. THE System SHALL identify all TypeScript source files (.ts) that reference `whereElementMatches`
-2. THE System SHALL rename all occurrences of `whereElementMatches` to `withMatching` in TypeScript source files
+2. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in TypeScript source files
 3. THE System SHALL identify all JavaScript files (.js) that reference `whereElementMatches`
-4. THE System SHALL rename all occurrences of `whereElementMatches` to `withMatching` in JavaScript files
+4. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in JavaScript files
 5. WHEN source code is updated, THE System SHALL preserve all surrounding code structure and logic
 
 ### Requirement 3: Update Test Files
@@ -42,9 +42,9 @@ This specification defines the requirements for refactoring the `whereElementMat
 #### Acceptance Criteria
 
 1. THE System SHALL identify all HTML test files in the tests/ directory that reference `whereElementMatches`
-2. THE System SHALL rename all occurrences of `whereElementMatches` to `withMatching` in HTML test files
+2. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in HTML test files
 3. THE System SHALL identify all test spec files (.spec.mjs) that reference `whereElementMatches`
-4. THE System SHALL rename all occurrences of `whereElementMatches` to `withMatching` in test spec files
+4. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in test spec files
 5. WHEN test files are updated, THE System SHALL preserve all test logic and assertions
 
 ### Requirement 4: Verify Completeness

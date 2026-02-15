@@ -10,7 +10,7 @@ Note that much of what is described below has not yet been polyfilled.
 The following features have been implemented and tested:
 
 ### Core Functionality
-- ✅ **withMatching**: CSS selector-based element matching
+- ✅ **matching**: CSS selector-based element matching
 - ✅ **withInstance**: Constructor-based element filtering (single or array)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
@@ -142,7 +142,7 @@ So the developer could use:
 ```JavaScript
 const observer = new MountObserver({
    //supported by this polyfill
-   withMatching:'my-element',
+   matching:'my-element',
    import: './my-element.js',
    do: ({localName}, {modules, observer, mountInit, rootNode}) => {
       if(!customElements.get(localName)) {
@@ -157,7 +157,7 @@ observer.observe(document);
 
 and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*".
 
-This polyfill in fact only supports this latter option ("withMatching"), and leaves "select" for such a time as when a selector observer is available in the platform.
+This polyfill in fact only supports this latter option ("matching"), and leaves "select" for such a time as when a selector observer is available in the platform.
 
 [Implemented as Requirement 1](requirements/Requirement1.md).
 
@@ -167,7 +167,7 @@ This proposal has been amended to support multiple imports, including of differe
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching:'my-element',
+   matching:'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
@@ -244,7 +244,7 @@ export {doFunction as do}
 // observer setup
 
 const observer = new MountObserver({
-   withMatching:'my-element',
+   matching:'my-element',
    import: [
       './my-element.js',
       ['./my-element-small.css', {type: 'css'}],
@@ -316,7 +316,7 @@ export { doFunction as do, withInstance };
 
 // my local module
 const observer = new MountObserver({
-   withMatching: 'my-element',
+   matching: 'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
@@ -379,7 +379,7 @@ But I think it's important to think about this way of making the mount observer 
 
 ## Binding from a distance
 
-It is important to note that "withMatching" is a css query with no restrictions.  So something like:
+It is important to note that "matching" is a css query with no restrictions.  So something like:
 
 ```JavaScript
 import {EvtRt} from 'mount-observer/EvtRt.js';
@@ -397,7 +397,7 @@ const observer = new MountObserver({
    // not supported by polyfill
    //select: 'div > p + p ~ span[class$="name"]' 
    // is supported:
-   withMatching: 'div > p + p ~ span[class$="name"]',
+   matching: 'div > p + p ~ span[class$="name"]',
    do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);
    },
@@ -433,7 +433,7 @@ MountObserver.define('myHandler', MyHandler);
 
 // Reference it by name in the configuration
 const observer = new MountObserver({
-   withMatching: 'div > p + p ~ span[class$="name"]',
+   matching: 'div > p + p ~ span[class$="name"]',
    do: 'myHandler'  // String reference instead of inline function
 });
 observer.observe(document);
@@ -454,7 +454,7 @@ MountObserver.define('logger', LoggerHandler);
 MountObserver.define('validator', ValidatorHandler);
 
 const observer = new MountObserver({
-   withMatching: 'input',
+   matching: 'input',
    do: [
       'logger',                    // Registered handler
       (element, ctx) => {          // Inline function
@@ -478,7 +478,7 @@ When both `do` (with string/array) and `reference` are specified, the execution 
 MountObserver.define('setup', SetupHandler);
 
 const observer = new MountObserver({
-   withMatching: 'button',
+   matching: 'button',
    import: './button-actions.js',
    reference: 0,
    do: ['setup', (el) => { el.dataset.ready = 'true'; }]
@@ -539,7 +539,7 @@ const observer = new MountObserver({
    // not supported by polyfill
    //select: 'div > p + p ~ span[class$="name"]' 
    // is supported:
-   withMatching: 'div > p + p ~ span[class$="name"]',
+   matching: 'div > p + p ~ span[class$="name"]',
    do: 'builtIns.logToConsole'
 });
 observer.observe(document);
@@ -561,7 +561,7 @@ export default class MyElement extends HTMLElement {
 import { MountObserver } from 'mount-observer';
 
 const observer = new MountObserver({
-    withMatching: 'my-element',
+    matching: 'my-element',
     import: './MyElement.js',
     do: 'builtIns.defineCustomElement'
 });
@@ -579,7 +579,7 @@ For the common use case of setting properties on matching elements, MountObserve
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'input',
+   matching: 'input',
    assignOnMount: {
       disabled: true,
       value: 'Default value',
@@ -599,7 +599,7 @@ You can also specify properties to apply when elements are removed from the DOM 
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: '.status-indicator',
+   matching: '.status-indicator',
    assignOnMount: {
       '?.style?.color': 'green',
       '?.dataset?.status': 'active'
@@ -622,7 +622,7 @@ A common use case is providing visual feedback for form validation:
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'input.validated',
+   matching: 'input.validated',
    assignOnMount: {
       '?.style?.borderColor': 'green',
       '?.style?.backgroundColor': '#f0fff0',
@@ -658,7 +658,7 @@ The `assignGingerly` library supports nested property assignment using the `?.` 
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'button',
+   matching: 'button',
    assignOnMount: {
       disabled: false,
       '?.dataset?.action': 'submit',
@@ -680,7 +680,7 @@ You can combine `assignOn*` with lazy loading to both import resources and set p
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'my-element',
+   matching: 'my-element',
    import: './my-element.js',
    assignOnMount: {
       theme: 'dark',
@@ -712,7 +712,7 @@ The `MountObserver` class provides a public `assignGingerly()` method that allow
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'input',
+   matching: 'input',
    assignOnMount: {
       disabled: true,
       value: 'Initial value'
@@ -739,7 +739,7 @@ await observer.assignGingerly({
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'input'
+   matching: 'input'
 });
 observer.observe(document);
 
@@ -779,7 +779,7 @@ MountObserver can automatically dispatch custom events from elements when they m
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'button[data-action]',
+   matching: 'button[data-action]',
    mountedElemEmits: {
       event: 'Event',
       args: 'custom-ready'
@@ -825,7 +825,7 @@ Use magic strings to inject dynamic values into event data:
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'button[data-test]',
+   matching: 'button[data-test]',
    mountedElemEmits: {
       event: 'CustomEvent',
       args: ['element-mounted', { 
@@ -861,7 +861,7 @@ Emit multiple events in sequence by providing an array:
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'my-component',
+   matching: 'my-component',
    mountedElemEmits: [
       { event: 'Event', args: 'component-loading' },
       { event: 'Event', args: 'component-ready' },
@@ -896,7 +896,7 @@ Use `oncePerMountedElement` to ensure an event only fires the first time an elem
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'button[data-once]',
+   matching: 'button[data-once]',
    mountedElemEmits: {
       event: 'Event',
       args: 'initialized',
@@ -915,7 +915,7 @@ The event emission logic is code-split into a separate module (`emitEvents.js`) 
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'my-widget',
+   matching: 'my-widget',
    import: './my-widget.js',
    mountedElemEmits: [
       {
@@ -962,7 +962,7 @@ While the MountObserver dispatches lifecycle events (mount, dismount, disconnect
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: 'button',
+   matching: 'button',
    do: (mountedElement, {observer}) => {
       const notifier = observer.getNotifier(mountedElement);
       
@@ -993,7 +993,7 @@ This prevents duplicate mount notifications when setting up listeners during the
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: '#my-button',
+   matching: '#my-button',
    do: (element, {observer}) => {
       const notifier = observer.getNotifier(element);
       
@@ -1012,7 +1012,7 @@ You can call `getNotifier()` at any time, even before an element mounts:
 
 ```JavaScript
 const observer = new MountObserver({
-   withMatching: '#future-button'
+   matching: '#future-button'
 });
 observer.observe(document);
 
@@ -1241,7 +1241,7 @@ We want to find all elements with attribute itemprop outside any itemscope, so t
 ```JavaScript
 const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
-   withMatching:'[itemprop]',
+   matching:'[itemprop]',
    withScopePerimeter: '[itemscope]'
    do: ({localName}, {modules, observer}) => {
       ...

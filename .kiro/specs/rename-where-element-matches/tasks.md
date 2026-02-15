@@ -1,27 +1,27 @@
-# Implementation Plan: Rename whereElementMatches to withMatching
+# Implementation Plan: Rename whereElementMatches to matching
 
 ## Overview
 
-This implementation plan breaks down the refactoring of `whereElementMatches` to `withMatching` into discrete steps. The approach is to update files in a logical order: type definitions first, then source code, then tests, followed by compilation and verification.
+This implementation plan breaks down the refactoring of `whereElementMatches` to `matching` into discrete steps. The approach is to update files in a logical order: type definitions first, then source code, then tests, followed by compilation and verification.
 
 ## Tasks
 
 - [x] 1. Update type definitions in types.d.ts
-  - Rename `whereElementMatches` property to `withMatching` in MountInit interface
+  - Rename `whereElementMatches` property to `matching` in MountInit interface
   - Update `'where-element-matches-failed'` to `'with-matching-failed'` in DismountReason type
   - Verify the property type remains `string`
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
 - [x] 2. Update TypeScript source files
   - [x] 2.1 Update MountObserver.ts
-    - Replace all occurrences of `whereElementMatches` with `withMatching`
-    - Update property access: `this.#init.whereElementMatches` → `this.#init.withMatching`
+    - Replace all occurrences of `whereElementMatches` with `matching`
+    - Update property access: `this.#init.whereElementMatches` → `this.#init.matching`
     - Update any comments referencing the property name
     - _Requirements: 2.2, 2.5_
   
   - [x] 2.2 Search for and update any other TypeScript files
     - Use grep to find any other .ts files with `whereElementMatches`
-    - Update all found occurrences to `withMatching`
+    - Update all found occurrences to `matching`
     - _Requirements: 2.2, 2.5_
 
 - [x] 3. Compile TypeScript to JavaScript
@@ -33,13 +33,13 @@ This implementation plan breaks down the refactoring of `whereElementMatches` to
 - [x] 4. Update test files
   - [x] 4.1 Update HTML test files
     - Search tests/ directory for all .html files containing `whereElementMatches`
-    - Replace all occurrences with `withMatching` in MountObserver configuration objects
+    - Replace all occurrences with `matching` in MountObserver configuration objects
     - Update any test descriptions or comments referencing the property
     - _Requirements: 3.2, 3.5_
   
   - [x] 4.2 Update test spec files
     - Search tests/ directory for all .spec.mjs files containing `whereElementMatches`
-    - Replace all occurrences with `withMatching`
+    - Replace all occurrences with `matching`
     - Update any test descriptions referencing the property
     - _Requirements: 3.4, 3.5_
 

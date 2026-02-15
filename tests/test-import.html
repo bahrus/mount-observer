@@ -29,7 +29,7 @@
 
         // Create observer with import
         const observer = new MountObserver({
-            withMatching: 'fancy-button',
+            matching: 'fancy-button',
             import: '/tests/fancy-button.js',
             do: (element, { modules, observer }) => {
                 const { localName } = element;
