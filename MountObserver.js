@@ -138,6 +138,17 @@ export class MountObserver extends EventTarget {
             this.#assignTentatively = assignTentatively;
         }
         this.#rootNode = new WeakRef(rootNode);
+        // Register enhancementConfig if provided
+        if (this.#init.enhancementConfig && rootNode instanceof Element) {
+            const registry = rootNode.customElementRegistry?.enhancementRegistry;
+            if (registry) {
+                // Check for duplicate using reference equality
+                const items = registry.getItems();
+                if (!items.includes(this.#init.enhancementConfig)) {
+                    registry.push(this.#init.enhancementConfig);
+                }
+            }
+        }
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();

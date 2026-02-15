@@ -22,6 +22,7 @@ import {
 } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
+import type { BaseRegistry } from 'assign-gingerly/types.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
@@ -194,6 +195,18 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
 
         this.#rootNode = new WeakRef(rootNode);
+
+        // Register enhancementConfig if provided
+        if (this.#init.enhancementConfig && rootNode instanceof Element) {
+            const registry = (rootNode as any).customElementRegistry?.enhancementRegistry as BaseRegistry | undefined;
+            if (registry) {
+                // Check for duplicate using reference equality
+                const items = registry.getItems();
+                if (!items.includes(this.#init.enhancementConfig)) {
+                    registry.push(this.#init.enhancementConfig);
+                }
+            }
+        }
 
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
