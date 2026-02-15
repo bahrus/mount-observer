@@ -17,19 +17,42 @@ The requirement asks to add attribute-based matching as an **AND condition** for
 
 ### 1. Attribute Name Construction
 
-From the `AttrPatterns` type, attributes are constructed using:
-- `base` prefix (required)
-- Individual attribute keys
+From the `AttrPatterns` type and `parseWithAttrs` implementation, attributes are constructed using **template strings** with variable substitution:
+
+- `base` is a variable that can be referenced in other attribute patterns
+- Attribute patterns use `${base}` or other `${variable}` placeholders
+- Template strings are resolved recursively
 
 For example:
 ```typescript
 withAttrs: {
-  base: 'data-btn',
-  theme: 'theme',
-  size: 'size'
+  base: 'data-',
+  theme: '${base}theme',
+  size: '${base}size'
 }
 ```
-Would check for attributes: `data-btn-theme` or `data-btn-size`
+Would check for attributes: `data-theme` or `data-size`
+
+**Important**: The value of each key (like `theme`, `size`) is a **template string** that gets resolved, not just a suffix. So:
+- `theme: '${base}theme'` → resolves to `data-theme`
+- `theme: 'theme'` → resolves to literal `theme` (no prefix)
+- `theme: 'my-theme'` → resolves to literal `my-theme`
+
+**enh- Prefix Handling:**
+
+The `parseWithAttrs` function also supports an `enh-` prefix for attribute isolation:
+
+- **Built-in HTML elements**: `enh-` acts as an alias. Tries `enh-` prefixed first, falls back to unprefixed
+  - `<div data-count="42">` → reads `data-count`
+  - `<div enh-data-count="42">` → reads `enh-data-count`
+  - `<div data-count="10" enh-data-count="42">` → reads `enh-data-count` (takes precedence)
+
+- **Custom elements and SVG**: `enh-` prefix is **strictly enforced** by default
+  - `<my-element data-count="42">` → ignored
+  - `<my-element enh-data-count="42">` → reads `enh-data-count`
+  - Can be overridden with `allowUnprefixed` pattern matching
+
+**For mounting purposes**, we need to check if the element has **any** of the specified attributes (with proper `enh-` prefix handling).
 
 ### 2. Where to Add the Logic
 
@@ -37,42 +60,94 @@ Add the check in `#matchesSelector()` method, after existing AND conditions but 
 
 ### 3. Implementation Strategy
 
-```typescript
-// In #matchesSelector() method, add before "All conditions passed":
+Since we need to check for attribute **presence** (not parse values), we need to:
+1. Resolve template strings in `withAttrs` to get actual attribute names
+2. Check if element has any of those attributes (considering `enh-` prefix rules)
 
+**Helper function to resolve templates:**
+```typescript
+function resolveAttrTemplate(template: string, patterns: Record<string, any>): string {
+    return template.replace(/\$\{(\w+)\}/g, (match, varName) => {
+        const value = patterns[varName];
+        if (value === undefined) {
+            throw new Error(`Undefined template variable: ${varName}`);
+        }
+        if (typeof value === 'string') {
+            // Recursively resolve
+            return resolveAttrTemplate(value, patterns);
+        }
+        return String(value);
+    });
+}
+```
+
+**Helper function to check attribute with enh- prefix:**
+```typescript
+function hasAttributeWithEnhPrefix(
+    element: Element, 
+    attrName: string, 
+    allowUnprefixed?: string | RegExp
+): boolean {
+    const isCustomElement = element.tagName.includes('-');
+    const isSVGElement = element instanceof SVGElement;
+    
+    // For custom elements and SVG - strict enh- requirement
+    if (isCustomElement || isSVGElement) {
+        if (element.hasAttribute(`enh-${attrName}`)) {
+            return true;
+        }
+        
+        // Only check unprefixed if tag name matches allowUnprefixed pattern
+        if (allowUnprefixed) {
+            const pattern = typeof allowUnprefixed === 'string' 
+                ? new RegExp(allowUnprefixed) 
+                : allowUnprefixed;
+            const tagName = element.tagName.toLowerCase();
+            if (pattern.test(tagName)) {
+                return element.hasAttribute(attrName);
+            }
+        }
+        return false;
+    }
+    
+    // For built-in elements - enh- is alias (check both)
+    return element.hasAttribute(`enh-${attrName}`) || element.hasAttribute(attrName);
+}
+```
+
+**Main implementation in #matchesSelector():**
+```typescript
 // Check withAttrs condition if specified (attribute-based matching)
 if (this.#init.enhancementConfig?.withAttrs) {
     const withAttrs = this.#init.enhancementConfig.withAttrs;
-    const base = withAttrs.base;
+    const allowUnprefixed = this.#init.enhancementConfig.allowUnprefixed;
     
-    // Collect all attribute patterns to check
-    const attrPatterns: string[] = [];
+    // Collect all attribute names to check
+    const attrNames: string[] = [];
     
     for (const key in withAttrs) {
-        if (key === 'base' || key === '_base') continue;
-        
-        // Handle both string and AttrConfig formats
-        const value = withAttrs[key];
-        let attrName: string;
-        
-        if (typeof value === 'string') {
-            // Simple string format: key maps to attribute suffix
-            attrName = `${base}-${value}`;
-        } else if (typeof value === 'object' && value !== null) {
-            // AttrConfig format: use the key itself as suffix
-            const configKey = key.startsWith('_') ? key.substring(1) : key;
-            attrName = `${base}-${configKey}`;
-        } else {
+        // Skip base and underscore-prefixed config keys
+        if (key === 'base' || key.startsWith('_')) {
             continue;
         }
         
-        attrPatterns.push(attrName);
+        const value = withAttrs[key];
+        if (typeof value === 'string') {
+            // Resolve template string to get actual attribute name
+            const attrName = resolveAttrTemplate(value, withAttrs);
+            attrNames.push(attrName);
+        }
+    }
+    
+    // Handle base attribute specially if present
+    if ('base' in withAttrs && typeof withAttrs.base === 'string') {
+        attrNames.push(withAttrs.base);
     }
     
     // Element must have at least ONE of the specified attributes (OR logic)
-    if (attrPatterns.length > 0) {
-        const hasAnyAttribute = attrPatterns.some(attrName => 
-            element.hasAttribute(attrName)
+    if (attrNames.length > 0) {
+        const hasAnyAttribute = attrNames.some(attrName => 
+            hasAttributeWithEnhPrefix(element, attrName, allowUnprefixed)
         );
         
         if (!hasAnyAttribute) {
@@ -85,30 +160,6 @@ if (this.#init.enhancementConfig?.withAttrs) {
 return true;
 ```
 
-### Alternative Simpler Approach
-
-Since we're only checking for attribute **presence** (not parsing values), we could simplify:
-
-```typescript
-// Check withAttrs condition if specified
-if (this.#init.enhancementConfig?.withAttrs) {
-    const { base, ...attrs } = this.#init.enhancementConfig.withAttrs;
-    const attrKeys = Object.keys(attrs).filter(k => k !== '_base');
-    
-    if (attrKeys.length > 0) {
-        // Element must have at least one attribute matching the pattern
-        const hasAnyAttribute = attrKeys.some(key => {
-            const suffix = typeof attrs[key] === 'string' ? attrs[key] : key.replace(/^_/, '');
-            return element.hasAttribute(`${base}-${suffix}`);
-        });
-        
-        if (!hasAnyAttribute) {
-            return false;
-        }
-    }
-}
-```
-
 ## Test Scenarios
 
 ### Test 1: Element with matching attribute mounts
@@ -117,31 +168,32 @@ const observer = new MountObserver({
     matching: 'button',
     enhancementConfig: {
         withAttrs: {
-            base: 'data-btn',
-            theme: 'theme'
+            base: 'data-',
+            theme: '${base}theme'
         }
     }
 });
-// <button data-btn-theme="dark"> should mount
+// <button data-theme="dark"> should mount
+// <button enh-data-theme="dark"> should also mount (enh- prefix)
 ```
 
 ### Test 2: Element without any matching attribute doesn't mount
 ```javascript
-// <button> (no data-btn-* attributes) should NOT mount
+// <button> (no data-theme attribute) should NOT mount
 ```
 
 ### Test 3: Element with any one of multiple attributes mounts (OR logic)
 ```javascript
 enhancementConfig: {
     withAttrs: {
-        base: 'data-field',
-        required: 'required',
-        disabled: 'disabled'
+        base: 'data-',
+        required: '${base}required',
+        disabled: '${base}disabled'
     }
 }
-// <input data-field-required> should mount
-// <input data-field-disabled> should mount
-// <input data-field-required data-field-disabled> should mount
+// <input data-required> should mount
+// <input data-disabled> should mount
+// <input data-required data-disabled> should mount
 // <input> should NOT mount
 ```
 
@@ -152,12 +204,12 @@ enhancementConfig: {
     withInstance: HTMLInputElement,
     enhancementConfig: {
         withAttrs: {
-            base: 'data-field',
-            required: 'required'
+            base: 'data-',
+            required: '${base}required'
         }
     }
 }
-// Must match selector AND be HTMLInputElement AND have data-field-required
+// Must match selector AND be HTMLInputElement AND have data-required
 ```
 
 ### Test 5: No withAttrs specified - no attribute checking
@@ -171,13 +223,55 @@ enhancementConfig: {
 // All buttons mount (no attribute requirement)
 ```
 
+### Test 6: Custom element with enh- prefix (strict enforcement)
+```javascript
+enhancementConfig: {
+    withAttrs: {
+        base: 'data-',
+        theme: '${base}theme'
+    }
+}
+// <my-element data-theme="dark"> should NOT mount (custom element, no enh- prefix)
+// <my-element enh-data-theme="dark"> should mount
+```
+
+### Test 7: Custom element with allowUnprefixed pattern
+```javascript
+enhancementConfig: {
+    allowUnprefixed: '^my-',
+    withAttrs: {
+        base: 'data-',
+        theme: '${base}theme'
+    }
+}
+// <my-element data-theme="dark"> should mount (matches pattern)
+// <other-element data-theme="dark"> should NOT mount (doesn't match pattern)
+// <my-element enh-data-theme="dark"> should mount (enh- always works)
+```
+
+### Test 8: Base attribute checking
+```javascript
+enhancementConfig: {
+    withAttrs: {
+        base: 'data-config',
+        theme: '${base}-theme'
+    }
+}
+// <div data-config="{}"> should mount (base attribute present)
+// <div data-config-theme="dark"> should mount (theme attribute present)
+// <div> should NOT mount (no attributes)
+```
+
 ## Edge Cases to Handle
 
-1. **Empty withAttrs object** (only `base` key): Should not add any attribute requirement
-2. **Special keys** (`_base`): Should be ignored when building attribute list
-3. **AttrConfig objects**: Extract the key name properly (strip leading underscore if present)
-4. **No enhancementConfig**: Skip the check entirely
-5. **enhancementConfig without withAttrs**: Skip the check
+1. **Empty withAttrs object** (only `base` key): Should check for the base attribute itself
+2. **Special keys** (`_base`, `_theme`, etc.): Should be ignored when building attribute list (they're config objects)
+3. **Template resolution**: Must handle `${variable}` placeholders correctly, including recursive resolution
+4. **enh- prefix for custom elements**: Must check `enh-` prefixed attributes for custom elements and SVG
+5. **allowUnprefixed pattern**: Must respect pattern matching for custom elements when specified
+6. **No enhancementConfig**: Skip the check entirely
+7. **enhancementConfig without withAttrs**: Skip the check
+8. **Built-in vs custom elements**: Different `enh-` prefix behavior
 
 ## Files to Modify
 
@@ -188,20 +282,27 @@ enhancementConfig: {
 
 ## Implementation Complexity
 
-**Low to Medium** - The implementation is straightforward:
-- Add one conditional block in `#matchesSelector()`
-- Parse the `withAttrs` object to extract attribute names
-- Check if element has at least one matching attribute
-- No need to parse attribute values (that's for spawn/enhancement instantiation, not mounting)
+**Medium** - The implementation requires:
+- Template string resolution with recursive variable substitution
+- enh- prefix handling with different behavior for built-in vs custom elements
+- allowUnprefixed pattern matching for custom elements
+- Proper handling of config keys (underscore-prefixed)
+- Integration with existing AND condition logic in `#matchesSelector()`
 
 ## Questions to Resolve
 
-1. **Should we handle `allowUnprefixed`?** The `EnhancementConfig` has an `allowUnprefixed` property - should we check unprefixed attributes too?
-   - **Recommendation**: Ignore for now, can be added later if needed
+1. **Should we handle `allowUnprefixed`?** The `EnhancementConfig` has an `allowUnprefixed` property for custom elements
+   - **Recommendation**: Yes, implement it - it's part of the standard `withAttrs` behavior
 
 2. **Case sensitivity?** Should attribute matching be case-sensitive or case-insensitive?
-   - **Recommendation**: Case-sensitive (standard HTML behavior)
+   - **Recommendation**: Case-sensitive (standard HTML behavior, `hasAttribute()` is case-sensitive)
 
-3. **Attribute value checking?** The requirement says "any of attributes defined within withAttrs form a sufficient condition" - does this mean just presence, or should we validate the attribute has a non-empty value?
-   - **Recommendation**: Presence-only checking (simplest approach)  
+3. **Attribute value checking?** Should we validate the attribute has a non-empty value?
+   - **Recommendation**: Presence-only checking - just check if attribute exists, not its value
+
+4. **Template resolution complexity?** Should we implement full recursive template resolution or simplified version?
+   - **Recommendation**: Implement proper template resolution to match `parseWithAttrs` behavior - it's needed for correct attribute name construction
+
+5. **Should we extract helper functions to separate file?** The template resolution and enh- prefix logic could be reusable
+   - **Recommendation**: Keep inline for now, can refactor later if needed elsewhere  
 
