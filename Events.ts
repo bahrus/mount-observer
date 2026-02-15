@@ -1,12 +1,11 @@
 // Event classes for MountObserver
-import type { IMountEvent, IDismountEvent, IAttrChangeEvent, AttrChange, MountInit, DismountReason, MountContext } from './types.js';
+import type { IMountEvent, IDismountEvent, MountInit, DismountReason, MountContext } from './types.js';
 
 // Event name constants
 export const loadEventName = 'load';
 export const mountEventName = 'mount';
 export const dismountEventName = 'dismount';
 export const disconnectEventName = 'disconnect';
-export const attrchangeEventName = 'attrchange';
 export const mediamatchEventName = 'mediamatch';
 export const mediaunmatchEventName = 'mediaunmatch';
 
@@ -44,14 +43,6 @@ export class LoadEvent extends Event {
     
     constructor(public modules: any[], public mountInit: MountInit) {
         super(LoadEvent.eventName);
-    }
-}
-
-export class AttrChangeEvent extends Event implements IAttrChangeEvent {
-    static eventName: typeof attrchangeEventName = attrchangeEventName;
-    
-    constructor(public changes: AttrChange[], public mountInit: MountInit) {
-        super(AttrChangeEvent.eventName);
     }
 }
 

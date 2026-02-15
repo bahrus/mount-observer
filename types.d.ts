@@ -17,7 +17,6 @@ export type DismountReason =
 
 export interface MountInit {
     withMatching: string;
-    whereAttr?: WhereAttr;
     whereInstanceOf?: Constructor | Constructor[];
     whereMediaMatches?: string | MediaQueryList;
     whereOutside?: string;
@@ -26,7 +25,6 @@ export interface MountInit {
     loadingEagerness?: 'eager' | 'lazy';
     assignOnMount?: Record<string, any>;
     assignOnDismount?: Record<string, any>;
-    map?: MapConfig;
     getPlayByPlay?: boolean;
     mountedElemEmits?: EventConfig | EventConfig[];
     reference?: number | number[];
@@ -35,29 +33,7 @@ export interface MountInit {
     customData?: unknown;
 }
 
-export interface MapConfig {
-    [coordinate: string]: MapEntry;
-}
 
-export interface MapEntry {
-    instanceOf?: string;
-    mapsTo?: string;
-    /**
-     * Only notify the presence of this attribute
-     * the first time it is seen
-     */
-    once?: boolean;
-    [key: string]: any;
-}
-
-export type BranchValue = string | { [key: string]: BranchValue[] };
-
-export interface WhereAttr {
-    hasBuiltInRootIn?: string[];
-    hasCERootIn?: string[];
-    hasBase: string;
-    hasBranchIn?: BranchValue[];
-}
 
 export interface ImportSpec {
     url: string;
@@ -112,16 +88,4 @@ export interface IDismountEvent extends Event {
     mountInit: MountInit;
 }
 
-export interface IAttrChangeEvent extends Event {
-    changes: AttrChange[];
-    mountInit: MountInit;
-}
 
-export interface AttrChange {
-    value: string | null;
-    attrNode: Attr | null;
-    mapEntry: MapEntry | null;
-    attrName: string;
-    coordinate: string;
-    element: Element;
-}

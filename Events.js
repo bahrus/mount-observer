@@ -3,7 +3,6 @@ export const loadEventName = 'load';
 export const mountEventName = 'mount';
 export const dismountEventName = 'dismount';
 export const disconnectEventName = 'disconnect';
-export const attrchangeEventName = 'attrchange';
 export const mediamatchEventName = 'mediamatch';
 export const mediaunmatchEventName = 'mediaunmatch';
 export class MountEvent extends Event {
@@ -49,16 +48,6 @@ export class LoadEvent extends Event {
     constructor(modules, mountInit) {
         super(LoadEvent.eventName);
         this.modules = modules;
-        this.mountInit = mountInit;
-    }
-}
-export class AttrChangeEvent extends Event {
-    changes;
-    mountInit;
-    static eventName = attrchangeEventName;
-    constructor(changes, mountInit) {
-        super(AttrChangeEvent.eventName);
-        this.changes = changes;
         this.mountInit = mountInit;
     }
 }

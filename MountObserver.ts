@@ -3,7 +3,6 @@ import {
     MountObserverOptions,
     IMountObserver,
     MountContext,
-    AttrChange,
     WeakDual,
     EventConfig,
     EventConstructor,
@@ -15,7 +14,6 @@ import {
     DismountEvent,
     DisconnectEvent,
     LoadEvent,
-    AttrChangeEvent,
 } from './Events.js';
 import {
     registerSharedObserver,
@@ -48,11 +46,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #mutationCallback: MutationCallback | undefined;
     #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
-    #elementAttrStates = new WeakMap<Element, Map<string, string | null>>();
-    #elementOnceAttrs = new WeakMap<Element, Set<string>>();
-    #matchesWhereAttrFn: ((element: Element, whereAttr: any) => boolean) | null = null;
-    #buildAttrCoordinateMapFn: ((whereAttr: any, isCustomElement: boolean) => any) | null = null;
-    #checkAttrChangesFn: ((element: Element) => AttrChange[]) | null = null;
     #mediaQueryCleanup?: () => void;
     #mediaMatches: boolean = true;
     #asgMtSource: Record<string, any> | undefined;
@@ -67,7 +60,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#abortController = new AbortController();
 
         const {
-            assignOnMount, assignOnDismount, do: doValue, reference, whereAttr, loadingEagerness,
+            assignOnMount, assignOnDismount, do: doValue, reference, loadingEagerness,
             import: imp
         } = init;
         // Make a copy of assignOnMount config using structuredClone
@@ -92,11 +85,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Validate reference property if present
         if (reference !== undefined) {
             this.#validateReference();
-        }
-
-        // Preload whereAttr utilities if needed
-        if (whereAttr) {
-            this.#preloadWhereAttrUtilities();
         }
 
         // Start loading imports if eager
@@ -149,29 +137,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
     }
     
-    async #preloadWhereAttrUtilities(): Promise<void> {
-        if (!this.#matchesWhereAttrFn) {
-            const { matchesWhereAttr } = await import('./whereAttr.js');
-            this.#matchesWhereAttrFn = matchesWhereAttr;
-        }
-        if (!this.#buildAttrCoordinateMapFn) {
-            const { buildAttrCoordinateMap } = await import('./attrCoordinates.js');
-            this.#buildAttrCoordinateMapFn = buildAttrCoordinateMap;
-        }
-        if (!this.#checkAttrChangesFn) {
-            const { checkAttrChanges } = await import('./attrChanges.js');
-            // Create a bound function that passes the required parameters
-            this.#checkAttrChangesFn = (element: Element) => {
-                return checkAttrChanges(
-                    element,
-                    this.#init,
-                    this.#buildAttrCoordinateMapFn!,
-                    this.#elementAttrStates,
-                    this.#elementOnceAttrs
-                );
-            };
-        }
-    }
     
     async #setupMediaQuery(): Promise<void> {
         if (!this.#rootNode) {
@@ -223,11 +188,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (this.#init.whereMediaMatches) {
             await this.#setupMediaQuery();
         }
-
-        // Wait for whereAttr utilities to load if needed
-        if (this.#init.whereAttr && !this.#matchesWhereAttrFn) {
-            await this.#preloadWhereAttrUtilities();
-        }
         
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
@@ -246,8 +206,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 return;
             }
             
-            const attrChanges: AttrChange[] = [];
-            
             for (const mutation of mutations) {
                 if (mutation.type === 'childList') {
                     for (const node of mutation.addedNodes) {
@@ -260,34 +218,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
                             this.#handleRemoval(node as Element);
                         }
                     });
-                } else if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
-                    // Handle attribute changes for mounted elements
-                    const element = mutation.target as Element;
-                    if (this.#mountedElements.weakSet.has(element) && this.#checkAttrChangesFn) {
-                        const changes = this.#checkAttrChangesFn(element);
-                        attrChanges.push(...changes);
-                    }
-                }
-            }
-            
-            // Batch and dispatch attribute changes
-            if (attrChanges.length > 0) {
-                this.dispatchEvent(new AttrChangeEvent(attrChanges, this.#init));
-                
-                // Dispatch filtered attrchange events to element-specific notifiers
-                const changesByElement = new Map<Element, AttrChange[]>();
-                for (const change of attrChanges) {
-                    if (!changesByElement.has(change.element)) {
-                        changesByElement.set(change.element, []);
-                    }
-                    changesByElement.get(change.element)!.push(change);
-                }
-                
-                for (const [element, changes] of changesByElement) {
-                    const notifier = this.#elementNotifiers.get(element);
-                    if (notifier) {
-                        notifier.dispatchEvent(new AttrChangeEvent(changes, this.#init));
-                    }
                 }
             }
         };
@@ -296,12 +226,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
             childList: true,
             subtree: true
         };
-        
-        // Add attribute observation if whereAttr is configured
-        if (this.#init.whereAttr) {
-            observerConfig.attributes = true;
-            observerConfig.attributeOldValue = true;
-        }
 
         // Register with shared mutation observer
         registerSharedObserver(rootNode, this.#mutationCallback, observerConfig);
@@ -394,19 +318,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (this.#init.whereOutside) {
             const rootNode = this.#rootNode?.deref();
             if (!rootNode || !whereOutside(rootNode, element, this.#init.whereOutside)) {
-                return false;
-            }
-        }
-        
-        // Check whereAttr condition if specified
-        if (this.#init.whereAttr) {
-            // Use cached function (should be loaded by now from constructor)
-            if (!this.#matchesWhereAttrFn) {
-                console.warn('whereAttr utilities not loaded yet');
-                return false;
-            }
-            
-            if (!this.#matchesWhereAttrFn(element, this.#init.whereAttr)) {
                 return false;
             }
         }
@@ -534,20 +445,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (this.#init.mountedElemEmits) {
             const { emitMountedElementEvents } = await import('./emitEvents.js');
             await emitMountedElementEvents(element, this.#init, this.#processedEventsForElement);
-        }
-        
-        // Check for initial attribute changes if whereAttr is configured
-        if (this.#checkAttrChangesFn) {
-            const changes = this.#checkAttrChangesFn(element);
-            if (changes.length > 0) {
-                this.dispatchEvent(new AttrChangeEvent(changes, this.#init));
-                
-                // Also dispatch to element-specific notifier
-                const notifier = this.#elementNotifiers.get(element);
-                if (notifier) {
-                    notifier.dispatchEvent(new AttrChangeEvent(changes, this.#init));
-                }
-            }
         }
     }
     

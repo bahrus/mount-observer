@@ -21,11 +21,6 @@ test('Element Notifier Tests', async ({ page }) => {
     expect(results.test3.notifierCreatedBeforeMount).toBe(true);
     expect(results.test3.mountFiredAfterCreation).toBe(true);
     
-    // Test 4: AttrChange events filtered correctly
-    expect(results.test4.attrChangeFiredOnNotifier).toBe(true);
-    expect(results.test4.attrChangeFilteredCorrectly).toBe(true);
-    expect(results.test4.changesCount).toBe(1); // Only changes for input-1
-    
     // Test 5: Mount event fires on subsequent mounts (after dismount)
     expect(results.test5.firstMountFired).toBe(true); // No mount on first (created during do)
     expect(results.test5.dismountFired).toBe(true);
