@@ -17,7 +17,7 @@ export type DismountReason =
 
 export interface MountInit {
     withMatching: string;
-    whereInstanceOf?: Constructor | Constructor[];
+    withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
     whereOutside?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;

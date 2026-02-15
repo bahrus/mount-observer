@@ -1,5 +1,5 @@
-// Test module for referenced whereInstanceOf
-const whereInstanceOf = [HTMLButtonElement, HTMLInputElement];
+// Test module for referenced withInstance
+const withInstance = [HTMLButtonElement, HTMLInputElement];
 
 const doFunction = function(element, context) {
     if (window.testResults) {
@@ -9,4 +9,4 @@ const doFunction = function(element, context) {
     window.moduleDoCalledFor.push(element.id);
 };
 
-export { whereInstanceOf, doFunction as do };
+export { withInstance, doFunction as do };

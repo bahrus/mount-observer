@@ -260,20 +260,20 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
 
-        // Validate referenced whereInstanceOf if reference is specified
+        // Validate referenced withInstance if reference is specified
         if (this.#init.reference !== undefined) {
             const references = arr(this.#init.reference);
 
             for (const index of references) {
                 const module = this.#modules[index];
-                if (module && module.whereInstanceOf !== undefined) {
+                if (module && module.withInstance !== undefined) {
                     // Validate that it's a Constructor or array of Constructors
-                    const whereInstanceOf = module.whereInstanceOf;
-                    const constructors = arr(whereInstanceOf);
+                    const withInstance = module.withInstance;
+                    const constructors = arr(withInstance);
                     
                     for (const constructor of constructors) {
                         if (typeof constructor !== 'function') {
-                            throw new Error(`Referenced module at index ${index} exports invalid whereInstanceOf: must be a Constructor or array of Constructors`);
+                            throw new Error(`Referenced module at index ${index} exports invalid withInstance: must be a Constructor or array of Constructors`);
                         }
                     }
                 }
@@ -322,9 +322,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
             }
         }
         
-        // Check whereInstanceOf condition if specified
-        if (this.#init.whereInstanceOf) {
-            const constructors = arr(this.#init.whereInstanceOf);
+        // Check withInstance condition if specified
+        if (this.#init.withInstance) {
+            const constructors = arr(this.#init.withInstance);
             
             // Element must be an instance of at least one constructor (OR logic for array)
             const matchesInstanceOf = constructors.some(constructor => element instanceof constructor);
@@ -334,14 +334,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
             }
         }
         
-        // Check referenced whereInstanceOf if imports are loaded and reference is specified
+        // Check referenced withInstance if imports are loaded and reference is specified
         if (this.#importsLoaded && this.#init.reference !== undefined) {
             const references = arr(this.#init.reference);
 
             for (const index of references) {
                 const module = this.#modules[index];
-                if (module && module.whereInstanceOf !== undefined) {
-                    const constructors = arr(module.whereInstanceOf);
+                if (module && module.withInstance !== undefined) {
+                    const constructors = arr(module.withInstance);
                     
                     // Element must be an instance of at least one constructor (OR logic within this module)
                     const matchesInstanceOf = constructors.some((constructor: Constructor) => element instanceof constructor);

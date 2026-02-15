@@ -1,8 +1,8 @@
-# Specifying whereInstanceOf remotely
+# Specifying withInstance remotely
 
-In addition to do actions, to be able to make mountInit 100% declarative JSON serializable, we need to accommodate the whereInstanceOf check also.
+In addition to do actions, to be able to make mountInit 100% declarative JSON serializable, we need to accommodate the withInstance check also.
 
-Following the same exact approach as [Requirement11](Requirement11.md), support moving the whereInstanceOf check to the imported reference:
+Following the same exact approach as [Requirement11](Requirement11.md), support moving the withInstance check to the imported reference:
 
 ```JavaScript
 //module mySettings.js
@@ -12,9 +12,9 @@ const doFunction =  function({localName}, {modules, observer, mountInit, rootNod
    }
    observer.disconnectedSignal.abort();
 },
-const whereInstanceOf = [HTMLMarqueeElement, SVGElement];
+const withInstance = [HTMLMarqueeElement, SVGElement];
 
-export {doFunction as do, whereInstanceOf}
+export {doFunction as do, withInstance}
 
 //my local module
 
@@ -31,18 +31,18 @@ observer.observe(document);
 
 ```
 
-This change means that the whereInstanceOf can continue to happen where it currently does for inline checks, but for external module settings as above, an additional check should be done after the importing has taken place to make sure the element matches all the criteria before mounting.
+This change means that the withInstance can continue to happen where it currently does for inline checks, but for external module settings as above, an additional check should be done after the importing has taken place to make sure the element matches all the criteria before mounting.
 
 **Combining checks**:
 
-If both inline and referenced whereInstanceOf checks exist, they should be AND'd together.
+If both inline and referenced withInstance checks exist, they should be AND'd together.
 
 
-**Multiple references**: If multiple referenced modules export `whereInstanceOf`, the element must match ALL of them (AND logic).
+**Multiple references**: If multiple referenced modules export `withInstance`, the element must match ALL of them (AND logic).
 
-**Validation**: Referenced `whereInstanceOf` is validated after imports load. If a referenced module exports `whereInstanceOf` but it's not a Constructor or array of Constructors, an error is thrown.
+**Validation**: Referenced `withInstance` is validated after imports load. If a referenced module exports `withInstance` but it's not a Constructor or array of Constructors, an error is thrown.
 
-**Optional export**: If a referenced module doesn't export `whereInstanceOf`, it's silently ignored (similar to `do` functions).
+**Optional export**: If a referenced module doesn't export `withInstance`, it's silently ignored (similar to `do` functions).
 
 **Timing**: 
 
@@ -52,6 +52,6 @@ Only if `loadingEagerness: 'eager'` should both inline and referenced checks be 
 
 Because custom elements start out as unknown elements, let's keep re-checking when needed just in case, rather than adding to #processedDoForElement to prevent re-checking.
 
-Do not dispatch any event when an element fails the referenced whereInstanceOf check.
+Do not dispatch any event when an element fails the referenced withInstance check.
 
 Throw a validation error at the earliest convenience (such as in the constructor, subject to async constraints).

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>whereInstanceOf Test</title>
+    <title>withInstance Test</title>
 </head>
 <body>
-    <h1>whereInstanceOf Test</h1>
+    <h1>withInstance Test</h1>
 
     <!-- Test elements -->
     <input id="input1" type="text" class="test">
@@ -24,7 +24,7 @@
         // Test 1: Single constructor
         const observer1 = new MountObserver({
             withMatching: '.test',
-            whereInstanceOf: HTMLInputElement,
+            withInstance: HTMLInputElement,
             do: (el) => {
                 results.push(`Test 1: Mounted ${el.id} (${el.constructor.name})`);
             }
@@ -35,7 +35,7 @@
         // Test 2: Array of constructors
         const observer2 = new MountObserver({
             withMatching: '.test',
-            whereInstanceOf: [HTMLButtonElement, HTMLDivElement],
+            withInstance: [HTMLButtonElement, HTMLDivElement],
             do: (el) => {
                 results.push(`Test 2: Mounted ${el.id} (${el.constructor.name})`);
             }

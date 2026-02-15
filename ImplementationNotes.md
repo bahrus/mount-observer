@@ -56,7 +56,7 @@ These features from the full spec are not in v2:
 - ❌ `whereElementIntersectsWith` (IntersectionObserver integration)
 - ❌ `withMediaMatching` (MediaQuery integration)
 - ❌ `whereSizeOfContainerMatches` (Container queries)
-- ❌ `whereInstanceOf` (instanceof checks)
+- ❌ `withInstance` (instanceof checks)
 - ❌ Shadow DOM inheritance
 - ❌ MOSE (Mount Observer Script Elements)
 - ❌ reconnect, reconfirm, exit, forget events

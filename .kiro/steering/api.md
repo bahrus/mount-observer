@@ -15,8 +15,8 @@ The `MountInit` object configures what elements the MountObserver should observe
 For example:
 ```javascript
 {
-    whereElementMatches: 'input, button',
-    whereInstanceOf: HTMLInputElement
+    withMatching: 'input, button',
+    withInstance: HTMLInputElement
 }
 ```
 This will only match elements that are BOTH (`input` or `button`) AND instances of HTMLInputElement.
