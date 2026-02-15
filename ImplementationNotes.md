@@ -130,4 +130,4 @@ observer.observe(document);
 
 The v2 implementation follows a strict code-splitting principle: any code block >6 lines that only executes based on optional configuration is extracted to a separate module and loaded dynamically.
 
-**Example**: The `loadImports.ts` module (handling CSS, JSON, HTML imports) is only loaded when `MountInit.import` is specified. Users who don't use the import feature pay zero bytes for that functionality.
+**Example**: The `loadImports.ts` module (handling CSS, JSON, HTML imports) is only loaded when `MountConfig.import` is specified. Users who don't use the import feature pay zero bytes for that functionality.

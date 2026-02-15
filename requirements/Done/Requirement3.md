@@ -1,6 +1,6 @@
 # whereAttr
 
-Please add to the steering document(s) that each of the "where*" conditions in the mountInit object forms an "and" condition with other where* conditions if present.
+Please add to the steering document(s) that each of the "where*" conditions in the MountConfig object forms an "and" condition with other where* conditions if present.
 
 So we already have *whereElementMatches.
 
@@ -68,7 +68,7 @@ So these will mount:
 </your-custom-element>
 ```
 
-will mount.  Again, if the adorned element isn't a custom element, the enh- isn't required based on the instructions above in MountInit.
+will mount.  Again, if the adorned element isn't a custom element, the enh- isn't required based on the instructions above in MountConfig.
 
 To customize the keys, the syntax looks as follows:
 

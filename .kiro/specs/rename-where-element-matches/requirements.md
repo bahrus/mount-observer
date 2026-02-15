@@ -2,13 +2,13 @@
 
 ## Introduction
 
-This specification defines the requirements for refactoring the `whereElementMatches` property name to `matching` throughout the mount-observer codebase. This is a breaking API change that affects the public interface of the MountInit configuration object.
+This specification defines the requirements for refactoring the `whereElementMatches` property name to `matching` throughout the mount-observer codebase. This is a breaking API change that affects the public interface of the MountConfig configuration object.
 
 ## Glossary
 
-- **MountInit**: The configuration object passed to MountObserver constructor that defines what elements to observe and how to act upon them
+- **MountConfig**: The configuration object passed to MountObserver constructor that defines what elements to observe and how to act upon them
 - **System**: The mount-observer library codebase including TypeScript source files, compiled JavaScript files, and test files
-- **Property_Name**: The identifier used in the MountInit interface for specifying CSS selector matching
+- **Property_Name**: The identifier used in the MountConfig interface for specifying CSS selector matching
 
 ## Requirements
 
@@ -18,7 +18,7 @@ This specification defines the requirements for refactoring the `whereElementMat
 
 #### Acceptance Criteria
 
-1. THE System SHALL rename `whereElementMatches` to `matching` in the MountInit interface in types.d.ts
+1. THE System SHALL rename `whereElementMatches` to `matching` in the MountConfig interface in types.d.ts
 2. THE System SHALL rename `whereElementMatches` to `matching` in the DismountReason type literal in types.d.ts
 3. WHEN the type definitions are updated, THE System SHALL maintain all other interface properties unchanged
 4. WHEN the type definitions are updated, THE System SHALL preserve the property type as `string`

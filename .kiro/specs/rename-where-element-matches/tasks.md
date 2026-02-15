@@ -7,7 +7,7 @@ This implementation plan breaks down the refactoring of `whereElementMatches` to
 ## Tasks
 
 - [x] 1. Update type definitions in types.d.ts
-  - Rename `whereElementMatches` property to `matching` in MountInit interface
+  - Rename `whereElementMatches` property to `matching` in MountConfig interface
   - Update `'where-element-matches-failed'` to `'with-matching-failed'` in DismountReason type
   - Verify the property type remains `string`
   - _Requirements: 1.1, 1.2, 1.3, 1.4_

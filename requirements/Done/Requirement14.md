@@ -2,7 +2,7 @@
 
 In our continued desire to:
 
-1.  Make MountInit as JSON serializable as possible, and 
+1.  Make MountConfig as JSON serializable as possible, and 
 2.  Encourage code reuse
 
 we provide another way to reuse mount observer logic.
@@ -13,10 +13,10 @@ We document this code in README.md
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
-   mount(mountedElement, mountInit, context){
+   mount(mountedElement, MountConfig, context){
       mountedElement.textContent = 'hello';
    }
-   dismount(mountedElement, mountInit){
+   dismount(mountedElement, MountConfig){
       mountedElement.textContent = 'bye';
    }
 }
@@ -36,10 +36,10 @@ What we can do instead is similar to defining a custom element:
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
-   mount(mountedElement, mountInit, context){
+   mount(mountedElement, MountConfig, context){
       mountedElement.textContent = 'hello';
    }
-   dismount(mountedElement, mountInit){
+   dismount(mountedElement, MountConfig){
       mountedElement.textContent = 'bye';
    }
 }
@@ -53,10 +53,10 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-So we are expanding the do property in MountInit to allow for a string value (or an array of string values), or a mix of string values and functions, which are run in sequence (fire and forget).   
+So we are expanding the do property in MountConfig to allow for a string value (or an array of string values), or a mix of string values and functions, which are run in sequence (fire and forget).   
 
 ```TypeScript
-export interface MountInit {
+export interface MountConfig {
     // ... other properties
     do?: string | DoCallback | (string | DoCallback)[];
 }

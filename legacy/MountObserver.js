@@ -6,7 +6,7 @@ export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
 export const mutationObserverLookup = new WeakMap();
 const refCount = new WeakMap();
 export class MountObserver extends EventTarget {
-    #mountInit;
+    #MountConfig;
     #options;
     //#rootMutObs: RootMutObs | undefined;
     #abortController;
@@ -28,7 +28,7 @@ export class MountObserver extends EventTarget {
         this.#isComplex = isComplex;
         if (whereElementIntersectsWith)
             throw 'NI'; //not implemented
-        this.#mountInit = init;
+        this.#MountConfig = init;
         this.#abortController = new AbortController();
         this.mountedElements = {
             weakSet: new WeakSet(),
@@ -48,7 +48,7 @@ export class MountObserver extends EventTarget {
     async #selector() {
         if (this.#calculatedSelector !== undefined)
             return this.#calculatedSelector;
-        const { on, whereAttr } = this.#mountInit;
+        const { on, whereAttr } = this.#MountConfig;
         const withoutAttrs = on || '*';
         if (whereAttr === undefined)
             return withoutAttrs;
@@ -104,7 +104,7 @@ export class MountObserver extends EventTarget {
         let templ = null;
         templ = refType === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
         if (templ === null) {
-            let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
+            let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#MountConfig.withTargetShadowRoot) || document);
             templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
             while (templ === null && rootToSearchOutwardFrom !== document) {
                 rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
@@ -176,7 +176,7 @@ export class MountObserver extends EventTarget {
     }
     async observe(within, options) {
         this.#options = options;
-        const init = this.#mountInit;
+        const init = this.#MountConfig;
         const { withMediaMatching } = init;
         if (withMediaMatching === undefined) {
             await this.#observe2(within);
@@ -207,7 +207,7 @@ export class MountObserver extends EventTarget {
         this.objNde = new WeakRef(within);
         const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
         if (!mutationObserverLookup.has(nodeToMonitor)) {
-            mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor, this.#mountInit));
+            mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor, this.#MountConfig));
             refCount.set(nodeToMonitor, 1);
         }
         else {
@@ -230,7 +230,7 @@ export class MountObserver extends EventTarget {
             const { mutationRecords } = e;
             const elsToInspect = [];
             //const elsToDisconnect: Array<Element> = [];
-            const doDisconnect = this.#mountInit.do?.disconnect;
+            const doDisconnect = this.#MountConfig.do?.disconnect;
             let attrChangeInfosMap;
             for (const mutationRecord of mutationRecords) {
                 const { addedNodes, type, removedNodes } = mutationRecord;
@@ -316,8 +316,8 @@ export class MountObserver extends EventTarget {
     async #mount(matching, initializing) {
         //first unmount non matching
         const alreadyMounted = await this.#filterAndDismount();
-        const mount = this.#mountInit.do?.mount;
-        const { import: imp } = this.#mountInit;
+        const mount = this.#MountConfig.do?.mount;
+        const { import: imp } = this.#MountConfig;
         const me = this.mountedElements;
         const options = this.#options;
         for (const match of matching) {
@@ -390,7 +390,7 @@ export class MountObserver extends EventTarget {
                 });
             }
         }
-        const { observedAttrsWhenMounted } = this.#mountInit;
+        const { observedAttrsWhenMounted } = this.#MountConfig;
         if (observedAttrsWhenMounted !== undefined) {
             for (const observedAttr of observedAttrsWhenMounted) {
                 const attrIsString = typeof observedAttr === 'string';
@@ -417,7 +417,7 @@ export class MountObserver extends EventTarget {
         return attrChangeInfos;
     }
     async #dismount(unmatching) {
-        const onDismount = this.#mountInit.do?.dismount;
+        const onDismount = this.#MountConfig.do?.dismount;
         const { DismountEvent } = await import('./Events.js');
         for (const unmatch of unmatching) {
             if (onDismount !== undefined) {
@@ -434,7 +434,7 @@ export class MountObserver extends EventTarget {
     }
     async #mountAll() {
         //TODO:  copilot created, check if needed
-        const { whereSatisfies, withInstance } = this.#mountInit;
+        const { whereSatisfies, withInstance } = this.#MountConfig;
         const match = await this.#selector();
         const els = Array.from(document.querySelectorAll(match));
         this.#filterAndMount(els, document.body, false, true);
@@ -443,7 +443,7 @@ export class MountObserver extends EventTarget {
         const returnSet = new Set();
         if (this.#mountedList !== undefined) {
             const previouslyMounted = this.#mountedList.map(x => x.deref());
-            const { whereSatisfies, withInstance } = this.#mountInit;
+            const { whereSatisfies, withInstance } = this.#MountConfig;
             const match = await this.#selector();
             const elsToUnMount = previouslyMounted.filter(x => {
                 if (x === undefined)
@@ -472,7 +472,7 @@ export class MountObserver extends EventTarget {
         return true;
     }
     async #filterAndMount(els, target, checkMatch, initializing) {
-        const { whereSatisfies, withInstance, assigner, outside } = this.#mountInit;
+        const { whereSatisfies, withInstance, assigner, outside } = this.#MountConfig;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if (checkMatch) {
@@ -497,7 +497,7 @@ export class MountObserver extends EventTarget {
         for (const elToMount of elsToMount) {
             if (elToMount.matches(inclTemplQry)) {
                 if (elToMount instanceof HTMLTemplateElement && elToMount.getAttribute('rel') === 'preload') {
-                    (await import('./preloadContent.js')).preloadContent(elToMount /*, this.#mountInit.withTargetShadowRoot*/);
+                    (await import('./preloadContent.js')).preloadContent(elToMount /*, this.#MountConfig.withTargetShadowRoot*/);
                 }
                 else {
                     await this.#compose(elToMount, 0);
@@ -522,7 +522,7 @@ export class MountObserver extends EventTarget {
                 el.removeAttribute('-id');
             }
         }
-        bindish(within, within, { assigner: this.#mountInit.assigner });
+        bindish(within, within, { assigner: this.#MountConfig.assigner });
         await this.composeFragment(within, 0);
         const match = await this.#selector();
         const els = Array.from(within.querySelectorAll(match));
@@ -531,7 +531,7 @@ export class MountObserver extends EventTarget {
 }
 //ToDO:  make external
 export function waitForIdleNodes(nodes, idleTimeout) {
-    const mountInit = {
+    const MountConfig = {
         idleTimeout
     };
     return new Promise((resolve) => {
@@ -543,7 +543,7 @@ export function waitForIdleNodes(nodes, idleTimeout) {
             }
             else {
                 const currentCount = refCount.get(node) || 0;
-                const newMutObs = new RootMutObs(node, mountInit);
+                const newMutObs = new RootMutObs(node, MountConfig);
                 mutationObserverLookup.set(node, newMutObs);
                 refCount.set(node, currentCount + 1);
                 mutObservers.push(newMutObs);

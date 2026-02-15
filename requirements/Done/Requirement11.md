@@ -4,7 +4,7 @@ Please note that I have modified the types.d.ts and the code to handle:
 
 ```JavaScript
 mountIni: {
-   do: function({localName}, {modules, observer, mountInit, rootNode}){...}
+   do: function({localName}, {modules, observer, MountConfig, rootNode}){...}
 ```
 
 rather than the deprecated:
@@ -18,11 +18,11 @@ Please update any outdated documentation / comments that assumes the deprecated 
 Also note that a previous version of this requirement talked about a private field #importedActions, but that is no longer relevant.
 
 
-In order to support pure 100% declarative syntax in mountInit, we need to be able to import the do function.  This is done as follows:
+In order to support pure 100% declarative syntax in MountConfig, we need to be able to import the do function.  This is done as follows:
 
 ```JavaScript
 //module myActions.js
-export function do({localName}, {modules, observer, mountInit, rootNode}){
+export function do({localName}, {modules, observer, MountConfig, rootNode}){
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
@@ -46,10 +46,10 @@ observer.observe(document);
 
 Here "2" refers to the imported module index ('./myActions.js' in this case).
 
-So MountInit needs a new property:
+So MountConfig needs a new property:
 
 ```TypeScript
-interface MountInit {
+interface MountConfig {
     // ... existing properties
     reference?: number | number[];
 }

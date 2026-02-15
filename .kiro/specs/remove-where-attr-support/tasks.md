@@ -67,7 +67,7 @@ This plan outlines the step-by-step removal of the whereAttr feature from the mo
     - Remove `MapEntry` interface
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
   
-  - [x] 3.2 Remove whereAttr properties from MountInit interface
+  - [x] 3.2 Remove whereAttr properties from MountConfig interface
     - Remove `whereAttr?: WhereAttr` property
     - Remove `map?: MapConfig` property
     - _Requirements: 1.1, 1.8_
@@ -120,4 +120,4 @@ This plan outlines the step-by-step removal of the whereAttr feature from the mo
 - This is a pure deletion task with no new functionality
 - Each step should be followed by compilation to catch any missed dependencies
 - The test suite should pass after all removals are complete
-- Manual testing should verify that other MountInit properties (withInstance, withMediaMatching, withScopePerimeter) still work correctly
+- Manual testing should verify that other MountConfig properties (withInstance, withMediaMatching, withScopePerimeter) still work correctly

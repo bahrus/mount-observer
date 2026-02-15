@@ -1,9 +1,9 @@
-import {mutationEventName, AddMutationEventListener, MountInit} from '../ts-refs/mount-observer/types';
+import {mutationEventName, AddMutationEventListener, MountConfig} from '../ts-refs/mount-observer/types';
 
 export class RootMutObs extends EventTarget{
     #idleTimeout: number; //TODO: make this configurable
     #idlePointer = 0;
-    constructor(rootNode: Node, options: MountInit ){
+    constructor(rootNode: Node, options: MountConfig ){
         super();
         this.#idleTimeout = options?.idleTimeout ?? 30;
         this.#mutationObserver = new MutationObserver(mutationRecords => {

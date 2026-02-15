@@ -21,7 +21,7 @@ test.describe('MountObserver - Reference Property', () => {
         expect(results).toContain('Has modules: true');
         expect(results).toContain('Has observer: true');
         expect(results).toContain('Has rootNode: true');
-        expect(results).toContain('Has mountInit: true');
+        expect(results).toContain('Has MountConfig: true');
     });
     
     test('should call multiple referenced do functions', async ({ page }) => {

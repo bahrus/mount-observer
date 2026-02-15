@@ -1,5 +1,7 @@
 // Core types for MountObserver v2 - Polyfill Supported Scenario I
 
+import {EnhancementConfig} from 'assign-gingerly/types.d.ts';
+
 export type Constructor = new (...args: any[]) => any;
 
 export type EventConstructor = {new(...args: any[]): Event};
@@ -15,7 +17,7 @@ export type DismountReason =
     | 'media-query-failed'
     | 'with-matching-failed';
 
-export interface MountInit {
+export interface MountConfig extends EnhancementConfig {
     matching: string;
     withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
@@ -45,7 +47,7 @@ export interface MountContext {
     modules: any[];
     observer: IMountObserver;
     rootNode: Node;
-    mountInit: MountInit
+    MountConfig: MountConfig
 }
 
 
@@ -79,14 +81,14 @@ export interface IMountObserver extends EventTarget {
 export interface IMountEvent extends Event {
     mountedElement: Element;
     modules: any[];
-    mountInit: MountInit;
+    MountConfig: MountConfig;
     mountContext: MountContext;
 }
 
 export interface IDismountEvent extends Event {
     mountedElement: Element;
     reason: DismountReason;
-    mountInit: MountInit;
+    MountConfig: MountConfig;
 }
 
 

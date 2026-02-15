@@ -1,7 +1,7 @@
-import { AttrChangeInfo, AttrParts, MountInit } from "../ts-refs/mount-observer/types";
+import { AttrChangeInfo, AttrParts, MountConfig } from "../ts-refs/mount-observer/types";
 
 export function readAttrs(
-    match: Element, mountInit: MountInit, branchIndexes?: Set<number>,
+    match: Element, MountConfig: MountConfig, branchIndexes?: Set<number>,
     fullListOfEnhancementAttrs?: string[],
     attrParts?: AttrParts[],
 ){
@@ -33,7 +33,7 @@ export function readAttrs(
             }
 
         }
-        const {observedAttrsWhenMounted} = mountInit;
+        const {observedAttrsWhenMounted} = MountConfig;
         if(observedAttrsWhenMounted !== undefined){
             for(const observedAttr of observedAttrsWhenMounted){
                 const attrIsString = typeof observedAttr === 'string';

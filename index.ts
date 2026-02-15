@@ -6,7 +6,7 @@ export { arr } from './arr.js';
 export { EvtRt } from './EvtRt.js';
 export { DefineCustomElementHandler } from './DefineCustomElementHandler.js';
 export type {
-    MountInit,
+    MountConfig,
     MountObserverOptions,
     IMountObserver,
     MountContext,

@@ -1,4 +1,4 @@
-import type { EventConfig, EventConstructor, MountInit } from './types.d.ts';
+import type { EventConfig, EventConstructor, MountConfig } from './types.d.ts';
 
 /**
  * Emits events from a mounted element based on the mountedElemEmits configuration.
@@ -6,21 +6,21 @@ import type { EventConfig, EventConstructor, MountInit } from './types.d.ts';
  */
 export async function emitMountedElementEvents(
     element: Element,
-    mountInit: MountInit,
+    MountConfig: MountConfig,
     processedEventsForElement: WeakMap<Element, Set<string>>
 ): Promise<void> {
-    const configs = Array.isArray(mountInit.mountedElemEmits) 
-        ? mountInit.mountedElemEmits 
-        : [mountInit.mountedElemEmits!];
+    const configs = Array.isArray(MountConfig.mountedElemEmits) 
+        ? MountConfig.mountedElemEmits 
+        : [MountConfig.mountedElemEmits!];
 
     for (const config of configs) {
-        await emitSingleEvent(element, mountInit, config, processedEventsForElement);
+        await emitSingleEvent(element, MountConfig, config, processedEventsForElement);
     }
 }
 
 async function emitSingleEvent(
     element: Element,
-    mountInit: MountInit,
+    MountConfig: MountConfig,
     config: EventConfig,
     processedEventsForElement: WeakMap<Element, Set<string>>
 ): Promise<void> {
@@ -46,7 +46,7 @@ async function emitSingleEvent(
 
     // Process args with magic string substitution
     const processedArgs = config.args !== undefined 
-        ? processMagicStrings(config.args, element, mountInit)
+        ? processMagicStrings(config.args, element, MountConfig)
         : undefined;
 
     // Construct the event
@@ -74,7 +74,7 @@ async function emitSingleEvent(
     // Apply eventProps if specified
     if (config.eventProps) {
         const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-        const processedProps = processMagicStrings(config.eventProps, element, mountInit);
+        const processedProps = processMagicStrings(config.eventProps, element, MountConfig);
         assignGingerly(event, processedProps);
     }
 
@@ -99,25 +99,25 @@ function getEventId(config: EventConfig): string {
     return `${eventName}:${argsStr}`;
 }
 
-function processMagicStrings(value: any, element: Element, mountInit: MountInit): any {
+function processMagicStrings(value: any, element: Element, MountConfig: MountConfig): any {
     if (typeof value === 'string') {
         if (value === '{{mountedElement}}') {
             return element;
         }
-        if (value === '{{mountInit}}') {
-            return mountInit;
+        if (value === '{{MountConfig}}') {
+            return MountConfig;
         }
         return value;
     }
 
     if (Array.isArray(value)) {
-        return value.map(item => processMagicStrings(item, element, mountInit));
+        return value.map(item => processMagicStrings(item, element, MountConfig));
     }
 
     if (value && typeof value === 'object') {
         const processed: any = {};
         for (const [key, val] of Object.entries(value)) {
-            processed[key] = processMagicStrings(val, element, mountInit);
+            processed[key] = processMagicStrings(val, element, MountConfig);
         }
         return processed;
     }

@@ -6,7 +6,7 @@ const doFunction = function(element, context) {
         window.testResults.push(`Has modules: ${Array.isArray(context.modules)}`);
         window.testResults.push(`Has observer: ${context.observer !== undefined}`);
         window.testResults.push(`Has rootNode: ${context.rootNode !== undefined}`);
-        window.testResults.push(`Has mountInit: ${context.mountInit !== undefined}`);
+        window.testResults.push(`Has MountConfig: ${context.MountConfig !== undefined}`);
     }
     if (window.results) {
         window.results.referencedCalled = true;

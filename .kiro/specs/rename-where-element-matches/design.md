@@ -16,7 +16,7 @@ The refactoring is purely a naming change with no behavioral modifications.
 ### Affected Components
 
 1. **Type System** (types.d.ts)
-   - MountInit interface property definition
+   - MountConfig interface property definition
    - DismountReason type literal value
 
 2. **Core Implementation** (MountObserver.ts)
@@ -49,7 +49,7 @@ This is a **global search-and-replace refactoring** with the following character
 **Changes**:
 ```typescript
 // Before
-export interface MountInit {
+export interface MountConfig {
     whereElementMatches: string;
     // ...
 }
@@ -59,7 +59,7 @@ export type DismountReason =
     | 'where-element-matches-failed';
 
 // After
-export interface MountInit {
+export interface MountConfig {
     matching: string;
     // ...
 }
@@ -117,7 +117,7 @@ No data model changes - this is a property name refactoring only.
 
 ### Acceptance Criteria Testing Prework
 
-1.1 THE System SHALL rename `whereElementMatches` to `matching` in the MountInit interface in types.d.ts
+1.1 THE System SHALL rename `whereElementMatches` to `matching` in the MountConfig interface in types.d.ts
   Thoughts: This is a specific file edit that can be verified by checking the file content after the change. This is an example of a specific change.
   Testable: yes - example
 
@@ -260,7 +260,7 @@ If any references to `whereElementMatches` remain:
 
 2. **Type Definition Check**
    - Open types.d.ts
-   - Verify MountInit interface has `matching: string`
+   - Verify MountConfig interface has `matching: string`
    - Verify DismountReason has `'with-matching-failed'`
 
 3. **Compilation Check**

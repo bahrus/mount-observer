@@ -1,5 +1,5 @@
 // Dynamic import loading utilities
-// Only loaded when MountInit.import is specified
+// Only loaded when MountConfig.import is specified
 import { arr } from './arr.js';
 export async function loadImports(imports) {
     const importArray = arr(imports);

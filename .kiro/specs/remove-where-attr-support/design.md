@@ -37,7 +37,7 @@ The removal strategy is to work from the bottom up: remove utility modules first
 - `MapConfig` interface - Maps attribute coordinates to metadata
 - `MapEntry` interface - Metadata for a single attribute coordinate
 
-**Properties to Remove from MountInit**:
+**Properties to Remove from MountConfig**:
 - `whereAttr?: WhereAttr` - The whereAttr configuration
 - `map?: MapConfig` - Metadata mapping for attributes
 
@@ -199,7 +199,7 @@ Since this is a code removal task, testing focuses on verification rather than p
 
 2. **Type Definition Verification**:
    - Verify types.d.ts no longer contains: WhereAttr, BranchValue, AttrChange, IAttrChangeEvent, MapConfig, MapEntry
-   - Verify MountInit interface no longer has whereAttr or map properties
+   - Verify MountConfig interface no longer has whereAttr or map properties
 
 3. **Event Class Verification**:
    - Verify Events.ts no longer exports AttrChangeEvent
@@ -238,7 +238,7 @@ Since this is a code removal task, testing focuses on verification rather than p
 
 After removal, manually verify:
 - The library still observes and mounts elements based on CSS selectors
-- Other MountInit properties (withInstance, withMediaMatching, withScopePerimeter) still work
+- Other MountConfig properties (withInstance, withMediaMatching, withScopePerimeter) still work
 - Mount and dismount events still fire correctly
 - The library compiles and runs without errors
 

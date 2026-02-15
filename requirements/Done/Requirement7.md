@@ -30,10 +30,10 @@ const observer = new MountObserver({
 observer.observe(oContainerNode);
 ```
 
-The MountInit interface should amended:
+The MountConfig interface should amended:
 
 ```TypeScript
-interface MountInit {
+interface MountConfig {
     withScopePerimeter?: string
 }
 ```

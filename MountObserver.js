@@ -303,7 +303,7 @@ export class MountObserver extends EventTarget {
             modules: this.#modules,
             observer: this,
             rootNode,
-            mountInit: this.#init,
+            MountConfig: this.#init,
         };
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
@@ -426,7 +426,7 @@ export class MountObserver extends EventTarget {
             modules: this.#modules,
             observer: this,
             rootNode,
-            mountInit: this.#init,
+            MountConfig: this.#init,
         };
         // Dispatch dismount event
         const dismountEvent = new DismountEvent(element, 'with-matching-failed', this.#init);

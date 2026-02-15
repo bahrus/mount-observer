@@ -1,12 +1,12 @@
 # Specifying withInstance remotely
 
-In addition to do actions, to be able to make mountInit 100% declarative JSON serializable, we need to accommodate the withInstance check also.
+In addition to do actions, to be able to make MountConfig 100% declarative JSON serializable, we need to accommodate the withInstance check also.
 
 Following the same exact approach as [Requirement11](Requirement11.md), support moving the withInstance check to the imported reference:
 
 ```JavaScript
 //module mySettings.js
-const doFunction =  function({localName}, {modules, observer, mountInit, rootNode}){
+const doFunction =  function({localName}, {modules, observer, MountConfig, rootNode}){
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }

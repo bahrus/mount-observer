@@ -1,5 +1,5 @@
 import {
-    MountInit,
+    MountConfig,
     MountObserverOptions,
     IMountObserver,
     MountContext,
@@ -34,7 +34,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#handlerRegistry.set(name, handler);
     }
     
-    #init: MountInit;
+    #init: MountConfig;
     #options: MountObserverOptions;
     #abortController: AbortController;
     #modules: any[] = [];
@@ -57,7 +57,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
 
-    constructor(init: MountInit, options: MountObserverOptions = {}) {
+    constructor(init: MountConfig, options: MountObserverOptions = {}) {
         super();
         this.#init = init;
         this.#options = options;
@@ -396,7 +396,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             modules: this.#modules,
             observer: this,
             rootNode,
-            mountInit: this.#init,
+            MountConfig: this.#init,
         };
 
         // Apply assignGingerly if specified
@@ -538,7 +538,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             modules: this.#modules,
             observer: this,
             rootNode,
-            mountInit: this.#init,
+            MountConfig: this.#init,
         };
 
 

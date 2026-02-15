@@ -73,7 +73,7 @@ Do NOT use `tsc` with individual file arguments or custom flags. The `tsconfig.j
 **Pattern**:
 ```typescript
 // types.d.ts - Type definitions only
-export interface MountInit {
+export interface MountConfig {
     whereElementMatches: string;
 }
 export type mountEventName = 'mount';
@@ -149,7 +149,7 @@ observer.addEventListener('mount', (e: MountEvent) => {
 ```typescript
 // Instead of including all import logic in MountObserver
 async #loadImports(): Promise<void> {
-    // Dynamically load only when MountInit.import is specified
+    // Dynamically load only when MountConfig.import is specified
     const { loadImports } = await import('./loadImports.js');
     this.#modules = await loadImports(this.#init.import);
 }

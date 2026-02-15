@@ -47,7 +47,7 @@
         // Test 1: Basic string reference
         console.log('Test 1: Basic string reference');
         class Handler1 extends EvtRt {
-            mount(element, mountInit, context) {
+            mount(element, MountConfig, context) {
                 results.test1.handlerCalled = true;
                 element.textContent = 'Handler1 mounted';
                 results.test1.elementText = element.textContent;
@@ -72,7 +72,7 @@
         // Test 2: Array with mixed types (strings and functions)
         console.log('Test 2: Array with mixed types');
         class Handler2 extends EvtRt {
-            mount(element, mountInit, context) {
+            mount(element, MountConfig, context) {
                 results.test2.handler1Called = true;
                 results.test2.callOrder.push('handler1');
                 console.log('Handler2.mount called (handler1)');
@@ -80,7 +80,7 @@
         }
         
         class Handler3 extends EvtRt {
-            mount(element, mountInit, context) {
+            mount(element, MountConfig, context) {
                 results.test2.handler2Called = true;
                 results.test2.callOrder.push('handler2');
                 console.log('Handler3.mount called (handler2)');
@@ -138,7 +138,7 @@
         // Test 5: Interaction with reference property
         console.log('Test 5: Interaction with reference property');
         class Handler4 extends EvtRt {
-            mount(element, mountInit, context) {
+            mount(element, MountConfig, context) {
                 results.test5.handler1Called = true;
                 results.test5.callOrder.push('registered1');
                 console.log('Handler4.mount called (registered1)');
@@ -146,7 +146,7 @@
         }
         
         class Handler5 extends EvtRt {
-            mount(element, mountInit, context) {
+            mount(element, MountConfig, context) {
                 results.test5.handler2Called = true;
                 results.test5.callOrder.push('registered2');
                 console.log('Handler5.mount called (registered2)');

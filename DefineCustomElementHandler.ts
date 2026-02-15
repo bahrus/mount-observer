@@ -1,8 +1,8 @@
 import { EvtRt } from './EvtRt.js';
-import { MountInit, MountContext } from './types.js';
+import { MountConfig, MountContext } from './types.js';
 
 export class DefineCustomElementHandler extends EvtRt {
-    mount(mountedElement: Element, mountInit: MountInit, context: MountContext): void {
+    mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): void {
         // Check if modules are specified
         if (!context.modules || context.modules.length === 0) {
             throw new Error('Must specify an ES Module');

@@ -4,7 +4,7 @@ As soon as an element mounts due to attributes as described in Requirement3.md, 
 
 The event should be added to Events.ts
 
-The event should pass the matching object found in MountInit's "map config setting.
+The event should pass the matching object found in MountConfig's "map config setting.
 
 So for example:
 
@@ -58,14 +58,14 @@ The event should include an array of matching attributes that were discovered / 
 
 1.  The string / null value of the attribute.
 2.  The Attribute Node object (null when an attribute goes away).
-3.  The object with corresponding "coordinates" contained within the map config setting of MountInit.
+3.  The object with corresponding "coordinates" contained within the map config setting of MountConfig.
 4.  The full name of the attribute without any manipulation
 5.  The coordinates (e.g. '2.2.1').  Include the trailing '.0' if specified (even though not needed).
 6.  The element whose attributes are changing.
 
 These events should fire immediately on initial mount, after the mount / dismount / etc. events if any one or more of the attributes being observed is present.  It should continue to fire after that when of the original list of values change, and also when any of the full list of attributes being watched for are added.  Or an attribute was present, and then removed.  The event should only fire from the mountObserver instance, not from the element itself.
 
-The mutation observer currently in MountObserver needs to monitor for attributes: true, whether or not map is present.  The scope of attributes to observe is the entire list of attribute combinations specified by MountInit, not just the initial ones discovered.
+The mutation observer currently in MountObserver needs to monitor for attributes: true, whether or not map is present.  The scope of attributes to observe is the entire list of attribute combinations specified by MountConfig, not just the initial ones discovered.
 
 Event batching should occur so that if multiple attributes change in the same mutation, one single event should fire with the array of attribute changes.
 

@@ -104,7 +104,7 @@ To specify the equivalent of what the alternative proposal linked to above would
 const observer = new MountObserver({
    select:'my-element', //not supported by this polyfill
    import: './my-element.js',
-   do: ({localName}, {modules, observer, mountInit, rootNode}) => {
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
       }
@@ -145,7 +145,7 @@ const observer = new MountObserver({
    //supported by this polyfill
    matching:'my-element',
    import: './my-element.js',
-   do: ({localName}, {modules, observer, mountInit, rootNode}) => {
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
       }
@@ -173,7 +173,7 @@ const observer = new MountObserver({
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
    ],
-   do: ({localName}, {modules, observer, mountInit, rootNode}) => {
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[1].MyElement);
       }
@@ -224,11 +224,11 @@ So what this does is only check for the presence of an element with tag name "my
 
 
 
-In order to support pure 100% declarative syntax in the passed in mountInit argument, we need to be able to import the do function.  This is done as follows:
+In order to support pure 100% declarative syntax in the passed in MountConfig argument, we need to be able to import the do function.  This is done as follows:
 
 ```JavaScript
 //module myActions.js
-const  doFunction = function({localName}, {modules, observer, mountInit, rootNode}){
+const  doFunction = function({localName}, {modules, observer, MountConfig, rootNode}){
    if(!customElements.get(localName)) {
       // Find the first exported class constructor from the module
       const ElementClass = Object.values(modules[0]).find(exp => 
@@ -304,7 +304,7 @@ Similar to the `do` function, the `withInstance` check can also be moved to impo
 
 ```javascript
 // module mySettings.js
-const doFunction = function({localName}, {modules, observer, mountInit, rootNode}) {
+const doFunction = function({localName}, {modules, observer, MountConfig, rootNode}) {
    if(!customElements.get(localName)) {
       customElements.define(localName, modules[1].MyElement);
    }
@@ -375,7 +375,7 @@ export { doFunction as do };
 
 To keep this proposal / polyfill of reasonable size, mount observer script elements has its own [repo / sub-proposal](https://github.com/bahrus/mount-observer-script-element).  There's much more to it, but it is awaiting implementation of scoped custom element registry before finalizing the requirements and (re)-implementing.
 
-But I think it's important to think about this way of making the mount observer declarative, as it provides one significant reason why we place so much emphasis on making sure that the mount observer settings (mountInit) is as JSON serializable as possible.
+But I think it's important to think about this way of making the mount observer declarative, as it provides one significant reason why we place so much emphasis on making sure that the mount observer settings (MountConfig) is as JSON serializable as possible.
 
 
 ## Binding from a distance
@@ -386,10 +386,10 @@ It is important to note that "matching" is a css query with no restrictions.  So
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
-   mount(mountedElement, mountInit, context){
+   mount(mountedElement, MountConfig, context){
       mountedElement.textContent = 'hello';
    }
-   dismount(mountedElement, mountInit){
+   dismount(mountedElement, MountConfig){
       mountedElement.textContent = 'goodbye';
    }
 }
@@ -415,16 +415,16 @@ This allows developers to create "stylesheet" like capabilities.
 
 ## Registering reusable handlers with MountObserver.define
 
-To make MountInit configurations more JSON-serializable and encourage code reuse, you can register handler classes with string names and reference them by name:
+To make MountConfig configurations more JSON-serializable and encourage code reuse, you can register handler classes with string names and reference them by name:
 
 ```JavaScript
 import {EvtRt} from 'mount-observer/EvtRt.js';
 
 class MyHandler extends EvtRt {
-   mount(mountedElement, mountInit, context){
+   mount(mountedElement, MountConfig, context){
       mountedElement.textContent = 'hello';
    }
-   dismount(mountedElement, mountInit){
+   dismount(mountedElement, MountConfig){
       mountedElement.textContent = 'bye';
    }
 }
@@ -949,7 +949,7 @@ mountedElemEmits: {
 Use magic strings to inject dynamic values into event data:
 
 - `{{mountedElement}}` - The element that just mounted
-- `{{mountInit}}` - The MountInit configuration object
+- `{{MountConfig}}` - The MountConfig configuration object
 
 ```JavaScript
 const observer = new MountObserver({
@@ -959,7 +959,7 @@ const observer = new MountObserver({
       args: ['element-mounted', { 
          detail: { 
             element: '{{mountedElement}}',
-            config: '{{mountInit}}'
+            config: '{{MountConfig}}'
          }
       }]
    }

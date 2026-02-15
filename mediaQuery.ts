@@ -1,9 +1,9 @@
 // Media query handling for MountObserver
-import type { MountInit, MountContext, WeakDual } from './types.js';
+import type { MountConfig, MountContext, WeakDual } from './types.js';
 import { MediaMatchEvent, MediaUnmatchEvent, DismountEvent } from './Events.js';
 
 export function setupMediaQuery(
-    init: MountInit,
+    init: MountConfig,
     rootNodeRef: WeakRef<Node>,
     mountedElements: WeakDual<Element>,
     modules: any[],
@@ -70,7 +70,7 @@ export function setupMediaQuery(
             modules,
             observer: observer as any,
             rootNode,
-            mountInit: init
+            MountConfig: init
         };
         
         // Get all mounted elements from the WeakDual setWeak

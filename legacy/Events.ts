@@ -1,4 +1,4 @@
-import {MountInit, IMountObserver, AddMutationEventListener, 
+import {MountConfig, IMountObserver, AddMutationEventListener, 
     MutationEvent, dismountEventName, mountEventName, IMountEvent, IDismountEvent,
     disconnectedEventName, IDisconnectEvent, IAttrChangeEvent, attrChangeEventName, AttrChangeInfo, loadEventName, ILoadEvent,
     AttrParts,

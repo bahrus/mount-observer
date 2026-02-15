@@ -34,21 +34,21 @@
         
         // Custom handler that extends EvtRt
         class MyHandler extends EvtRt {
-            mount(mountedElement, mountInit, context) {
+            mount(mountedElement, MountConfig, context) {
                 console.log('MyHandler.mount called', mountedElement);
                 results.mountCalled = true;
                 mountedElement.textContent = 'hello';
                 results.mountText = mountedElement.textContent;
             }
             
-            dismount(mountedElement, mountInit) {
+            dismount(mountedElement, MountConfig) {
                 console.log('MyHandler.dismount called', mountedElement);
                 results.dismountCalled = true;
                 mountedElement.textContent = 'bye';
                 results.dismountText = mountedElement.textContent;
             }
             
-            disconnect(mountedElement, mountInit) {
+            disconnect(mountedElement, MountConfig) {
                 console.log('MyHandler.disconnect called', mountedElement);
                 results.disconnectCalled = true;
             }

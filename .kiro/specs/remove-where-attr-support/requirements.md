@@ -9,10 +9,10 @@ The removal affects type definitions, source code, utility modules, event classe
 ## Glossary
 
 - **MountObserver**: The main class that observes DOM elements and triggers mount/dismount lifecycle events
-- **whereAttr**: A configuration property in MountInit that enables attribute-based element matching
+- **whereAttr**: A configuration property in MountConfig that enables attribute-based element matching
 - **AttrChange**: A type representing a change to an attribute on a mounted element
 - **AttrChangeEvent**: An event class dispatched when attributes matching whereAttr configuration change
-- **MountInit**: The configuration object passed to MountObserver constructor
+- **MountConfig**: The configuration object passed to MountObserver constructor
 - **Utility_Module**: A TypeScript/JavaScript module providing helper functions (e.g., attrChanges.ts, attrCoordinates.ts, whereAttr.ts)
 - **Type_Definition**: TypeScript interface or type alias defined in types.d.ts
 - **Test_Spec**: A Playwright test file with .spec.mjs extension
@@ -25,14 +25,14 @@ The removal affects type definitions, source code, utility modules, event classe
 
 #### Acceptance Criteria
 
-1. THE System SHALL remove the `whereAttr` property from the `MountInit` interface
+1. THE System SHALL remove the `whereAttr` property from the `MountConfig` interface
 2. THE System SHALL remove the `WhereAttr` interface definition
 3. THE System SHALL remove the `BranchValue` type definition
 4. THE System SHALL remove the `AttrChange` interface definition
 5. THE System SHALL remove the `IAttrChangeEvent` interface definition
 6. THE System SHALL remove the `MapConfig` interface definition
 7. THE System SHALL remove the `MapEntry` interface definition
-8. THE System SHALL remove the `map` property from the `MountInit` interface
+8. THE System SHALL remove the `map` property from the `MountConfig` interface
 
 ### Requirement 2: Remove Event Classes
 

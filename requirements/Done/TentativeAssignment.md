@@ -70,10 +70,10 @@ const observer3 = new MountObserver({
 
 ### 1. Type Definitions (types.d.ts)
 
-Add `stageOnMount` property to `MountInit` interface:
+Add `stageOnMount` property to `MountConfig` interface:
 
 ```typescript
-export interface MountInit {
+export interface MountConfig {
     withMatching: string;
     withInstance?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
@@ -103,7 +103,7 @@ export interface MountInit {
 #### Constructor Changes
 
 ```typescript
-constructor(init: MountInit, options: MountObserverOptions = {}) {
+constructor(init: MountConfig, options: MountObserverOptions = {}) {
     super();
     this.#init = init;
     this.#options = options;

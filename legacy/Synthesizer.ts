@@ -1,4 +1,4 @@
-import {MountInit, MOSE} from '../ts-refs/mount-observer/types';
+import {MountConfig, MOSE} from '../ts-refs/mount-observer/types';
 import {MountObserver} from './MountObserver.js';
 
 export abstract class Synthesizer extends HTMLElement{
@@ -54,7 +54,7 @@ export abstract class Synthesizer extends HTMLElement{
         if(!this.checkIfAllowed(mose)) return;
         mose.dispatchEvent(new LoadEvent());
         const {init, do: d} = mose;
-        const mi: MountInit = {
+        const mi: MountConfig = {
             do: d,
             ...init
         };

@@ -1,6 +1,6 @@
 # withMediaMatching
 
-We need to support another AND condition, "withMediaMatching" in the MountInit interface defined in types.d.ts.
+We need to support another AND condition, "withMediaMatching" in the MountConfig interface defined in types.d.ts.
 
 The value can either be a single string, or a MediaQueryList object, and is optional.  If it is a MediaQueryList, use it as is.  If it is a string, call window.matchMedia(string) to create the MediaQueryList.
 
@@ -31,9 +31,9 @@ The example shows 'where-element-matches-failed' as another reason. Should we al
 'where-attr-failed'?  No -- attributes going away shouldn't ever cause a dismount event.
 'where-instanceof-failed'? No -- elements shouldn't lose instanceOf status
 
-Let's add another boolean property to MountInit, "getPlayByPlay" which if true, will cause the mountObserver instance to issue  events with names 'mediamatch' and 'mediaunmatch' according to the scenario.
+Let's add another boolean property to MountConfig, "getPlayByPlay" which if true, will cause the mountObserver instance to issue  events with names 'mediamatch' and 'mediaunmatch' according to the scenario.
 
-All the events, including these new ones, including MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent, should have a property added,  "mountInit: MountInit" that passes the full MountInit object.
+All the events, including these new ones, including MountEvent, DismountEvent, DisconnectEvent, LoadEvent, AttrChangeEvent, should have a property added,  "MountConfig: MountConfig" that passes the full MountConfig object.
 
 Let's not cache the mediaQuery observers across mount observers for now.  Make sure that the mediaQuery observer is aborted when the mountObserver is disconnected. 
 
@@ -42,7 +42,7 @@ If an element was mounted when media matched, then media stops matching, it shou
 
 Should we create MediaMatchEvent and MediaUnmatchEvent classes in Events.ts?  Yes
 
-What properties should these events have besides mountInit?  None for now
+What properties should these events have besides MountConfig?  None for now
 
 Shared mutation observer interaction:
 

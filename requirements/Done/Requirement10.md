@@ -12,7 +12,7 @@ interface EventConfig {
 
 
 
-interface MountInit {
+interface MountConfig {
     ...
     mountedElemEmits: EventConfig | EventConfig[]
 }
@@ -37,7 +37,7 @@ throw new Error(`Event constructor "${eventName}" not found in globalThis`);
 The most common scenario would be:
 
 ```JavaScript
-const mountInit = {
+const MountConfig = {
     mountedElemEmits: {
         event: 'Event',
         args: 'my-event-name'
@@ -48,7 +48,7 @@ const mountInit = {
 which is equivalent to:
 
 ```JavaScript
-const mountInit = {
+const MountConfig = {
     mountedElemEmits: {
         event: Event,
         args: 'my-event-name',
@@ -62,7 +62,7 @@ which would do:
 oMountedElement.dispatchEvent(new Event('my-event-name'));
 ```
 
-The reason specifying the event via a string is important is that an important goal of MountInit is that it supports JSON as much as possible.
+The reason specifying the event via a string is important is that an important goal of MountConfig is that it supports JSON as much as possible.
 
 If args is a single value, treat is as the first argument.
 
@@ -71,7 +71,7 @@ If args is a single value, treat is as the first argument.
 You can dispatch multiple events by providing an array:
 
 ```javascript
-const mountInit = {
+const MountConfig = {
     mountedElemEmits: [
         { event: 'Event', args: 'ready' },
         { event: 'Event', args: 'initialized'}
@@ -86,7 +86,7 @@ Events are dispatched in array order, sequentially.
 Along the lines of supporting JSON, there are two special strings that need to be treated specially if they appear anywhere in the list of args, or the RHS of eventProps:
 
 ```JavaScript
-'{{mountInit}}'
+'{{MountConfig}}'
 ```
 
 and 
@@ -106,7 +106,7 @@ would also get substituted.
 Here's another example:
 
 ```JavaScript
-const mountInit = {
+const MountConfig = {
     mountedElemEmits: {
         event: 'CommandEvent',
         args: ['command', {

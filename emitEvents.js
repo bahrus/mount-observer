@@ -2,15 +2,15 @@
  * Emits events from a mounted element based on the mountedElemEmits configuration.
  * This module is dynamically loaded only when mountedElemEmits is configured.
  */
-export async function emitMountedElementEvents(element, mountInit, processedEventsForElement) {
-    const configs = Array.isArray(mountInit.mountedElemEmits)
-        ? mountInit.mountedElemEmits
-        : [mountInit.mountedElemEmits];
+export async function emitMountedElementEvents(element, MountConfig, processedEventsForElement) {
+    const configs = Array.isArray(MountConfig.mountedElemEmits)
+        ? MountConfig.mountedElemEmits
+        : [MountConfig.mountedElemEmits];
     for (const config of configs) {
-        await emitSingleEvent(element, mountInit, config, processedEventsForElement);
+        await emitSingleEvent(element, MountConfig, config, processedEventsForElement);
     }
 }
-async function emitSingleEvent(element, mountInit, config, processedEventsForElement) {
+async function emitSingleEvent(element, MountConfig, config, processedEventsForElement) {
     // Check if this event should only fire once per element
     if (config.oncePerMountedElement) {
         const eventId = getEventId(config);
@@ -28,7 +28,7 @@ async function emitSingleEvent(element, mountInit, config, processedEventsForEle
     const EventCtor = resolveEventConstructor(config.event);
     // Process args with magic string substitution
     const processedArgs = config.args !== undefined
-        ? processMagicStrings(config.args, element, mountInit)
+        ? processMagicStrings(config.args, element, MountConfig)
         : undefined;
     // Construct the event
     let event;
@@ -58,7 +58,7 @@ async function emitSingleEvent(element, mountInit, config, processedEventsForEle
     // Apply eventProps if specified
     if (config.eventProps) {
         const { assignGingerly } = await import('assign-gingerly/assignGingerly.js');
-        const processedProps = processMagicStrings(config.eventProps, element, mountInit);
+        const processedProps = processMagicStrings(config.eventProps, element, MountConfig);
         assignGingerly(event, processedProps);
     }
     // Dispatch the event from the mounted element
@@ -79,23 +79,23 @@ function getEventId(config) {
     const argsStr = JSON.stringify(config.args || '');
     return `${eventName}:${argsStr}`;
 }
-function processMagicStrings(value, element, mountInit) {
+function processMagicStrings(value, element, MountConfig) {
     if (typeof value === 'string') {
         if (value === '{{mountedElement}}') {
             return element;
         }
-        if (value === '{{mountInit}}') {
-            return mountInit;
+        if (value === '{{MountConfig}}') {
+            return MountConfig;
         }
         return value;
     }
     if (Array.isArray(value)) {
-        return value.map(item => processMagicStrings(item, element, mountInit));
+        return value.map(item => processMagicStrings(item, element, MountConfig));
     }
     if (value && typeof value === 'object') {
         const processed = {};
         for (const [key, val] of Object.entries(value)) {
-            processed[key] = processMagicStrings(val, element, mountInit);
+            processed[key] = processMagicStrings(val, element, MountConfig);
         }
         return processed;
     }

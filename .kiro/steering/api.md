@@ -4,13 +4,13 @@ inclusion: always
 
 # MountObserver API Documentation
 
-## MountInit Configuration
+## MountConfig Configuration
 
-The `MountInit` object configures what elements the MountObserver should observe and act upon.
+The `MountConfig` object configures what elements the MountObserver should observe and act upon.
 
 ### Condition Logic
 
-**AND Conditions**: All `where*` properties in the `MountInit` object form an AND condition. An element must satisfy ALL specified `where*` conditions to mount.
+**AND Conditions**: All `where*` properties in the `MountConfig` object form an AND condition. An element must satisfy ALL specified `where*` conditions to mount.
 
 For example:
 ```javascript

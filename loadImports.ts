@@ -1,5 +1,5 @@
 // Dynamic import loading utilities
-// Only loaded when MountInit.import is specified
+// Only loaded when MountConfig.import is specified
 
 import { ImportSpec } from './types.js';
 import { arr } from './arr.js';
