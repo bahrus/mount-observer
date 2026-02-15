@@ -1,16 +1,16 @@
-# whereMediaMatches
+# withMediaMatching
 
-We need to support another AND condition, "whereMediaMatches" in the MountInit interface defined in types.d.ts.
+We need to support another AND condition, "withMediaMatching" in the MountInit interface defined in types.d.ts.
 
 The value can either be a single string, or a MediaQueryList object, and is optional.  If it is a MediaQueryList, use it as is.  If it is a string, call window.matchMedia(string) to create the MediaQueryList.
 
-Essentially, this check should bracket all other requests.  Currently the MountObserver immediately checks all the elements within the passed in Node, before the mutation observer fires.  This shouldn't happen if the whereMediaMatches isn't true.  Essentially, the mountObserver needs to "go to sleep", turning off the mutation observer then wake up when the test passes, including catching up by doing the same checks mentioned above during startup.  Be careful, though, the mutation observer can only be aborted rather than ignored if it isn't shared with other MountObserver instances.
+Essentially, this check should bracket all other requests.  Currently the MountObserver immediately checks all the elements within the passed in Node, before the mutation observer fires.  This shouldn't happen if the withMediaMatching isn't true.  Essentially, the mountObserver needs to "go to sleep", turning off the mutation observer then wake up when the test passes, including catching up by doing the same checks mentioned above during startup.  Be careful, though, the mutation observer can only be aborted rather than ignored if it isn't shared with other MountObserver instances.
 
 When media doesn't match and the observer IS shared, should we:
 Keep the shared observer running but just ignore mutations in this instance? Yes
 Use a flag like #mediaMatches to skip processing in the mutation callback? Yes
 
-When the whereMediaMatches turns false, all previously mounted elements that are still in mounted states should be considered dismounted, and should dispatch the DismountEvent event.  The DismountEvent should provide a reason property in the event, and indicate that the cause of the dismount was due to the media query failing.
+When the withMediaMatching turns false, all previously mounted elements that are still in mounted states should be considered dismounted, and should dispatch the DismountEvent event.  The DismountEvent should provide a reason property in the event, and indicate that the cause of the dismount was due to the media query failing.
 
 The reason property will be an OR condition of strings like:
 

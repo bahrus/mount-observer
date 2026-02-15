@@ -1,13 +1,13 @@
 import { MediaMatchEvent, MediaUnmatchEvent, DismountEvent } from './Events.js';
 export function setupMediaQuery(init, rootNodeRef, mountedElements, modules, observer, processNode) {
-    const { whereMediaMatches } = init;
+    const { withMediaMatching } = init;
     // Create or use MediaQueryList
     let mediaQueryList;
-    if (typeof whereMediaMatches === 'string') {
-        mediaQueryList = window.matchMedia(whereMediaMatches);
+    if (typeof withMediaMatching === 'string') {
+        mediaQueryList = window.matchMedia(withMediaMatching);
     }
     else {
-        mediaQueryList = whereMediaMatches;
+        mediaQueryList = withMediaMatching;
     }
     // Track current state
     let mediaMatches = mediaQueryList.matches;

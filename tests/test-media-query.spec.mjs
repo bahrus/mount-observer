@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Media Query Tests', () => {
-    test('should respect whereMediaMatches condition', async ({ page }) => {
+    test('should respect withMediaMatching condition', async ({ page }) => {
         await page.goto('/tests/test-media-query.html');
         
         // Wait for test to complete

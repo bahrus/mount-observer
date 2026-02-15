@@ -31,7 +31,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     constructor(init: MountInit){
         super();
-        const {on, whereElementIntersectsWith, whereMediaMatches} = init;
+        const {on, whereElementIntersectsWith, withMediaMatching} = init;
         let isComplex = false;
         //TODO:  study this problem further.  Starting to think this is basically not polyfillable
         if(on !== undefined){
@@ -201,12 +201,12 @@ export class MountObserver extends EventTarget implements IMountObserver{
     async observe(within: Node, options?: MountObserverOptions){
         this.#options = options;
         const init = this.#mountInit;
-        const {whereMediaMatches} = init;
-        if(whereMediaMatches === undefined){
+        const {withMediaMatching} = init;
+        if(withMediaMatching === undefined){
             await this.#observe2(within);
             return;
         }
-        const mql = window.matchMedia(whereMediaMatches);
+        const mql = window.matchMedia(withMediaMatching);
         if(mql.matches){
             await this.#observe2(within);  
         }

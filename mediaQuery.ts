@@ -14,14 +14,14 @@ export function setupMediaQuery(
     mediaMatches: boolean;
     cleanup: () => void;
 } {
-    const { whereMediaMatches } = init;
+    const { withMediaMatching } = init;
     
     // Create or use MediaQueryList
     let mediaQueryList: MediaQueryList;
-    if (typeof whereMediaMatches === 'string') {
-        mediaQueryList = window.matchMedia(whereMediaMatches);
+    if (typeof withMediaMatching === 'string') {
+        mediaQueryList = window.matchMedia(withMediaMatching);
     } else {
-        mediaQueryList = whereMediaMatches!;
+        mediaQueryList = withMediaMatching!;
     }
     
     // Track current state

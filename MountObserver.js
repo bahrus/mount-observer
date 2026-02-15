@@ -129,7 +129,7 @@ export class MountObserver extends EventTarget {
         }
         this.#rootNode = new WeakRef(rootNode);
         // Set up media query if specified (needs rootNode to be set first)
-        if (this.#init.whereMediaMatches) {
+        if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
         }
         // Wait for eager imports to complete if they were started in constructor

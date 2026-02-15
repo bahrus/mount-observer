@@ -20,7 +20,7 @@
 | `do` (function) | ✅ | ✅ | Single callback |
 | `do` (object) | ✅ | ✅ | mount/dismount/disconnect |
 | `whereElementIntersectsWith` | ❌ | ❌ | Future feature |
-| `whereMediaMatches` | ❌ | ❌ | Future feature |
+| `withMediaMatching` | ❌ | ❌ | Future feature |
 | `whereInstanceOf` | ❌ | ❌ | Future feature |
 | Shadow DOM support | ✅ | ⚠️ | v1 has complex support; v2 basic |
 | MOSE (script elements) | ❌ | ❌ | Future feature |

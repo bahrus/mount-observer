@@ -12,7 +12,7 @@ The following features have been implemented and tested:
 ### Core Functionality
 - ✅ **whereElementMatches**: CSS selector-based element matching
 - ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
-- ✅ **whereMediaMatches**: Media query-based conditional mounting (string or MediaQueryList)
+- ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereOutside**: Donut hole scoping (exclude elements inside matching ancestors)
 
 ### Lifecycle & Events
@@ -1078,7 +1078,7 @@ Unlike traditional CSS @import, CSS Modules don't support specifying different i
 ```JavaScript
 const observer = new MountObserver({
    select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
-   whereMediaMatches: '(max-width: 1250px)',
+   withMediaMatching: '(max-width: 1250px)',
    whereSizeOfContainerMatches: '(min-width: 700px)',
    whereContainerHas: '[itemprop=isActive][value="true"]',
    whereInstanceOf: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
@@ -1093,7 +1093,7 @@ const observer = new MountObserver({
 
 [whereInstanceOf implemented as [Requirement5](requirements/Requirement5.md)]
 
-[whereMediaMatches implemented as [Requirement6](requirements/Requirement6.md)]
+[withMediaMatching implemented as [Requirement6](requirements/Requirement6.md)]
 
 ## InstanceOf checks in detail
 
@@ -1504,7 +1504,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <template mount='{
       "select": ":not([defer-loading])",
       "loadingEagerness": "eager",
-      "whereMediaMatches": "(min-width: 700px)",
+      "withMediaMatching": "(min-width: 700px)",
       "whereLangIn": ["en-GB"],
    }'>
       <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
@@ -1513,7 +1513,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <template mount='{
       "select": ":not([defer-loading])",
       "loadingEagerness": "lazy",
-      "whereMediaMatches": "(max-width: 700px)",
+      "withMediaMatching": "(max-width: 700px)",
       "whereLangIn": ["fr"],
    }'>
       <div>Je ne sais pas pourquoi tu dis  <slot name=slot2></slot> je dis  <slot name=slot1></slot></div>

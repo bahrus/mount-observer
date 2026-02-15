@@ -185,7 +185,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#rootNode = new WeakRef(rootNode);
 
         // Set up media query if specified (needs rootNode to be set first)
-        if (this.#init.whereMediaMatches) {
+        if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
         }
         

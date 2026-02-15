@@ -23,10 +23,10 @@
         // Create a media query that we can control
         mediaQueryList = window.matchMedia('(min-width: 500px)');
 
-        // Test: whereMediaMatches should control mounting
+        // Test: withMediaMatching should control mounting
         const observer = new MountObserver({
             withMatching: '.test',
-            whereMediaMatches: mediaQueryList,
+            withMediaMatching: mediaQueryList,
             getPlayByPlay: true,
             do: (el) => {
                 eventLog.push({ type: 'mount', id: el.id });

@@ -238,7 +238,7 @@ Since this is a code removal task, testing focuses on verification rather than p
 
 After removal, manually verify:
 - The library still observes and mounts elements based on CSS selectors
-- Other MountInit properties (whereInstanceOf, whereMediaMatches, whereOutside) still work
+- Other MountInit properties (whereInstanceOf, withMediaMatching, whereOutside) still work
 - Mount and dismount events still fire correctly
 - The library compiles and runs without errors
 

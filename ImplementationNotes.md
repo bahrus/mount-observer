@@ -54,7 +54,7 @@ These features from the full spec are not in v2:
 
 - ❌ `select` (complex CSS queries requiring selector observer)
 - ❌ `whereElementIntersectsWith` (IntersectionObserver integration)
-- ❌ `whereMediaMatches` (MediaQuery integration)
+- ❌ `withMediaMatching` (MediaQuery integration)
 - ❌ `whereSizeOfContainerMatches` (Container queries)
 - ❌ `whereInstanceOf` (instanceof checks)
 - ❌ Shadow DOM inheritance
