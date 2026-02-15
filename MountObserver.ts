@@ -21,6 +21,7 @@ import {
     type MutationCallback
 } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
+import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
@@ -50,6 +51,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #mediaMatches: boolean = true;
     #asgMtSource: Record<string, any> | undefined;
     #asgDisMtSource: Record<string, any> | undefined;
+    #stageMtSource: Record<string, any> | undefined;
+    #stageReversals = new WeakMap<Element, Record<string, any>>();
+    #assignTentatively: typeof AssignTentativelyType | undefined;
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
 
@@ -60,7 +64,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#abortController = new AbortController();
 
         const {
-            assignOnMount, assignOnDismount, do: doValue, reference, loadingEagerness,
+            assignOnMount, assignOnDismount, stageOnMount, do: doValue, reference, loadingEagerness,
             import: imp
         } = init;
         // Make a copy of assignOnMount config using structuredClone
@@ -69,6 +73,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
         if (assignOnDismount !== undefined) {
             this.#asgDisMtSource = structuredClone(assignOnDismount);
+        }
+        if (stageOnMount !== undefined) {
+            this.#stageMtSource = structuredClone(stageOnMount);
         }
 
         if (options.disconnectedSignal) {
@@ -180,6 +187,10 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
         if(this.#asgMtSource || this.#asgDisMtSource){
             await import('assign-gingerly/object-extension.js');
+        }
+        if(this.#stageMtSource){
+            const { assignTentatively } = await import('assign-gingerly/assignTentatively.js');
+            this.#assignTentatively = assignTentatively;
         }
 
         this.#rootNode = new WeakRef(rootNode);
@@ -393,6 +404,13 @@ export class MountObserver extends EventTarget implements IMountObserver {
             element.assignGingerly(this.#asgMtSource);
         }
 
+        // Apply assignTentatively if specified (staged assignments)
+        if (this.#stageMtSource && this.#assignTentatively) {
+            const reversal = {};
+            this.#assignTentatively(element, this.#stageMtSource, { reversal });
+            this.#stageReversals.set(element, reversal);
+        }
+
         // Check if notifier exists BEFORE calling do callback
         const notifierExistedBeforeDo = this.#elementNotifiers.has(element);
 
@@ -482,7 +500,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return;
         }
 
-        
+        // Reverse tentative assignments first (restore original values)
+        if (this.#stageMtSource && this.#assignTentatively) {
+            const reversal = this.#stageReversals.get(element);
+            if (reversal) {
+                this.#assignTentatively(element, reversal);
+                this.#stageReversals.delete(element);
+            }
+        }
 
         // Apply assignGingerly if specified for dismount
         if (this.#asgDisMtSource) {

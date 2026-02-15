@@ -25,6 +25,7 @@ export interface MountInit {
     loadingEagerness?: 'eager' | 'lazy';
     assignOnMount?: Record<string, any>;
     assignOnDismount?: Record<string, any>;
+    stageOnMount?: Record<string, any>;
     getPlayByPlay?: boolean;
     mountedElemEmits?: EventConfig | EventConfig[];
     reference?: number | number[];

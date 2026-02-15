@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test stageOnMount</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="container">
+        <button id="btn1" class="test-button">Button 1</button>
+        <input id="input1" class="test-input" value="original" />
+        <div id="div1" class="test-div" data-original="true">Div 1</div>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        // Test 1: Basic stageOnMount - properties applied on mount
+        const observer1 = new MountObserver({
+            matching: '.test-button',
+            stageOnMount: {
+                disabled: true,
+                title: 'Processing...',
+                '?.dataset?.staged': 'button'
+            }
+        });
+
+        await observer1.observe(document.body);
+
+        // Test 2: stageOnMount with nested paths
+        const observer2 = new MountObserver({
+            matching: '.test-input',
+            stageOnMount: {
+                '?.dataset?.staged': 'yes',
+                readOnly: true
+            }
+        });
+
+        await observer2.observe(document.body);
+
+        // Test 3: stageOnMount with assignOnMount (both should apply)
+        const observer3 = new MountObserver({
+            matching: '.test-div',
+            assignOnMount: {
+                className: 'enhanced'
+            },
+            stageOnMount: {
+                '?.dataset?.hidden': 'true'
+            }
+        });
+
+        await observer3.observe(document.body);
+
+        // Signal ready for tests
+        window.testsReady = true;
+    </script>
+</body>
+</html>
