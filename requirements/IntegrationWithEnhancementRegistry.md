@@ -309,6 +309,295 @@ const observer = new MountObserver({
 - [ ] Add tests for enhancement registry integration
 - [ ] Document the integration in README.md
 
+## Duplicate Detection Strategy
+
+### The Problem
+
+When `observe()` is called, we need to decide whether to add the `MountConfig` to the enhancement registry. But what if:
+
+1. The same `MountObserver` instance calls `observe()` multiple times on different root nodes?
+2. Multiple `MountObserver` instances are created with identical or similar `MountConfig` objects?
+3. A `MountObserver` is created with a `MountConfig` that has the same `enhKey` as an existing registry item?
+
+We need a clear strategy for detecting and handling duplicates.
+
+### Available Detection Methods
+
+The `BaseRegistry` class provides these methods for finding existing items:
+
+```typescript
+class BaseRegistry {
+  findBySymbol(symbol: symbol | string): EnhancementConfig | undefined;
+  findByEnhKey(enhKey: string | symbol): EnhancementConfig | undefined;
+  getItems(): EnhancementConfig[];
+}
+```
+
+### Strategy Options
+
+#### Option 1: Check by enhKey (Recommended)
+
+**Approach**: Before adding to registry, check if an item with the same `enhKey` already exists.
+
+**Implementation**:
+```typescript
+async observe(rootNode: Node): Promise<void> {
+    // ... existing code ...
+    
+    if (rootNode instanceof Element) {
+        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
+        if (registry && this.#init.enhKey) {
+            // Check for duplicate by enhKey
+            const existing = registry.findByEnhKey(this.#init.enhKey);
+            if (!existing) {
+                registry.push(this.#init);
+            }
+            // If exists, silently skip (or log warning)
+        }
+    }
+}
+```
+
+**Pros**:
+- Simple and efficient
+- Prevents `enhKey` collisions
+- Aligns with how enhancements are accessed (`element.enh[enhKey]`)
+- Clear semantic meaning: same key = same enhancement
+
+**Cons**:
+- Only works if `enhKey` is specified
+- Doesn't detect duplicates when `enhKey` is undefined
+- Multiple observers with same `enhKey` but different logic would conflict
+
+**When duplicates occur**:
+- Same `enhKey` used by different `MountObserver` instances
+- Re-observing with the same `MountObserver` instance
+
+**Behavior on duplicate**: Skip registration, use existing enhancement
+
+#### Option 2: Check by Reference Equality
+
+**Approach**: Check if the exact same `MountConfig` object is already in the registry.
+
+**Implementation**:
+```typescript
+async observe(rootNode: Node): Promise<void> {
+    // ... existing code ...
+    
+    if (rootNode instanceof Element) {
+        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
+        if (registry) {
+            const items = registry.getItems();
+            const alreadyRegistered = items.includes(this.#init);
+            if (!alreadyRegistered) {
+                registry.push(this.#init);
+            }
+        }
+    }
+}
+```
+
+**Pros**:
+- Works even without `enhKey`
+- Prevents exact duplicate registrations
+- Simple reference check (fast)
+
+**Cons**:
+- Doesn't detect "semantic duplicates" (different objects with same properties)
+- Multiple observers with identical configs would all register
+- Less useful for preventing logical conflicts
+
+**When duplicates occur**:
+- Same `MountObserver` instance observes multiple times
+- Same `MountConfig` object passed to multiple observers
+
+**Behavior on duplicate**: Skip registration
+
+#### Option 3: Check by Matching Selector + Properties
+
+**Approach**: Consider two configs duplicates if they have the same `matching` selector and other key properties.
+
+**Implementation**:
+```typescript
+function configsMatch(a: MountConfig, b: MountConfig): boolean {
+    return a.matching === b.matching &&
+           a.enhKey === b.enhKey &&
+           a.withInstance === b.withInstance &&
+           a.withMediaMatching === b.withMediaMatching;
+}
+
+async observe(rootNode: Node): Promise<void> {
+    // ... existing code ...
+    
+    if (rootNode instanceof Element) {
+        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
+        if (registry) {
+            const items = registry.getItems();
+            const duplicate = items.find(item => configsMatch(item, this.#init));
+            if (!duplicate) {
+                registry.push(this.#init);
+            }
+        }
+    }
+}
+```
+
+**Pros**:
+- Detects semantic duplicates
+- Prevents redundant observers with same matching logic
+- More intelligent duplicate detection
+
+**Cons**:
+- Complex to implement (which properties to compare?)
+- Slower (requires deep comparison)
+- May prevent legitimate use cases (same selector, different `do` callbacks)
+- Unclear which properties should be compared
+
+**When duplicates occur**:
+- Different observers with same selector and key properties
+
+**Behavior on duplicate**: Skip registration
+
+#### Option 4: Allow All Duplicates
+
+**Approach**: Never check for duplicates; always add to registry.
+
+**Implementation**:
+```typescript
+async observe(rootNode: Node): Promise<void> {
+    // ... existing code ...
+    
+    if (rootNode instanceof Element) {
+        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
+        if (registry) {
+            registry.push(this.#init);  // Always add
+        }
+    }
+}
+```
+
+**Pros**:
+- Simplest implementation
+- No performance overhead
+- Allows maximum flexibility
+- No risk of preventing legitimate use cases
+
+**Cons**:
+- Registry can grow unbounded with duplicates
+- `enhKey` collisions cause last-one-wins behavior
+- Memory waste from duplicate configs
+- Confusing behavior when multiple configs have same `enhKey`
+
+**When duplicates occur**:
+- Always (duplicates are allowed)
+
+**Behavior on duplicate**: Add anyway, potential conflicts
+
+### Recommended Approach: Hybrid Strategy
+
+**Combine Option 1 (enhKey check) with Option 2 (reference check)**:
+
+```typescript
+async observe(rootNode: Node): Promise<void> {
+    // ... existing code ...
+    
+    if (rootNode instanceof Element) {
+        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry;
+        if (registry) {
+            // Check 1: Reference equality (prevents re-registration of same object)
+            const items = registry.getItems();
+            if (items.includes(this.#init)) {
+                return;  // Already registered
+            }
+            
+            // Check 2: enhKey collision (prevents key conflicts)
+            if (this.#init.enhKey) {
+                const existing = registry.findByEnhKey(this.#init.enhKey);
+                if (existing) {
+                    console.warn(
+                        `MountObserver: enhKey "${this.#init.enhKey}" already registered. ` +
+                        `Skipping duplicate registration.`
+                    );
+                    return;
+                }
+            }
+            
+            // No duplicates found, safe to register
+            registry.push(this.#init);
+        }
+    }
+}
+```
+
+**Why this works**:
+1. **Reference check** prevents the same `MountObserver` from registering multiple times
+2. **enhKey check** prevents different observers from conflicting on the same key
+3. **Warning message** helps developers debug configuration issues
+4. **Allows multiple observers** with different `enhKey` values or no `enhKey`
+
+### Edge Cases to Consider
+
+#### Case 1: Same MountObserver, Multiple Root Nodes
+
+```typescript
+const observer = new MountObserver({ matching: 'button', enhKey: 'btn' });
+observer.observe(document.body);
+observer.observe(document.querySelector('#container'));
+```
+
+**Expected behavior**: Register once in each root node's registry (if they have different registries).
+
+**Implementation note**: Each root node may have its own `customElementRegistry`, so we register per-registry, not globally.
+
+#### Case 2: Multiple Observers, Same enhKey
+
+```typescript
+const observer1 = new MountObserver({ matching: 'button', enhKey: 'btn' });
+const observer2 = new MountObserver({ matching: 'input', enhKey: 'btn' });
+observer1.observe(document);
+observer2.observe(document);
+```
+
+**Expected behavior**: Second registration fails with warning (enhKey collision).
+
+**Rationale**: `element.enh.btn` can only point to one enhancement.
+
+#### Case 3: Multiple Observers, No enhKey
+
+```typescript
+const observer1 = new MountObserver({ matching: 'button', do: callback1 });
+const observer2 = new MountObserver({ matching: 'button', do: callback2 });
+observer1.observe(document);
+observer2.observe(document);
+```
+
+**Expected behavior**: Both register successfully (no collision).
+
+**Rationale**: Without `enhKey`, there's no namespace conflict. Both observers can coexist.
+
+#### Case 4: Re-observing After Disconnect
+
+```typescript
+const observer = new MountObserver({ matching: 'button', enhKey: 'btn' });
+observer.observe(document);
+observer.disconnect();
+observer.observe(document);  // Re-observe
+```
+
+**Expected behavior**: Should we re-register, or is the old registration still valid?
+
+**Recommendation**: On `disconnect()`, remove the `MountConfig` from the registry. On re-observe, register again.
+
+### Implementation Checklist for Duplicate Detection
+
+- [ ] Implement reference equality check in `observe()`
+- [ ] Implement `enhKey` collision check in `observe()`
+- [ ] Add warning message for `enhKey` collisions
+- [ ] Handle multiple root nodes with separate registries
+- [ ] Remove `MountConfig` from registry on `disconnect()`
+- [ ] Add tests for duplicate detection scenarios
+- [ ] Document duplicate detection behavior in README.md
+
 ## Questions to Resolve
 
 1. **Registry scope**: Should we register the MountConfig in the rootNode's registry, or in each matched element's registry?
@@ -325,6 +614,9 @@ const observer = new MountObserver({
 
 5. **Backward compatibility**: How do we ensure this doesn't break existing code that doesn't use enhancements?
    - **Recommendation**: Make all enhancement features optional; only activate if `enhKey` or `spawn` is specified
+
+6. **Disconnect cleanup**: Should `disconnect()` remove the `MountConfig` from the enhancement registry?
+   - **Recommendation**: Yes, to allow clean re-observation and prevent stale registrations
 
 ## Related Files
 
