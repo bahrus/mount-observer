@@ -66,6 +66,8 @@ Organized by feature area:
 ### ts-refs/ Directory
 External TypeScript type definitions for related libraries (be-* ecosystem, trans-render, etc.). This is a git submodule or reference directory.
 
+**IMPORTANT**: The `ts-refs/mount-observer/` subdirectory contains legacy type definitions from an older version of this library. These files should be IGNORED when working on the current codebase - they will be replaced by the current implementation. Do not modify or reference files in `ts-refs/mount-observer/`.
+
 ## File Naming Conventions
 
 - **TypeScript sources**: camelCase (e.g., `MountObserver.ts`)
