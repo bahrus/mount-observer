@@ -10,7 +10,7 @@ Note that much of what is described below has not yet been polyfilled.
 The following features have been implemented and tested:
 
 ### Core Functionality
-- ✅ **whereElementMatches**: CSS selector-based element matching
+- ✅ **withMatching**: CSS selector-based element matching
 - ✅ **withInstance**: Constructor-based element filtering (single or array)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
