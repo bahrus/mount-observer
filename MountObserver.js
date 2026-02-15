@@ -231,6 +231,55 @@ export class MountObserver extends EventTarget {
         }
         this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
     }
+    /**
+     * Resolves template variables in a string recursively
+     * @param template - Template string with ${var} placeholders
+     * @param patterns - The patterns object containing variable values
+     * @returns Resolved string
+     */
+    #resolveAttrTemplate(template, patterns) {
+        return template.replace(/\$\{(\w+)\}/g, (match, varName) => {
+            const value = patterns[varName];
+            if (value === undefined) {
+                throw new Error(`Undefined template variable: ${varName}`);
+            }
+            if (typeof value === 'string') {
+                // Recursively resolve
+                return this.#resolveAttrTemplate(value, patterns);
+            }
+            return String(value);
+        });
+    }
+    /**
+     * Checks if element has attribute with enh- prefix handling
+     * @param element - The element to check
+     * @param attrName - The attribute name (without enh- prefix)
+     * @param allowUnprefixed - Pattern that element tag name must match to allow unprefixed attributes
+     * @returns true if element has the attribute
+     */
+    #hasAttributeWithEnhPrefix(element, attrName, allowUnprefixed) {
+        const isCustomElement = element.tagName.includes('-');
+        const isSVGElement = element instanceof SVGElement;
+        // For custom elements and SVG - strict enh- requirement
+        if (isCustomElement || isSVGElement) {
+            if (element.hasAttribute(`enh-${attrName}`)) {
+                return true;
+            }
+            // Only check unprefixed if tag name matches allowUnprefixed pattern
+            if (allowUnprefixed) {
+                const pattern = typeof allowUnprefixed === 'string'
+                    ? new RegExp(allowUnprefixed)
+                    : allowUnprefixed;
+                const tagName = element.tagName.toLowerCase();
+                if (pattern.test(tagName)) {
+                    return element.hasAttribute(attrName);
+                }
+            }
+            return false;
+        }
+        // For built-in elements - enh- is alias (check both)
+        return element.hasAttribute(`enh-${attrName}`) || element.hasAttribute(attrName);
+    }
     #processNode(node) {
         // If it's an element node, check if it matches
         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -285,6 +334,37 @@ export class MountObserver extends EventTarget {
                     if (!matchesInstanceOf) {
                         return false;
                     }
+                }
+            }
+        }
+        //TODO:  move to a separate file?
+        // Check withAttrs condition if specified (attribute-based matching)
+        if (this.#init.enhancementConfig?.withAttrs) {
+            const withAttrs = this.#init.enhancementConfig.withAttrs;
+            const allowUnprefixed = this.#init.enhancementConfig.allowUnprefixed;
+            // Collect all attribute names to check
+            const attrNames = [];
+            for (const key in withAttrs) {
+                // Skip base and underscore-prefixed config keys
+                if (key === 'base' || key.startsWith('_')) {
+                    continue;
+                }
+                const value = withAttrs[key];
+                if (typeof value === 'string') {
+                    // Resolve template string to get actual attribute name
+                    const attrName = this.#resolveAttrTemplate(value, withAttrs);
+                    attrNames.push(attrName);
+                }
+            }
+            // Handle base attribute specially if present
+            if ('base' in withAttrs && typeof withAttrs.base === 'string') {
+                attrNames.push(withAttrs.base);
+            }
+            // Element must have at least ONE of the specified attributes (OR logic)
+            if (attrNames.length > 0) {
+                const hasAnyAttribute = attrNames.some(attrName => this.#hasAttributeWithEnhPrefix(element, attrName, allowUnprefixed));
+                if (!hasAnyAttribute) {
+                    return false;
                 }
             }
         }

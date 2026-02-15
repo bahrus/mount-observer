@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WithAttrs Integration Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test-container"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        window.testResults = {
+            mountedElements: []
+        };
+
+        console.log('Test setup complete');
+    </script>
+</body>
+</html>
