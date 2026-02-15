@@ -159,7 +159,7 @@ and could perhaps expect faster binding as a result of the more limited supporte
 
 This polyfill in fact only supports this latter option ("matching"), and leaves "select" for such a time as when a selector observer is available in the platform.
 
-[Implemented as Requirement 1](requirements/Requirement1.md).
+[Implemented as Requirement 1](requirements/Done/Requirement1.md).
 
 ##  The import key
 
@@ -190,7 +190,7 @@ Previously, this proposal called for allowing arrow functions as well, thinking 
 
 This proposal would also include support for JSON and HTML module imports (really, all types).
 
-[Implemented as Requirement 1](requirements/Requirement1.md).
+[Implemented as Requirement 1](requirements/Done/Requirement1.md).
 
 ## Preemptive downloading
 
@@ -295,7 +295,7 @@ import: [
 reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if present
 ```
 
-[Implemented as [Requirement11](requirements/Requirement11.md)]
+[Implemented as [Requirement11](requirements/Done/Requirement11.md)]
 
 ### Referenced withInstance
 
@@ -338,7 +338,7 @@ observer.observe(document);
 
 This optimization ensures that with lazy loading, elements that don't match the inline `withInstance` won't trigger unnecessary imports.
 
-[Implemented as [Requirement12](requirements/Requirement12.md)]
+[Implemented as [Requirement12](requirements/Done/Requirement12.md)]
 
 
 
@@ -526,7 +526,7 @@ MountObserver.define('myHandler', Handler2);  // Error: myHandler already in use
 
 The handler registry is global and shared across all MountObserver instances, similar to the custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
 
-[Implemented as [Requirement14](requirements/Requirement14.md)]
+[Implemented as [Requirement14](requirements/Done/Requirement14.md)]
 
 ### Built in handlers
 
@@ -591,7 +591,7 @@ observer.observe(document);
 
 This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
 
-[Implemented as [Requirement2](requirements/Requirement2.md) and [Requirement16](requirements/Requirement16.md)]
+[Implemented as [Requirement2](requirements/Done/Requirement2.md) and [Requirement16](requirements/Done/Requirement16.md)]
 
 ### Assigning properties on dismount
 
@@ -765,7 +765,7 @@ async assignGingerly(config: Record<string, any> | undefined): Promise<void>
 
 The method is async because the assign-gingerly library is loaded dynamically when needed.
 
-[Implemented as [Requirement9](requirements/Requirement9.md)]
+[Implemented as [Requirement9](requirements/Done/Requirement9.md)]
 
 ## Emitting events from mounted elements
 
@@ -952,7 +952,7 @@ document.addEventListener('widget-ready', (e) => {
 observer.observe(document);
 ```
 
-[Implemented as [Requirement10](requirements/Requirement10.md)]
+[Implemented as [Requirement10](requirements/Done/Requirement10.md)]
 
 ## Element-specific lifecycle notifications with getNotifier
 
@@ -1051,7 +1051,7 @@ Element-specific notifiers are useful for:
 getNotifier(element: Element): EventTarget
 ```
 
-[Implemented as [Requirement13](requirements/Requirement13.md)]
+[Implemented as [Requirement13](requirements/Done/Requirement13.md)]
 
 
 ##  Extra lazy loading
@@ -1091,9 +1091,9 @@ const observer = new MountObserver({
 });
 ```
 
-[withInstance implemented as [Requirement5](requirements/Requirement5.md)]
+[withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
 
-[withMediaMatching implemented as [Requirement6](requirements/Requirement6.md)]
+[withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
 
 ## InstanceOf checks in detail
 
@@ -1216,7 +1216,7 @@ So I believe the prudent thing to do is wait for all the conditions to be satisf
 
 The alternative to providing this feature, which I'm leaning towards, is to just ask the developer to create "specialized" mountObserver construction arguments, that turn on and off precisely when the developer needs to know.
 
-[Implemented with [Requirement6](requirements/Requirement6.md)]
+[Implemented with [Requirement6](requirements/Done/Requirement6.md)]
 
 
 ## Support for "donut hole scoping"
@@ -1270,7 +1270,7 @@ withScopePerimeter(oContainerNode: Node, matchCandidate: Element, outside: strin
 
 ```
 
-[Implemented as [Requirement7](requirements/Requirement7.md)]
+[Implemented as [Requirement7](requirements/Done/Requirement7.md)]
 
 ## Intra document html imports
 
