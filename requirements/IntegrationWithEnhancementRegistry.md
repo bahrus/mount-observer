@@ -108,49 +108,9 @@ async observe(rootNode: Node): Promise<void> {
 }
 ```
 
-### 2. Support for enhKey
 
-If the `enhancementConfig` includes an `enhKey`, mounted elements should be accessible via `element.enh[enhKey]`:
 
-```typescript
-const observer = new MountObserver({
-    matching: 'button',
-    enhancementConfig: {
-        spawn: ButtonEnhancement,
-        enhKey: 'myButton',  // Enhancement key
-    },
-    do: (element, ctx) => {
-        // Additional mount logic
-    }
-});
 
-observer.observe(document);
-
-// Later, access the enhancement
-const button = document.querySelector('button');
-console.log(button.enh.myButton);  // Should be accessible
-```
-
-### 3. Support for spawn Property
-
-If the `enhancementConfig` includes a `spawn` class, it should be instantiated for each matching element:
-
-```typescript
-class ButtonEnhancement {
-    constructor(element, ctx, initVals) {
-        this.element = element;
-        this.clickCount = 0;
-        element.addEventListener('click', () => this.clickCount++);
-    }
-}
-
-const observer = new MountObserver({
-    matching: 'button',
-    enhancementConfig: {
-        spawn: ButtonEnhancement,
-        enhKey: 'counter',
-    }
-});
 
 observer.observe(document);
 
