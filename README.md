@@ -24,6 +24,7 @@ The following features have been implemented and tested:
 - ✅ **Dynamic imports**: Lazy loading of JavaScript modules
 - ✅ **assignOnMount**: Property assignment when elements mount
 - ✅ **assignOnDismount**: Property assignment when elements dismount
+- ✅ **stageOnMount**: Reversible property assignment (auto-restores on dismount)
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
@@ -766,6 +767,133 @@ async assignGingerly(config: Record<string, any> | undefined): Promise<void>
 The method is async because the assign-gingerly library is loaded dynamically when needed.
 
 [Implemented as [Requirement9](requirements/Done/Requirement9.md)]
+
+## Reversible property assignment with stageOnMount
+
+While `assignOnMount` and `assignOnDismount` provide permanent property assignments, sometimes you need temporary changes that automatically reverse when elements dismount. The `stageOnMount` property provides this capability using the `assignTentatively` function from assign-gingerly:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button.async-action',
+   stageOnMount: {
+      disabled: true,
+      title: 'Processing...',
+      '?.dataset?.loading': 'true'
+   }
+});
+observer.observe(document);
+```
+
+When a matching button mounts, these properties are applied. When it dismounts (e.g., loses the `async-action` class), the original values are automatically restored.
+
+### How it works
+
+`stageOnMount` uses `assignTentatively` under the hood, which:
+
+1. **Captures original values** before making changes
+2. **Applies the new properties** when elements mount
+3. **Automatically reverses** to original values when elements dismount
+
+This is different from `assignOnMount`/`assignOnDismount`, where you must explicitly specify both the mount and dismount values.
+
+### When to use stageOnMount vs assignOnMount
+
+**Use `stageOnMount` when:**
+- You want temporary state changes that should automatically reverse
+- The original values matter and should be restored
+- You're toggling states (disabled/enabled, hidden/visible)
+- Setting temporary ARIA states or loading indicators
+
+**Use `assignOnMount`/`assignOnDismount` when:**
+- You need different values on mount vs dismount (not just reversal)
+- You want permanent enhancements that shouldn't be reversed
+- You need explicit control over both mount and dismount behavior
+- The dismount value is not simply "restore original"
+
+### Comparison example
+
+```JavaScript
+// With assignOnMount/assignOnDismount - explicit control
+const observer1 = new MountObserver({
+   matching: 'input.validated',
+   assignOnMount: {
+      '?.style?.borderColor': 'green'
+   },
+   assignOnDismount: {
+      '?.style?.borderColor': 'red'  // Different value, not restoration
+   }
+});
+
+// With stageOnMount - automatic reversal
+const observer2 = new MountObserver({
+   matching: 'button.loading',
+   stageOnMount: {
+      disabled: true,  // Automatically restores original disabled state on dismount
+      '?.dataset?.loading': 'true'  // Automatically removes on dismount
+   }
+});
+```
+
+### Combining with assignOnMount
+
+You can use both `assignOnMount` and `stageOnMount` together. The order of operations is:
+
+1. **On mount**: `assignOnMount` applied first, then `stageOnMount`
+2. **On dismount**: `stageOnMount` reversed first, then `assignOnDismount` applied
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'form',
+   assignOnMount: {
+      noValidate: true  // Permanent enhancement
+   },
+   stageOnMount: {
+      '?.dataset?.submitting': 'true'  // Temporary state
+   }
+});
+```
+
+### Nested properties
+
+Like `assignOnMount`, `stageOnMount` supports nested property paths:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: '.modal',
+   stageOnMount: {
+      '?.style?.display': 'block',
+      '?.style?.opacity': '1',
+      '?.dataset?.visible': 'true',
+      '?.setAttribute': ['aria-hidden', 'false']
+   }
+});
+```
+
+### Re-mounting behavior
+
+If an element dismounts and then re-mounts, `stageOnMount` will:
+
+1. Capture the current values (which may have changed since last mount)
+2. Apply the staged properties again
+3. Store new reversal information for the next dismount
+
+```JavaScript
+const button = document.querySelector('button');
+button.disabled = false;  // Original state
+
+button.classList.add('loading');  // Mount: disabled becomes true
+button.classList.remove('loading');  // Dismount: disabled restored to false
+
+button.disabled = true;  // Manually changed
+button.classList.add('loading');  // Re-mount: disabled becomes true (staged value)
+button.classList.remove('loading');  // Dismount: disabled restored to true (the value before re-mount)
+```
+
+### Performance and memory
+
+- The assign-gingerly library is only loaded when `stageOnMount` is specified
+- Reversal objects are stored in a WeakMap, allowing garbage collection when elements are removed
+- Each element's reversal data is cleaned up when it dismounts
 
 ## Emitting events from mounted elements
 
