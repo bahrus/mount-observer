@@ -32,7 +32,7 @@
                 // Test 1: Referenced whereInstanceOf with buttons and inputs
                 addResult('Test 1: Referenced whereInstanceOf filters correctly');
                 const observer1 = new MountObserver({
-                    whereElementMatches: '.test1',
+                    withMatching: '.test1',
                     import: '/tests/test-instanceof-module.js',
                     reference: 0,
                     loadingEagerness: 'eager'
@@ -61,7 +61,7 @@
                 // Test 2: Combining inline and referenced whereInstanceOf (AND logic)
                 addResult('Test 2: Inline AND referenced whereInstanceOf');
                 const observer2 = new MountObserver({
-                    whereElementMatches: '.test2',
+                    withMatching: '.test2',
                     whereInstanceOf: HTMLElement, // All elements match this
                     import: '/tests/test-instanceof-module2.js',
                     reference: 0,
@@ -86,7 +86,7 @@
                 // Test 3: Lazy loading with referenced whereInstanceOf
                 addResult('Test 3: Lazy loading with referenced whereInstanceOf');
                 const observer3 = new MountObserver({
-                    whereElementMatches: '.test3',
+                    withMatching: '.test3',
                     import: '/tests/test-instanceof-module.js',
                     reference: 0
                     // No loadingEagerness - lazy loading

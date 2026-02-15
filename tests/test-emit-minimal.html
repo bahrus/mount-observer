@@ -25,7 +25,7 @@
             console.log('MountObserver imported');
             
             const observer = new MountObserver({
-                whereElementMatches: 'button[data-test]',
+                withMatching: 'button[data-test]',
                 mountedElemEmits: {
                     event: 'Event',
                     args: 'test-event'

@@ -66,7 +66,7 @@
         };
         
         const observer1 = new MountObserver({
-            whereElementMatches: '#log-test',
+            withMatching: '#log-test',
             do: 'builtIns.logToConsole'
         });
         
@@ -100,7 +100,7 @@
         console.log('Test 2: defineCustomElement with default export');
         
         const observer2 = new MountObserver({
-            whereElementMatches: 'fancy-button',
+            withMatching: 'fancy-button',
             import: './tests/fancy-button.js',
             do: 'builtIns.defineCustomElement'
         });
@@ -121,7 +121,7 @@
         console.log('Test 3: defineCustomElement with named export');
         
         const observer3 = new MountObserver({
-            whereElementMatches: 'simple-card',
+            withMatching: 'simple-card',
             import: './tests/simple-card.js',
             do: 'builtIns.defineCustomElement'
         });
@@ -142,7 +142,7 @@
         console.log('Test 4: Multiple exports error');
         
         const observer4 = new MountObserver({
-            whereElementMatches: 'multi-elem',
+            withMatching: 'multi-elem',
             import: './tests/multiple-exports.js',
             do: 'builtIns.defineCustomElement'
         });
@@ -162,7 +162,7 @@
         console.log('Test 5: No suitable class error');
         
         const observer5 = new MountObserver({
-            whereElementMatches: 'no-elem',
+            withMatching: 'no-elem',
             import: './tests/no-suitable-class.js',
             do: 'builtIns.defineCustomElement'
         });
@@ -190,7 +190,7 @@
         customElements.define('pre-defined', PreDefinedElement);
         
         const observer6 = new MountObserver({
-            whereElementMatches: 'pre-defined',
+            withMatching: 'pre-defined',
             import: './tests/fancy-button.js',
             do: 'builtIns.defineCustomElement'
         });
@@ -210,7 +210,7 @@
         console.log('Test 7: No module specified');
         
         const observer7 = new MountObserver({
-            whereElementMatches: 'no-module-elem',
+            withMatching: 'no-module-elem',
             do: 'builtIns.defineCustomElement'
         });
         
@@ -229,7 +229,7 @@
         console.log('Test 8: Reusable class');
         
         const observer8a = new MountObserver({
-            whereElementMatches: 'reusable-one',
+            withMatching: 'reusable-one',
             import: './tests/reusable-element.js',
             do: 'builtIns.defineCustomElement'
         });
@@ -245,7 +245,7 @@
         
         // Now use same class for different tag name
         const observer8b = new MountObserver({
-            whereElementMatches: 'reusable-two',
+            withMatching: 'reusable-two',
             import: './tests/reusable-element.js',
             do: 'builtIns.defineCustomElement'
         });

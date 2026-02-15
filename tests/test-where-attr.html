@@ -49,7 +49,7 @@
         <input id="delim6" my-custom--goodbye---last-words="farewell">
     </section>
 
-    <!-- Test 5: AND condition with whereElementMatches -->
+    <!-- Test 5: AND condition with withMatching -->
     <section id="test5">
         <h2>Test 5: AND Condition</h2>
         <input id="and1" class="target" my-greetings="should match">
@@ -72,7 +72,7 @@
 
         // Test 1: Built-in elements with various prefixes
         const mo1 = new MountObserver({
-            whereElementMatches: 'input',
+            withMatching: 'input',
             whereAttr: {
                 hasBuiltInRootIn: ['', 'data', 'enh', 'data-enh'],
                 hasCERootIn: ['data', 'enh', 'data-enh'],
@@ -88,7 +88,7 @@
 
         // Test 2: Custom elements (should NOT match unprefixed)
         const mo2 = new MountObserver({
-            whereElementMatches: 'my-element',
+            withMatching: 'my-element',
             whereAttr: {
                 hasBuiltInRootIn: ['', 'data', 'enh', 'data-enh'],
                 hasCERootIn: ['data', 'enh', 'data-enh'],
@@ -104,7 +104,7 @@
 
         // Test 3: Branch attributes
         const mo3 = new MountObserver({
-            whereElementMatches: 'input',
+            withMatching: 'input',
             whereAttr: {
                 hasBuiltInRootIn: [''],
                 hasBase: 'my-greetings',
@@ -128,7 +128,7 @@
 
         // Test 4: Custom delimiters
         const mo4 = new MountObserver({
-            whereElementMatches: 'input',
+            withMatching: 'input',
             whereAttr: {
                 hasBuiltInRootIn: [''],
                 hasBase: '[_]my-custom',
@@ -152,7 +152,7 @@
 
         // Test 5: AND condition
         const mo5 = new MountObserver({
-            whereElementMatches: 'input.target, button.target',
+            withMatching: 'input.target, button.target',
             whereAttr: {
                 hasBuiltInRootIn: [''],
                 hasBase: 'my-greetings'

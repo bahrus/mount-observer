@@ -45,7 +45,7 @@ test.describe('MountObserver - assignGingerly Method', () => {
         await page.evaluate(async () => {
             const { MountObserver } = await import('../MountObserver.js');
             const observer = new MountObserver({
-                whereElementMatches: 'input'
+                withMatching: 'input'
             });
             await observer.observe(document);
             
@@ -82,7 +82,7 @@ test.describe('MountObserver - assignGingerly Method', () => {
         await page.evaluate(async () => {
             const { MountObserver } = await import('../MountObserver.js');
             const observer = new MountObserver({
-                whereElementMatches: 'input',
+                withMatching: 'input',
                 assignOnMount: {
                     disabled: true
                 }

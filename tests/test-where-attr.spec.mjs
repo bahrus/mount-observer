@@ -62,7 +62,7 @@ test.describe('WhereAttr Tests', () => {
         expect(results.length).toBe(6);
     });
 
-    test('Test 5: AND condition with whereElementMatches', async ({ page }) => {
+    test('Test 5: AND condition with withMatching', async ({ page }) => {
         const results = await page.evaluate(() => window.testResults.test5);
         
         // Should match input and button with class AND attribute

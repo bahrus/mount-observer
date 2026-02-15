@@ -32,7 +32,7 @@
         addLog('Creating observer...');
         
         const observer = new MountObserver({
-            whereElementMatches: 'button',
+            withMatching: 'button',
             import: '/tests/test-actions.js',
             reference: 0,
             do: (element) => {

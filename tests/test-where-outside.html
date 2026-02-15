@@ -27,7 +27,7 @@
 
         // Test: whereOutside should exclude elements inside nested itemscope
         const observer = new MountObserver({
-            whereElementMatches: '[itemprop]',
+            withMatching: '[itemprop]',
             whereOutside: '[itemscope]',
             do: (el) => {
                 window.eventLog.push({ type: 'mount', id: el.id });

@@ -45,7 +45,7 @@
         // Test 1: Basic assignOnMount
         console.log('Test 1: Basic assignOnMount');
         const observer1 = new MountObserver({
-            whereElementMatches: '#test1',
+            withMatching: '#test1',
             assignOnMount: {
                 '?.style?.color': 'green'
             }
@@ -67,7 +67,7 @@
         // Test 2: assignOnMount and assignOnDismount
         console.log('Test 2: assignOnMount and assignOnDismount');
         const observer2 = new MountObserver({
-            whereElementMatches: '#test2',
+            withMatching: '#test2',
             assignOnMount: {
                 '?.style?.color': 'green'
             },
@@ -98,7 +98,7 @@
         // Test 3: Multiple properties on mount
         console.log('Test 3: Multiple properties on mount');
         const observer3 = new MountObserver({
-            whereElementMatches: '#test3',
+            withMatching: '#test3',
             assignOnMount: {
                 disabled: true,
                 value: 'Default value',
@@ -122,7 +122,7 @@
         // Test 4: Remount after dismount
         console.log('Test 4: Remount after dismount');
         const observer4 = new MountObserver({
-            whereElementMatches: '#test4',
+            withMatching: '#test4',
             assignOnMount: {
                 '?.style?.color': 'blue'
             },
@@ -166,7 +166,7 @@
         // Test 5: Safe navigation with non-existent properties
         console.log('Test 5: Safe navigation');
         const observer5 = new MountObserver({
-            whereElementMatches: '#test5',
+            withMatching: '#test5',
             assignOnMount: {
                 '?.nonExistent?.deeply?.nested': 'value',
                 '?.style?.backgroundColor': 'lightblue'

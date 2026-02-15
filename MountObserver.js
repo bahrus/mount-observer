@@ -284,7 +284,7 @@ export class MountObserver extends EventTarget {
         if ('querySelectorAll' in node) {
             const root = node;
             // Get all elements matching the CSS selector first
-            root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+            root.querySelectorAll(this.#init.withMatching).forEach(child => {
                 if (this.#matchesSelector(child)) {
                     this.#handleMatch(child);
                 }
@@ -293,8 +293,8 @@ export class MountObserver extends EventTarget {
     }
     #matchesSelector(element) {
         //TODO:  reduce redundncy with this.#init?
-        // Check whereElementMatches condition
-        const matchesElement = element.matches(this.#init.whereElementMatches);
+        // Check withMatching condition
+        const matchesElement = element.matches(this.#init.withMatching);
         if (!matchesElement) {
             return false;
         }
@@ -490,7 +490,7 @@ export class MountObserver extends EventTarget {
             mountInit: this.#init,
         };
         // Dispatch dismount event
-        const dismountEvent = new DismountEvent(element, 'where-element-matches-failed', this.#init);
+        const dismountEvent = new DismountEvent(element, 'with-matching-failed', this.#init);
         this.dispatchEvent(dismountEvent);
         // Dispatch to element-specific notifier
         const notifier = this.#elementNotifiers.get(element);

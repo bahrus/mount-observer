@@ -374,7 +374,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const root = node as DocumentFragment;
             
             // Get all elements matching the CSS selector first
-            root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+            root.querySelectorAll(this.#init.withMatching).forEach(child => {
                 if (this.#matchesSelector(child)) {
                     this.#handleMatch(child);
                 }
@@ -384,8 +384,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
     #matchesSelector(element: Element): boolean {
         //TODO:  reduce redundncy with this.#init?
-        // Check whereElementMatches condition
-        const matchesElement = element.matches(this.#init.whereElementMatches);
+        // Check withMatching condition
+        const matchesElement = element.matches(this.#init.withMatching);
         if (!matchesElement) {
             return false;
         }
@@ -621,7 +621,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
 
         // Dispatch dismount event
-        const dismountEvent = new DismountEvent(element, 'where-element-matches-failed', this.#init);
+        const dismountEvent = new DismountEvent(element, 'with-matching-failed', this.#init);
         this.dispatchEvent(dismountEvent);
         
         // Dispatch to element-specific notifier

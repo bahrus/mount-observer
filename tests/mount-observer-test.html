@@ -32,7 +32,7 @@
         (async () => {
             try {
                 const observer = new MountObserver({
-                    whereElementMatches: '[\\-id]',
+                    withMatching: '[\\-id]',
                     do: (element, info) => {
                         addLog('MountObserver triggered!');
                         addLog('Element: ' + element.localName);

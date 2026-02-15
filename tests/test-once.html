@@ -20,7 +20,7 @@
 
         // Test: once attribute should only trigger event on first presence
         const observer = new MountObserver({
-            whereElementMatches: '.test',
+            withMatching: '.test',
             whereAttr: {
                 hasBuiltInRootIn: ['', 'data'],
                 hasCERootIn: ['data'],

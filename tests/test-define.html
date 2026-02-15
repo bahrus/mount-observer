@@ -58,7 +58,7 @@
         MountObserver.define('handler1', Handler1);
         
         const observer1 = new MountObserver({
-            whereElementMatches: '#test1',
+            withMatching: '#test1',
             do: 'handler1'
         });
         
@@ -91,7 +91,7 @@
         MountObserver.define('handler3', Handler3);
         
         const observer2 = new MountObserver({
-            whereElementMatches: '#test2',
+            withMatching: '#test2',
             do: [
                 'handler2',
                 (element, context) => {
@@ -114,7 +114,7 @@
         console.log('Test 3: Error when handler not defined');
         try {
             const observer3 = new MountObserver({
-                whereElementMatches: '#test3',
+                withMatching: '#test3',
                 do: 'nonexistent'
             });
             results.test3.errorThrown = false;
@@ -157,7 +157,7 @@
         MountObserver.define('handler5', Handler5);
         
         const observer5 = new MountObserver({
-            whereElementMatches: '#test5',
+            withMatching: '#test5',
             import: './tests/test-actions.js',
             reference: 0,
             do: ['handler4', 'handler5']

@@ -29,7 +29,7 @@
         
         try {
             const observer = new MountObserver({
-                whereElementMatches: 'button[data-action]',
+                withMatching: 'button[data-action]',
                 mountedElemEmits: {
                     event: 'Event',
                     args: 'custom-ready'

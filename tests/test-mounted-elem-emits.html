@@ -63,7 +63,7 @@
         // NOW create observers after all listeners are set up
         // Test 1: Simple event emission
         const observer1 = new MountObserver({
-            whereElementMatches: 'button[data-action]',
+            withMatching: 'button[data-action]',
             mountedElemEmits: {
                 event: 'Event',
                 args: 'custom-ready'
@@ -75,7 +75,7 @@
         
         // Test 2: Event with magic strings
         const observer2 = new MountObserver({
-            whereElementMatches: 'button[data-test]',
+            withMatching: 'button[data-test]',
             mountedElemEmits: {
                 event: 'CustomEvent',
                 args: ['element-mounted', { 
@@ -92,7 +92,7 @@
         
         // Test 3: Multiple events
         const observer3 = new MountObserver({
-            whereElementMatches: 'button[data-multi]',
+            withMatching: 'button[data-multi]',
             mountedElemEmits: [
                 { event: 'Event', args: 'ready' },
                 { event: 'Event', args: 'initialized' }
@@ -104,7 +104,7 @@
         
         // Test 4: oncePerMountedElement
         const observer4 = new MountObserver({
-            whereElementMatches: 'button[data-once]',
+            withMatching: 'button[data-once]',
             mountedElemEmits: {
                 event: 'Event',
                 args: 'once-event',

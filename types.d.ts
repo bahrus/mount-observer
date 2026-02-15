@@ -13,10 +13,10 @@ export interface EventConfig {
 
 export type DismountReason = 
     | 'media-query-failed'
-    | 'where-element-matches-failed';
+    | 'with-matching-failed';
 
 export interface MountInit {
-    whereElementMatches: string;
+    withMatching: string;
     whereAttr?: WhereAttr;
     whereInstanceOf?: Constructor | Constructor[];
     whereMediaMatches?: string | MediaQueryList;
