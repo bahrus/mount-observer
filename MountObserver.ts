@@ -457,11 +457,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 }
             }
             
-            // Handle base attribute specially if present
-            if ('base' in withAttrs && typeof withAttrs.base === 'string') {
-                attrNames.push(withAttrs.base);
-            }
-            
             // Element must have at least ONE of the specified attributes (OR logic)
             if (attrNames.length > 0) {
                 const hasAnyAttribute = attrNames.some(attrName => 
@@ -519,6 +514,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const reversal = {};
             this.#assignTentatively(element, this.#stageMtSource, { reversal });
             this.#stageReversals.set(element, reversal);
+        }
+
+        // Spawn enhancement if configured
+        if (this.#init.enhancementConfig?.spawn) {
+            await import('assign-gingerly/object-extension.js');
+            (element as any).enh.get(this.#init.enhancementConfig, context);
         }
 
         // Check if notifier exists BEFORE calling do callback
