@@ -25,6 +25,7 @@ The following features have been implemented and tested:
 - ✅ **assignOnMount**: Property assignment when elements mount
 - ✅ **assignOnDismount**: Property assignment when elements dismount
 - ✅ **stageOnMount**: Reversible property assignment (auto-restores on dismount)
+- ✅ **spawn**: Automatic enhancement spawning via assign-gingerly integration
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
@@ -894,6 +895,233 @@ button.classList.remove('loading');  // Dismount: disabled restored to true (the
 - The assign-gingerly library is only loaded when `stageOnMount` is specified
 - Reversal objects are stored in a WeakMap, allowing garbage collection when elements are removed
 - Each element's reversal data is cleaned up when it dismounts
+
+[Implemented as [Requirement13](requirements/Done/Requirement13.md)]
+
+## Spawning enhancements with assign-gingerly integration
+
+MountObserver integrates with the [assign-gingerly](https://github.com/bahrus/assign-gingerly) enhancement system to automatically spawn enhancement instances when elements mount. This provides a powerful way to attach behaviors and functionality to elements using the enhancement registry pattern.
+
+### What is spawn?
+
+In the assign-gingerly enhancement system, `spawn` is a class constructor (not a boolean) that defines what enhancement instance to create. The `enhancementConfig` object is a registry item that gets registered with the element's enhancement registry.
+
+### Basic spawn usage
+
+```JavaScript
+// Define an enhancement class
+class ButtonEnhancement {
+   constructor(element, ctx, initVals) {
+      this.element = element;
+      this.onClick = this.onClick.bind(this);
+      element.addEventListener('click', this.onClick);
+   }
+   
+   onClick(e) {
+      console.log('Button clicked!', this.element);
+   }
+}
+
+const observer = new MountObserver({
+   matching: 'button[data-enhance]',
+   enhancementConfig: {
+      spawn: ButtonEnhancement,  // The class constructor
+      enhKey: 'buttonEnh'
+   }
+});
+observer.observe(document);
+```
+
+When an element mounts, if `enhancementConfig.spawn` is defined, MountObserver will:
+1. Import the assign-gingerly object extension module
+2. Call `element.enh.get(enhancementConfig, mountContext)` to spawn the enhancement
+3. Pass the mount context as the second parameter, making it available to the enhancement constructor
+
+### How spawn works
+
+The spawn feature leverages the `element.enh` property from assign-gingerly, which provides access to the enhancement registry. The `enhancementConfig` is a registry item with this structure:
+
+```TypeScript
+interface IBaseRegistryItem<T> {
+   spawn: {new(element?: Element, ctx?: SpawnContext<T>, initVals?: Partial<T>): T};
+   symlinks?: {[key: symbol]: keyof T};
+   enhKey?: string;
+   withAttrs?: AttrPatterns<T>;
+   canSpawn?: (obj: any, ctx?: SpawnContext<T>) => boolean;
+}
+```
+
+When you call `element.enh.get(enhancementConfig, mountContext)`:
+- If an enhancement matching the config already exists for this element, it returns the existing instance
+- If no enhancement exists, it creates a new one by calling `new enhancementConfig.spawn(element, ctx, initVals)`
+- The enhancement is registered in the element's custom element registry's enhancement registry
+- The mount context is passed to the enhancement constructor via `ctx.mountCtx`
+
+### Spawn happens once per element
+
+The spawn operation only occurs the first time an element mounts. If the element is removed and re-added to the DOM:
+- The spawn code won't run again (element already in `#processedDoForElement`)
+- The existing enhancement instance persists with the element
+- This ensures enhancements are singletons per element instance
+
+### Mount context in enhancements
+
+The mount context passed to spawned enhancements includes:
+
+```TypeScript
+interface MountContext {
+   modules: any[];        // Imported modules (if import was specified)
+   observer: MountObserver;  // The MountObserver instance
+   rootNode: Node;        // The observed root node
+   MountConfig: MountConfig; // The full configuration object
+}
+```
+
+This allows enhancements to access imported dependencies, communicate with the observer, and understand their mounting context.
+
+### Combining spawn with other features
+
+Spawn works seamlessly with other MountObserver features:
+
+```JavaScript
+class WidgetEnhancement {
+   constructor(element, ctx, initVals) {
+      this.element = element;
+      this.modules = ctx.mountCtx?.modules || [];
+      console.log('Widget enhanced with', this.modules);
+   }
+   
+   theme = 'light';
+   mode = 'default';
+}
+
+const observer = new MountObserver({
+   matching: 'my-widget',
+   import: './widget-helpers.js',
+   assignOnMount: {
+      dataset: { initialized: 'true' }
+   },
+   stageOnMount: {
+      disabled: true  // Temporarily disable during setup
+   },
+   enhancementConfig: {
+      spawn: WidgetEnhancement,
+      enhKey: 'widget',
+      withAttrs: {
+         base: 'data-config',
+         theme: '${base}-theme',
+         mode: '${base}-mode'
+      }
+   },
+   do: (element, ctx) => {
+      console.log('Additional setup after spawn');
+   }
+});
+```
+
+**Execution order on mount:**
+1. `assignOnMount` properties applied
+2. `stageOnMount` properties applied
+3. **Spawn enhancement** (if configured)
+4. `do` callbacks executed
+5. Mount event dispatched
+
+### Attribute-based enhancement spawning
+
+When combined with `withAttrs`, spawn only occurs for elements that have the specified attributes:
+
+```JavaScript
+class ActionEnhancement {
+   constructor(element, ctx, initVals) {
+      this.element = element;
+      this.onClick = this.onClick.bind(this);
+      element.addEventListener('click', this.onClick);
+   }
+   
+   onClick(e) {
+      const action = this.element.dataset.action;
+      console.log(`Action: ${action}`);
+   }
+}
+
+const observer = new MountObserver({
+   matching: 'button',
+   enhancementConfig: {
+      spawn: ActionEnhancement,
+      enhKey: 'action',
+      withAttrs: {
+         base: 'data-action'
+      }
+   }
+});
+```
+
+Only buttons with a `data-action` attribute (or `enh-data-action` for custom elements) will have the enhancement spawned.
+
+### Guard conditions with canSpawn
+
+The `canSpawn` property in `enhancementConfig` provides conditional spawning:
+
+```JavaScript
+class InputEnhancement {
+   constructor(element, ctx, initVals) {
+      this.element = element;
+      this.onInput = this.onInput.bind(this);
+      element.addEventListener('input', this.onInput);
+   }
+   
+   onInput(e) {
+      console.log('Input changed:', e.target.value);
+   }
+   
+   static canSpawn(element) {
+      // Only spawn for inputs that aren't readonly
+      return !element.readOnly;
+   }
+}
+
+const observer = new MountObserver({
+   matching: 'input',
+   enhancementConfig: {
+      spawn: InputEnhancement,
+      enhKey: 'inputEnh'
+   }
+});
+```
+
+If `canSpawn` returns `false`, the enhancement won't be spawned for that element.
+
+### Browser compatibility
+
+The spawn feature requires:
+- `Element.prototype.customElementRegistry` (Chrome 146+)
+- `customElementRegistry.enhancementRegistry` (Chrome 146+)
+
+For older browsers, you'll need to polyfill these features or the spawn functionality won't work. The test suite includes a polyfill example:
+
+```JavaScript
+// Polyfill for browsers without customElementRegistry
+if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
+   Object.defineProperty(Element.prototype, 'customElementRegistry', {
+      get() {
+         if (!this._customElementRegistry) {
+            this._customElementRegistry = {
+               enhancementRegistry: new BaseRegistry()
+            };
+         }
+         return this._customElementRegistry;
+      }
+   });
+}
+```
+
+### Performance considerations
+
+- The assign-gingerly object extension module is only loaded when `spawn` is configured
+- Enhancements are created once per element (singleton pattern)
+- The enhancement registry uses weak references to allow garbage collection
+
+[Implemented as [SpawnOnMount](requirements/SpawnOnMount.md)]
 
 ## Emitting events from mounted elements
 
