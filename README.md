@@ -27,6 +27,7 @@ The following features have been implemented and tested:
 - ✅ **stageOnMount**: Reversible property assignment (auto-restores on dismount)
 - ✅ **spawn**: Automatic enhancement spawning via assign-gingerly integration
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
+- ✅ **Array argument shorthand**: Pass EnhancementConfig[] directly to constructor
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
 - ✅ **Memory management**: WeakRef usage for DOM node references
@@ -95,6 +96,51 @@ The amount of code necessary to accomplish these common tasks designed to improv
 3.  As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
+
+## Simplified API: Array Argument Shorthand
+
+For simple use cases where you just want to enhance elements based on attributes without needing the full `MountConfig` object, you can pass an array of `EnhancementConfig` objects directly to the constructor:
+
+```JavaScript
+import { MountObserver } from 'mount-observer';
+
+// Instead of wrapping in MountConfig:
+// const observer = new MountObserver({
+//     enhancementConfig: [config1, config2]
+// });
+
+// You can use the shorthand:
+const observer = new MountObserver([
+    {
+        spawn: Enhancement1,
+        enhKey: 'enh1',
+        withAttrs: {
+            base: 'data-',
+            action: '${base}action'
+        }
+    },
+    {
+        spawn: Enhancement2,
+        enhKey: 'enh2',
+        withAttrs: {
+            base: 'data-',
+            theme: '${base}theme'
+        }
+    }
+]);
+
+await observer.observe(document.body);
+```
+
+When you pass an array directly:
+- The array is automatically converted to `{ matching: '*', enhancementConfig: [...] }`
+- All elements are considered (matching: '*'), with filtering done by `withAttrs` in each config
+- This is perfect for attribute-based progressive enhancement scenarios
+- You can still use all `EnhancementConfig` features like `spawn`, `withAttrs`, `canSpawn`, etc.
+
+This "lite" API makes it easier to do the right thing by reducing boilerplate for common enhancement patterns.
+
+[Implemented as ArrayArgument requirement](requirements/ArrayArgument.md).
  
 
 ## First use case -- lazy loading custom elements

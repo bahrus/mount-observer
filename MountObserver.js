@@ -33,8 +33,19 @@ export class MountObserver extends EventTarget {
     #assignTentatively;
     #elementNotifiers = new WeakMap();
     #notifierMountedElements = new WeakSet();
-    constructor(init, options = {}) {
+    constructor(config, options = {}) {
         super();
+        // Handle array shorthand - convert EnhancementConfig[] to MountConfig
+        let init;
+        if (Array.isArray(config)) {
+            init = {
+                matching: '*', // Match all elements, let withAttrs do the filtering
+                enhancementConfig: config
+            };
+        }
+        else {
+            init = config;
+        }
         this.#init = init;
         this.#options = options;
         this.#abortController = new AbortController();
@@ -320,7 +331,7 @@ export class MountObserver extends EventTarget {
             }
         }
         // Process children
-        if ('querySelectorAll' in node) {
+        if ('querySelectorAll' in node && this.#init.matching) {
             const root = node;
             // Get all elements matching the CSS selector first
             root.querySelectorAll(this.#init.matching).forEach(child => {
@@ -333,6 +344,9 @@ export class MountObserver extends EventTarget {
     #matchesSelector(element) {
         //TODO:  reduce redundncy with this.#init?
         // Check matching condition
+        if (!this.#init.matching) {
+            return false;
+        }
         const matchesElement = element.matches(this.#init.matching);
         if (!matchesElement) {
             return false;
