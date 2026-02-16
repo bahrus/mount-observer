@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Load Enhancement Config Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Load Enhancement Config From Module Test</h1>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { BaseRegistry } from 'assign-gingerly/assignGingerly.js';
+        
+        // Polyfill for browsers without customElementRegistry
+        if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
+            Object.defineProperty(Element.prototype, 'customElementRegistry', {
+                get() {
+                    if (!this._customElementRegistry) {
+                        this._customElementRegistry = {
+                            enhancementRegistry: new BaseRegistry()
+                        };
+                    }
+                    return this._customElementRegistry;
+                }
+            });
+        }
+        
+        const results = {
+            test1: {
+                enhancementSpawned: false,
+                enhancementType: null,
+                enhKeySet: false
+            },
+            test2: {
+                inlineSpawned: false,
+                referencedSpawned: false,
+                bothPresent: false
+            },
+            test3: {
+                multipleReferencedSpawned: false,
+                config1Present: false,
+                config2Present: false
+            }
+        };
+        
+        console.log('Starting Load Enhancement Config Tests...');
+        
+        // Test 1: Load enhancementConfig from referenced module
+        console.log('Test 1: Load enhancementConfig from referenced module');
+        
+        const observer1 = new MountObserver({
+            matching: '#test1',
+            import: './tests/ButtonEnhancement.js',
+            reference: 0
+        });
+        
+        await observer1.observe(document.body);
+        
+        const elem1 = document.createElement('button');
+        elem1.id = 'test1';
+        elem1.textContent = 'Test 1';
+        
+        // Add polyfill inline for Firefox compatibility
+        if (!elem1.customElementRegistry) {
+            Object.defineProperty(elem1, 'customElementRegistry', {
+                value: {
+                    enhancementRegistry: new BaseRegistry()
+                },
+                configurable: true
+            });
+        }
+        
+        document.body.appendChild(elem1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test1.enhancementSpawned = elem1.enh?.buttonEnh !== undefined;
+        results.test1.enhancementType = elem1.enh?.buttonEnh?.constructor?.name || null;
+        results.test1.enhKeySet = 'buttonEnh' in (elem1.enh || {});
+        
+        console.log('Test 1 complete:', results.test1);
+        
+        // Test 2: Inline + referenced enhancementConfig
+        console.log('Test 2: Inline + referenced enhancementConfig');
+        
+        class InlineEnhancement {
+            constructor(element, ctx, initVals) {
+                this.element = element;
+                this.type = 'inline';
+            }
+        }
+        
+        const observer2 = new MountObserver({
+            matching: '#test2',
+            import: './tests/ButtonEnhancement.js',
+            reference: 0,
+            enhancementConfig: {
+                spawn: InlineEnhancement,
+                symlinks: {},
+                enhKey: 'inlineEnh'
+            }
+        });
+        
+        await observer2.observe(document.body);
+        
+        const elem2 = document.createElement('button');
+        elem2.id = 'test2';
+        elem2.textContent = 'Test 2';
+        
+        // Add polyfill inline for Firefox compatibility
+        if (!elem2.customElementRegistry) {
+            Object.defineProperty(elem2, 'customElementRegistry', {
+                value: {
+                    enhancementRegistry: new BaseRegistry()
+                },
+                configurable: true
+            });
+        }
+        
+        document.body.appendChild(elem2);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test2.inlineSpawned = elem2.enh?.inlineEnh !== undefined;
+        results.test2.referencedSpawned = elem2.enh?.buttonEnh !== undefined;
+        results.test2.bothPresent = results.test2.inlineSpawned && results.test2.referencedSpawned;
+        
+        console.log('Test 2 complete:', results.test2);
+        
+        // Test 3: Multiple enhancementConfigs (array)
+        console.log('Test 3: Multiple enhancementConfigs (array)');
+        
+        class Config1Enhancement {
+            constructor(element, ctx, initVals) {
+                this.element = element;
+                this.name = 'config1';
+            }
+        }
+        
+        class Config2Enhancement {
+            constructor(element, ctx, initVals) {
+                this.element = element;
+                this.name = 'config2';
+            }
+        }
+        
+        const observer3 = new MountObserver({
+            matching: '#test3',
+            enhancementConfig: [
+                {
+                    spawn: Config1Enhancement,
+                    symlinks: {},
+                    enhKey: 'config1'
+                },
+                {
+                    spawn: Config2Enhancement,
+                    symlinks: {},
+                    enhKey: 'config2'
+                }
+            ]
+        });
+        
+        await observer3.observe(document.body);
+        
+        const elem3 = document.createElement('button');
+        elem3.id = 'test3';
+        elem3.textContent = 'Test 3';
+        
+        // Add polyfill inline for Firefox compatibility
+        if (!elem3.customElementRegistry) {
+            Object.defineProperty(elem3, 'customElementRegistry', {
+                value: {
+                    enhancementRegistry: new BaseRegistry()
+                },
+                configurable: true
+            });
+        }
+        
+        document.body.appendChild(elem3);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test3.config1Present = elem3.enh?.config1 !== undefined;
+        results.test3.config2Present = elem3.enh?.config2 !== undefined;
+        results.test3.multipleReferencedSpawned = results.test3.config1Present && results.test3.config2Present;
+        
+        console.log('Test 3 complete:', results.test3);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (Referenced config):', results.test1);
+        console.log('Test 2 (Inline + referenced):', results.test2);
+        console.log('Test 3 (Multiple configs):', results.test3);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

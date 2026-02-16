@@ -138,17 +138,6 @@ export class MountObserver extends EventTarget {
             this.#assignTentatively = assignTentatively;
         }
         this.#rootNode = new WeakRef(rootNode);
-        // Register enhancementConfig if provided
-        if (this.#init.enhancementConfig && rootNode instanceof Element) {
-            const registry = rootNode.customElementRegistry?.enhancementRegistry;
-            if (registry) {
-                // Check for duplicate using reference equality
-                const items = registry.getItems();
-                if (!items.includes(this.#init.enhancementConfig)) {
-                    registry.push(this.#init.enhancementConfig);
-                }
-            }
-        }
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
@@ -156,6 +145,11 @@ export class MountObserver extends EventTarget {
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
             await this.#loadImports();
+        }
+        // Register enhancement configs if no imports (inline only)
+        // If imports exist, registration happens in #loadImports after modules are loaded
+        if (!this.#init.import && this.#init.enhancementConfig) {
+            await this.#registerEnhancementConfigs();
         }
         // Process existing elements only if media matches
         if (this.#mediaMatches) {
@@ -229,7 +223,44 @@ export class MountObserver extends EventTarget {
                 }
             }
         }
+        // Register enhancement configs after imports are loaded
+        await this.#registerEnhancementConfigs();
         this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
+    }
+    async #registerEnhancementConfigs() {
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode || !(rootNode instanceof Element)) {
+            return;
+        }
+        const registry = rootNode.customElementRegistry?.enhancementRegistry;
+        if (!registry) {
+            return;
+        }
+        const items = registry.getItems();
+        // Collect all enhancement configs to register
+        const configsToRegister = [];
+        // First, add inline enhancementConfig(s)
+        if (this.#init.enhancementConfig) {
+            const inlineConfigs = arr(this.#init.enhancementConfig);
+            configsToRegister.push(...inlineConfigs);
+        }
+        // Then, add referenced enhancementConfig(s) from imported modules
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = arr(this.#init.reference);
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.enhancementConfig !== undefined) {
+                    const referencedConfigs = arr(module.enhancementConfig);
+                    configsToRegister.push(...referencedConfigs);
+                }
+            }
+        }
+        // Register each config if not already registered (using reference equality)
+        for (const config of configsToRegister) {
+            if (!items.includes(config)) {
+                registry.push(config);
+            }
+        }
     }
     /**
      * Resolves template variables in a string recursively
@@ -339,10 +370,33 @@ export class MountObserver extends EventTarget {
         }
         //TODO:  move to a separate file?
         // Check withAttrs condition if specified (attribute-based matching)
-        if (this.#init.enhancementConfig?.withAttrs) {
-            const withAttrs = this.#init.enhancementConfig.withAttrs;
-            const allowUnprefixed = this.#init.enhancementConfig.allowUnprefixed;
-            // Collect all attribute names to check
+        // Check ALL enhancementConfigs (inline + referenced)
+        const enhancementConfigs = [];
+        // Add inline configs
+        if (this.#init.enhancementConfig) {
+            enhancementConfigs.push(...arr(this.#init.enhancementConfig));
+        }
+        // Add referenced configs if imports are loaded
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = arr(this.#init.reference);
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.enhancementConfig !== undefined) {
+                    enhancementConfigs.push(...arr(module.enhancementConfig));
+                }
+            }
+        }
+        // Check if ANY enhancementConfig has withAttrs - if so, element must match at least ONE
+        let hasAnyWithAttrs = false;
+        let matchesAnyWithAttrs = false;
+        for (const config of enhancementConfigs) {
+            if (!config.withAttrs) {
+                continue; // Skip configs without withAttrs
+            }
+            hasAnyWithAttrs = true;
+            const withAttrs = config.withAttrs;
+            const allowUnprefixed = config.allowUnprefixed;
+            // Collect all attribute names to check for this config
             const attrNames = [];
             for (const key in withAttrs) {
                 // Skip base and underscore-prefixed config keys
@@ -360,13 +414,18 @@ export class MountObserver extends EventTarget {
             if ('base' in withAttrs && typeof withAttrs.base === 'string') {
                 attrNames.push(withAttrs.base);
             }
-            // Element must have at least ONE of the specified attributes (OR logic)
+            // Check if element has at least ONE of the specified attributes (OR logic within config)
             if (attrNames.length > 0) {
                 const hasAnyAttribute = attrNames.some(attrName => this.#hasAttributeWithEnhPrefix(element, attrName, allowUnprefixed));
-                if (!hasAnyAttribute) {
-                    return false;
+                if (hasAnyAttribute) {
+                    matchesAnyWithAttrs = true;
+                    break; // Found a matching config, no need to check others
                 }
             }
+        }
+        // If any config has withAttrs but element doesn't match any of them, reject
+        if (hasAnyWithAttrs && !matchesAnyWithAttrs) {
+            return false;
         }
         // All conditions passed
         return true;
@@ -406,10 +465,31 @@ export class MountObserver extends EventTarget {
             this.#assignTentatively(element, this.#stageMtSource, { reversal });
             this.#stageReversals.set(element, reversal);
         }
-        // Spawn enhancement if configured
-        if (this.#init.enhancementConfig?.spawn) {
+        // Spawn enhancements if configured
+        // Process inline configs first, then referenced configs
+        const enhancementConfigs = [];
+        // Add inline configs
+        if (this.#init.enhancementConfig) {
+            enhancementConfigs.push(...arr(this.#init.enhancementConfig));
+        }
+        // Add referenced configs if imports are loaded
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = arr(this.#init.reference);
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.enhancementConfig !== undefined) {
+                    enhancementConfigs.push(...arr(module.enhancementConfig));
+                }
+            }
+        }
+        // Spawn each enhancement that has a spawn property
+        if (enhancementConfigs.length > 0) {
             await import('assign-gingerly/object-extension.js');
-            element.enh.get(this.#init.enhancementConfig, context);
+            for (const config of enhancementConfigs) {
+                if (config.spawn) {
+                    element.enh.get(config, context);
+                }
+            }
         }
         // Check if notifier exists BEFORE calling do callback
         const notifierExistedBeforeDo = this.#elementNotifiers.has(element);

@@ -34,7 +34,7 @@ export interface MountConfig {
     //allow handler classes or functions
     //to be passed some custom information
     customData?: unknown;
-    enhancementConfig?: EnhancementConfig;
+    enhancementConfig?: EnhancementConfig | EnhancementConfig[];
 }
 
 

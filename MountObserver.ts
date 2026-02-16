@@ -22,7 +22,7 @@ import {
 } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
-import type { BaseRegistry } from 'assign-gingerly/types.js';
+import type { BaseRegistry, EnhancementConfig } from 'assign-gingerly/types.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
@@ -196,18 +196,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         this.#rootNode = new WeakRef(rootNode);
 
-        // Register enhancementConfig if provided
-        if (this.#init.enhancementConfig && rootNode instanceof Element) {
-            const registry = (rootNode as any).customElementRegistry?.enhancementRegistry as BaseRegistry | undefined;
-            if (registry) {
-                // Check for duplicate using reference equality
-                const items = registry.getItems();
-                if (!items.includes(this.#init.enhancementConfig)) {
-                    registry.push(this.#init.enhancementConfig);
-                }
-            }
-        }
-
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
@@ -216,6 +204,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
             await this.#loadImports();
+        }
+        
+        // Register enhancement configs if no imports (inline only)
+        // If imports exist, registration happens in #loadImports after modules are loaded
+        if (!this.#init.import && this.#init.enhancementConfig) {
+            await this.#registerEnhancementConfigs();
         }
         
         // Process existing elements only if media matches
@@ -304,7 +298,53 @@ export class MountObserver extends EventTarget implements IMountObserver {
             }
         }
 
+        // Register enhancement configs after imports are loaded
+        await this.#registerEnhancementConfigs();
+
         this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
+    }
+
+    async #registerEnhancementConfigs(): Promise<void> {
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode || !(rootNode instanceof Element)) {
+            return;
+        }
+
+        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry as BaseRegistry | undefined;
+        if (!registry) {
+            return;
+        }
+
+        const items = registry.getItems();
+        
+        // Collect all enhancement configs to register
+        const configsToRegister: EnhancementConfig[] = [];
+        
+        // First, add inline enhancementConfig(s)
+        if (this.#init.enhancementConfig) {
+            const inlineConfigs = arr(this.#init.enhancementConfig);
+            configsToRegister.push(...inlineConfigs);
+        }
+        
+        // Then, add referenced enhancementConfig(s) from imported modules
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = arr(this.#init.reference);
+            
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.enhancementConfig !== undefined) {
+                    const referencedConfigs = arr(module.enhancementConfig);
+                    configsToRegister.push(...referencedConfigs);
+                }
+            }
+        }
+        
+        // Register each config if not already registered (using reference equality)
+        for (const config of configsToRegister) {
+            if (!items.includes(config)) {
+                registry.push(config);
+            }
+        }
     }
 
     /**
@@ -436,11 +476,39 @@ export class MountObserver extends EventTarget implements IMountObserver {
         }
         //TODO:  move to a separate file?
         // Check withAttrs condition if specified (attribute-based matching)
-        if (this.#init.enhancementConfig?.withAttrs) {
-            const withAttrs = this.#init.enhancementConfig.withAttrs;
-            const allowUnprefixed = this.#init.enhancementConfig.allowUnprefixed;
+        // Check ALL enhancementConfigs (inline + referenced)
+        const enhancementConfigs: EnhancementConfig[] = [];
+        
+        // Add inline configs
+        if (this.#init.enhancementConfig) {
+            enhancementConfigs.push(...arr(this.#init.enhancementConfig));
+        }
+        
+        // Add referenced configs if imports are loaded
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = arr(this.#init.reference);
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.enhancementConfig !== undefined) {
+                    enhancementConfigs.push(...arr(module.enhancementConfig));
+                }
+            }
+        }
+        
+        // Check if ANY enhancementConfig has withAttrs - if so, element must match at least ONE
+        let hasAnyWithAttrs = false;
+        let matchesAnyWithAttrs = false;
+        
+        for (const config of enhancementConfigs) {
+            if (!config.withAttrs) {
+                continue; // Skip configs without withAttrs
+            }
             
-            // Collect all attribute names to check
+            hasAnyWithAttrs = true;
+            const withAttrs = config.withAttrs;
+            const allowUnprefixed = config.allowUnprefixed;
+            
+            // Collect all attribute names to check for this config
             const attrNames: string[] = [];
             
             for (const key in withAttrs) {
@@ -462,16 +530,22 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 attrNames.push(withAttrs.base);
             }
             
-            // Element must have at least ONE of the specified attributes (OR logic)
+            // Check if element has at least ONE of the specified attributes (OR logic within config)
             if (attrNames.length > 0) {
                 const hasAnyAttribute = attrNames.some(attrName => 
                     this.#hasAttributeWithEnhPrefix(element, attrName, allowUnprefixed)
                 );
                 
-                if (!hasAnyAttribute) {
-                    return false;
+                if (hasAnyAttribute) {
+                    matchesAnyWithAttrs = true;
+                    break; // Found a matching config, no need to check others
                 }
             }
+        }
+        
+        // If any config has withAttrs but element doesn't match any of them, reject
+        if (hasAnyWithAttrs && !matchesAnyWithAttrs) {
+            return false;
         }
         
         // All conditions passed
@@ -521,10 +595,34 @@ export class MountObserver extends EventTarget implements IMountObserver {
             this.#stageReversals.set(element, reversal);
         }
 
-        // Spawn enhancement if configured
-        if (this.#init.enhancementConfig?.spawn) {
+        // Spawn enhancements if configured
+        // Process inline configs first, then referenced configs
+        const enhancementConfigs: EnhancementConfig[] = [];
+        
+        // Add inline configs
+        if (this.#init.enhancementConfig) {
+            enhancementConfigs.push(...arr(this.#init.enhancementConfig));
+        }
+        
+        // Add referenced configs if imports are loaded
+        if (this.#importsLoaded && this.#init.reference !== undefined) {
+            const references = arr(this.#init.reference);
+            for (const index of references) {
+                const module = this.#modules[index];
+                if (module && module.enhancementConfig !== undefined) {
+                    enhancementConfigs.push(...arr(module.enhancementConfig));
+                }
+            }
+        }
+        
+        // Spawn each enhancement that has a spawn property
+        if (enhancementConfigs.length > 0) {
             await import('assign-gingerly/object-extension.js');
-            (element as any).enh.get(this.#init.enhancementConfig, context);
+            for (const config of enhancementConfigs) {
+                if (config.spawn) {
+                    (element as any).enh.get(config, context);
+                }
+            }
         }
 
         // Check if notifier exists BEFORE calling do callback
