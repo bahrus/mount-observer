@@ -457,6 +457,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 }
             }
             
+            // Handle base attribute specially if present
+            if ('base' in withAttrs && typeof withAttrs.base === 'string') {
+                attrNames.push(withAttrs.base);
+            }
+            
             // Element must have at least ONE of the specified attributes (OR logic)
             if (attrNames.length > 0) {
                 const hasAnyAttribute = attrNames.some(attrName => 

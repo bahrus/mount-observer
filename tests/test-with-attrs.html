@@ -11,6 +11,23 @@
 
     <script type="module">
         import { MountObserver } from '../MountObserver.js';
+        import { BaseRegistry } from 'assign-gingerly/assignGingerly.js';
+
+        // Polyfill customElementRegistry for browsers that don't support it yet
+        if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
+            Object.defineProperty(Element.prototype, 'customElementRegistry', {
+                get: function() {
+                    if (!this._customElementRegistry) {
+                        this._customElementRegistry = {
+                            enhancementRegistry: new BaseRegistry()
+                        };
+                    }
+                    return this._customElementRegistry;
+                },
+                enumerable: true,
+                configurable: true
+            });
+        }
 
         window.testResults = {
             mountedElements: []

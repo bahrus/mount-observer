@@ -223,6 +223,24 @@ test.describe('WithAttrs Integration', () => {
     test('Test 6: No withAttrs specified - no attribute checking', async ({ page }) => {
         const result = await page.evaluate(async () => {
             const { MountObserver } = await import('../MountObserver.js');
+            const { BaseRegistry } = await import('assign-gingerly/assignGingerly.js');
+            
+            // Ensure polyfill is available (Firefox needs this)
+            if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
+                Object.defineProperty(Element.prototype, 'customElementRegistry', {
+                    get: function() {
+                        if (!this._customElementRegistry) {
+                            this._customElementRegistry = {
+                                enhancementRegistry: new BaseRegistry()
+                            };
+                        }
+                        return this._customElementRegistry;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+            
             const container = document.getElementById('test-container');
             
             let mounted = false;
