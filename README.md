@@ -28,6 +28,7 @@ The following features have been implemented and tested:
 - ✅ **spawn**: Automatic enhancement spawning via assign-gingerly integration
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **Array argument shorthand**: Pass EnhancementConfig[] directly to constructor
+- ✅ **Element mount extension**: element.mount() method for scoped registry observation
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
 - ✅ **Memory management**: WeakRef usage for DOM node references
@@ -141,6 +142,63 @@ When you pass an array directly:
 This "lite" API makes it easier to do the right thing by reducing boilerplate for common enhancement patterns.
 
 [Implemented as ArrayArgument requirement](requirements/ArrayArgument.md).
+
+## Element Mount Extension
+
+For even more convenience, you can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with scoped custom element registries (Chrome 146+, latest WebKit/Safari).
+
+```JavaScript
+import 'mount-observer/ElementMountExtension.js';
+
+// Mount with MountConfig
+await document.body.mount({
+    matching: 'button',
+    do: (element) => {
+        element.classList.add('enhanced');
+    }
+});
+
+// Or use the array shorthand directly
+await document.body.mount([
+    {
+        spawn: ButtonEnhancement,
+        enhKey: 'btn-enh',
+        withAttrs: {
+            base: 'data-',
+            action: '${base}action'
+        }
+    }
+]);
+```
+
+The `mount()` method:
+- Automatically finds the highest scoped container with the same `customElementRegistry` as the element
+- Creates a `MountObserver` with the provided config
+- Observes that root container
+- Returns the element for chaining (as a Promise)
+- Accepts both `MountConfig` objects and `EnhancementConfig[]` arrays
+
+This is especially useful for web components that want to observe their own shadow DOM or scoped registry:
+
+```JavaScript
+class MyComponent extends HTMLElement {
+    async connectedCallback() {
+        const shadow = this.attachShadow({ mode: 'open', registry: new CustomElementRegistry() });
+        shadow.innerHTML = `<button data-action="click">Click me</button>`;
+        
+        // Observe within this component's scoped registry
+        await shadow.mount([{
+            spawn: ButtonHandler,
+            enhKey: 'handler',
+            withAttrs: { action: 'data-action' }
+        }]);
+    }
+}
+```
+
+Browser support: Works in all browsers, but scoped registry features require Chrome 146+ or latest WebKit/Safari.
+
+[Implemented as CustomElementRegistryMounting requirement](requirements/CustomElementRegistryMounting.md).
  
 
 ## First use case -- lazy loading custom elements
