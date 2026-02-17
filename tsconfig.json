@@ -12,7 +12,9 @@
 		"MountObserver.ts",
 		"EvtRt.ts",
 		"index.ts",
-		"DefineCustomElementHandler.ts"
+		"DefineCustomElementHandler.ts",
+		"getRootRegistryContainer.ts",
+		"ElementMountExtension.ts"
 	],
 	"exclude":[
 		"node_modules"

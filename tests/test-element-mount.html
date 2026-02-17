@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Mount Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Element Mount Test</h1>
+    
+    <div id="container">
+        <div id="test-element"></div>
+    </div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { BaseRegistry } from 'assign-gingerly/assignGingerly.js';
+        import { getRootRegistryContainer } from '../getRootRegistryContainer.js';
+        import '../ElementMountExtension.js';
+        
+        (async () => {
+        
+        // Polyfill for browsers without customElementRegistry
+        if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
+            Object.defineProperty(Element.prototype, 'customElementRegistry', {
+                get() {
+                    if (!this._customElementRegistry) {
+                        this._customElementRegistry = {
+                            enhancementRegistry: new BaseRegistry()
+                        };
+                    }
+                    return this._customElementRegistry;
+                },
+                enumerable: true,
+                configurable: true
+            });
+        }
+        
+        const results = {
+            test1: {
+                mountMethodExists: false,
+                elementReturned: false,
+                observerCreated: false,
+                elementMounted: false
+            },
+            test2: {
+                rootContainerFound: false,
+                rootIsDocument: false,
+                rootIsCorrect: false
+            },
+            test3: {
+                arrayConfigWorked: false,
+                enhancementSpawned: false
+            }
+        };
+        
+        console.log('Starting Element Mount Tests...');
+        
+        // Check if mount method exists
+        const testElem = document.getElementById('test-element');
+        results.test1.mountMethodExists = typeof testElem.mount === 'function';
+        
+        if (!results.test1.mountMethodExists) {
+            console.warn('Element.prototype.mount() not available - extension not loaded');
+            window.testResults = results;
+            window.testComplete = true;
+            return;
+        }
+        
+        // Test 1: Basic mount with MountConfig
+        console.log('Test 1: Basic mount with MountConfig');
+        
+        let mounted1 = false;
+        const returnedElement = await testElem.mount({
+            matching: '#mounted-elem',
+            do: (element) => {
+                mounted1 = true;
+            }
+        });
+        
+        results.test1.elementReturned = returnedElement === testElem;
+        results.test1.observerCreated = true; // If no error, observer was created
+        
+        const elem1 = document.createElement('div');
+        elem1.id = 'mounted-elem';
+        document.body.appendChild(elem1);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test1.elementMounted = mounted1;
+        
+        console.log('Test 1 complete:', results.test1);
+        
+        // Test 2: getRootRegistryContainer utility
+        console.log('Test 2: getRootRegistryContainer utility');
+        
+        const container = document.getElementById('container');
+        const root = getRootRegistryContainer(container);
+        
+        results.test2.rootContainerFound = root !== null && root !== undefined;
+        results.test2.rootIsDocument = root === document;
+        results.test2.rootIsCorrect = root === document || root === container;
+        
+        console.log('Test 2 complete:', results.test2);
+        
+        // Test 3: Mount with array of EnhancementConfigs
+        console.log('Test 3: Mount with array of EnhancementConfigs');
+        
+        class TestEnhancement {
+            constructor(element, ctx, initVals) {
+                this.element = element;
+                this.name = 'testEnh';
+            }
+        }
+        
+        const elem3Container = document.createElement('div');
+        elem3Container.id = 'elem3-container';
+        document.body.appendChild(elem3Container);
+        
+        await elem3Container.mount([
+            {
+                spawn: TestEnhancement,
+                symlinks: {},
+                enhKey: 'testEnh',
+                withAttrs: {
+                    base: 'data-',
+                    test: '${base}test'
+                }
+            }
+        ]);
+        
+        results.test3.arrayConfigWorked = true;
+        
+        const elem3 = document.createElement('button');
+        elem3.id = 'test3';
+        elem3.setAttribute('data-test', 'value');
+        
+        // Add polyfill inline for Firefox compatibility
+        if (!elem3.customElementRegistry) {
+            Object.defineProperty(elem3, 'customElementRegistry', {
+                value: {
+                    enhancementRegistry: new BaseRegistry()
+                },
+                configurable: true
+            });
+        }
+        
+        elem3Container.appendChild(elem3);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test3.enhancementSpawned = elem3.enh?.testEnh !== undefined;
+        
+        console.log('Test 3 complete:', results.test3);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (Basic mount):', results.test1);
+        console.log('Test 2 (getRootRegistryContainer):', results.test2);
+        console.log('Test 3 (Array config):', results.test3);
+        
+        window.testResults = results;
+        window.testComplete = true;
+        })();
+    </script>
+</body>
+</html>
