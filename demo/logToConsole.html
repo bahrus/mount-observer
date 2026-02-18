@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log-To-Console</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div log-to-console="clicked on a div">hello</div>
+
+    <script type=module>
+        import 'mount-observer/ElementMountExtension.js';
+        document.body.mount([{
+            withAttrs:{
+                base: 'log-to-console'
+            },
+            spawn: function(el, ctx){
+                console.log({el, ctx});
+            },
+        }])
+    </script>
+</body>
+</html>
