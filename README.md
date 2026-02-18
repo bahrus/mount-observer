@@ -449,7 +449,7 @@ When you pass an array directly:
 
 This "lite" API makes it easier to do the right thing by reducing boilerplate for common enhancement patterns.
 
-[Implemented as ArrayArgument requirement](requirements/ArrayArgument.md).
+[Implemented as ArrayArgument requirement](requirements/Done/ArrayArgument.md).
 
 ## Element Mount Extension
 
@@ -525,7 +525,7 @@ class MyComponent extends HTMLElement {
 
 Browser support: Works in all browsers, but scoped registry features require Chrome 146+ or latest WebKit/Safari.
 
-[Implemented as CustomElementRegistryMounting requirement](requirements/CustomElementRegistryMounting.md).
+[Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
  
 
 
@@ -1312,7 +1312,7 @@ if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
 - Enhancements are created once per element (singleton pattern)
 - The enhancement registry uses weak references to allow garbage collection
 
-[Implemented as [SpawnOnMount](requirements/SpawnOnMount.md)]
+[Implemented as [SpawnOnMount](requirements/Done/SpawnOnMount.md)]
 
 ## Emitting events from mounted elements
 
