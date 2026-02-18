@@ -100,6 +100,8 @@ The extra flexibility this new primitive would provide could be quite useful to 
 
 ## Quick Examples of The Most Common Use Cases
 
+Before getting into the weeds, let's demonstrate the two most prominent use cases
+
 ### Use Case 1:  Custom Attribute Enhancement
 
 ```html
@@ -109,14 +111,13 @@ The extra flexibility this new primitive would provide could be quite useful to 
     <script type=module>
         import 'mount-observer/ElementMountExtension.js';
         document.body.mount([{
-            withAttrs:{
-                base: 'log-to-console'
-            },
+            withAttrs:{base: 'log-to-console'},
             spawn: function(el, {config}){
                 el.addEventListener('click', e => {
                     const base = config.withAttrs.base;
                     const {target} = e;
-                    const msg = target.getAttribute(`enh-${base}`) || target.getAttribute(base);
+                    const msg = target.getAttribute(`enh-${base}`) 
+                    || target.getAttribute(base);
                     console.log({msg});
                 });
             },
@@ -127,7 +128,28 @@ The extra flexibility this new primitive would provide could be quite useful to 
 
 ### Use Case 2:  Lazy Custom Element Definition
 
+```JavaScript
+// MyElement.js
+export default class MyElement extends HTMLElement {
+    connectedCallback() {
+        this.textContent = 'Hello!';
+    }
+}
 
+// main.js
+import 'mount-observer/ElementMountExtension.js';
+
+document.mount({
+    matching: 'my-element',
+    import: './MyElement.js',
+    do: 'builtIns.defineCustomElement'
+});
+
+// HTML - elements will be upgraded when discovered
+// by the mount observer
+<my-element></my-element>
+
+```
 
 ## Simplified API: Array Argument Shorthand
 
