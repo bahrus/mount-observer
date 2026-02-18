@@ -15,8 +15,14 @@
             withAttrs:{
                 base: 'log-to-console'
             },
-            spawn: function(el, ctx){
-                console.log({el, ctx});
+            spawn: function(el, {config}){
+                el.addEventListener('click', e => {
+                    const base = config.withAttrs.base;
+                    const {target} = e;
+                    const msg = target.getAttribute(`enh-${base}`) || target.getAttribute(base);
+                    console.log({msg});
+                })
+                //console.log({el, ctx});
             },
         }])
     </script>
