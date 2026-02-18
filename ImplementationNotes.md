@@ -7,7 +7,7 @@ A streamlined implementation of the MountObserver API focusing on "Polyfill Supp
 This v2 implementation focuses on the core polyfillable features:
 
 ### ✅ Core Features
-- **whereElementMatches**: CSS selector matching using `element.matches()`
+- **matching**: CSS selector matching using `element.matches()`
 - **import**: Dynamic module loading (JS, CSS, JSON, HTML)
 - **do**: Callback function or object with lifecycle methods
 - **loadingEagerness**: 'eager' or 'lazy' import loading
@@ -18,7 +18,7 @@ This v2 implementation focuses on the core polyfillable features:
 
 ```typescript
 const observer = new MountObserver({
-   whereElementMatches: 'my-element',
+   matching: 'my-element',
    import: './my-element.js',
    do: (element, { modules, observer, observeInfo }) => {
       // Called once per element when it mounts
@@ -36,7 +36,7 @@ observer.observe(document);
 
 ```typescript
 const observer = new MountObserver({
-   whereElementMatches: 'my-element',
+   matching: 'my-element',
    import: [
       ['./my-element.css', { type: 'css' }],
       './my-element.js'
@@ -91,7 +91,7 @@ npm test -- v2/tests/test.spec.mjs
 
 ## Key Differences from v1
 
-1. **Simpler**: Only `whereElementMatches` (no complex `select` queries)
+1. **Simpler**: Only `matching` (no complex `select` queries)
 2. **Cleaner**: No WeakDual, no complex state tracking
 3. **Focused**: Core lazy loading use case only
 4. **Async-aware**: Proper handling of import loading
@@ -104,7 +104,7 @@ import { MountObserver } from './MountObserver.js';
 
 // Lazy load custom element
 const observer = new MountObserver({
-   whereElementMatches: 'my-element',
+   matching: 'my-element',
    import: './my-element.js',
    do: ({ localName }, { modules, observer }) => {
       if (!customElements.get(localName)) {

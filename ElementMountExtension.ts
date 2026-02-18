@@ -20,9 +20,9 @@ declare global {
 
 /**
  * Adds a mount method to Element.prototype that:
- * 1. Finds the root registry container for the element
+ * 1. Determines the observation scope based on options.scope
  * 2. Creates a MountObserver with the provided config
- * 3. Observes that root container
+ * 3. Observes that scope
  * 4. Returns the element for chaining
  */
 Object.defineProperty(Element.prototype, 'mount', {
@@ -31,9 +31,28 @@ Object.defineProperty(Element.prototype, 'mount', {
         config: MountConfig | EnhancementConfig[], 
         options: MountObserverOptions = {}
     ): Promise<T> {
-        const root = getRootRegistryContainer(this);
+        const scope = options.scope ?? 'registry';
+        let thingToObserve: Node;
+        
+        if (scope === 'registry') {
+            thingToObserve = getRootRegistryContainer(this);
+        } else if (scope === 'self') {
+            thingToObserve = this;
+        } else if (scope === 'root') {
+            thingToObserve = this.getRootNode();
+        } else if (scope === 'shadow') {
+            const shadowRoot = (this as any).shadowRoot;
+            if (!shadowRoot) {
+                throw new Error('Element does not have a shadowRoot');
+            }
+            thingToObserve = shadowRoot;
+        } else {
+            // scope is an Element
+            thingToObserve = scope;
+        }
+        
         const mo = new MountObserver(config, options);
-        await mo.observe(root);
+        await mo.observe(thingToObserve);
         return this;
     },
     writable: true,

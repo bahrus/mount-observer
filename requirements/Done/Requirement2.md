@@ -3,7 +3,7 @@
 ```JavaScript
 const observer = new MountObserver({
    import: './my-element.js',
-   whereElementMatches:'input',
+   matching:'input',
    assignOnMount: {
      disabled: true
    }

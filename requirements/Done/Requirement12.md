@@ -19,7 +19,7 @@ export {doFunction as do, withInstance}
 //my local module
 
 const observer = new MountObserver({
-   whereElementMatches:'my-element',
+   matching:'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',

@@ -22,7 +22,7 @@ class MyHandler extends EvtRt {
 }
 
 const observer = new MountObserver({
-   whereElementMatches: 'div > p + p ~ span[class$="name"]',
+   matching: 'div > p + p ~ span[class$="name"]',
    do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);
    }
@@ -47,7 +47,7 @@ class MyHandler extends EvtRt {
 MountObserver.define('myObserver', MyHandler);
 
 const observer = new MountObserver({
-   whereElementMatches: 'div > p + p ~ span[class$="name"]',
+   matching: 'div > p + p ~ span[class$="name"]',
    do: 'myObserver'
 });
 observer.observe(document);

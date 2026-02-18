@@ -16,7 +16,7 @@ const observer = new MountObserver({
    // not supported by polyfill
    //select: 'div > p + p ~ span[class$="name"]' 
    // is supported:
-   whereElementMatches: 'div > p + p ~ span[class$="name"]',
+   matching: 'div > p + p ~ span[class$="name"]',
    do: 'builtIns.logToConsole'
 });
 observer.observe(document);
@@ -40,7 +40,7 @@ export default class MyElement extends HTMLElement {
 import { MountObserver } from 'mount-observer';
 
 const observer = new MountObserver({
-    whereElementMatches: 'my-element',
+    matching: 'my-element',
     import: './MyElement.js',
     do: 'builtIns.defineCustomElement'
 });
@@ -58,7 +58,7 @@ The custom element name is derived from the first matched element's localName pr
 if (customElements.get('my-element')) return;
 ```
 
-If multiple elements match whereElementMatches, the mount method will be called for each one.  If the name has already been found,  it will not proceed based on the line of code above.
+If multiple elements match matching, the mount method will be called for each one.  If the name has already been found,  it will not proceed based on the line of code above.
 
 The implementation will extend class EvtRt, and all the logic that registers the custom element will take place in the mount method.
 

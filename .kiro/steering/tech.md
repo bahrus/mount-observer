@@ -74,7 +74,7 @@ Do NOT use `tsc` with individual file arguments or custom flags. The `tsconfig.j
 ```typescript
 // types.d.ts - Type definitions only
 export interface MountConfig {
-    whereElementMatches: string;
+    matching: string;
 }
 export type mountEventName = 'mount';
 

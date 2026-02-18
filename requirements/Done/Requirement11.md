@@ -30,7 +30,7 @@ export function do({localName}, {modules, observer, MountConfig, rootNode}){
 }
 
 const observer = new MountObserver({
-   whereElementMatches:'my-element',
+   matching:'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',

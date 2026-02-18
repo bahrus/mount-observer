@@ -8,7 +8,7 @@ When an element mounts, the following code demonstrates how to use the `MountObs
 
 ```javascript
 const observer = new MountObserver({
-   whereElementMatches: '.valid',
+   matching: '.valid',
    assignOnMount: {
       '?.style?.color': 'green' // Assigns the color green when the element mounts
    }
@@ -23,7 +23,7 @@ To apply assignments when an element dismounts, the `asgDisMt` property can be u
 
 ```javascript
 const observer = new MountObserver({
-   whereElementMatches: '.valid',
+   matching: '.valid',
    assignOnMount: {
       '?.style?.color': 'green' // Assigns the color green when the element mounts
    },
@@ -38,7 +38,7 @@ observer.observe(document);
 
 ## Notes
 - **Assigned Gingerly**: The term "assigned gingerly" means that the assignments are applied cautiously, ensuring no errors occur if the specified properties or paths do not exist.
-- **Lifecycle Explanation**: The `MountObserver` observes elements matching the `whereElementMatches` selector and applies the specified assignments during the mount and dismount lifecycle events.
+- **Lifecycle Explanation**: The `MountObserver` observes elements matching the `matching` selector and applies the specified assignments during the mount and dismount lifecycle events.
 
 ## Suggestions for Improvement
 - Consider renaming `asgMt` and `asgDisMt` to more descriptive names, such as `assignOnMount` and `assignOnDismount`, for better readability.

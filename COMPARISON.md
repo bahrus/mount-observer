@@ -10,7 +10,7 @@
 
 | Feature | v1 | v2 | Notes |
 |---------|----|----|-------|
-| `whereElementMatches` | ✅ | ✅ | Simple element.matches() selector |
+| `matching` | ✅ | ✅ | Simple element.matches() selector |
 | `select` (complex CSS) | ⚠️ | ❌ | v1 attempts but limited; v2 omits (needs platform support) |
 | `import` (single) | ✅ | ✅ | Dynamic import |
 | `import` (multiple) | ✅ | ✅ | Array of imports |
@@ -48,7 +48,7 @@
 ### v1 Example
 ```javascript
 const observer = new MountObserver({
-   on: 'my-element',  // or whereElementMatches
+   on: 'my-element',  // or matching
    import: './my-element.js',
    do: ({localName}, {modules, observer, observeInfo}) => {
       // Complex context object
@@ -59,7 +59,7 @@ const observer = new MountObserver({
 ### v2 Example
 ```javascript
 const observer = new MountObserver({
-   whereElementMatches: 'my-element',
+   matching: 'my-element',
    import: './my-element.js',
    do: (element, {modules, observer, observeInfo}) => {
       // Clean, simple API
@@ -110,7 +110,7 @@ const observer = new MountObserver({
 
 // v2 equivalent
 const observer = new MountObserver({
-   whereElementMatches: 'my-element',  // To this
+   matching: 'my-element',  // To this
    import: './my-element.js',
    do: callback
 });

@@ -18,7 +18,7 @@ We want to find all elements with attribute itemprop outside any itemscope, so t
 ```JavaScript
 const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
-   whereElementMatches:'[itemprop]',
+   matching:'[itemprop]',
    withScopePerimeter: '[itemscope]'
    do: {
       mount: ({localName}, {modules, observer}) => {
@@ -60,7 +60,7 @@ outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
 
 ```
 
-This is an AND condition, so that if an element matches whereElementMatches but its parent (between it and root) matches withScopePerimeter it would not mount.
+This is an AND condition, so that if an element matches matching but its parent (between it and root) matches withScopePerimeter it would not mount.
 
 The root node (oContainerNode) should not be checked against the outside selector
 
@@ -68,8 +68,8 @@ The root node (oContainerNode) should not be checked against the outside selecto
 
  The check order should be:
 
-- whereElementMatches (cheapest - CSS selector)
-- withScopePerimeter (medium - upward traversal) add on to whereElementMatches
+- matching (cheapest - CSS selector)
+- withScopePerimeter (medium - upward traversal) add on to matching
 - whereAttr (expensive - complex logic)
 - withInstance (cheap - instanceof check)
 withMediaMatching (already checked globally)

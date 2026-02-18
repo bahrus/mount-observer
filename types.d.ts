@@ -62,8 +62,16 @@ export type DoCallback = (mountedElement: Element, context: MountContext) => voi
 //     reconnect?: (mountedElement: Element, context: MountContext) => void;
 // }
 
+export type MountScope = 
+    | 'registry'     // getRootRegistryContainer (default)
+    | 'self'         // this element
+    | 'root'         // getRootNode()
+    | 'shadow'       // shadowRoot (throws if none)
+    | Element;       // custom element to observe
+
 export interface MountObserverOptions {
     disconnectedSignal?: AbortSignal;
+    scope?: MountScope;
 }
 
 export interface WeakDual<T extends Object>{

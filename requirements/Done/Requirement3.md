@@ -2,7 +2,7 @@
 
 Please add to the steering document(s) that each of the "where*" conditions in the MountConfig object forms an "and" condition with other where* conditions if present.
 
-So we already have *whereElementMatches.
+So we already have *matching.
 
 On top of that, we want to add the following and condition:
 

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This specification defines the requirements for refactoring the `whereElementMatches` property name to `matching` throughout the mount-observer codebase. This is a breaking API change that affects the public interface of the MountConfig configuration object.
+This specification defines the requirements for refactoring the `matching` property name to `matching` throughout the mount-observer codebase. This is a breaking API change that affects the public interface of the MountConfig configuration object.
 
 ## Glossary
 
@@ -18,8 +18,8 @@ This specification defines the requirements for refactoring the `whereElementMat
 
 #### Acceptance Criteria
 
-1. THE System SHALL rename `whereElementMatches` to `matching` in the MountConfig interface in types.d.ts
-2. THE System SHALL rename `whereElementMatches` to `matching` in the DismountReason type literal in types.d.ts
+1. THE System SHALL rename `matching` to `matching` in the MountConfig interface in types.d.ts
+2. THE System SHALL rename `matching` to `matching` in the DismountReason type literal in types.d.ts
 3. WHEN the type definitions are updated, THE System SHALL maintain all other interface properties unchanged
 4. WHEN the type definitions are updated, THE System SHALL preserve the property type as `string`
 
@@ -29,10 +29,10 @@ This specification defines the requirements for refactoring the `whereElementMat
 
 #### Acceptance Criteria
 
-1. THE System SHALL identify all TypeScript source files (.ts) that reference `whereElementMatches`
-2. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in TypeScript source files
-3. THE System SHALL identify all JavaScript files (.js) that reference `whereElementMatches`
-4. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in JavaScript files
+1. THE System SHALL identify all TypeScript source files (.ts) that reference `matching`
+2. THE System SHALL rename all occurrences of `matching` to `matching` in TypeScript source files
+3. THE System SHALL identify all JavaScript files (.js) that reference `matching`
+4. THE System SHALL rename all occurrences of `matching` to `matching` in JavaScript files
 5. WHEN source code is updated, THE System SHALL preserve all surrounding code structure and logic
 
 ### Requirement 3: Update Test Files
@@ -41,10 +41,10 @@ This specification defines the requirements for refactoring the `whereElementMat
 
 #### Acceptance Criteria
 
-1. THE System SHALL identify all HTML test files in the tests/ directory that reference `whereElementMatches`
-2. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in HTML test files
-3. THE System SHALL identify all test spec files (.spec.mjs) that reference `whereElementMatches`
-4. THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in test spec files
+1. THE System SHALL identify all HTML test files in the tests/ directory that reference `matching`
+2. THE System SHALL rename all occurrences of `matching` to `matching` in HTML test files
+3. THE System SHALL identify all test spec files (.spec.mjs) that reference `matching`
+4. THE System SHALL rename all occurrences of `matching` to `matching` in test spec files
 5. WHEN test files are updated, THE System SHALL preserve all test logic and assertions
 
 ### Requirement 4: Verify Completeness
@@ -53,10 +53,10 @@ This specification defines the requirements for refactoring the `whereElementMat
 
 #### Acceptance Criteria
 
-1. WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `whereElementMatches` in type definition files
-2. WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `whereElementMatches` in source code files
-3. WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `whereElementMatches` in test files
-4. THE System SHALL allow occurrences of `whereElementMatches` in documentation files that describe the migration or changelog
+1. WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `matching` in type definition files
+2. WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `matching` in source code files
+3. WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `matching` in test files
+4. THE System SHALL allow occurrences of `matching` in documentation files that describe the migration or changelog
 
 ### Requirement 5: Compilation and Testing Validation
 

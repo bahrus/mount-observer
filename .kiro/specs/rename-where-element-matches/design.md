@@ -1,8 +1,8 @@
-# Design Document: Rename whereElementMatches to matching
+# Design Document: Rename matching to matching
 
 ## Overview
 
-This design describes the approach for refactoring the `whereElementMatches` property to `matching` throughout the mount-observer codebase. This is a straightforward find-and-replace refactoring that affects:
+This design describes the approach for refactoring the `matching` property to `matching` throughout the mount-observer codebase. This is a straightforward find-and-replace refactoring that affects:
 
 - Type definitions (types.d.ts)
 - Source code implementation (MountObserver.ts and potentially other .ts files)
@@ -20,7 +20,7 @@ The refactoring is purely a naming change with no behavioral modifications.
    - DismountReason type literal value
 
 2. **Core Implementation** (MountObserver.ts)
-   - Property access via `this.#init.whereElementMatches`
+   - Property access via `this.#init.matching`
    - Comments referencing the property name
 
 3. **Compiled Output** (*.js files)
@@ -36,7 +36,7 @@ The refactoring is purely a naming change with no behavioral modifications.
 This is a **global search-and-replace refactoring** with the following characteristics:
 
 - **Scope**: All files in the repository except documentation
-- **Pattern**: Exact string match for `whereElementMatches`
+- **Pattern**: Exact string match for `matching`
 - **Replacement**: `matching`
 - **Validation**: TypeScript compilation + test execution
 
@@ -50,7 +50,7 @@ This is a **global search-and-replace refactoring** with the following character
 ```typescript
 // Before
 export interface MountConfig {
-    whereElementMatches: string;
+    matching: string;
     // ...
 }
 
@@ -76,11 +76,11 @@ export type DismountReason =
 **Changes**:
 ```typescript
 // Before
-root.querySelectorAll(this.#init.whereElementMatches).forEach(child => {
+root.querySelectorAll(this.#init.matching).forEach(child => {
     // ...
 });
 
-const matchesElement = element.matches(this.#init.whereElementMatches);
+const matchesElement = element.matches(this.#init.matching);
 
 // After
 root.querySelectorAll(this.#init.matching).forEach(child => {
@@ -96,7 +96,7 @@ const matchesElement = element.matches(this.#init.matching);
 ```javascript
 // Before
 const observer = new MountObserver({
-    whereElementMatches: 'input',
+    matching: 'input',
     // ...
 });
 
@@ -117,11 +117,11 @@ No data model changes - this is a property name refactoring only.
 
 ### Acceptance Criteria Testing Prework
 
-1.1 THE System SHALL rename `whereElementMatches` to `matching` in the MountConfig interface in types.d.ts
+1.1 THE System SHALL rename `matching` to `matching` in the MountConfig interface in types.d.ts
   Thoughts: This is a specific file edit that can be verified by checking the file content after the change. This is an example of a specific change.
   Testable: yes - example
 
-1.2 THE System SHALL rename `whereElementMatches` to `matching` in the DismountReason type literal in types.d.ts
+1.2 THE System SHALL rename `matching` to `matching` in the DismountReason type literal in types.d.ts
   Thoughts: This is another specific file edit that can be verified by checking the file content. This is an example.
   Testable: yes - example
 
@@ -133,19 +133,19 @@ No data model changes - this is a property name refactoring only.
   Thoughts: This verifies the type annotation remains unchanged. This is an example check.
   Testable: yes - example
 
-2.1 THE System SHALL identify all TypeScript source files (.ts) that reference `whereElementMatches`
+2.1 THE System SHALL identify all TypeScript source files (.ts) that reference `matching`
   Thoughts: This is about the search process, not a testable property of the final system.
   Testable: no
 
-2.2 THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in TypeScript source files
+2.2 THE System SHALL rename all occurrences of `matching` to `matching` in TypeScript source files
   Thoughts: This is verifiable by searching all .ts files for the old name and ensuring none exist.
   Testable: yes - property
 
-2.3 THE System SHALL identify all JavaScript files (.js) that reference `whereElementMatches`
+2.3 THE System SHALL identify all JavaScript files (.js) that reference `matching`
   Thoughts: This is about the search process, not a testable property of the final system.
   Testable: no
 
-2.4 THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in JavaScript files
+2.4 THE System SHALL rename all occurrences of `matching` to `matching` in JavaScript files
   Thoughts: This is verifiable by searching all .js files for the old name and ensuring none exist.
   Testable: yes - property
 
@@ -153,19 +153,19 @@ No data model changes - this is a property name refactoring only.
   Thoughts: This is about ensuring we don't break code during refactoring. This is best verified by compilation and tests passing, not a specific property test.
   Testable: no
 
-3.1 THE System SHALL identify all HTML test files in the tests/ directory that reference `whereElementMatches`
+3.1 THE System SHALL identify all HTML test files in the tests/ directory that reference `matching`
   Thoughts: This is about the search process, not a testable property.
   Testable: no
 
-3.2 THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in HTML test files
+3.2 THE System SHALL rename all occurrences of `matching` to `matching` in HTML test files
   Thoughts: This is verifiable by searching all .html files in tests/ for the old name.
   Testable: yes - property
 
-3.3 THE System SHALL identify all test spec files (.spec.mjs) that reference `whereElementMatches`
+3.3 THE System SHALL identify all test spec files (.spec.mjs) that reference `matching`
   Thoughts: This is about the search process, not a testable property.
   Testable: no
 
-3.4 THE System SHALL rename all occurrences of `whereElementMatches` to `matching` in test spec files
+3.4 THE System SHALL rename all occurrences of `matching` to `matching` in test spec files
   Thoughts: This is verifiable by searching all .spec.mjs files for the old name.
   Testable: yes - property
 
@@ -173,19 +173,19 @@ No data model changes - this is a property name refactoring only.
   Thoughts: This is best verified by tests passing, not a specific property test.
   Testable: no
 
-4.1 WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `whereElementMatches` in type definition files
+4.1 WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `matching` in type definition files
   Thoughts: This is verifiable by searching .d.ts files for the old name.
   Testable: yes - property
 
-4.2 WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `whereElementMatches` in source code files
+4.2 WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `matching` in source code files
   Thoughts: This is verifiable by searching .ts files for the old name.
   Testable: yes - property
 
-4.3 WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `whereElementMatches` in test files
+4.3 WHEN the refactoring is complete, THE System SHALL contain zero occurrences of the string `matching` in test files
   Thoughts: This is verifiable by searching test files for the old name.
   Testable: yes - property
 
-4.4 THE System SHALL allow occurrences of `whereElementMatches` in documentation files that describe the migration or changelog
+4.4 THE System SHALL allow occurrences of `matching` in documentation files that describe the migration or changelog
   Thoughts: This is about excluding certain files from the search. This is a constraint on the refactoring process, not a testable property of the result.
   Testable: no
 
@@ -212,8 +212,8 @@ No data model changes - this is a property name refactoring only.
 ### Property Reflection
 
 Reviewing the testable properties:
-- Properties 2.2, 2.4, 3.2, 3.4, 4.1, 4.2, 4.3 all test the same thing: that `whereElementMatches` doesn't exist in various file types
-- These can be consolidated into a single comprehensive property: "No occurrences of whereElementMatches in code files"
+- Properties 2.2, 2.4, 3.2, 3.4, 4.1, 4.2, 4.3 all test the same thing: that `matching` doesn't exist in various file types
+- These can be consolidated into a single comprehensive property: "No occurrences of matching in code files"
 - The examples (1.1-1.4, 5.1-5.3) are specific validation steps that should remain separate
 
 **Consolidated properties**:
@@ -222,7 +222,7 @@ Reviewing the testable properties:
 
 ### Property 1: Complete Refactoring
 
-*For any* file in the codebase with extensions .ts, .js, .d.ts, .html (in tests/), or .spec.mjs, the file content should contain zero occurrences of the string `whereElementMatches`.
+*For any* file in the codebase with extensions .ts, .js, .d.ts, .html (in tests/), or .spec.mjs, the file content should contain zero occurrences of the string `matching`.
 
 **Validates: Requirements 2.2, 2.4, 3.2, 3.4, 4.1, 4.2, 4.3**
 
@@ -245,7 +245,7 @@ If tests fail after the refactoring:
 
 ### Incomplete Refactoring
 
-If any references to `whereElementMatches` remain:
+If any references to `matching` remain:
 1. Use grep/search to find remaining occurrences
 2. Manually review each occurrence
 3. Update or document why it should remain (e.g., migration documentation)
@@ -255,7 +255,7 @@ If any references to `whereElementMatches` remain:
 ### Manual Verification Steps
 
 1. **Search Verification**
-   - Run: `grep -r "whereElementMatches" --include="*.ts" --include="*.js" --include="*.d.ts" --include="*.html" --include="*.mjs" .`
+   - Run: `grep -r "matching" --include="*.ts" --include="*.js" --include="*.d.ts" --include="*.html" --include="*.mjs" .`
    - Expected: No matches (or only in documentation files)
 
 2. **Type Definition Check**
@@ -305,7 +305,7 @@ Unit tests are not needed for this refactoring. The existing test suite serves a
 
 **Search for occurrences**:
 ```bash
-grep -r "whereElementMatches" --include="*.ts" --include="*.js" --include="*.d.ts" --include="*.html" --include="*.mjs" .
+grep -r "matching" --include="*.ts" --include="*.js" --include="*.d.ts" --include="*.html" --include="*.mjs" .
 ```
 
 **Compile TypeScript**:

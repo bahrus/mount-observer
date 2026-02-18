@@ -172,11 +172,18 @@ await document.body.mount([
 ```
 
 The `mount()` method:
-- Automatically finds the highest scoped container with the same `customElementRegistry` as the element
+- Automatically finds the highest scoped container with the same `customElementRegistry` as the element (default behavior)
 - Creates a `MountObserver` with the provided config
-- Observes that root container
+- Observes the determined scope
 - Returns the element for chaining (as a Promise)
 - Accepts both `MountConfig` objects and `EnhancementConfig[]` arrays
+
+Scope options (via `options.scope`):
+- `'registry'` (default): Observes the root registry container (highest element with same customElementRegistry)
+- `'self'`: Observes only this element
+- `'root'`: Observes the root node (document or shadow root)
+- `'shadow'`: Observes the element's shadowRoot (throws error if none exists)
+- `Element`: Observes a custom element you specify
 
 This is especially useful for web components that want to observe their own shadow DOM or scoped registry:
 
@@ -186,12 +193,24 @@ class MyComponent extends HTMLElement {
         const shadow = this.attachShadow({ mode: 'open', registry: new CustomElementRegistry() });
         shadow.innerHTML = `<button data-action="click">Click me</button>`;
         
-        // Observe within this component's scoped registry
+        // Default: Observe within this component's scoped registry
         await shadow.mount([{
             spawn: ButtonHandler,
             enhKey: 'handler',
             withAttrs: { action: 'data-action' }
         }]);
+        
+        // Or observe just the shadow root itself
+        await this.mount([{
+            spawn: ShadowHandler,
+            enhKey: 'shadow'
+        }], { scope: 'shadow' });
+        
+        // Or observe the entire document
+        await this.mount({
+            matching: '.global-button',
+            do: (el) => console.log('Global button found')
+        }, { scope: 'root' });
     }
 }
 ```

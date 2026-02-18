@@ -6,7 +6,7 @@
 
 ```JavaScript
 const observer = new MountObserver({
-   whereElementMatches: '[direction="left"]',
+   matching: '[direction="left"]',
    withInstance: HTMLMarqueeElement,
    do: (el, {modules, observer, observeInfo}) => {
       el.direction='right';
@@ -19,9 +19,9 @@ observer.observe(document);
 
 As is always the case, each "where..." is an and condition.
 
-Even though withInstance is probably cheaper than the whereElementMatches, the way we use querySelectorAll means the order of the checks should be:
+Even though withInstance is probably cheaper than the matching, the way we use querySelectorAll means the order of the checks should be:
 
-1.  whereElementMatches
+1.  matching
 2.  whereAttr
 3.  withInstance
 
