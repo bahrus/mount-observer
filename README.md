@@ -98,6 +98,37 @@ The amount of code necessary to accomplish these common tasks designed to improv
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
 
+## Quick Examples of The Most Common Use Cases
+
+### Use Case 1:  Custom Attribute Enhancement
+
+```html
+<body>
+    <div log-to-console="clicked on a div">hello</div>
+
+    <script type=module>
+        import 'mount-observer/ElementMountExtension.js';
+        document.body.mount([{
+            withAttrs:{
+                base: 'log-to-console'
+            },
+            spawn: function(el, {config}){
+                el.addEventListener('click', e => {
+                    const base = config.withAttrs.base;
+                    const {target} = e;
+                    const msg = target.getAttribute(`enh-${base}`) || target.getAttribute(base);
+                    console.log({msg});
+                });
+            },
+        }])
+    </script>
+</body>
+```
+
+### Use Case 2:  Lazy Custom Element Definition
+
+
+
 ## Simplified API: Array Argument Shorthand
 
 For simple use cases where you just want to enhance elements based on attributes without needing the full `MountConfig` object, you can pass an array of `EnhancementConfig` objects directly to the constructor:
