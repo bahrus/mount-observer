@@ -153,6 +153,257 @@ document.mount({
 
 ```
 
+# Thorough Exposition Begins Here
+
+Okay, let's get into the weeds.  First, we strongly recommend studying the core package that mount-observer extends, [assign-gingerly](https://www.npmjs.com/package/assign-gingerly).
+
+## First use case -- lazy loading custom elements without sugar coating
+
+To specify the equivalent of what the [alternative proposal linked to above would do](https://github.com/WICG/webcomponents/issues/782), we can do the following:
+
+```JavaScript
+const observer = new MountObserver({
+   select:'my-element', //not supported by this polyfill
+   import: './my-element.js',
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyElement);
+      }
+      observer.disconnectedSignal.abort();
+   }
+   
+}, {disconnectedSignal: new AbortController().signal});
+observer.observe(document);
+```
+
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, will continue to be called repeatedly.
+
+The constructor argument can also be an array of objects that fit the pattern shown above.
+
+In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "select" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
+
+If no imports are specified, it would go straight to do (if any such callbacks are specified), and it will also dispatch events as discussed below.
+
+This only searches for elements matching 'my-element' outside any shadow DOM.
+
+But the observe method can accept a node within the document, or a shadowRoot, or a node inside a shadowRoot as well.
+
+The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
+
+> [!Note]
+> Reading through the historical links tied to the selector-observer proposal this proposal helped spawn, I may have painted an overly optimistic picture of [what the platform is capable of](https://github.com/whatwg/dom/issues/398).  It does leave me a little puzzled why this isn't an issue when it comes to styling, and also if some of the advances that were utilized to support :has could be applied to this problem space, so that maybe the arguments raised there have weakened.  Even if the concerns raised are as relevant today, I think considering the use cases this proposal envisions, that the objections could be overcome, for the following reasons: 1.  For scenarios where lazy loading is the primary objective, "bunching" multiple DOM mutations together and only reevaluating when things are quite idle is perfectly reasonable.  Also, for binding from a distance, most of the mutations that need responding to quickly will be when the *state of the host* changes, so DOM mutations play a somewhat muted role in that regard. Again, bunching multiple DOM mutations together, even if adds a bit of a delay, also seems reasonable.  I also think the platform could add an "analysis" step to look at the query and categorize it as "simple" queries vs complex.  Selector queries that are driven by the characteristics of the element itself (localName, attributes, etc) could be handled in a more expedited fashion.  Those that the platform does expect to require more babysitting could be monitored for less vigilantly.  Maybe in the latter case, a console.warning could be emitted during initialization.  The other use case, for lazy loading custom elements and custom enhancements based on attributes, I think most of the time this would fit the "simple" scenario, so again there wouldn't be much of an issue.
+
+In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but has to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable in some circumstances.
+
+If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors provide a selector-observer (if ever).
+
+So the developer could use:
+
+## Polyfill Supported Mount Observer
+
+```JavaScript
+const observer = new MountObserver({
+   //supported by this polyfill
+   matching:'my-element',
+   import: './my-element.js',
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyElement);
+      }
+      observer.disconnectedSignal.abort();
+   }
+   
+}, {disconnectedSignal: new AbortController().signal});
+observer.observe(document);
+```
+
+and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*".
+
+This polyfill in fact only supports this latter option ("matching"), and leaves "select" for such a time as when a selector observer is available in the platform.
+
+[Implemented as Requirement 1](requirements/Done/Requirement1.md).
+
+
+##  The import key
+
+This proposal has been amended to support multiple imports, including of different types:
+
+```JavaScript
+const observer = new MountObserver({
+   matching:'my-element',
+   import: [
+      ['./my-element-small.css', {type: 'css'}],
+      './my-element.js',
+   ],
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[1].MyElement);
+      }
+      observer.disconnectedSignal.abort();
+   }
+});
+observer.observe(document);
+```
+
+Once again, the key can accept either a single import, but alternatively it can also support multiple imports (via an array).
+
+The do function won't be invoked until all the imports have been successfully completed and inserted into the modules array.
+
+Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
+
+This proposal would also include support for JSON and HTML module imports (really, all types).
+
+[Implemented as Requirement 1](requirements/Done/Requirement1.md).
+
+## Preemptive downloading
+
+There are two significant steps to imports, each of which imposes a cost:  
+
+1.  Downloading the resource.
+2.  Loading the resource into memory.
+
+What if we want to *download* the resource ahead of time, but only load into memory when needed?
+
+The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
+
+So for this we add loadingEagerness:
+
+```JavaScript
+const observer = new MountObserver({
+   select: 'my-element', //not supported by this polyfill
+   loadingEagerness: 'eager',
+   import: './my-element.js',
+   do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
+});
+```
+
+So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
+
+> [!NOTE]
+> As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
+
+## Separating JS imperative code from JSON serializable config
+
+
+
+
+In order to support pure 100% declarative syntax in the passed in MountConfig argument, we need to be able to import the do function.  This is done as follows:
+
+```JavaScript
+//module myActions.js
+const  doFunction = function({localName}, {modules, observer, MountConfig, rootNode}){
+   if(!customElements.get(localName)) {
+      // Find the first exported class constructor from the module
+      const ElementClass = Object.values(modules[0]).find(exp => 
+         typeof exp === 'function' && exp.prototype && exp.prototype.constructor === exp
+      );
+      if(ElementClass) {
+         customElements.define(localName, ElementClass);
+      }
+   }
+   observer.disconnectedSignal.abort();
+}
+export {doFunction as do}
+
+// observer setup
+
+const observer = new MountObserver({
+   matching:'my-element',
+   import: [
+      './my-element.js',
+      ['./my-element-small.css', {type: 'css'}],
+      './myActions.js'
+   ],
+   reference: 2
+});
+observer.observe(document);
+
+```
+
+Here "2" refers to the imported module index ('./myActions.js' in this case).
+
+### How the reference property works
+
+The `reference` property allows you to call `do` functions from imported modules, enabling 100% JSON-serializable configuration. This is useful when you want to separate imperative code from declarative configuration.
+
+**Key behaviors:**
+- The `reference` property can be a single number or an array of numbers, each referring to an import index
+- Referenced modules must be JavaScript modules (not CSS, JSON, or HTML imports)
+- If a referenced module exports a `do` function, it will be called after the inline `do` callback (if present)
+- If a referenced module doesn't export a `do` function, it's silently skipped
+- The inline `do` callback runs first, then referenced `do` functions run in the order specified
+
+**Important:** Since `do` is a reserved keyword in JavaScript, you must export it using the syntax:
+```javascript
+const doFunction = function(element, context) { /* ... */ };
+export { doFunction as do };
+```
+
+**Validation:** The `reference` property is validated in the constructor:
+- Throws an error if `import` is not defined
+- Throws an error if any index is out of bounds
+- Throws an error if any index points to a non-JS module (e.g., CSS or JSON import)
+
+Multiple references can also be made.
+
+So for example:
+
+```JavaScript
+
+import: [
+    ['./my-element-small.css', {type: 'css'}],
+    './component.js',
+    './actions1.js',
+    './actions2.js'
+],
+reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if present
+```
+
+[Implemented as [Requirement11](requirements/Done/Requirement11.md)]
+
+### Referenced withInstance
+
+Similar to the `do` function, the `withInstance` check can also be moved to imported modules for 100% JSON-serializable configuration:
+
+```javascript
+// module mySettings.js
+const doFunction = function({localName}, {modules, observer, MountConfig, rootNode}) {
+   if(!customElements.get(localName)) {
+      customElements.define(localName, modules[1].MyElement);
+   }
+   observer.disconnectedSignal.abort();
+};
+
+const withInstance = [HTMLMarqueeElement, SVGElement];
+
+export { doFunction as do, withInstance };
+
+// my local module
+const observer = new MountObserver({
+   matching: 'my-element',
+   import: [
+      ['./my-element-small.css', {type: 'css'}],
+      './my-element.js',
+      './mySettings.js'
+   ],
+   reference: 2
+});
+observer.observe(document);
+```
+
+**Behavior:**
+- **Combining checks**: If both inline `withInstance` and referenced `withInstance` exist, they are AND'd together (element must match both)
+- **Multiple references**: If multiple referenced modules export `withInstance`, the element must match ALL of them (AND logic)
+- **Validation**: Referenced `withInstance` is validated after imports load. Throws an error if not a Constructor or array of Constructors
+- **Optional export**: If a referenced module doesn't export `withInstance`, it's silently ignored
+- **Timing**: 
+  - With lazy loading (default): Inline `withInstance` is checked first (before imports), then referenced checks happen after imports load
+  - With `loadingEagerness: 'eager'`: Both inline and referenced checks happen together after imports are loaded
+
+This optimization ensures that with lazy loading, elements that don't match the inline `withInstance` won't trigger unnecessary imports.
+
+[Implemented as [Requirement12](requirements/Done/Requirement12.md)]
+
 ## Simplified API: Array Argument Shorthand
 
 For simple use cases where you just want to enhance elements based on attributes without needing the full `MountConfig` object, you can pass an array of `EnhancementConfig` objects directly to the constructor:
@@ -275,250 +526,10 @@ Browser support: Works in all browsers, but scoped registry features require Chr
 [Implemented as CustomElementRegistryMounting requirement](requirements/CustomElementRegistryMounting.md).
  
 
-## First use case -- lazy loading custom elements
-
-To specify the equivalent of what the alternative proposal linked to above would do, we can do the following:
-
-```JavaScript
-const observer = new MountObserver({
-   select:'my-element', //not supported by this polyfill
-   import: './my-element.js',
-   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
-      if(!customElements.get(localName)) {
-         customElements.define(localName, modules[0].MyElement);
-      }
-      observer.disconnectedSignal.abort();
-   }
-   
-}, {disconnectedSignal: new AbortController().signal});
-observer.observe(document);
-```
-
-The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, will continue to be called repeatedly.
-
-The constructor argument can also be an array of objects that fit the pattern shown above.
-
-In fact, as we will see, where it makes sense, where we see examples that are strings, we will also allow for arrays of such strings.  For example, the "select" key can point to an array of CSS selectors (and in this case the mount/dismount callbacks would need to provide an index of which one matched).  I only recommend adding this complexity if what I suspect is true -- providing this support can reduce "context switching" between threads / memory spaces (c++ vs JavaScript), and thus improve performance.  If multiple "on" selectors are provided, and multiple ones match, I think it makes sense to indicate the one with the highest specifier that matches.  It would probably be helpful in this case to provide a special event that allows for knowing when the matching selector with the highest specificity changes for mounted elements.
-
-If no imports are specified, it would go straight to do (if any such callbacks are specified), and it will also dispatch events as discussed below.
-
-This only searches for elements matching 'my-element' outside any shadow DOM.
-
-But the observe method can accept a node within the document, or a shadowRoot, or a node inside a shadowRoot as well.
-
-The "observer" constant above is a class instance that inherits from EventTarget, which means it can be subscribed to by outside interests.
-
-> [!Note]
-> Reading through the historical links tied to the selector-observer proposal this proposal helped spawn, I may have painted an overly optimistic picture of [what the platform is capable of](https://github.com/whatwg/dom/issues/398).  It does leave me a little puzzled why this isn't an issue when it comes to styling, and also if some of the advances that were utilized to support :has could be applied to this problem space, so that maybe the arguments raised there have weakened.  Even if the concerns raised are as relevant today, I think considering the use cases this proposal envisions, that the objections could be overcome, for the following reasons: 1.  For scenarios where lazy loading is the primary objective, "bunching" multiple DOM mutations together and only reevaluating when things are quite idle is perfectly reasonable.  Also, for binding from a distance, most of the mutations that need responding to quickly will be when the *state of the host* changes, so DOM mutations play a somewhat muted role in that regard. Again, bunching multiple DOM mutations together, even if adds a bit of a delay, also seems reasonable.  I also think the platform could add an "analysis" step to look at the query and categorize it as "simple" queries vs complex.  Selector queries that are driven by the characteristics of the element itself (localName, attributes, etc) could be handled in a more expedited fashion.  Those that the platform does expect to require more babysitting could be monitored for less vigilantly.  Maybe in the latter case, a console.warning could be emitted during initialization.  The other use case, for lazy loading custom elements and custom enhancements based on attributes, I think most of the time this would fit the "simple" scenario, so again there wouldn't be much of an issue.
-
-In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but has to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable in some circumstances.
-
-If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors provide a selector-observer (if ever).
-
-So the developer could use:
-
-## Polyfill Supported Mount Observer
-
-```JavaScript
-const observer = new MountObserver({
-   //supported by this polyfill
-   matching:'my-element',
-   import: './my-element.js',
-   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
-      if(!customElements.get(localName)) {
-         customElements.define(localName, modules[0].MyElement);
-      }
-      observer.disconnectedSignal.abort();
-   }
-   
-}, {disconnectedSignal: new AbortController().signal});
-observer.observe(document);
-```
-
-and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*".
-
-This polyfill in fact only supports this latter option ("matching"), and leaves "select" for such a time as when a selector observer is available in the platform.
-
-[Implemented as Requirement 1](requirements/Done/Requirement1.md).
-
-##  The import key
-
-This proposal has been amended to support multiple imports, including of different types:
-
-```JavaScript
-const observer = new MountObserver({
-   matching:'my-element',
-   import: [
-      ['./my-element-small.css', {type: 'css'}],
-      './my-element.js',
-   ],
-   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
-      if(!customElements.get(localName)) {
-         customElements.define(localName, modules[1].MyElement);
-      }
-      observer.disconnectedSignal.abort();
-   }
-});
-observer.observe(document);
-```
-
-Once again, the key can accept either a single import, but alternatively it can also support multiple imports (via an array).
-
-The do function won't be invoked until all the imports have been successfully completed and inserted into the modules array.
-
-Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
-
-This proposal would also include support for JSON and HTML module imports (really, all types).
-
-[Implemented as Requirement 1](requirements/Done/Requirement1.md).
-
-## Preemptive downloading
-
-There are two significant steps to imports, each of which imposes a cost:  
-
-1.  Downloading the resource.
-2.  Loading the resource into memory.
-
-What if we want to *download* the resource ahead of time, but only load into memory when needed?
-
-The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
-
-So for this we add loadingEagerness:
-
-```JavaScript
-const observer = new MountObserver({
-   select: 'my-element', //not supported by this polyfill
-   loadingEagerness: 'eager',
-   import: './my-element.js',
-   do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
-});
-```
-
-So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
-
-> [!NOTE]
-> As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
-
-## Separating JS imperative code from JSON serializable config
 
 
 
-In order to support pure 100% declarative syntax in the passed in MountConfig argument, we need to be able to import the do function.  This is done as follows:
 
-```JavaScript
-//module myActions.js
-const  doFunction = function({localName}, {modules, observer, MountConfig, rootNode}){
-   if(!customElements.get(localName)) {
-      // Find the first exported class constructor from the module
-      const ElementClass = Object.values(modules[0]).find(exp => 
-         typeof exp === 'function' && exp.prototype && exp.prototype.constructor === exp
-      );
-      if(ElementClass) {
-         customElements.define(localName, ElementClass);
-      }
-   }
-   observer.disconnectedSignal.abort();
-}
-export {doFunction as do}
-
-// observer setup
-
-const observer = new MountObserver({
-   matching:'my-element',
-   import: [
-      './my-element.js',
-      ['./my-element-small.css', {type: 'css'}],
-      './myActions.js'
-   ],
-   reference: 2
-});
-observer.observe(document);
-
-```
-
-Here "2" refers to the imported module index ('./myActions.js' in this case).
-
-### How the reference property works
-
-The `reference` property allows you to call `do` functions from imported modules, enabling 100% JSON-serializable configuration. This is useful when you want to separate imperative code from declarative configuration.
-
-**Key behaviors:**
-- The `reference` property can be a single number or an array of numbers, each referring to an import index
-- Referenced modules must be JavaScript modules (not CSS, JSON, or HTML imports)
-- If a referenced module exports a `do` function, it will be called after the inline `do` callback (if present)
-- If a referenced module doesn't export a `do` function, it's silently skipped
-- The inline `do` callback runs first, then referenced `do` functions run in the order specified
-
-**Important:** Since `do` is a reserved keyword in JavaScript, you must export it using the syntax:
-```javascript
-const doFunction = function(element, context) { /* ... */ };
-export { doFunction as do };
-```
-
-**Validation:** The `reference` property is validated in the constructor:
-- Throws an error if `import` is not defined
-- Throws an error if any index is out of bounds
-- Throws an error if any index points to a non-JS module (e.g., CSS or JSON import)
-
-Multiple references can also be made.
-
-So for example:
-
-```JavaScript
-
-import: [
-    ['./my-element-small.css', {type: 'css'}],
-    './component.js',
-    './actions1.js',
-    './actions2.js'
-],
-reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if present
-```
-
-[Implemented as [Requirement11](requirements/Done/Requirement11.md)]
-
-### Referenced withInstance
-
-Similar to the `do` function, the `withInstance` check can also be moved to imported modules for 100% JSON-serializable configuration:
-
-```javascript
-// module mySettings.js
-const doFunction = function({localName}, {modules, observer, MountConfig, rootNode}) {
-   if(!customElements.get(localName)) {
-      customElements.define(localName, modules[1].MyElement);
-   }
-   observer.disconnectedSignal.abort();
-};
-
-const withInstance = [HTMLMarqueeElement, SVGElement];
-
-export { doFunction as do, withInstance };
-
-// my local module
-const observer = new MountObserver({
-   matching: 'my-element',
-   import: [
-      ['./my-element-small.css', {type: 'css'}],
-      './my-element.js',
-      './mySettings.js'
-   ],
-   reference: 2
-});
-observer.observe(document);
-```
-
-**Behavior:**
-- **Combining checks**: If both inline `withInstance` and referenced `withInstance` exist, they are AND'd together (element must match both)
-- **Multiple references**: If multiple referenced modules export `withInstance`, the element must match ALL of them (AND logic)
-- **Validation**: Referenced `withInstance` is validated after imports load. Throws an error if not a Constructor or array of Constructors
-- **Optional export**: If a referenced module doesn't export `withInstance`, it's silently ignored
-- **Timing**: 
-  - With lazy loading (default): Inline `withInstance` is checked first (before imports), then referenced checks happen after imports load
-  - With `loadingEagerness: 'eager'`: Both inline and referenced checks happen together after imports are loaded
-
-This optimization ensures that with lazy loading, elements that don't match the inline `withInstance` won't trigger unnecessary imports.
-
-[Implemented as [Requirement12](requirements/Done/Requirement12.md)]
 
 
 
