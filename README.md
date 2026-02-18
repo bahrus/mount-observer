@@ -126,6 +126,8 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
 </body>
 ```
 
+See [this extending package](https://github.com/bahrus/mount-observer-script-element) that provides for a more declarative approach.
+
 ### Use Case 2:  Lazy Custom Element Definition
 
 ```JavaScript
