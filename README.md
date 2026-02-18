@@ -114,11 +114,15 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
             withAttrs:{base: 'log-to-console'},
             spawn: function(el, {config}){
                 el.addEventListener('click', e => {
-                    const base = config.withAttrs.base;
-                    const {target} = e;
-                    const msg = target.getAttribute(`enh-${base}`) 
-                    || target.getAttribute(base);
-                    console.log({msg});
+                  //the line below allows people to register
+                  //the same code with different names in 
+                  //different registry scopes without
+                  //breaking the code below.
+                  const base = config.withAttrs.base;
+                  const {target} = e;
+                  const msg = target.getAttribute(`enh-${base}`) 
+                  || target.getAttribute(base);
+                  console.log({msg});
                 });
             },
         }])
@@ -285,8 +289,6 @@ So what this does is only check for the presence of an element with tag name "my
 ## Separating JS imperative code from JSON serializable config
 
 
-
-
 In order to support pure 100% declarative syntax in the passed in MountConfig argument, we need to be able to import the do function.  This is done as follows:
 
 ```JavaScript
@@ -406,7 +408,7 @@ This optimization ensures that with lazy loading, elements that don't match the 
 
 ## Simplified API: Array Argument Shorthand
 
-For simple use cases where you just want to enhance elements based on attributes without needing the full `MountConfig` object, you can pass an array of `EnhancementConfig` objects directly to the constructor:
+For simple use cases where you just want to enhance elements based on attributes without needing the full `MountConfig` object, you can pass an array of [EnhancementConfig` objects](https://github.com/bahrus/assign-gingerly) directly to the constructor:
 
 ```JavaScript
 import { MountObserver } from 'mount-observer';
