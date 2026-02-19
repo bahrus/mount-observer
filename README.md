@@ -317,7 +317,7 @@ Here "2" refers to the imported module index ('./myActions.js' in this case).
 
 ### How the reference property works
 
-The `reference` property allows you to call `do` functions from imported modules, enabling 100% JSON-serializable configuration. This is useful when you want to separate imperative code from declarative configuration.
+The `reference` property allows us to call `do` functions from imported modules, enabling 100% JSON-serializable configuration. This is useful when you want to separate imperative code from declarative configuration.
 
 **Key behaviors:**
 - The `reference` property can be a single number or an array of numbers, each referring to an import index
