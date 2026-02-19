@@ -114,15 +114,7 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
             withAttrs:{base: 'log-to-console'},
             spawn: function(el, {config}){
                 el.addEventListener('click', e => {
-                  //the line below allows people to register
-                  //the same code with different names in 
-                  //different registry scopes without
-                  //breaking the code below.
-                  const base = config.withAttrs.base;
-                  const {target} = e;
-                  const msg = target.getAttribute(`enh-${base}`) 
-                  || target.getAttribute(base);
-                  console.log({msg});
+                  console.log(e.target.getAttribute('log-to-console'));
                 });
             },
         }])
@@ -240,10 +232,7 @@ const observer = new MountObserver({
       './my-element.js',
    ],
    do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
-      if(!customElements.get(localName)) {
-         customElements.define(localName, modules[1].MyElement);
-      }
-      observer.disconnectedSignal.abort();
+      ...
    }
 });
 observer.observe(document);
@@ -275,13 +264,15 @@ So for this we add loadingEagerness:
 ```JavaScript
 const observer = new MountObserver({
    select: 'my-element', //not supported by this polyfill
-   loadingEagerness: 'eager',
+   loadingEagerness: 'eager', //partially supported by this polyfill
    import: './my-element.js',
    do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
 });
 ```
 
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
+
+The polyfill just loads the module into memory right away.
 
 > [!NOTE]
 > As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
