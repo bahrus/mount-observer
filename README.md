@@ -40,21 +40,21 @@ The following features have been implemented and tested:
 - ❌ Reconnect event handling
 - ❌ Multiple import types (CSS, JSON, HTML)
 
-# The MountObserver api.
+# The MountObserver API
 
-Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
+Author: Bruce B. Anderson (with valuable feedback from @doeixd)
 
-Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
+Issues / PRs / polyfill: [mount-observer](https://github.com/bahrus/mount-observer)
 
 Last Update: Aug 7, 2025
 
 ## Benefits of this API
 
-What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are more encompassing, and less focused on registering custom elements.  In fact, this proposal addresses numerous use cases in one api.  It is basically mapping common filtering conditions in the DOM, to mounting a "campaign" of some sort, like importing a resource, and/or progressively enhancing an element, and/or "binding from a distance".
+What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782). The goals of the MountObserver API are more encompassing and less focused on registering custom elements. In fact, this proposal addresses numerous use cases in one API. It basically maps common filtering conditions in the DOM to mounting a "campaign" of some sort, like importing a resource, and/or progressively enhancing an element, and/or "binding from a distance".
 
 ["Binding from a distance"](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc, to the HTML as it streams in.  Libraries that take this approach include [Corset](https://corset.dev/) and [trans-render](https://github.com/bahrus/trans-render), [selector-observer](https://github.com/josh/selector-observer), [pure](http://web.archive.org/web/20160313152905/https://beebole.com/pure/), [weld](https://github.com/tmpvar/weld), [bess](https://github.com/bkardell/bess).  The concept has been promoted by a [number](https://bkardell.com/blog/CSSLike.html) [of](https://www.w3.org/TR/NOTE-AS)  [prominent](https://www.xanthir.com/blog/b4K_0) voices in the community. 
 
-The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [a selector observer](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
+The underlying theme is that this API is meant to make it easy for developers to do the right thing by encouraging lazy loading and smaller footprints. It rolls up most of the other observer APIs into one, including, potentially, [a selector observer](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
 
 ### Finite Element Analysis
 
@@ -73,34 +73,34 @@ ES module based web components may or may not be the best fit for these applicat
 A significant pain point has to do with downloading all the third-party web components and/or (progressive) enhancements that these macro components / compositions require, and loading them into memory only when needed.
 
 
-### Does this api make the impossible possible?
+### Does this API make the impossible possible?
 
-There is quite a bit of functionality this proposal would open up, that is exceedingly difficult to polyfill reliably:  
+There is quite a bit of functionality this proposal would open up that is exceedingly difficult to polyfill reliably:  
 
-1.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet).  The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren't visible, or during template instantiation, and requires carefully constructed "negating" queries if needing to know when the css selector is no longer matching.
+1. It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet). The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren't visible or during template instantiation, and requires carefully constructed "negating" queries if needing to know when the CSS selector is no longer matching.
 
-2.  For simple css matches, like "my-element", or "[name='hello']" it is enough to use a mutation observer, and only observe the elements within the specified DOM region (more on that below).  But as CSS has evolved, it is quite easy to think of numerous css selectors that would require us to expand our mutation observer to need to scan the entire Shadow DOM realm, or the entire DOM tree outside any Shadow DOM, for any and all mutations (including attribute changes), and re-evaluate every single element within the specified DOM region for new matches or old matches that no longer match.  Things like child selectors, :has, and so on. All this is done, miraculously, by the browser in a performant way.  Reproducing this in userland using JavaScript alone, matching the same performance seems impossible.  
+2. For simple CSS matches, like "my-element" or "[name='hello']", it is enough to use a mutation observer and only observe the elements within the specified DOM region (more on that below). But as CSS has evolved, it is quite easy to think of numerous CSS selectors that would require us to expand our mutation observer to scan the entire Shadow DOM realm, or the entire DOM tree outside any Shadow DOM, for any and all mutations (including attribute changes), and re-evaluate every single element within the specified DOM region for new matches or old matches that no longer match. Things like child selectors, :has, and so on. All this is done miraculously by the browser in a performant way. Reproducing this in userland using JavaScript alone while matching the same performance seems impossible.  
 
-3.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
+3. Knowing when an element previously being monitored passes totally "out-of-scope" so that no more hard references to the element remain. This would allow for cleanup of no longer needed weak references without requiring polling.
 
-4.  Some css selectors, such as the [scope donut hole range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope) aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
+4. Some CSS selectors, such as the [scope donut hole range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope), aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
 
-###  Most significant use cases.
+###  Most significant use cases
 
-The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant.  Building it into the platform would potentially:
+The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant. Building it into the platform would potentially:
 
-1.  Give the developer a strong signal to do the right thing, by 
-    1.  Making lazy loading of resource dependencies easy, to the benefit of users with expensive networks.
-    2.  Supporting "binding from a distance" that can set property values of elements in bulk as the HTML streams in.  For example, say a web page is streaming in HTML with thousands of input elements (say a long tax form).  We want to have some indication in the head tag of the HTML (for example) to make all the input elements read only as they stream through the page. With css, we could do similar things, for example set the background to red of all input elements. Why can't we do something similar with setting properties like readOnly, disabled, etc?  With this api, giving developers the "keys" to css filtering, so they can "mount a campaign" to apply common settings on them all feels like something that almost every web developer has mentally screamed to themselves "why can't I do that?", doesn't it? 
-    3.  Supporting "progressive enhancement" more effectively.
-2.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.  This is done by passing into the API substantial number of conditions, which can all be evaluated at a lower level, before the api needs to surface up to the developer "found one!".
-3.  As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
+1. Give developers a strong signal to do the right thing by:
+    1. Making lazy loading of resource dependencies easy, to the benefit of users with expensive networks.
+    2. Supporting "binding from a distance" that can set property values of elements in bulk as the HTML streams in. For example, say a web page is streaming in HTML with thousands of input elements (say a long tax form). We want to have some indication in the head tag of the HTML (for example) to make all the input elements read-only as they stream through the page. With CSS, we could do similar things, for example set the background to red of all input elements. Why can't we do something similar with setting properties like readOnly, disabled, etc? With this API, giving developers the "keys" to CSS filtering so they can "mount a campaign" to apply common settings on them all feels like something that almost every web developer has mentally screamed to themselves "why can't I do that?", doesn't it?
+    3. Supporting "progressive enhancement" more effectively.
+2. Potentially allow the platform to do more work in low-level (C/C++/Rust?) code without as much context switching into the JavaScript memory space, which may reduce CPU cycles as well. This is done by passing a substantial number of conditions into the API, which can all be evaluated at a lower level before the API needs to surface up to the developer "found one!".
+3. As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has an attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector. Surely the platform has found ways to do this more efficiently?  
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
 
-## Quick Examples of The Most Common Use Cases
+## Quick Examples of the Most Common Use Cases
 
-Before getting into the weeds, let's demonstrate the two most prominent use cases
+Before getting into the weeds, let's demonstrate the two most prominent use cases:
 
 ### Use Case 1:  Custom Attribute Enhancement
 
@@ -124,7 +124,7 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
 
 See [this extending package](https://github.com/bahrus/mount-observer-script-element) that provides for a more declarative approach.
 
-### Use Case 2:  Lazy Global Custom Element Definition
+### Use Case 2: Lazy Global Custom Element Definition
 
 To specify the equivalent of what the [alternative proposal linked to above would do](https://github.com/WICG/webcomponents/issues/782), we can do the following:
 
@@ -151,7 +151,7 @@ document.mount({
 
 ```
 
-This registers custom elements with the global customElements registry
+This registers custom elements with the global customElements registry.
 
 ### Scoped
 
