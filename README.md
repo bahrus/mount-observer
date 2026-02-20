@@ -155,7 +155,7 @@ This registers custom elements with the global customElements registry
 
 ### Scoped
 
-To register the class in the same custom element registry as the element which calls the "mount" method (element in this case), use "builtIns.defineScopedCustomElement:
+To register the class in the same custom element registry as the element which calls the "mount" method (element in this case), use "builtIns.defineScopedCustomElement":
 
 ```JavaScript
 element.mount({
@@ -206,7 +206,7 @@ The "observer" constant above is a class instance that inherits from EventTarget
 > [!Note]
 > Reading through the historical links tied to the selector-observer proposal this proposal helped spawn, I may have painted an overly optimistic picture of [what the platform is capable of](https://github.com/whatwg/dom/issues/398).  It does leave me a little puzzled why this isn't an issue when it comes to styling, and also if some of the advances that were utilized to support :has could be applied to this problem space, so that maybe the arguments raised there have weakened.  Even if the concerns raised are as relevant today, I think considering the use cases this proposal envisions, that the objections could be overcome, for the following reasons: 1.  For scenarios where lazy loading is the primary objective, "bunching" multiple DOM mutations together and only reevaluating when things are quite idle is perfectly reasonable.  Also, for binding from a distance, most of the mutations that need responding to quickly will be when the *state of the host* changes, so DOM mutations play a somewhat muted role in that regard. Again, bunching multiple DOM mutations together, even if adds a bit of a delay, also seems reasonable.  I also think the platform could add an "analysis" step to look at the query and categorize it as "simple" queries vs complex.  Selector queries that are driven by the characteristics of the element itself (localName, attributes, etc) could be handled in a more expedited fashion.  Those that the platform does expect to require more babysitting could be monitored for less vigilantly.  Maybe in the latter case, a console.warning could be emitted during initialization.  The other use case, for lazy loading custom elements and custom enhancements based on attributes, I think most of the time this would fit the "simple" scenario, so again there wouldn't be much of an issue.
 
-In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but has to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable in some circumstances.
+In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but have to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable in some circumstances.
 
 If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors provide a selector-observer (if ever).
 
