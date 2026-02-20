@@ -112,7 +112,7 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
         import 'mount-observer/ElementMountExtension.js';
         document.body.mount([{
             withAttrs:{base: 'log-to-console'},
-            spawn: function(el, {config}){
+            spawn: function(el){
                 el.addEventListener('click', e => {
                   console.log(e.target.getAttribute('log-to-console'));
                 });
@@ -125,6 +125,8 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
 See [this extending package](https://github.com/bahrus/mount-observer-script-element) that provides for a more declarative approach.
 
 ### Use Case 2:  Lazy Custom Element Definition
+
+To specify the equivalent of what the [alternative proposal linked to above would do](https://github.com/WICG/webcomponents/issues/782), we can do the following:
 
 ```JavaScript
 // MyElement.js
@@ -149,13 +151,15 @@ document.mount({
 
 ```
 
+This registers the custom element in the same custom element registry as the element which calls the "mount" method (document in this case).
+
 # Thorough Exposition Begins Here
 
 Okay, let's get into the weeds.  First, we strongly recommend studying the core package that mount-observer extends, [assign-gingerly](https://www.npmjs.com/package/assign-gingerly).
 
 ## First use case -- lazy loading custom elements without sugar coating
 
-To specify the equivalent of what the [alternative proposal linked to above would do](https://github.com/WICG/webcomponents/issues/782), we can do the following:
+
 
 ```JavaScript
 const observer = new MountObserver({
