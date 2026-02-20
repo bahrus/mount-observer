@@ -124,7 +124,7 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
 
 See [this extending package](https://github.com/bahrus/mount-observer-script-element) that provides for a more declarative approach.
 
-### Use Case 2:  Lazy Custom Element Definition
+### Use Case 2:  Lazy Global Custom Element Definition
 
 To specify the equivalent of what the [alternative proposal linked to above would do](https://github.com/WICG/webcomponents/issues/782), we can do the following:
 
@@ -151,7 +151,20 @@ document.mount({
 
 ```
 
-This registers the custom element in the same custom element registry as the element which calls the "mount" method (document in this case).
+This registers custom elements with the global customElements registry
+
+### Scoped
+
+To register the class in the same custom element registry as the element which calls the "mount" method (document in this case), use "builtIns.defineScopedCustomElement:
+
+```JavaScript
+element.mount({
+    matching: 'my-element',
+    import: './MyElement.js',
+    do: 'builtIns.defineScopedCustomElement'
+});
+```
+
 
 # Thorough Exposition Begins Here
 

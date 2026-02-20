@@ -21,8 +21,18 @@ export class DefineCustomElementHandler extends EvtRt {
         // Use anonymous class expression which works across all browsers
         const WrapperClass = class extends ElementClass {
         };
-        // Define the custom element
-        customElements.define(tagName, WrapperClass);
+        // Define the custom element using the define method
+        this.define(tagName, WrapperClass, mountedElement);
+    }
+    /**
+     * Define the custom element in the appropriate registry.
+     * Override this method in subclasses to use scoped registries.
+     * @param tagName - The custom element tag name
+     * @param ElementClass - The element class constructor
+     * @param mountedElement - The mounted element (used for scoped registry access)
+     */
+    define(tagName, ElementClass, mountedElement) {
+        customElements.define(tagName, ElementClass);
     }
     findSuitableClass(module) {
         // Check default export first
@@ -60,5 +70,29 @@ export class DefineCustomElementHandler extends EvtRt {
         catch {
             return false;
         }
+    }
+}
+/**
+ * Handler for defining custom elements in scoped registries.
+ * Uses the element's customElementRegistry property to define elements
+ * in the appropriate scoped registry instead of the global registry.
+ */
+export class DefineScopedCustomElementHandler extends DefineCustomElementHandler {
+    /**
+     * Define the custom element in the element's scoped registry.
+     * @param tagName - The custom element tag name
+     * @param ElementClass - The element class constructor
+     * @param mountedElement - The mounted element with customElementRegistry
+     */
+    define(tagName, ElementClass, mountedElement) {
+        const registry = mountedElement.customElementRegistry;
+        if (!registry) {
+            throw new Error('Element does not have a customElementRegistry. Scoped registries require Chrome 146+ or latest WebKit/Safari.');
+        }
+        // Check if already defined in this scoped registry
+        if (registry.get(tagName)) {
+            return;
+        }
+        registry.define(tagName, ElementClass);
     }
 }

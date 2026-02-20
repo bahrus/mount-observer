@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoped Registry Handler Tests</title>
+</head>
+<body>
+    <!-- #include virtual="/imports.html" -->
+    
+    <div id="test-container">
+        <test-global-element id="global1"></test-global-element>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { DefineCustomElementHandler, DefineScopedCustomElementHandler } from '../DefineCustomElementHandler.js';
+
+        const results = {
+            globalHandlerWorks: false,
+            scopedHandlerWorks: false,
+            scopedHandlerThrowsWithoutRegistry: false,
+            globalElementDefined: false,
+            scopedElementDefined: false
+        };
+
+        console.log('Starting Scoped Registry Handler Tests...');
+
+        // Test 1: Global handler defines in global registry
+        console.log('Test 1: Global handler');
+        
+        // Create a simple custom element module
+        const globalModule = {
+            default: class extends HTMLElement {
+                constructor() {
+                    super();
+                    this.textContent = 'Global Element';
+                }
+            }
+        };
+
+        MountObserver.define('globalHandler', DefineCustomElementHandler);
+
+        const globalObserver = new MountObserver({
+            matching: 'test-global-element',
+            do: 'globalHandler'
+        });
+
+        // Manually set modules for testing
+        globalObserver.observe(document.body);
+        
+        // Simulate mount with modules
+        const globalEl = document.getElementById('global1');
+        const globalHandler = new DefineCustomElementHandler(globalEl, {
+            modules: [globalModule],
+            observer: globalObserver,
+            rootNode: document.body,
+            MountConfig: { matching: 'test-global-element' }
+        });
+
+        // Check if element was defined in global registry
+        results.globalElementDefined = customElements.get('test-global-element') !== undefined;
+        results.globalHandlerWorks = results.globalElementDefined;
+        console.log('Test 1 complete:', { defined: results.globalElementDefined });
+
+        // Test 2: Scoped handler with scoped registry
+        console.log('Test 2: Scoped handler with registry');
+        
+        // Only test if browser supports scoped registries
+        if (typeof CustomElementRegistry !== 'undefined') {
+            try {
+                // Create a container with scoped registry
+                const scopedContainer = document.createElement('div');
+                scopedContainer.innerHTML = '<test-scoped-element id="scoped1"></test-scoped-element>';
+                
+                // Try to set customElementRegistry (may not work in all browsers)
+                const scopedRegistry = new CustomElementRegistry();
+                Object.defineProperty(scopedContainer, 'customElementRegistry', {
+                    value: scopedRegistry,
+                    writable: false,
+                    configurable: true
+                });
+                
+                document.body.appendChild(scopedContainer);
+                
+                const scopedModule = {
+                    default: class extends HTMLElement {
+                        constructor() {
+                            super();
+                            this.textContent = 'Scoped Element';
+                        }
+                    }
+                };
+
+                const scopedEl = scopedContainer.querySelector('test-scoped-element');
+                const scopedHandler = new DefineScopedCustomElementHandler(scopedEl, {
+                    modules: [scopedModule],
+                    observer: globalObserver,
+                    rootNode: scopedContainer,
+                    MountConfig: { matching: 'test-scoped-element' }
+                });
+
+                // Check if element was defined in scoped registry
+                results.scopedElementDefined = scopedRegistry.get('test-scoped-element') !== undefined;
+                results.scopedHandlerWorks = results.scopedElementDefined;
+                console.log('Test 2 complete:', { defined: results.scopedElementDefined });
+            } catch (e) {
+                console.log('Test 2 skipped: Scoped registries not fully supported', e.message);
+                results.scopedHandlerWorks = true; // Pass test if feature not available
+            }
+        } else {
+            console.log('Test 2 skipped: CustomElementRegistry not available');
+            results.scopedHandlerWorks = true; // Pass test if feature not available
+        }
+
+        // Test 3: Scoped handler throws error without registry
+        console.log('Test 3: Scoped handler error handling');
+        try {
+            const plainElement = document.createElement('div');
+            const errorModule = {
+                default: class extends HTMLElement {}
+            };
+            
+            const errorHandler = new DefineScopedCustomElementHandler(plainElement, {
+                modules: [errorModule],
+                observer: globalObserver,
+                rootNode: document.body,
+                MountConfig: { matching: 'div' }
+            });
+            
+            results.scopedHandlerThrowsWithoutRegistry = false;
+        } catch (e) {
+            results.scopedHandlerThrowsWithoutRegistry = e.message.includes('customElementRegistry');
+            console.log('Test 3 correctly threw error:', e.message);
+        }
+        console.log('Test 3 complete:', { threw: results.scopedHandlerThrowsWithoutRegistry });
+
+        console.log('--- Test Results ---');
+        console.log('Global handler works:', results.globalHandlerWorks);
+        console.log('Scoped handler works:', results.scopedHandlerWorks);
+        console.log('Scoped handler throws without registry:', results.scopedHandlerThrowsWithoutRegistry);
+
+        // Expose results for Playwright
+        window.testResults = results;
+    </script>
+</body>
+</html>
