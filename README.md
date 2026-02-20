@@ -155,7 +155,7 @@ This registers custom elements with the global customElements registry
 
 ### Scoped
 
-To register the class in the same custom element registry as the element which calls the "mount" method (document in this case), use "builtIns.defineScopedCustomElement:
+To register the class in the same custom element registry as the element which calls the "mount" method (element in this case), use "builtIns.defineScopedCustomElement:
 
 ```JavaScript
 element.mount({
@@ -274,7 +274,7 @@ There are two significant steps to imports, each of which imposes a cost:
 
 What if we want to *download* the resource ahead of time, but only load into memory when needed?
 
-The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
+The link rel=modulepreload option (and maybe the new defer tc39 proposal) provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
 
 So for this we add loadingEagerness:
 
@@ -580,7 +580,7 @@ But I think it's important to think about this way of making the mount observer 
 
 ## Binding from a distance
 
-It is important to note that "matching" is a css query with no restrictions.  So something like:
+It is important to note that "matching" (and especially the non polyfillable "select") is a css query with no restrictions.  So something like:
 
 ```JavaScript
 import {EvtRt} from 'mount-observer/EvtRt.js';
@@ -597,7 +597,7 @@ class MyHandler extends EvtRt {
 const observer = new MountObserver({
    // not supported by polyfill
    //select: 'div > p + p ~ span[class$="name"]' 
-   // is supported:
+   // is supported by polyfill, and even after select is also supported:
    matching: 'div > p + p ~ span[class$="name"]',
    do: (mountedElement, ctx) => {
       new MyHandler(mountedElement, ctx);
