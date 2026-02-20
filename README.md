@@ -159,7 +159,7 @@ Okay, let's get into the weeds.  First, we strongly recommend studying the core 
 
 ## First use case -- lazy loading custom elements without sugar coating
 
-
+This registers the custom element in the global registry.
 
 ```JavaScript
 const observer = new MountObserver({
