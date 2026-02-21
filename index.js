@@ -9,6 +9,7 @@ export { mountEventName, dismountEventName, disconnectEventName, loadEventName, 
 // Register built-in handlers
 import { MountObserver } from './MountObserver.js';
 import { EvtRt } from './EvtRt.js';
-import { DefineCustomElementHandler } from './DefineCustomElementHandler.js';
+import { DefineCustomElementHandler, DefineScopedCustomElementHandler } from './DefineCustomElementHandler.js';
 MountObserver.define('builtIns.logToConsole', EvtRt);
 MountObserver.define('builtIns.defineCustomElement', DefineCustomElementHandler);
+MountObserver.define('buildIns.defineScopedCustomElement', DefineScopedCustomElementHandler);

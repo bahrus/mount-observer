@@ -16,7 +16,11 @@ Object.defineProperty(Element.prototype, 'mount', {
         const scope = options.scope ?? 'registry';
         let thingToObserve;
         if (scope === 'registry') {
-            thingToObserve = getRootRegistryContainer(this);
+            const registryContainer = getRootRegistryContainer(this);
+            if (!registryContainer) {
+                throw new Error('Could not find root registry container');
+            }
+            thingToObserve = registryContainer;
         }
         else if (scope === 'self') {
             thingToObserve = this;
