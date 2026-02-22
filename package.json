@@ -39,6 +39,10 @@
     "./DefineCustomElementHandler.js": {
       "default": "./DefineCustomElementHandler.js",
       "types": "./DefineCustomElementHandler.ts"
+    },
+    "./EnhanceMountedElementHandler.js": {
+      "default": "./EnhanceMountedElementHandler.js",
+      "types": "./EnhanceMountedElementHandler.ts"
     }
   },
   "files": [

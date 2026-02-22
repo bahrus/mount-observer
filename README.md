@@ -163,6 +163,56 @@ element.mount({
 });
 ```
 
+## Enhancing Elements with assign-gingerly
+
+The `builtIns.enhanceMountedElement` handler automatically enhances mounted elements using the [assign-gingerly](https://www.npmjs.com/package/assign-gingerly) enhancement system. This allows you to attach behavior and state to elements without subclassing.
+
+```JavaScript
+// MyEnhancement.js
+class ButtonEnhancement {
+    constructor(element, ctx, initVals) {
+        this.element = element;
+        this.ctx = ctx;
+        this.clickCount = 0;
+        
+        element.addEventListener('click', () => {
+            this.clickCount++;
+            element.setAttribute('data-clicks', this.clickCount);
+        });
+    }
+}
+
+export default {
+    spawn: ButtonEnhancement,
+    enhKey: 'buttonEnh'
+};
+
+// main.js
+import 'mount-observer/ElementMountExtension.js';
+
+document.mount({
+    matching: '.enhance-me',
+    import: './MyEnhancement.js',
+    do: 'builtIns.enhanceMountedElement'
+});
+
+// HTML
+<button class="enhance-me">Click me</button>
+
+// Access the enhancement
+const button = document.querySelector('.enhance-me');
+console.log(button.enh.buttonEnh.clickCount); // 0
+button.click();
+console.log(button.enh.buttonEnh.clickCount); // 1
+```
+
+The handler:
+1. Searches the imported module for an export with a `spawn` property (the enhancement class)
+2. Calls `element.enh.get(registryItem, context)` to spawn the enhancement
+3. Stores the enhancement instance on `element.enh[enhKey]` if an `enhKey` is provided
+
+This works with browsers that don't support scoped custom element registries by polyfilling the `customElementRegistry` property on elements.
+
 
 # Thorough Exposition Begins Here
 
