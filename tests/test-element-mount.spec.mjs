@@ -19,9 +19,5 @@ test.describe('Element Mount Extension', () => {
         // Test 2: getRootRegistryContainer
         expect(results.test2.rootContainerFound).toBe(true);
         // Note: rootIsCorrect may vary based on browser support for scoped registries
-        
-        // Test 3: Array config
-        expect(results.test3.arrayConfigWorked).toBe(true);
-        // Note: enhancementSpawned may be false in browsers without native scoped registry support
     });
 });

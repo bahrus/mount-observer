@@ -6,13 +6,12 @@
 import { MountObserver } from './MountObserver.js';
 import { getRootRegistryContainer } from './getRootRegistryContainer.js';
 import type { MountConfig, MountObserverOptions } from './types/mount-observer/types.js';
-import type { EnhancementConfig } from './types/assign-gingerly/types.js';
 
 declare global {
     interface Element {
         mount<T extends Element>(
             this: T,
-            config: MountConfig | EnhancementConfig[], 
+            config: MountConfig, 
             options?: MountObserverOptions
         ): Promise<T>;
     }
@@ -28,7 +27,7 @@ declare global {
 Object.defineProperty(Element.prototype, 'mount', {
     value: async function <T extends Element>(
         this: T,
-        config: MountConfig | EnhancementConfig[], 
+        config: MountConfig, 
         options: MountObserverOptions = {}
     ): Promise<T> {
         const scope = options.scope ?? 'registry';

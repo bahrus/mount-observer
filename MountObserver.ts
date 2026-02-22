@@ -22,7 +22,6 @@ import {
 } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
-import type { BaseRegistry, EnhancementConfig } from './types/assign-gingerly/types.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
@@ -58,28 +57,17 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
 
-    constructor(config: MountConfig | EnhancementConfig[], options: MountObserverOptions = {}) {
+    constructor(config: MountConfig, options: MountObserverOptions = {}) {
         super();
         
-        // Handle array shorthand - convert EnhancementConfig[] to MountConfig
-        let init: MountConfig;
-        if (Array.isArray(config)) {
-            init = {
-                matching: '*', // Match all elements, let withAttrs do the filtering
-                enhancementConfig: config
-            };
-        } else {
-            init = config;
-        }
-        
-        this.#init = init;
+        this.#init = config;
         this.#options = options;
         this.#abortController = new AbortController();
 
         const {
             assignOnMount, assignOnDismount, stageOnMount, do: doValue, reference, loadingEagerness,
             import: imp
-        } = init;
+        } = config;
         // Make a copy of assignOnMount config using structuredClone
         if (assignOnMount !== undefined) {
             this.#asgMtSource = structuredClone(assignOnMount);
@@ -218,12 +206,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
             await this.#loadImports();
         }
         
-        // Register enhancement configs if no imports (inline only)
-        // If imports exist, registration happens in #loadImports after modules are loaded
-        if (!this.#init.import && this.#init.enhancementConfig) {
-            await this.#registerEnhancementConfigs();
-        }
-        
         // Process existing elements only if media matches
         if (this.#mediaMatches) {
             this.#processNode(rootNode);
@@ -310,111 +292,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             }
         }
 
-        // Register enhancement configs after imports are loaded
-        await this.#registerEnhancementConfigs();
-
         this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
-    }
-
-    async #registerEnhancementConfigs(): Promise<void> {
-        const rootNode = this.#rootNode?.deref();
-        if (!rootNode || !(rootNode instanceof Element)) {
-            return;
-        }
-
-        const registry = (rootNode as any).customElementRegistry?.enhancementRegistry as BaseRegistry | undefined;
-        if (!registry) {
-            return;
-        }
-
-        const items = registry.getItems();
-        
-        // Collect all enhancement configs to register
-        const configsToRegister: EnhancementConfig[] = [];
-        
-        // First, add inline enhancementConfig(s)
-        if (this.#init.enhancementConfig) {
-            const inlineConfigs = arr(this.#init.enhancementConfig);
-            configsToRegister.push(...inlineConfigs);
-        }
-        
-        // Then, add referenced enhancementConfig(s) from imported modules
-        if (this.#importsLoaded && this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
-            
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && module.enhancementConfig !== undefined) {
-                    const referencedConfigs = arr(module.enhancementConfig);
-                    configsToRegister.push(...referencedConfigs);
-                }
-            }
-        }
-        
-        // Register each config if not already registered (using reference equality)
-        for (const config of configsToRegister) {
-            if (!items.includes(config)) {
-                registry.push(config);
-            }
-        }
-    }
-
-    /**
-     * Resolves template variables in a string recursively
-     * @param template - Template string with ${var} placeholders
-     * @param patterns - The patterns object containing variable values
-     * @returns Resolved string
-     */
-    #resolveAttrTemplate(template: string, patterns: Record<string, any>): string {
-        return template.replace(/\$\{(\w+)\}/g, (match, varName) => {
-            const value = patterns[varName];
-            if (value === undefined) {
-                throw new Error(`Undefined template variable: ${varName}`);
-            }
-            if (typeof value === 'string') {
-                // Recursively resolve
-                return this.#resolveAttrTemplate(value, patterns);
-            }
-            return String(value);
-        });
-    }
-
-    /**
-     * Checks if element has attribute with enh- prefix handling
-     * @param element - The element to check
-     * @param attrName - The attribute name (without enh- prefix)
-     * @param allowUnprefixed - Pattern that element tag name must match to allow unprefixed attributes
-     * @returns true if element has the attribute
-     */
-    #hasAttributeWithEnhPrefix(
-        element: Element, 
-        attrName: string, 
-        allowUnprefixed?: string | RegExp
-    ): boolean {
-        const isCustomElement = element.tagName.includes('-');
-        const isSVGElement = element instanceof SVGElement;
-        
-        // For custom elements and SVG - strict enh- requirement
-        if (isCustomElement || isSVGElement) {
-            if (element.hasAttribute(`enh-${attrName}`)) {
-                return true;
-            }
-            
-            // Only check unprefixed if tag name matches allowUnprefixed pattern
-            if (allowUnprefixed) {
-                const pattern = typeof allowUnprefixed === 'string' 
-                    ? new RegExp(allowUnprefixed) 
-                    : allowUnprefixed;
-                const tagName = element.tagName.toLowerCase();
-                if (pattern.test(tagName)) {
-                    return element.hasAttribute(attrName);
-                }
-            }
-            return false;
-        }
-        
-        // For built-in elements - enh- is alias (check both)
-        return element.hasAttribute(`enh-${attrName}`) || element.hasAttribute(attrName);
     }
 
     #processNode(node: Node): void {
@@ -490,80 +368,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 }
             }
         }
-        //TODO:  move to a separate file?
-        // Check withAttrs condition if specified (attribute-based matching)
-        // Check ALL enhancementConfigs (inline + referenced)
-        const enhancementConfigs: EnhancementConfig[] = [];
-        
-        // Add inline configs
-        if (this.#init.enhancementConfig) {
-            enhancementConfigs.push(...arr(this.#init.enhancementConfig));
-        }
-        
-        // Add referenced configs if imports are loaded
-        if (this.#importsLoaded && this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && module.enhancementConfig !== undefined) {
-                    enhancementConfigs.push(...arr(module.enhancementConfig));
-                }
-            }
-        }
-        
-        // Check if ANY enhancementConfig has withAttrs - if so, element must match at least ONE
-        let hasAnyWithAttrs = false;
-        let matchesAnyWithAttrs = false;
-        
-        for (const config of enhancementConfigs) {
-            if (!config.withAttrs) {
-                continue; // Skip configs without withAttrs
-            }
-            
-            hasAnyWithAttrs = true;
-            const withAttrs = config.withAttrs;
-            const allowUnprefixed = config.allowUnprefixed;
-            
-            // Collect all attribute names to check for this config
-            const attrNames: string[] = [];
-            
-            for (const key in withAttrs) {
-                // Skip base and underscore-prefixed config keys
-                if (key === 'base' || key.startsWith('_')) {
-                    continue;
-                }
-                
-                const value = withAttrs[key];
-                if (typeof value === 'string') {
-                    // Resolve template string to get actual attribute name
-                    const attrName = this.#resolveAttrTemplate(value, withAttrs);
-                    attrNames.push(attrName);
-                }
-            }
-            
-            // Handle base attribute specially if present
-            if ('base' in withAttrs && typeof withAttrs.base === 'string') {
-                attrNames.push(withAttrs.base);
-            }
-            
-            // Check if element has at least ONE of the specified attributes (OR logic within config)
-            if (attrNames.length > 0) {
-                const hasAnyAttribute = attrNames.some(attrName => 
-                    this.#hasAttributeWithEnhPrefix(element, attrName, allowUnprefixed)
-                );
-                
-                if (hasAnyAttribute) {
-                    matchesAnyWithAttrs = true;
-                    break; // Found a matching config, no need to check others
-                }
-            }
-        }
-        
-        // If any config has withAttrs but element doesn't match any of them, reject
-        if (hasAnyWithAttrs && !matchesAnyWithAttrs) {
-            return false;
-        }
-        
+
         // All conditions passed
         return true;
     }
@@ -609,36 +414,6 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const reversal = {};
             this.#assignTentatively(element, this.#stageMtSource, { reversal });
             this.#stageReversals.set(element, reversal);
-        }
-
-        // Spawn enhancements if configured
-        // Process inline configs first, then referenced configs
-        const enhancementConfigs: EnhancementConfig[] = [];
-        
-        // Add inline configs
-        if (this.#init.enhancementConfig) {
-            enhancementConfigs.push(...arr(this.#init.enhancementConfig));
-        }
-        
-        // Add referenced configs if imports are loaded
-        if (this.#importsLoaded && this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && module.enhancementConfig !== undefined) {
-                    enhancementConfigs.push(...arr(module.enhancementConfig));
-                }
-            }
-        }
-        
-        // Spawn each enhancement that has a spawn property
-        if (enhancementConfigs.length > 0) {
-            await import('assign-gingerly/object-extension.js');
-            for (const config of enhancementConfigs) {
-                if (config.spawn) {
-                    (element as any).enh.get(config, context);
-                }
-            }
         }
 
         // Check if notifier exists BEFORE calling do callback

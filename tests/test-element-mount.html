@@ -48,10 +48,6 @@
                 rootContainerFound: false,
                 rootIsDocument: false,
                 rootIsCorrect: false
-            },
-            test3: {
-                arrayConfigWorked: false,
-                enhancementSpawned: false
             }
         };
         
@@ -104,61 +100,10 @@
         
         console.log('Test 2 complete:', results.test2);
         
-        // Test 3: Mount with array of EnhancementConfigs
-        console.log('Test 3: Mount with array of EnhancementConfigs');
-        
-        class TestEnhancement {
-            constructor(element, ctx, initVals) {
-                this.element = element;
-                this.name = 'testEnh';
-            }
-        }
-        
-        const elem3Container = document.createElement('div');
-        elem3Container.id = 'elem3-container';
-        document.body.appendChild(elem3Container);
-        
-        await elem3Container.mount([
-            {
-                spawn: TestEnhancement,
-                symlinks: {},
-                enhKey: 'testEnh',
-                withAttrs: {
-                    base: 'data-',
-                    test: '${base}test'
-                }
-            }
-        ]);
-        
-        results.test3.arrayConfigWorked = true;
-        
-        const elem3 = document.createElement('button');
-        elem3.id = 'test3';
-        elem3.setAttribute('data-test', 'value');
-        
-        // Add polyfill inline for Firefox compatibility
-        if (!elem3.customElementRegistry) {
-            Object.defineProperty(elem3, 'customElementRegistry', {
-                value: {
-                    enhancementRegistry: new BaseRegistry()
-                },
-                configurable: true
-            });
-        }
-        
-        elem3Container.appendChild(elem3);
-        
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        results.test3.enhancementSpawned = elem3.enh?.testEnh !== undefined;
-        
-        console.log('Test 3 complete:', results.test3);
-        
         // Display results
         console.log('--- Test Results ---');
         console.log('Test 1 (Basic mount):', results.test1);
         console.log('Test 2 (getRootRegistryContainer):', results.test2);
-        console.log('Test 3 (Array config):', results.test3);
         
         window.testResults = results;
         window.testComplete = true;
