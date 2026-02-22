@@ -5,8 +5,8 @@
 
 import { MountObserver } from './MountObserver.js';
 import { getRootRegistryContainer } from './getRootRegistryContainer.js';
-import type { MountConfig, MountObserverOptions } from './types.js';
-import type { EnhancementConfig } from 'assign-gingerly/types.js';
+import type { MountConfig, MountObserverOptions } from './types/mount-observer/types.js';
+import type { EnhancementConfig } from './types/assign-gingerly/types.js';
 
 declare global {
     interface Element {

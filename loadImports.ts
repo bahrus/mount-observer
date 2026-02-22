@@ -1,7 +1,7 @@
 // Dynamic import loading utilities
 // Only loaded when MountConfig.import is specified
 
-import { ImportSpec } from './types.js';
+import { ImportSpec } from './types/mount-observer/types.js';
 import { arr } from './arr.js';
 
 export async function loadImports(

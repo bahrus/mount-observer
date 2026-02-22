@@ -1,4 +1,4 @@
-import {MountContext, MountConfig} from './types.js';
+import {MountContext, MountConfig} from './types/mount-observer/types.js';
 
 import { 
     DismountEvent, MountEvent, DisconnectEvent,

@@ -1,4 +1,4 @@
-import type { EventConfig, EventConstructor, MountConfig } from './types.d.ts';
+import type { EventConfig, EventConstructor, MountConfig } from './types/mount-observer/types.d.ts';
 
 /**
  * Emits events from a mounted element based on the mountedElemEmits configuration.

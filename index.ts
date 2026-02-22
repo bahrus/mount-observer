@@ -14,7 +14,7 @@ export type {
     ImportSpec,
     IMountEvent,
     IDismountEvent
-} from './types.js';
+} from './types/mount-observer/types.js';
 export {
     mountEventName,
     dismountEventName,

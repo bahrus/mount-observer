@@ -7,7 +7,7 @@ import {
     EventConfig,
     EventConstructor,
     Constructor
-} from './types.js';
+} from './types/mount-observer/types.js';
 import { arr } from './arr.js';
 import {
     MountEvent,
@@ -22,7 +22,7 @@ import {
 } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
-import type { BaseRegistry, EnhancementConfig } from 'assign-gingerly/types.js';
+import type { BaseRegistry, EnhancementConfig } from './types/assign-gingerly/types.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
     // Static registry for registered handlers

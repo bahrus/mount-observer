@@ -1,5 +1,5 @@
 // Event classes for MountObserver
-import type { IMountEvent, IDismountEvent, MountConfig, DismountReason, MountContext } from './types.js';
+import type { IMountEvent, IDismountEvent, MountConfig, DismountReason, MountContext } from './types/mount-observer/types.js';
 
 // Event name constants
 export const loadEventName = 'load';

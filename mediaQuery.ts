@@ -1,5 +1,5 @@
 // Media query handling for MountObserver
-import type { MountConfig, MountContext, WeakDual } from './types.js';
+import type { MountConfig, MountContext, WeakDual } from './types/mount-observer/types.js';
 import { MediaMatchEvent, MediaUnmatchEvent, DismountEvent } from './Events.js';
 
 export function setupMediaQuery(

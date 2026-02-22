@@ -1,5 +1,5 @@
 import { EvtRt } from './EvtRt.js';
-import { MountConfig, MountContext } from './types.js';
+import { MountConfig, MountContext } from './types/mount-observer/types.js';
 
 export class DefineCustomElementHandler extends EvtRt {
     mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): void {
