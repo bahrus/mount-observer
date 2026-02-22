@@ -45,7 +45,7 @@
     "*.js",
     "*.ts"
   ],
-  "types": "./types.d.ts",
+  "types": "./types/mount-observer/types.d.ts",
   "scripts": {
     "serve": "node ./node_modules/spa-ssi/serve.js",
     "test": "playwright test",
