@@ -1,18 +1,20 @@
 import { EvtRt } from './EvtRt.js';
+import { buildCSSQuery } from 'assign-gingerly/buildCSSQuery.js';
+import 'assign-gingerly/object-extension.js';
 /**
  * Handler for automatically enhancing mounted elements using assign-gingerly.
  * Searches the first imported module for an export with a "spawn" property
  * and uses element.enh.get() to spawn the enhancement.
  */
 export class EnhanceMountedElementHandler extends EvtRt {
-    async mount(mountedElement, MountConfig, context) {
+    mount(mountedElement, MountConfig, context) {
         // Check if modules are specified
         if (!context.modules || context.modules.length === 0) {
             throw new Error('Must specify an ES Module with import property');
         }
         const module = context.modules[0];
         // Find registry item (object with spawn property)
-        const registryItem = await this.#findRegistryItem(module, mountedElement);
+        const registryItem = this._findRegistryItem(module, mountedElement);
         if (!registryItem) {
             throw new Error('No registry item found in module. Expected an export with a "spawn" property.');
         }
@@ -21,15 +23,13 @@ export class EnhanceMountedElementHandler extends EvtRt {
             throw new Error('Registry item "spawn" property must be a constructor function');
         }
         // Spawn the enhancement
-        await this.#spawnEnhancement(mountedElement, registryItem, context);
+        this._spawnEnhancement(mountedElement, registryItem, context);
     }
     /**
      * Spawn the enhancement using element.enh.get().
      * Polyfills customElementRegistry if needed for browsers without scoped registry support.
      */
-    async #spawnEnhancement(element, registryItem, context) {
-        // Import assign-gingerly object-extension to enable enh property
-        await import('assign-gingerly/object-extension.js');
+    _spawnEnhancement(element, registryItem, context) {
         // Polyfill element.customElementRegistry if it doesn't exist (for browsers without scoped registries)
         if (!element.customElementRegistry) {
             Object.defineProperty(element, 'customElementRegistry', {
@@ -52,21 +52,19 @@ export class EnhanceMountedElementHandler extends EvtRt {
      * @param module - The imported module
      * @returns The registry item or null if not found
      */
-    async #findRegistryItem(module, el) {
+    _findRegistryItem(module, el) {
         // Check default export first
-        if (module.default && await this.#isRegistryItem(module.default, el)) {
+        if (module.default && this._isRegistryItem(module.default, el)) {
             return module.default;
         }
         // Search all exports for a registry item
         const exports = Object.values(module);
         const registryItems = [];
         for (const e of exports) {
-            const isRegistryItem = await this.#isRegistryItem(e, el);
+            const isRegistryItem = this._isRegistryItem(e, el);
             if (isRegistryItem)
                 registryItems.push(e);
         }
-        // const registryItems = 
-        //     .filter(exp => this.#isRegistryItem(exp));
         if (registryItems.length === 0) {
             return null;
         }
@@ -80,10 +78,18 @@ export class EnhanceMountedElementHandler extends EvtRt {
      * @param exp - The export to check
      * @returns True if the export is a registry item
      */
-    async #isRegistryItem(exp, mountedElement) {
-        return exp !== null
+    _isRegistryItem(exp, mountedElement) {
+        let test = exp !== null
             && typeof exp === 'object'
             && 'spawn' in exp
             && typeof exp.spawn === 'function';
+        if (!test)
+            return false;
+        const emc = exp;
+        if (emc.withAttrs !== undefined) {
+            const cssQuery = buildCSSQuery(emc);
+            return mountedElement.matches(cssQuery);
+        }
+        return true;
     }
 }
