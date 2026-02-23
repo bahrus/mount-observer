@@ -1,7 +1,7 @@
 import { EvtRt } from './EvtRt.js';
 import {EnhancementConfig} from './types/assign-gingerly/types.js';
 import { MountConfig, MountContext } from './types/mount-observer/types.js';
-import { buildCSSQuery } from 'assign-gingerly/buildCSSQuery.js';
+//import { buildCSSQuery } from 'assign-gingerly/buildCSSQuery.js';
 import 'assign-gingerly/object-extension.js';
 
 /**
@@ -10,7 +10,7 @@ import 'assign-gingerly/object-extension.js';
  * and uses element.enh.get() to spawn the enhancement.
  */
 export class EnhanceMountedElementHandler extends EvtRt {
-    mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): void {
+    async mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext){
         // Check if modules are specified
         if (!context.modules || context.modules.length === 0) {
             throw new Error('Must specify an ES Module with import property');
@@ -19,7 +19,7 @@ export class EnhanceMountedElementHandler extends EvtRt {
         const module = context.modules[0];
         
         // Find registry item (object with spawn property)
-        const registryItem = this._findRegistryItem(module, mountedElement);
+        const registryItem = await this._findRegistryItem(module, mountedElement);
         
         if (!registryItem) {
             throw new Error('No registry item found in module. Expected an export with a "spawn" property.');
@@ -64,9 +64,9 @@ export class EnhanceMountedElementHandler extends EvtRt {
      * @param module - The imported module
      * @returns The registry item or null if not found
      */
-    protected _findRegistryItem(module: any, el: Element): any | null {
+    protected async _findRegistryItem(module: any, el: Element): Promise<any | null> {
         // Check default export first
-        if (module.default && this._isRegistryItem(module.default, el)) {
+        if (module.default && await this._isRegistryItem(module.default, el)) {
             return module.default;
         }
         
@@ -74,7 +74,7 @@ export class EnhanceMountedElementHandler extends EvtRt {
         const exports = Object.values(module);
         const registryItems = [];
         for(const e of exports){
-            const isRegistryItem = this._isRegistryItem(e, el);
+            const isRegistryItem = await this._isRegistryItem(e, el);
             if(isRegistryItem) registryItems.push(e);
         }
         
@@ -94,7 +94,7 @@ export class EnhanceMountedElementHandler extends EvtRt {
      * @param exp - The export to check
      * @returns True if the export is a registry item
      */
-    protected _isRegistryItem(exp: any, mountedElement: Element): boolean {
+    protected async  _isRegistryItem(exp: any, mountedElement: Element): Promise<boolean> {
         let test = exp !== null 
             && typeof exp === 'object' 
             && 'spawn' in exp 
@@ -102,7 +102,7 @@ export class EnhanceMountedElementHandler extends EvtRt {
         if(!test) return false;
         const emc = exp as EnhancementConfig;
         if(emc.withAttrs !== undefined){
-            const cssQuery = buildCSSQuery(emc);
+            const cssQuery = (await import('assign-gingerly/buildCSSQuery.js')).buildCSSQuery(emc);
             return mountedElement.matches(cssQuery);
         }
         return true;
