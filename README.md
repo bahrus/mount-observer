@@ -42,9 +42,9 @@ The following features have been implemented and tested:
 
 Author: Bruce B. Anderson (with valuable feedback from @doeixd)
 
-Issues / PRs / polyfill: [mount-observer](https://github.com/bahrus/mount-observer)
+Issues / PRs / polyfill: [mount-observer](https://github.com/bahrus/mount-observer/tree/v2)
 
-Last Update: Aug 7, 2025
+Last Update: Feb 23, 2026
 
 ## Benefits of this API
 
@@ -100,7 +100,7 @@ The extra flexibility this new primitive would provide could be quite useful to 
 
 Before getting into the weeds, let's demonstrate the two most prominent use cases:
 
-### Use Case 1:  Custom Attribute Enhancement
+### Use Case 1:  Custom Attribute Enhancement [TODO]: out of date
 
 ```html
 <body>
@@ -108,6 +108,8 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
 
     <script type=module>
         import 'mount-observer/ElementMountExtension.js';
+
+        
         document.body.mount([{
             withAttrs:{base: 'log-to-console'},
             spawn: function(el){
