@@ -48,7 +48,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #rootNode: WeakRef<Node> | undefined;
     #importsLoaded = false;
     #mediaQueryCleanup?: () => void;
+    #rootSizeCleanup?: () => void;
     #mediaMatches: boolean = true;
+    #rootSizeMatches: boolean = true;
     #asgMtSource: Record<string, any> | undefined;
     #asgDisMtSource: Record<string, any> | undefined;
     #stageMtSource: Record<string, any> | undefined;
@@ -165,6 +167,25 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#mediaQueryCleanup = result.cleanup;
     }
 
+    async #setupRootSizeObserver(): Promise<void> {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup root size observer before observe() is called');
+        }
+        
+        const { setupRootSizeObserver } = await import('./rootSizeObserver.js');
+        const result = setupRootSizeObserver(
+            this.#init,
+            this.#rootNode,
+            this.#mountedElements,
+            this.#modules,
+            this,
+            (node) => this.#processNode(node)
+        );
+        
+        this.#rootSizeMatches = result.conditionMatches;
+        this.#rootSizeCleanup = result.cleanup;
+    }
+
     get disconnectedSignal(): AbortSignal {
         return this.#abortController.signal;
     }
@@ -201,20 +222,25 @@ export class MountObserver extends EventTarget implements IMountObserver {
             await this.#setupMediaQuery();
         }
         
+        // Set up root size observer if specified (needs rootNode to be set first)
+        if (this.#init.whereObservedRootSizeMatches) {
+            await this.#setupRootSizeObserver();
+        }
+        
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
             await this.#loadImports();
         }
         
-        // Process existing elements only if media matches
-        if (this.#mediaMatches) {
+        // Process existing elements only if media matches and root size matches
+        if (this.#mediaMatches && this.#rootSizeMatches) {
             this.#processNode(rootNode);
         }
 
         // Create mutation callback
         this.#mutationCallback = (mutations) => {
-            // Skip processing if media doesn't match
-            if (!this.#mediaMatches) {
+            // Skip processing if media doesn't match or root size doesn't match
+            if (!this.#mediaMatches || !this.#rootSizeMatches) {
                 return;
             }
             
@@ -256,6 +282,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (this.#mediaQueryCleanup) {
             this.#mediaQueryCleanup();
             this.#mediaQueryCleanup = undefined;
+        }
+        
+        // Remove root size observer
+        if (this.#rootSizeCleanup) {
+            this.#rootSizeCleanup();
+            this.#rootSizeCleanup = undefined;
         }
         
         this.#abortController.abort();
@@ -319,59 +351,65 @@ export class MountObserver extends EventTarget implements IMountObserver {
     }
 
     #matchesSelector(element: Element): boolean {
-        //TODO:  reduce redundncy with this.#init?
-        // Check matching condition
-        if (!this.#init.matching) {
-            return false;
-        }
-        
-        const matchesElement = element.matches(this.#init.matching);
-        if (!matchesElement) {
-            return false;
-        }
-        
-        // Check withScopePerimeter condition if specified (donut hole scoping)
-        if (this.#init.withScopePerimeter) {
-            const rootNode = this.#rootNode?.deref();
-            if (!rootNode || !withScopePerimeter(rootNode, element, this.#init.withScopePerimeter)) {
+            //TODO:  reduce redundncy with this.#init?
+            // Check matching condition
+            if (!this.#init.matching) {
                 return false;
             }
-        }
-        
-        // Check withInstance condition if specified
-        if (this.#init.withInstance) {
-            const constructors = arr(this.#init.withInstance);
-            
-            // Element must be an instance of at least one constructor (OR logic for array)
-            const matchesInstanceOf = constructors.some(constructor => element instanceof constructor);
-            
-            if (!matchesInstanceOf) {
-                return false;
-            }
-        }
-        
-        // Check referenced withInstance if imports are loaded and reference is specified
-        if (this.#importsLoaded && this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
 
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && module.withInstance !== undefined) {
-                    const constructors = arr(module.withInstance);
-                    
-                    // Element must be an instance of at least one constructor (OR logic within this module)
-                    const matchesInstanceOf = constructors.some((constructor: Constructor) => element instanceof constructor);
-                    
-                    if (!matchesInstanceOf) {
-                        return false;
+            const matchesElement = element.matches(this.#init.matching);
+            if (!matchesElement) {
+                return false;
+            }
+
+            // Check withScopePerimeter condition if specified (donut hole scoping)
+            if (this.#init.withScopePerimeter) {
+                const rootNode = this.#rootNode?.deref();
+                if (!rootNode || !withScopePerimeter(rootNode, element, this.#init.withScopePerimeter)) {
+                    return false;
+                }
+            }
+
+            // Check whereObservedRootSizeMatches condition if specified
+            if (this.#init.whereObservedRootSizeMatches && !this.#rootSizeMatches) {
+                return false;
+            }
+
+            // Check withInstance condition if specified
+            if (this.#init.withInstance) {
+                const constructors = arr(this.#init.withInstance);
+
+                // Element must be an instance of at least one constructor (OR logic for array)
+                const matchesInstanceOf = constructors.some(constructor => element instanceof constructor);
+
+                if (!matchesInstanceOf) {
+                    return false;
+                }
+            }
+
+            // Check referenced withInstance if imports are loaded and reference is specified
+            if (this.#importsLoaded && this.#init.reference !== undefined) {
+                const references = arr(this.#init.reference);
+
+                for (const index of references) {
+                    const module = this.#modules[index];
+                    if (module && module.withInstance !== undefined) {
+                        const constructors = arr(module.withInstance);
+
+                        // Element must be an instance of at least one constructor (OR logic within this module)
+                        const matchesInstanceOf = constructors.some((constructor: Constructor) => element instanceof constructor);
+
+                        if (!matchesInstanceOf) {
+                            return false;
+                        }
                     }
                 }
             }
+
+            // All conditions passed
+            return true;
         }
 
-        // All conditions passed
-        return true;
-    }
 
     async #handleMatch(element: Element): Promise<void> {
         if (this.#processedDoForElement.has(element)) {

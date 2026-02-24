@@ -25,7 +25,9 @@ export class MountObserver extends EventTarget {
     #rootNode;
     #importsLoaded = false;
     #mediaQueryCleanup;
+    #rootSizeCleanup;
     #mediaMatches = true;
+    #rootSizeMatches = true;
     #asgMtSource;
     #asgDisMtSource;
     #stageMtSource;
@@ -112,6 +114,15 @@ export class MountObserver extends EventTarget {
         this.#mediaMatches = result.mediaMatches;
         this.#mediaQueryCleanup = result.cleanup;
     }
+    async #setupRootSizeObserver() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup root size observer before observe() is called');
+        }
+        const { setupRootSizeObserver } = await import('./rootSizeObserver.js');
+        const result = setupRootSizeObserver(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (node) => this.#processNode(node));
+        this.#rootSizeMatches = result.conditionMatches;
+        this.#rootSizeCleanup = result.cleanup;
+    }
     get disconnectedSignal() {
         return this.#abortController.signal;
     }
@@ -142,18 +153,22 @@ export class MountObserver extends EventTarget {
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
         }
+        // Set up root size observer if specified (needs rootNode to be set first)
+        if (this.#init.whereObservedRootSizeMatches) {
+            await this.#setupRootSizeObserver();
+        }
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
             await this.#loadImports();
         }
-        // Process existing elements only if media matches
-        if (this.#mediaMatches) {
+        // Process existing elements only if media matches and root size matches
+        if (this.#mediaMatches && this.#rootSizeMatches) {
             this.#processNode(rootNode);
         }
         // Create mutation callback
         this.#mutationCallback = (mutations) => {
-            // Skip processing if media doesn't match
-            if (!this.#mediaMatches) {
+            // Skip processing if media doesn't match or root size doesn't match
+            if (!this.#mediaMatches || !this.#rootSizeMatches) {
                 return;
             }
             for (const mutation of mutations) {
@@ -189,6 +204,11 @@ export class MountObserver extends EventTarget {
         if (this.#mediaQueryCleanup) {
             this.#mediaQueryCleanup();
             this.#mediaQueryCleanup = undefined;
+        }
+        // Remove root size observer
+        if (this.#rootSizeCleanup) {
+            this.#rootSizeCleanup();
+            this.#rootSizeCleanup = undefined;
         }
         this.#abortController.abort();
         this.#rootNode = undefined;
@@ -255,6 +275,10 @@ export class MountObserver extends EventTarget {
             if (!rootNode || !withScopePerimeter(rootNode, element, this.#init.withScopePerimeter)) {
                 return false;
             }
+        }
+        // Check whereObservedRootSizeMatches condition if specified
+        if (this.#init.whereObservedRootSizeMatches && !this.#rootSizeMatches) {
+            return false;
         }
         // Check withInstance condition if specified
         if (this.#init.withInstance) {
