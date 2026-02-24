@@ -13,6 +13,7 @@ The following features have been implemented and tested:
 - ✅ **matching**: CSS selector-based element matching
 - ✅ **withInstance**: Constructor-based element filtering (single or array)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
+- ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
 - ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
 
 ### Lifecycle & Events
@@ -33,7 +34,6 @@ The following features have been implemented and tested:
 
 ### Not Yet Implemented
 - ❌ Intersection observer integration
-- ❌ Container query support
 - ❌ Shadow DOM traversal utilities
 - ❌ Reconnect event handling
 - ❌ Multiple import types (CSS, JSON, HTML)
@@ -425,8 +425,7 @@ Unlike traditional CSS @import, CSS Modules don't support specifying different i
 const observer = new MountObserver({
    select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
    withMediaMatching: '(max-width: 1250px)',
-   withSizeOfContainerHaving: '(min-width: 700px)', // not yet supported by polyfill
-   whereObservedRootSizeMatches: '(min-width: 700px)', //not yet supported by polyfill
+   whereObservedRootSizeMatches: '(min-width: 700px)',
    withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
    whereLangIn: ['en-GB'], //not yet supported by polyfill
    whereConnectionHas:{
@@ -438,6 +437,7 @@ const observer = new MountObserver({
 ```
 
 [withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
+[whereObservedRootSizeMatches implemented]
 
 [withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
 
