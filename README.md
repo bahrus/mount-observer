@@ -426,7 +426,7 @@ const observer = new MountObserver({
    select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
    withMediaMatching: '(max-width: 1250px)',
    withSizeOfContainerHaving: '(min-width: 700px)', // not yet supported by polyfill
-   whereContainerHas: '[itemprop=isActive][value="true"]', //not yet supported by polyfill
+   whereObservedRootHas: '[itemprop=isActive][value="true"]', //not yet supported by polyfill
    withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
    whereLangIn: ['en-GB'], //not yet supported by polyfill
    whereConnectionHas:{
