@@ -26,6 +26,8 @@ export class MountObserver extends EventTarget {
     #importsLoaded = false;
     #mediaQueryCleanup;
     #rootSizeCleanup;
+    #intersectionCleanup;
+    #intersectionObserver;
     #mediaMatches = true;
     #rootSizeMatches = true;
     #asgMtSource;
@@ -123,6 +125,15 @@ export class MountObserver extends EventTarget {
         this.#rootSizeMatches = result.conditionMatches;
         this.#rootSizeCleanup = result.cleanup;
     }
+    async #setupElementIntersection() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup element intersection before observe() is called');
+        }
+        const { setupElementIntersection } = await import('./elementIntersection.js');
+        const result = setupElementIntersection(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (element) => this.#matchesSelector(element), (element) => this.#handleMatch(element));
+        this.#intersectionObserver = result.intersectionObserver;
+        this.#intersectionCleanup = result.cleanup;
+    }
     get disconnectedSignal() {
         return this.#abortController.signal;
     }
@@ -156,6 +167,10 @@ export class MountObserver extends EventTarget {
         // Set up root size observer if specified (needs rootNode to be set first)
         if (this.#init.whereObservedRootSizeMatches) {
             await this.#setupRootSizeObserver();
+        }
+        // Set up element intersection observer if specified (needs rootNode to be set first)
+        if (this.#init.whereElementIntersectsWith) {
+            await this.#setupElementIntersection();
         }
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
@@ -210,6 +225,11 @@ export class MountObserver extends EventTarget {
             this.#rootSizeCleanup();
             this.#rootSizeCleanup = undefined;
         }
+        // Remove intersection observer
+        if (this.#intersectionCleanup) {
+            this.#intersectionCleanup();
+            this.#intersectionCleanup = undefined;
+        }
         this.#abortController.abort();
         this.#rootNode = undefined;
     }
@@ -244,7 +264,12 @@ export class MountObserver extends EventTarget {
         // If it's an element node, check if it matches
         if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node;
-            if (this.#matchesSelector(element)) {
+            // If intersection observer is active, start observing the element
+            // The intersection callback will handle mounting when it intersects
+            if (this.#intersectionObserver) {
+                this.#intersectionObserver.observe(element);
+            }
+            else if (this.#matchesSelector(element)) {
                 this.#handleMatch(element);
             }
         }
@@ -253,7 +278,11 @@ export class MountObserver extends EventTarget {
             const root = node;
             // Get all elements matching the CSS selector first
             root.querySelectorAll(this.#init.matching).forEach(child => {
-                if (this.#matchesSelector(child)) {
+                // If intersection observer is active, start observing the element
+                if (this.#intersectionObserver) {
+                    this.#intersectionObserver.observe(child);
+                }
+                else if (this.#matchesSelector(child)) {
                     this.#handleMatch(child);
                 }
             });

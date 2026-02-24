@@ -14,6 +14,7 @@ The following features have been implemented and tested:
 - ✅ **withInstance**: Constructor-based element filtering (single or array)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
+- ✅ **whereElementIntersectsWith**: Intersection observer-based conditional mounting (observes element visibility)
 - ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
 
 ### Lifecycle & Events
@@ -33,7 +34,6 @@ The following features have been implemented and tested:
 - ✅ **Memory management**: WeakRef usage for DOM node references
 
 ### Not Yet Implemented
-- ❌ Intersection observer integration
 - ❌ Shadow DOM traversal utilities
 - ❌ Reconnect event handling
 - ❌ Multiple import types (CSS, JSON, HTML)
@@ -442,6 +442,7 @@ const observer = new MountObserver({
 
 [withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
 [whereObservedRootSizeMatches implemented]
+[whereElementIntersectsWith implemented]
 
 [withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
 

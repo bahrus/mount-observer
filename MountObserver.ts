@@ -49,6 +49,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #importsLoaded = false;
     #mediaQueryCleanup?: () => void;
     #rootSizeCleanup?: () => void;
+    #intersectionCleanup?: () => void;
+    #intersectionObserver?: IntersectionObserver;
     #mediaMatches: boolean = true;
     #rootSizeMatches: boolean = true;
     #asgMtSource: Record<string, any> | undefined;
@@ -186,6 +188,26 @@ export class MountObserver extends EventTarget implements IMountObserver {
         this.#rootSizeCleanup = result.cleanup;
     }
 
+    async #setupElementIntersection(): Promise<void> {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup element intersection before observe() is called');
+        }
+        
+        const { setupElementIntersection } = await import('./elementIntersection.js');
+        const result = setupElementIntersection(
+            this.#init,
+            this.#rootNode,
+            this.#mountedElements,
+            this.#modules,
+            this,
+            (element) => this.#matchesSelector(element),
+            (element) => this.#handleMatch(element)
+        );
+        
+        this.#intersectionObserver = result.intersectionObserver;
+        this.#intersectionCleanup = result.cleanup;
+    }
+
     get disconnectedSignal(): AbortSignal {
         return this.#abortController.signal;
     }
@@ -225,6 +247,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
         // Set up root size observer if specified (needs rootNode to be set first)
         if (this.#init.whereObservedRootSizeMatches) {
             await this.#setupRootSizeObserver();
+        }
+        
+        // Set up element intersection observer if specified (needs rootNode to be set first)
+        if (this.#init.whereElementIntersectsWith) {
+            await this.#setupElementIntersection();
         }
         
         // Wait for eager imports to complete if they were started in constructor
@@ -290,6 +317,12 @@ export class MountObserver extends EventTarget implements IMountObserver {
             this.#rootSizeCleanup = undefined;
         }
         
+        // Remove intersection observer
+        if (this.#intersectionCleanup) {
+            this.#intersectionCleanup();
+            this.#intersectionCleanup = undefined;
+        }
+        
         this.#abortController.abort();
         this.#rootNode = undefined;
     }
@@ -332,7 +365,11 @@ export class MountObserver extends EventTarget implements IMountObserver {
         if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
             
-            if (this.#matchesSelector(element)) {
+            // If intersection observer is active, start observing the element
+            // The intersection callback will handle mounting when it intersects
+            if (this.#intersectionObserver) {
+                this.#intersectionObserver.observe(element);
+            } else if (this.#matchesSelector(element)) {
                 this.#handleMatch(element);
             }
         }
@@ -343,7 +380,10 @@ export class MountObserver extends EventTarget implements IMountObserver {
             
             // Get all elements matching the CSS selector first
             root.querySelectorAll(this.#init.matching).forEach(child => {
-                if (this.#matchesSelector(child)) {
+                // If intersection observer is active, start observing the element
+                if (this.#intersectionObserver) {
+                    this.#intersectionObserver.observe(child);
+                } else if (this.#matchesSelector(child)) {
                     this.#handleMatch(child);
                 }
             });
