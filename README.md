@@ -107,9 +107,6 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
     <div log-to-console="clicked on a div">hello</div>
 
     <script type=module>
-        import 'mount-observer/ElementMountExtension.js';
-
-        
         document.body.mount({
             matching: '[log-to-console]',
             do: (el) => {
