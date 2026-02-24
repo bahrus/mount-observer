@@ -111,7 +111,7 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
 
         
         document.body.mount({
-            matching: 'log-to-console',
+            matching: '[log-to-console]',
             do: (el) => {
                 el.addEventListener('click', e => {
                   console.log(e.target.getAttribute('log-to-console'));
