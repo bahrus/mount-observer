@@ -420,6 +420,45 @@ reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if 
 
 [Implemented as [Requirement11](requirements/Done/Requirement11.md)]
 
+## Media / container queries / instanceOf / custom checks [TODO] out of date
+
+Unlike traditional CSS @import, CSS Modules don't support specifying different imports based on media queries.  That can be another condition we can attach (and why not throw in container queries, based on the rootNode?):
+
+```JavaScript
+const observer = new MountObserver({
+   select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
+   withMediaMatching: '(max-width: 1250px)',
+   whereSizeOfContainerMatches: '(min-width: 700px)', // not yet supported by polyfill
+   whereContainerHas: '[itemprop=isActive][value="true"]', //not yet supported by polyfill
+   withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
+   whereLangIn: ['en-GB'], //not yet supported by polyfill
+   whereConnectionHas:{
+      effectiveTypeIn: ["slow-2g"], //not yet supported by polyfill
+   },
+   import: ['./my-element-small.css', {type: 'css'}],
+   do: ...
+});
+```
+
+[withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
+
+[withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
+
+## InstanceOf checks in detail
+
+Carving out the special "withInstance" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
+
+The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that superclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each sub class, which might not always be all that high as a percentage, compared to the base class.
+
+However, where this support for "withInstance" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to lazily layer some heavy lifting functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the *entire custom **enhancement***, based on the presence in the DOM of a member of the family of custom elements, would, if my calculations are correct, result in providing a significant benefit. 
+ 
+
+<!--
+
+[TODO] Maybe should also (optionally?) pass back which checks failed and which succeeded on dismount.  Not sure I really see a use case for it, but leaving the thought here for now 
+
+-->
+
 ### Referenced withInstance
 
 Similar to the `do` function, the `withInstance` check can also be moved to imported modules for 100% JSON-serializable configuration:
@@ -564,7 +603,7 @@ export { doFunction as do };
 </script>
 ```
 
-To keep this proposal / polyfill of reasonable size, mount observer script elements has its own [repo / sub-proposal](https://github.com/bahrus/mount-observer-script-element).  There's much more to it, but it is awaiting implementation of scoped custom element registry before finalizing the requirements and (re)-implementing.
+To keep this proposal / polyfill of reasonable size, mount observer script elements has its own [repo / sub-proposal](https://github.com/bahrus/mount-observer-script-element).  There's much more to it, including support for inheritance across containing scoped custom element registries.
 
 But I think it's important to think about this way of making the mount observer declarative, as it provides one significant reason why we place so much emphasis on making sure that the mount observer settings (MountConfig) is as JSON serializable as possible.
 
@@ -1392,44 +1431,7 @@ const observer = new MountObserver({
 });
 ```
 
-## Media / container queries / instanceOf / custom checks [TODO] out of date
-
-Unlike traditional CSS @import, CSS Modules don't support specifying different imports based on media queries.  That can be another condition we can attach (and why not throw in container queries, based on the rootNode?):
-
-```JavaScript
-const observer = new MountObserver({
-   select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
-   withMediaMatching: '(max-width: 1250px)',
-   whereSizeOfContainerMatches: '(min-width: 700px)',
-   whereContainerHas: '[itemprop=isActive][value="true"]',
-   withInstance: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
-   whereLangIn: ['en-GB'],
-   whereConnectionHas:{
-      effectiveTypeIn: ["slow-2g"],
-   },
-   import: ['./my-element-small.css', {type: 'css'}],
-   do: ...
-});
-```
-
-[withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
-
-[withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
-
-## InstanceOf checks in detail
-
-Carving out the special "withInstance" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
-
-The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that superclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each sub class, which might not always be all that high as a percentage, compared to the base class.
-
-However, where this support for "withInstance" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to lazily layer some heavy lifting functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the *entire custom **enhancement***, based on the presence in the DOM of a member of the family of custom elements, would, if my calculations are correct, result in providing a significant benefit. 
  
-
-<!--
-
-[TODO] Maybe should also (optionally?) pass back which checks failed and which succeeded on dismount.  Not sure I really see a use case for it, but leaving the thought here for now 
-
---> 
 
 ## Subscribing
 
