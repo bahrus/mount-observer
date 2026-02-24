@@ -100,7 +100,7 @@ The extra flexibility this new primitive would provide could be quite useful to 
 
 Before getting into the weeds, let's demonstrate the two most prominent use cases:
 
-### Use Case 1:  Custom Attribute Enhancement [TODO]: out of date
+### Use Case 1:  Custom Attribute Enhancement
 
 ```html
 <body>
@@ -110,14 +110,14 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
         import 'mount-observer/ElementMountExtension.js';
 
         
-        document.body.mount([{
-            withAttrs:{base: 'log-to-console'},
-            spawn: function(el){
+        document.body.mount({
+            matching: 'log-to-console',
+            do: (el) => {
                 el.addEventListener('click', e => {
                   console.log(e.target.getAttribute('log-to-console'));
                 });
-            },
-        }])
+            }
+        })
     </script>
 </body>
 ```
