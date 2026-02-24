@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('MountObserver - Referenced withInstance', () => {
-    test('should filter elements using referenced withInstance', async ({ page }) => {
+test.describe('MountObserver - Referenced whereInstanceOf', () => {
+    test('should filter elements using referenced whereInstanceOf', async ({ page }) => {
         await page.goto('http://localhost:8000/tests/test-instanceof-reference.html');
         
         // Wait for test to complete

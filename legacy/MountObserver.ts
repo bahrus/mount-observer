@@ -333,8 +333,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
         instance.appendChild(mose);
     }
 
-    #confirmInstanceOf(el: Element, withInstance: Array<{new(): Element}>){
-        for(const test of withInstance){
+    #confirmInstanceOf(el: Element, whereInstanceOf: Array<{new(): Element}>){
+        for(const test of whereInstanceOf){
             if(el instanceof test) return true;
         }
         return false;
@@ -466,7 +466,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
 
     async #mountAll(){
         //TODO:  copilot created, check if needed
-        const {whereSatisfies, withInstance} = this.#MountConfig;
+        const {whereSatisfies, whereInstanceOf} = this.#MountConfig;
         const match = await this.#selector();
         const els = Array.from(document.querySelectorAll(match));
         this.#filterAndMount(els, document.body, false, true);
@@ -476,7 +476,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
         const returnSet = new Set<Element>();
         if(this.#mountedList !== undefined){
             const previouslyMounted = this.#mountedList.map(x => x.deref());
-            const {whereSatisfies, withInstance} = this.#MountConfig;
+            const {whereSatisfies, whereInstanceOf} = this.#MountConfig;
             const match = await this.#selector();
             const elsToUnMount = previouslyMounted.filter(x => {
                 if(x === undefined) return false;
@@ -503,7 +503,7 @@ export class MountObserver extends EventTarget implements IMountObserver{
     }
 
     async #filterAndMount(els: Array<Element>, target: Node, checkMatch: boolean, initializing: boolean){
-        const {whereSatisfies, withInstance, assigner, outside} = this.#MountConfig;
+        const {whereSatisfies, whereInstanceOf, assigner, outside} = this.#MountConfig;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if(checkMatch){
@@ -517,8 +517,8 @@ export class MountObserver extends EventTarget implements IMountObserver{
             if(whereSatisfies !== undefined){
                 if(!whereSatisfies(x, this, {stage: 'Inspecting', initializing})) return false;
             }
-            if(withInstance !== undefined){
-                if(!this.#confirmInstanceOf(x, withInstance)) return false;
+            if(whereInstanceOf !== undefined){
+                if(!this.#confirmInstanceOf(x, whereInstanceOf)) return false;
             }
             return true;
         });

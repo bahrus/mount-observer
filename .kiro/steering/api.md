@@ -16,7 +16,7 @@ For example:
 ```javascript
 {
     matching: 'input, button',
-    withInstance: HTMLInputElement
+    whereInstanceOf: HTMLInputElement
 }
 ```
 This will only match elements that are BOTH (`input` or `button`) AND instances of HTMLInputElement.

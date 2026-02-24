@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Referenced withInstance Test</title>
+    <title>Referenced whereInstanceOf Test</title>
     <!-- #include virtual="/imports.html" -->
 </head>
 <body>
-    <h1>Referenced withInstance Test</h1>
+    <h1>Referenced whereInstanceOf Test</h1>
     
     <div id="results"></div>
     
@@ -29,8 +29,8 @@
             try {
                 addResult('Starting tests...');
                 
-                // Test 1: Referenced withInstance with buttons and inputs
-                addResult('Test 1: Referenced withInstance filters correctly');
+                // Test 1: Referenced whereInstanceOf with buttons and inputs
+                addResult('Test 1: Referenced whereInstanceOf filters correctly');
                 const observer1 = new MountObserver({
                     matching: '.test1',
                     import: '/tests/test-instanceof-module.js',
@@ -58,11 +58,11 @@
                 
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
-                // Test 2: Combining inline and referenced withInstance (AND logic)
-                addResult('Test 2: Inline AND referenced withInstance');
+                // Test 2: Combining inline and referenced whereInstanceOf (AND logic)
+                addResult('Test 2: Inline AND referenced whereInstanceOf');
                 const observer2 = new MountObserver({
                     matching: '.test2',
-                    withInstance: HTMLElement, // All elements match this
+                    whereInstanceOf: HTMLElement, // All elements match this
                     import: '/tests/test-instanceof-module2.js',
                     reference: 0,
                     loadingEagerness: 'eager'
@@ -83,8 +83,8 @@
                 
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
-                // Test 3: Lazy loading with referenced withInstance
-                addResult('Test 3: Lazy loading with referenced withInstance');
+                // Test 3: Lazy loading with referenced whereInstanceOf
+                addResult('Test 3: Lazy loading with referenced whereInstanceOf');
                 const observer3 = new MountObserver({
                     matching: '.test3',
                     import: '/tests/test-instanceof-module.js',
@@ -117,16 +117,16 @@
                 const test3Pass = window.moduleDoCalledFor &&
                                   window.moduleDoCalledFor.includes('btn3');
                 
-                addResult(`Test 1: ${test1Pass ? '✅ PASS' : '❌ FAIL'} - Referenced withInstance filtered correctly`);
+                addResult(`Test 1: ${test1Pass ? '✅ PASS' : '❌ FAIL'} - Referenced whereInstanceOf filtered correctly`);
                 addResult(`  btn1 mounted: ${window.moduleDoCalledFor?.includes('btn1')}`);
                 addResult(`  input1 mounted: ${window.moduleDoCalledFor?.includes('input1')}`);
                 addResult(`  div1 mounted: ${window.moduleDoCalledFor?.includes('div1')} (should be false)`);
                 
-                addResult(`Test 2: ${test2Pass ? '✅ PASS' : '❌ FAIL'} - Inline AND referenced withInstance`);
+                addResult(`Test 2: ${test2Pass ? '✅ PASS' : '❌ FAIL'} - Inline AND referenced whereInstanceOf`);
                 addResult(`  div2 mounted: ${window.module2DoCalledFor?.includes('div2')}`);
                 addResult(`  span2 mounted: ${window.module2DoCalledFor?.includes('span2')} (should be false)`);
                 
-                addResult(`Test 3: ${test3Pass ? '✅ PASS' : '❌ FAIL'} - Lazy loading with referenced withInstance`);
+                addResult(`Test 3: ${test3Pass ? '✅ PASS' : '❌ FAIL'} - Lazy loading with referenced whereInstanceOf`);
                 addResult(`  btn3 mounted: ${window.moduleDoCalledFor?.includes('btn3')}`);
                 
                 window.testPassed = test1Pass && test2Pass && test3Pass;

@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('withInstance Tests', () => {
+test.describe('whereInstanceOf Tests', () => {
     test('should filter elements by constructor', async ({ page }) => {
-        await page.goto('/tests/test-withInstance.html');
+        await page.goto('/tests/test-whereInstanceOf.html');
         
         // Wait for test to complete
         await page.waitForFunction(() => window.testResult !== undefined, { timeout: 5000 });

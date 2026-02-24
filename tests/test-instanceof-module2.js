@@ -1,5 +1,5 @@
-// Second test module for multiple references with withInstance
-const withInstance = HTMLDivElement;
+// Second test module for multiple references with whereInstanceOf
+const whereInstanceOf = HTMLDivElement;
 
 const doFunction = function(element, context) {
     if (window.testResults) {
@@ -9,4 +9,4 @@ const doFunction = function(element, context) {
     window.module2DoCalledFor.push(element.id);
 };
 
-export { withInstance, doFunction as do };
+export { whereInstanceOf, doFunction as do };

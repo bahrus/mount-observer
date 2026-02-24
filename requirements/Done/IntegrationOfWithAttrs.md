@@ -201,7 +201,7 @@ enhancementConfig: {
 ```javascript
 {
     matching: 'input',
-    withInstance: HTMLInputElement,
+    whereInstanceOf: HTMLInputElement,
     enhancementConfig: {
         withAttrs: {
             base: 'data-',

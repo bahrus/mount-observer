@@ -75,7 +75,7 @@ Add `stageOnMount` property to `MountConfig` interface:
 ```typescript
 export interface MountConfig {
     withMatching: string;
-    withInstance?: Constructor | Constructor[];
+    whereInstanceOf?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
     whereOutside?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;

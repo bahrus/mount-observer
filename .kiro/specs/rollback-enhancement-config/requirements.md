@@ -106,7 +106,7 @@ This specification defines the requirements for removing the `enhancementConfig`
 #### Acceptance Criteria
 
 1. THE MountObserver_Class SHALL continue to support the matching property
-2. THE MountObserver_Class SHALL continue to support the withInstance property
+2. THE MountObserver_Class SHALL continue to support the whereInstanceOf property
 3. THE MountObserver_Class SHALL continue to support the import property
 4. THE MountObserver_Class SHALL continue to support the do property
 5. THE MountObserver_Class SHALL continue to support the assignOnMount property

@@ -306,8 +306,8 @@ export class MountObserver extends EventTarget {
         }
         instance.appendChild(mose);
     }
-    #confirmInstanceOf(el, withInstance) {
-        for (const test of withInstance) {
+    #confirmInstanceOf(el, whereInstanceOf) {
+        for (const test of whereInstanceOf) {
             if (el instanceof test)
                 return true;
         }
@@ -434,7 +434,7 @@ export class MountObserver extends EventTarget {
     }
     async #mountAll() {
         //TODO:  copilot created, check if needed
-        const { whereSatisfies, withInstance } = this.#MountConfig;
+        const { whereSatisfies, whereInstanceOf } = this.#MountConfig;
         const match = await this.#selector();
         const els = Array.from(document.querySelectorAll(match));
         this.#filterAndMount(els, document.body, false, true);
@@ -443,7 +443,7 @@ export class MountObserver extends EventTarget {
         const returnSet = new Set();
         if (this.#mountedList !== undefined) {
             const previouslyMounted = this.#mountedList.map(x => x.deref());
-            const { whereSatisfies, withInstance } = this.#MountConfig;
+            const { whereSatisfies, whereInstanceOf } = this.#MountConfig;
             const match = await this.#selector();
             const elsToUnMount = previouslyMounted.filter(x => {
                 if (x === undefined)
@@ -472,7 +472,7 @@ export class MountObserver extends EventTarget {
         return true;
     }
     async #filterAndMount(els, target, checkMatch, initializing) {
-        const { whereSatisfies, withInstance, assigner, outside } = this.#MountConfig;
+        const { whereSatisfies, whereInstanceOf, assigner, outside } = this.#MountConfig;
         const match = await this.#selector();
         const elsToMount = els.filter(x => {
             if (checkMatch) {
@@ -488,8 +488,8 @@ export class MountObserver extends EventTarget {
                 if (!whereSatisfies(x, this, { stage: 'Inspecting', initializing }))
                     return false;
             }
-            if (withInstance !== undefined) {
-                if (!this.#confirmInstanceOf(x, withInstance))
+            if (whereInstanceOf !== undefined) {
+                if (!this.#confirmInstanceOf(x, whereInstanceOf))
                     return false;
             }
             return true;

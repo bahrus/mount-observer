@@ -71,5 +71,5 @@ The root node (oContainerNode) should not be checked against the outside selecto
 - matching (cheapest - CSS selector)
 - withScopePerimeter (medium - upward traversal) add on to matching
 - whereAttr (expensive - complex logic)
-- withInstance (cheap - instanceof check)
+- whereInstanceOf (cheap - instanceof check)
 withMediaMatching (already checked globally)

@@ -22,7 +22,7 @@ The enhancement registry (from assign-gingerly) is a system for managing element
 ```typescript
 export interface MountConfig {
     matching: string;
-    withInstance?: Constructor | Constructor[];
+    whereInstanceOf?: Constructor | Constructor[];
     // ... mount-observer specific properties
     enhancementConfig?: EnhancementConfig;
 }
@@ -64,7 +64,7 @@ interface EnhancementConfig<T = any> {
 ```typescript
 interface MountConfig {
     matching: string;  // CSS selector for element matching
-    withInstance?: Constructor | Constructor[];
+    whereInstanceOf?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
     withScopePerimeter?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;

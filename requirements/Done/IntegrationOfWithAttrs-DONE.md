@@ -16,7 +16,7 @@ Successfully implemented attribute-based matching as an AND condition for mounti
 
 4. **OR Logic Within withAttrs**: Element must have at least ONE of the specified attributes to mount
 
-5. **AND Logic With Other Conditions**: withAttrs check integrates seamlessly with existing conditions (matching, withInstance, etc.)
+5. **AND Logic With Other Conditions**: withAttrs check integrates seamlessly with existing conditions (matching, whereInstanceOf, etc.)
 
 ## Changes Made
 

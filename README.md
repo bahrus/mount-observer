@@ -11,7 +11,7 @@ The following features have been implemented and tested:
 
 ### Core Functionality
 - ✅ **matching**: CSS selector-based element matching
-- ✅ **withInstance**: Constructor-based element filtering (single or array)
+- ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
 - ✅ **whereElementIntersectsWith**: Intersection observer-based conditional mounting (observes element visibility)
@@ -431,7 +431,7 @@ const observer = new MountObserver({
       rootMargin: "0px",
       threshold: 1.0,
    },
-   withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
+   whereInstanceOf: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
    whereLangIn: ['en-GB'], // Cannot be implemented - see https://github.com/whatwg/html/issues/7039
    whereConnectionHas:{
       effectiveTypeIn: ["slow-2g"],
@@ -441,7 +441,7 @@ const observer = new MountObserver({
 });
 ```
 
-[withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
+[whereInstanceOf implemented as [Requirement5](requirements/Done/Requirement5.md)]
 [whereObservedRootSizeMatches implemented]
 [whereElementIntersectsWith implemented]
 [whereConnectionHas implemented]
@@ -450,11 +450,11 @@ const observer = new MountObserver({
 
 ## InstanceOf checks in detail
 
-Carving out the special "withInstance" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
+Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
 The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that superclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each sub class, which might not always be all that high as a percentage, compared to the base class.
 
-However, where this support for "withInstance" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to lazily layer some heavy lifting functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the *entire custom **enhancement***, based on the presence in the DOM of a member of the family of custom elements, would, if my calculations are correct, result in providing a significant benefit. 
+However, where this support for "whereInstanceOf" would be *most* helpful is when it comes to [*custom enhancements*](https://github.com/WICG/webcomponents/issues/1000) that only wish to lazily layer some heavy lifting functionality on top of certain families of already loaded and upgraded custom elements (possibly in addition to some (specified) built in elements).  Here, the lazy loading of the *entire custom **enhancement***, based on the presence in the DOM of a member of the family of custom elements, would, if my calculations are correct, result in providing a significant benefit. 
  
 
 <!--
@@ -463,9 +463,9 @@ However, where this support for "withInstance" would be *most* helpful is when i
 
 -->
 
-### Referenced withInstance
+### Referenced whereInstanceOf
 
-Similar to the `do` function, the `withInstance` check can also be moved to imported modules for 100% JSON-serializable configuration:
+Similar to the `do` function, the `whereInstanceOf` check can also be moved to imported modules for 100% JSON-serializable configuration:
 
 ```javascript
 // module mySettings.js
@@ -476,9 +476,9 @@ const doFunction = function({localName}, {modules, observer, MountConfig, rootNo
    observer.disconnectedSignal.abort();
 };
 
-const withInstance = [HTMLMarqueeElement, SVGElement];
+const whereInstanceOf = [HTMLMarqueeElement, SVGElement];
 
-export { doFunction as do, withInstance };
+export { doFunction as do, whereInstanceOf };
 
 // my local module
 const observer = new MountObserver({
@@ -494,15 +494,15 @@ observer.observe(document);
 ```
 
 **Behavior:**
-- **Combining checks**: If both inline `withInstance` and referenced `withInstance` exist, they are AND'd together (element must match both)
-- **Multiple references**: If multiple referenced modules export `withInstance`, the element must match ALL of them (AND logic)
-- **Validation**: Referenced `withInstance` is validated after imports load. Throws an error if not a Constructor or array of Constructors
-- **Optional export**: If a referenced module doesn't export `withInstance`, it's silently ignored
+- **Combining checks**: If both inline `whereInstanceOf` and referenced `whereInstanceOf` exist, they are AND'd together (element must match both)
+- **Multiple references**: If multiple referenced modules export `whereInstanceOf`, the element must match ALL of them (AND logic)
+- **Validation**: Referenced `whereInstanceOf` is validated after imports load. Throws an error if not a Constructor or array of Constructors
+- **Optional export**: If a referenced module doesn't export `whereInstanceOf`, it's silently ignored
 - **Timing**: 
-  - With lazy loading (default): Inline `withInstance` is checked first (before imports), then referenced checks happen after imports load
+  - With lazy loading (default): Inline `whereInstanceOf` is checked first (before imports), then referenced checks happen after imports load
   - With `loadingEagerness: 'eager'`: Both inline and referenced checks happen together after imports are loaded
 
-This optimization ensures that with lazy loading, elements that don't match the inline `withInstance` won't trigger unnecessary imports.
+This optimization ensures that with lazy loading, elements that don't match the inline `whereInstanceOf` won't trigger unnecessary imports.
 
 [Implemented as [Requirement12](requirements/Done/Requirement12.md)]
 

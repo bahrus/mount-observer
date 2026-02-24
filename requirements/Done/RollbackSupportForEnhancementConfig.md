@@ -5,7 +5,7 @@ TypesCript definition types/mount-observer/types.d.ts defines:
 ```TypeScript
 export interface MountConfig {
     matching?: string;
-    withInstance?: Constructor | Constructor[];
+    whereInstanceOf?: Constructor | Constructor[];
     withMediaMatching?: string | MediaQueryList;
     withScopePerimeter?: string;
     import?: string | ImportSpec | Array<string | ImportSpec>;
