@@ -432,7 +432,7 @@ const observer = new MountObserver({
       threshold: 1.0,
    },
    withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
-   whereLangIn: ['en-GB'], //not yet supported by polyfill
+   whereLangIn: ['en-GB'], // Cannot be implemented - see https://github.com/whatwg/html/issues/7039
    whereConnectionHas:{
       effectiveTypeIn: ["slow-2g"],
    },
@@ -1519,7 +1519,7 @@ So the dismount event should provide a "checklist" of all the conditions, and th
 mediaMatches: true,
 containerMatches: true,
 satisfiesCustomConditiselect: true,
-whereLangIn: ['en-GB'],
+// whereLangIn: ['en-GB'], // Not implemented - requires platform support
 whereConnectiselect:{
    effectiveTypeMatches: true
 },
@@ -1831,8 +1831,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <template mount='{
       "select": ":not([defer-loading])",
       "loadingEagerness": "eager",
-      "withMediaMatching": "(min-width: 700px)",
-      "whereLangIn": ["en-GB"],
+      "withMediaMatching": "(min-width: 700px)"
    }'>
       <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
    </template>
@@ -1840,8 +1839,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <template mount='{
       "select": ":not([defer-loading])",
       "loadingEagerness": "lazy",
-      "withMediaMatching": "(max-width: 700px)",
-      "whereLangIn": ["fr"],
+      "withMediaMatching": "(max-width: 700px)"
    }'>
       <div>Je ne sais pas pourquoi tu dis  <slot name=slot2></slot> je dis  <slot name=slot1></slot></div>
    </template>
