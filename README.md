@@ -35,9 +35,7 @@ The following features have been implemented and tested:
 - ✅ **Memory management**: WeakRef usage for DOM node references
 
 ### Not Yet Implemented
-- ❌ Shadow DOM traversal utilities
 - ❌ Reconnect event handling
-- ❌ Multiple import types (CSS, JSON, HTML)
 
 # The MountObserver API
 
