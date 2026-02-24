@@ -15,6 +15,7 @@ The following features have been implemented and tested:
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
 - ✅ **whereElementIntersectsWith**: Intersection observer-based conditional mounting (observes element visibility)
+- ✅ **whereConnectionHas**: Network connection-based conditional mounting (observes connection speed/type)
 - ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
 
 ### Lifecycle & Events
@@ -433,7 +434,7 @@ const observer = new MountObserver({
    withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
    whereLangIn: ['en-GB'], //not yet supported by polyfill
    whereConnectionHas:{
-      effectiveTypeIn: ["slow-2g"], //not yet supported by polyfill
+      effectiveTypeIn: ["slow-2g"],
    },
    import: ['./my-element-small.css', {type: 'css'}],
    do: ...
@@ -443,6 +444,7 @@ const observer = new MountObserver({
 [withInstance implemented as [Requirement5](requirements/Done/Requirement5.md)]
 [whereObservedRootSizeMatches implemented]
 [whereElementIntersectsWith implemented]
+[whereConnectionHas implemented]
 
 [withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
 

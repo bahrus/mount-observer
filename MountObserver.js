@@ -27,9 +27,11 @@ export class MountObserver extends EventTarget {
     #mediaQueryCleanup;
     #rootSizeCleanup;
     #intersectionCleanup;
+    #connectionCleanup;
     #intersectionObserver;
     #mediaMatches = true;
     #rootSizeMatches = true;
+    #connectionMatches = true;
     #asgMtSource;
     #asgDisMtSource;
     #stageMtSource;
@@ -134,6 +136,15 @@ export class MountObserver extends EventTarget {
         this.#intersectionObserver = result.intersectionObserver;
         this.#intersectionCleanup = result.cleanup;
     }
+    async #setupConnectionMonitor() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup connection monitor before observe() is called');
+        }
+        const { setupConnectionMonitor } = await import('./connectionMonitor.js');
+        const result = setupConnectionMonitor(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (node) => this.#processNode(node));
+        this.#connectionMatches = result.conditionMatches;
+        this.#connectionCleanup = result.cleanup;
+    }
     get disconnectedSignal() {
         return this.#abortController.signal;
     }
@@ -172,18 +183,22 @@ export class MountObserver extends EventTarget {
         if (this.#init.whereElementIntersectsWith) {
             await this.#setupElementIntersection();
         }
+        // Set up connection monitor if specified (needs rootNode to be set first)
+        if (this.#init.whereConnectionHas) {
+            await this.#setupConnectionMonitor();
+        }
         // Wait for eager imports to complete if they were started in constructor
         if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
             await this.#loadImports();
         }
-        // Process existing elements only if media matches and root size matches
-        if (this.#mediaMatches && this.#rootSizeMatches) {
+        // Process existing elements only if all conditions match
+        if (this.#mediaMatches && this.#rootSizeMatches && this.#connectionMatches) {
             this.#processNode(rootNode);
         }
         // Create mutation callback
         this.#mutationCallback = (mutations) => {
-            // Skip processing if media doesn't match or root size doesn't match
-            if (!this.#mediaMatches || !this.#rootSizeMatches) {
+            // Skip processing if any condition doesn't match
+            if (!this.#mediaMatches || !this.#rootSizeMatches || !this.#connectionMatches) {
                 return;
             }
             for (const mutation of mutations) {
@@ -229,6 +244,11 @@ export class MountObserver extends EventTarget {
         if (this.#intersectionCleanup) {
             this.#intersectionCleanup();
             this.#intersectionCleanup = undefined;
+        }
+        // Remove connection monitor
+        if (this.#connectionCleanup) {
+            this.#connectionCleanup();
+            this.#connectionCleanup = undefined;
         }
         this.#abortController.abort();
         this.#rootNode = undefined;
