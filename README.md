@@ -426,6 +426,10 @@ const observer = new MountObserver({
    select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
    withMediaMatching: '(max-width: 1250px)',
    whereObservedRootSizeMatches: '(min-width: 700px)',
+   whereElementIntersectsWith:{
+      rootMargin: "0px",
+      threshold: 1.0,
+   },
    withInstance: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
    whereLangIn: ['en-GB'], //not yet supported by polyfill
    whereConnectionHas:{
