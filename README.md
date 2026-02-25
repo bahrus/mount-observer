@@ -171,13 +171,13 @@ The `builtIns.enhanceMountedElement` handler automatically enhances mounted elem
 // MyEnhancement.js
 class ButtonEnhancement {
     constructor(element, ctx, initVals) {
-        this.element = element;
+        this.element = new WeakRef(element);
         this.ctx = ctx;
         this.clickCount = 0;
         
-        element.addEventListener('click', () => {
+        element.addEventListener('click', ({target}) => {
             this.clickCount++;
-            element.setAttribute('data-clicks', this.clickCount);
+            target.setAttribute('data-clicks', this.clickCount);
         });
     }
 }
