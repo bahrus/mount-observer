@@ -39,12 +39,39 @@ export class MountObserver extends EventTarget {
     #assignTentatively;
     #elementNotifiers = new WeakMap();
     #notifierMountedElements = new WeakSet();
+    #mergeHandlerDefaults(config) {
+        const doValue = config.do;
+        // Only process if do is a string (single handler reference)
+        if (typeof doValue !== 'string') {
+            return config;
+        }
+        // Look up the handler class
+        const HandlerClass = MountObserver.#handlerRegistry.get(doValue);
+        if (!HandlerClass) {
+            // Validation will catch this later
+            return config;
+        }
+        // Extract static properties from the handler class
+        const handlerDefaults = {};
+        const proto = HandlerClass;
+        // Get all static properties
+        for (const key of Object.getOwnPropertyNames(proto)) {
+            if (key !== 'prototype' && key !== 'length' && key !== 'name') {
+                handlerDefaults[key] = proto[key];
+            }
+        }
+        // Merge: handler defaults first, then inline config (inline trumps)
+        // Using object spread - inline config overwrites handler defaults
+        return { ...handlerDefaults, ...config };
+    }
     constructor(config, options = {}) {
         super();
-        this.#init = config;
+        // Merge handler defaults if do is a string reference
+        const mergedConfig = this.#mergeHandlerDefaults(config);
+        this.#init = mergedConfig;
         this.#options = options;
         this.#abortController = new AbortController();
-        const { assignOnMount, assignOnDismount, stageOnMount, do: doValue, reference, loadingEagerness, import: imp } = config;
+        const { assignOnMount, assignOnDismount, stageOnMount, do: doValue, reference, loadingEagerness, import: imp } = mergedConfig;
         // Make a copy of assignOnMount config using structuredClone
         if (assignOnMount !== undefined) {
             this.#asgMtSource = structuredClone(assignOnMount);

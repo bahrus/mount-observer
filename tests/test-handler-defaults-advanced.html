@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Handler Defaults Test</title>
+</head>
+<body>
+    <h1>Advanced Handler Defaults Test</h1>
+
+    <!-- Test elements -->
+    <input type="text" class="test-input" value="initial">
+    <button class="test-button">Button</button>
+    <div class="test-div">Div</div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { EvtRt } from '../EvtRt.js';
+
+        const results = [];
+
+        // Handler with multiple static properties
+        class ComplexHandler extends EvtRt {
+            static matching = '.test-input';
+            static whereInstanceOf = HTMLInputElement;
+            
+            mount(mountedElement, MountConfig, context) {
+                results.push(`Complex: ${mountedElement.className} (${mountedElement.constructor.name})`);
+            }
+        }
+
+        // Handler with just matching
+        class SimpleHandler extends EvtRt {
+            static matching = '.test-button, .test-div';
+            
+            mount(mountedElement, MountConfig, context) {
+                results.push(`Simple: ${mountedElement.className}`);
+            }
+        }
+
+        // Register handlers
+        MountObserver.define('complexHandler', ComplexHandler);
+        MountObserver.define('simpleHandler', SimpleHandler);
+
+        // Test 1: Use complex handler with all defaults
+        const observer1 = new MountObserver({
+            do: 'complexHandler'
+        });
+        await observer1.observe(document.body);
+
+        // Test 2: Use simple handler with defaults
+        const observer2 = new MountObserver({
+            do: 'simpleHandler'
+        });
+        await observer2.observe(document.body);
+
+        // Test 3: Override matching but keep whereInstanceOf
+        const observer3 = new MountObserver({
+            matching: '.test-button',
+            do: 'complexHandler'
+        });
+        await observer3.observe(document.body);
+
+        // Wait for observers to process
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            const complexInputCount = results.filter(r => r.includes('Complex') && r.includes('test-input')).length;
+            const simpleButtonCount = results.filter(r => r.includes('Simple') && r.includes('test-button')).length;
+            const simpleDivCount = results.filter(r => r.includes('Simple') && r.includes('test-div')).length;
+            const complexButtonCount = results.filter(r => r.includes('Complex') && r.includes('test-button')).length;
+            
+            // Test 1: Should mount input (matches .test-input AND is HTMLInputElement)
+            const test1Pass = complexInputCount === 1;
+            
+            // Test 2: Should mount button and div
+            const test2Pass = simpleButtonCount === 1 && simpleDivCount === 1;
+            
+            // Test 3: Should NOT mount button (matches .test-button but NOT HTMLInputElement)
+            const test3Pass = complexButtonCount === 0;
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <pre>${results.join('\n')}</pre>
+                
+                <h3>Test Results</h3>
+                <p>Test 1 (Multiple defaults): ${test1Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Test 2 (Simple defaults): ${test2Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Test 3 (Partial override): ${test3Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                
+                <h3>Expected</h3>
+                <ul>
+                    <li>Test 1: Mount input (matching + whereInstanceOf from handler)</li>
+                    <li>Test 2: Mount button and div (matching from handler)</li>
+                    <li>Test 3: No mount (button matches selector but fails whereInstanceOf check)</li>
+                </ul>
+            `;
+            
+            window.testResult = test1Pass && test2Pass && test3Pass;
+        }, 100);
+    </script>
+</body>
+</html>
