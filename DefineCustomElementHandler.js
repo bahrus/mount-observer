@@ -1,6 +1,7 @@
 import { EvtRt } from './EvtRt.js';
 export class DefineCustomElementHandler extends EvtRt {
     mount(mountedElement, MountConfig, context) {
+        this.abort();
         // Check if modules are specified
         if (!context.modules || context.modules.length === 0) {
             throw new Error('Must specify an ES Module');

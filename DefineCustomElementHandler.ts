@@ -3,6 +3,7 @@ import { MountConfig, MountContext } from './types/mount-observer/types.js';
 
 export class DefineCustomElementHandler extends EvtRt {
     mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): void {
+        this.abort();
         // Check if modules are specified
         if (!context.modules || context.modules.length === 0) {
             throw new Error('Must specify an ES Module');
