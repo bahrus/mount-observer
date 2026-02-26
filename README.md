@@ -82,6 +82,7 @@ There is quite a bit of functionality this proposal would open up that is exceed
 
 4. Some CSS selectors, such as the [scope donut hole range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope), aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
 
+
 ###  Most significant use cases
 
 The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant. Building it into the platform would potentially:
