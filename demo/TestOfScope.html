@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Registry Islands</title>
+</head>
+<body>
+    <script>
+        const reg1 = new CustomElementRegistry;
+        const div1 = document.createElement('div', {customElementRegistry: reg1});
+        div1.id = 'div1';
+        div1.textContent = 'div1';
+
+        const reg2 = new CustomElementRegistry;
+        const div2 = document.createElement('div', {customElementRegistry: reg2});
+        div2.id = 'div2';
+        div2.textContent = 'div2';
+
+
+        const reg3 = new CustomElementRegistry;
+        const div3 = document.createElement('div', {customElementRegistry: reg3});
+        div3.id = 'div3';
+        div3.textContent = 'div3';
+
+        const div4 = document.createElement('div', {customElementRegistry: reg2});
+        div4.id = 'div4';
+        div4.textContent = 'div4';
+
+        div1.append(div2, div3, div4);
+        document.body.append(div1);
+    </script>
+</body>
+</html>
