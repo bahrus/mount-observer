@@ -6,6 +6,9 @@
     <title>Custom Registry Islands</title>
 </head>
 <body>
+    <template id=myTemplate>
+        <div id="div5">i am hee</div>
+    </template>
     <script>
         const reg1 = new CustomElementRegistry;
         const div1 = document.createElement('div', {customElementRegistry: reg1});
@@ -28,6 +31,9 @@
         div4.textContent = 'div4';
 
         div1.append(div2, div3, div4);
+        const clone = myTemplate.content.cloneNode(true, {customElementRegistry: reg2});
+        console.log(clone.querySelector('div').customElementRegistry === reg2);
+        div1.append(clone);
         document.body.append(div1);
     </script>
 </body>
