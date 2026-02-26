@@ -24,13 +24,13 @@ export class EnhanceMountedElementHandler extends EvtRt {
             throw new Error('Registry item "spawn" property must be a constructor function');
         }
         // Spawn the enhancement
-        this._spawnEnhancement(mountedElement, registryItem, context);
+        this.#spawnEnhancement(mountedElement, registryItem, context);
     }
     /**
      * Spawn the enhancement using element.enh.get().
      * Polyfills customElementRegistry if needed for browsers without scoped registry support.
      */
-    _spawnEnhancement(element, registryItem, context) {
+    #spawnEnhancement(element, registryItem, context) {
         // Polyfill element.customElementRegistry if it doesn't exist (for browsers without scoped registries)
         if (!element.customElementRegistry) {
             Object.defineProperty(element, 'customElementRegistry', {

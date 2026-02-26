@@ -32,14 +32,14 @@ export class EnhanceMountedElementHandler extends EvtRt {
         }
         
         // Spawn the enhancement
-        this._spawnEnhancement(mountedElement, registryItem, context);
+        this.#spawnEnhancement(mountedElement, registryItem, context);
     }
     
     /**
      * Spawn the enhancement using element.enh.get().
      * Polyfills customElementRegistry if needed for browsers without scoped registry support.
      */
-    protected _spawnEnhancement(element: Element, registryItem: any, context: MountContext): void {
+    #spawnEnhancement(element: Element, registryItem: any, context: MountContext): void {
         // Polyfill element.customElementRegistry if it doesn't exist (for browsers without scoped registries)
         if (!(element as any).customElementRegistry) {
             Object.defineProperty(element, 'customElementRegistry', {
