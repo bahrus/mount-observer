@@ -762,6 +762,83 @@ The handler registry is global and shared across all MountObserver instances, si
 
 [Implemented as [Requirement14](requirements/Done/Requirement14.md)]
 
+### Handler defaults with static properties
+
+Registered handler classes can specify default MountConfig properties using static class properties. When you reference a handler by name, its static properties are automatically merged with your inline configuration, with inline config always taking precedence:
+
+```JavaScript
+import {EvtRt} from 'mount-observer/EvtRt.js';
+
+class MyHandler extends EvtRt {
+   static matching = 'div > p + p ~ span[class$="name"]';
+   static whereInstanceOf = HTMLSpanElement;
+   
+   mount(mountedElement, MountConfig, context){
+      mountedElement.textContent = 'hello';
+   }
+   dismount(mountedElement, MountConfig){
+      mountedElement.textContent = 'bye';
+   }
+}
+
+// Register the handler
+MountObserver.define('myHandler', MyHandler);
+
+// Use with defaults - will use handler's matching and whereInstanceOf
+const observer1 = new MountObserver({
+   do: 'myHandler'
+});
+observer1.observe(document);
+
+// Override specific properties - inline config trumps handler defaults
+const observer2 = new MountObserver({
+   matching: 'span.special',  // This overrides the handler's matching
+   do: 'myHandler'            // Still uses handler's whereInstanceOf
+});
+observer2.observe(document);
+```
+
+**How it works:**
+1. When `do` is a string reference to a registered handler, the handler's static properties are extracted
+2. Static properties are merged with the inline config using object spread
+3. Inline config properties always override handler defaults (inline trumps)
+4. All MountConfig properties can be specified as static properties (matching, whereInstanceOf, withMediaMatching, etc.)
+
+**Benefits:**
+- **DRY principle**: Define common configuration once in the handler class
+- **Flexibility**: Override any property when needed for specific use cases
+- **Composability**: Handlers become self-contained with their own default behavior
+- **JSON serialization**: Configurations remain JSON-serializable since only the handler name is referenced
+
+**Example with multiple properties:**
+
+```JavaScript
+class InputHandler extends EvtRt {
+   static matching = 'input[type="text"]';
+   static whereInstanceOf = HTMLInputElement;
+   static withMediaMatching = '(min-width: 768px)';
+   
+   mount(mountedElement, MountConfig, context){
+      mountedElement.placeholder = 'Enter text...';
+   }
+}
+
+MountObserver.define('inputHandler', InputHandler);
+
+// Uses all handler defaults
+const observer = new MountObserver({
+   do: 'inputHandler'
+});
+
+// Partially override - keeps whereInstanceOf and withMediaMatching from handler
+const observer2 = new MountObserver({
+   matching: 'input[type="email"]',  // Override matching only
+   do: 'inputHandler'
+});
+```
+
+[Implemented as [SupportWhereCriteriaWithRegisteredActions](requirements/SupportWhereCriteriaWithRegisteredActions.md)]
+
 ### Built in handlers
 
 This proposal advocates having the platform provide some built in handlers, that extend EvtRt, that is included with this Polyfill.
