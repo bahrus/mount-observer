@@ -8,6 +8,7 @@ import 'assign-gingerly/object-extension.js';
  */
 export class EnhanceMountedElementHandler extends EvtRt {
     async mount(mountedElement, MountConfig, context) {
+        this.abort();
         // Check if modules are specified
         if (!context.modules || context.modules.length === 0) {
             throw new Error('Must specify an ES Module with import property');
