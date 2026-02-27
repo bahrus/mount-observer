@@ -10,7 +10,7 @@
         <div id="div5">i am hee</div>
     </template>
     <script>
-        const reg1 = new CustomElementRegistry;
+        const reg1 = new CustomElementRegistry();
         const div1 = document.createElement('div', {customElementRegistry: reg1});
         div1.id = 'div1';
         div1.textContent = 'div1';
