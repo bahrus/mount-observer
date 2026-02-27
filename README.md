@@ -12,6 +12,7 @@ The following features have been implemented and tested:
 ### Core Functionality
 - ✅ **matching**: CSS selector-based element matching
 - ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
+- ✅ **Registry matching**: Automatic filtering by customElementRegistry (Chrome 146+)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
 - ✅ **whereElementIntersectsWith**: Intersection observer-based conditional mounting (observes element visibility)
@@ -504,6 +505,39 @@ observer.observe(document);
 This optimization ensures that with lazy loading, elements that don't match the inline `whereInstanceOf` won't trigger unnecessary imports.
 
 [Implemented as [Requirement12](requirements/Done/Requirement12.md)]
+
+## Custom Element Registry Matching
+
+MountObserver automatically respects scoped custom element registry boundaries. When observing a root node, only elements that share the same `customElementRegistry` as the root node will be mounted. This is an implicit AND condition that applies to all observations.
+
+**How it works:**
+
+```javascript
+// Observe document - only mounts elements in the global registry
+const observer1 = new MountObserver({
+    matching: '.my-element',
+    do: (el) => { /* ... */ }
+});
+observer1.observe(document);
+
+// Observe shadow root - only mounts elements in that shadow root's registry
+const shadowRoot = host.attachShadow({ mode: 'open' });
+const observer2 = new MountObserver({
+    matching: '.my-element',
+    do: (el) => { /* ... */ }
+});
+observer2.observe(shadowRoot);
+```
+
+**Behavior across browser versions:**
+- **Pre-Chrome 146**: Both `customElementRegistry` properties are `undefined`, so all elements within the observed scope match (backward compatible)
+- **Chrome 146+ with scoped registries**: Elements are filtered by registry reference equality
+  - Elements in the same registry scope as the root node → mount ✓
+  - Elements in different registry scopes → don't mount ✓
+
+This ensures that when you observe a shadow root with a scoped registry, you won't accidentally mount elements from the parent document or other shadow roots with different registries. The registry check happens automatically before any other `where*` conditions are evaluated.
+
+[Implemented as [ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch](requirements/ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch.md)]
 
 ## Element Mount Extension
 
