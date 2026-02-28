@@ -266,6 +266,9 @@ await div4.registerScope();
 ```typescript
 // In a new file: RegistryMountCoordinator.ts
 
+import type { MountConfig, WeakDual } from './types/mount-observer/types.js';
+import type { MountObserver } from './MountObserver.js';
+
 /**
  * Represents a single MountObserver observing a specific registry root.
  */
@@ -276,29 +279,31 @@ type ObserverEntry = {
 };
 
 /**
- * Maps CustomElementRegistry -> Map<MountConfig, ObserverEntry[]>
+ * Maps CustomElementRegistry -> Map<MountConfig, WeakMap<Node, ObserverEntry>>
  * The MountConfig object itself is used as the key (object identity).
- * Each entry array contains one observer per registry root for that config.
+ * The innermost WeakMap maps registry root nodes to their observer entries.
  */
 const registryObservers = new WeakMap<
-    CustomElementRegistry, Map<
-        MountConfig, WeakMap<
-            //registryRoot
-            Node, ObserverEntry 
-        >
+    CustomElementRegistry, 
+    Map<
+        MountConfig, 
+        WeakMap<Node, ObserverEntry>
     >
 >();
 
+/**
+ * Tracks all registry root nodes for each CustomElementRegistry.
+ * Used to iterate over all scopes when a new config is added.
+ */
 const registryScopes = new WeakMap<
-    CustomElementRegistry, WeakDual<Node>
->
+    CustomElementRegistry, 
+    WeakDual<Node>
+>();
 
-//assignGingerly.ts already has a polyfill for getOrInsertComputed.  
-//If it can be verified that this code will 
-// already have imported assignGingerly, then no need to add the duplicate polyfill below
+// Note: assignGingerly.ts already has a polyfill for getOrInsertComputed.
+// If this code will already have imported assignGingerly, then no need for the duplicate polyfill below.
 
-
-// Polyfill for Map.prototype.getOrInsert and WeakMap.prototype.getOrInsert
+// Polyfill for Map.prototype.getOrInsertComputed and WeakMap.prototype.getOrInsertComputed
 if (typeof Map.prototype.getOrInsertComputed !== 'function') {
   Map.prototype.getOrInsertComputed = function(key, insert) {
     if (this.has(key)) return this.get(key);
@@ -317,43 +322,90 @@ if (typeof WeakMap.prototype.getOrInsertComputed !== 'function') {
 }
 
 /**
- * Register a mount observer for a specific registry root.
+ * Helper to create an observer entry asynchronously.
+ * Separated to handle async operations cleanly.
  */
-export function getOrInsertObserverEntry(
+async function createObserverEntry(
+    config: MountConfig,
+    registryRoot: Node
+): Promise<ObserverEntry> {
+    // Dynamically import to avoid circular dependency
+    const { MountObserver: MountObserverClass } = await import('./MountObserver.js');
+    const observer = new MountObserverClass(config);
+    await observer.observe(registryRoot);
+    return {
+        config,
+        registryRootRef: new WeakRef(registryRoot),
+        observer
+    };
+}
+
+/**
+ * Get or create a mount observer for a specific registry + config + registry root combination.
+ * This function ensures that:
+ * 1. The config is registered with the registry's mountConfigRegistry
+ * 2. An observer exists for this specific registry root
+ * 3. All other registry roots with the same registry get observers for this config
+ * 4. All other configs get observers for this registry root
+ * 
+ * @returns The ObserverEntry for the requested combination
+ */
+export async function getOrInsertObserverEntry(
     registry: CustomElementRegistry, 
     config: MountConfig,
     registryRoot: Node
-): void {
+): Promise<ObserverEntry> {
+    // Add config to the registry's config list (if not already there)
     registry.mountConfigRegistry.push(config);
     
+    // Get or create the nested map structure
     const mountConfigMap = registryObservers.getOrInsertComputed(registry, () => new Map());
-    const nodeToRootRegistryMap = mountConfigMap.getOrInsertComputed(config, () => new WeakMap());
+    const nodeToObserverMap = mountConfigMap.getOrInsertComputed(config, () => new WeakMap());
     
-    const observerEntry = nodeToRootRegistryMap.getOrInsertComputed(registryRoot, () => {
-        const observer = new MountObserver(config);
-        observer.observe(registryRoot);
-        return {
-            config,
-            registryRootRef: new WeakRef(registryRoot),
-            observer
-        }
-    });
-    const configs = registry.mountConfigRegistry.items;
-    const scopes = registryScopes.getOrInsertComputed(registry, () => {
+    // Get or create the observer for this specific registry root
+    let observerEntry = nodeToObserverMap.get(registryRoot);
+    if (!observerEntry) {
+        observerEntry = await createObserverEntry(config, registryRoot);
+        nodeToObserverMap.set(registryRoot, observerEntry);
+    }
+    
+    // Track this registry root in the scopes set
+    const scopes = registryScopes.getOrInsertComputed(registry, () => ({
         weakSet: new WeakSet<Node>(),
         setWeak: new Set<WeakRef<Node>>()
-    });
-    scopes.weakSet.add(registryRoot);
-    scopes.setWeak.add(new WeakRef(registryRoot));
+    }));
+    
+    // Add to tracking sets if not already present
+    if (!scopes.weakSet.has(registryRoot)) {
+        scopes.weakSet.add(registryRoot);
+        scopes.setWeak.add(new WeakRef(registryRoot));
+    }
+    
+    // Get all configs for this registry
+    const configs = registry.mountConfigRegistry.items;
+    
+    // Iterate over all known registry roots for this registry
     const arr = Array.from(scopes.setWeak);
-    for(const regRootRef of arr){
+    for (const regRootRef of arr) {
         const regRoot = regRootRef.deref();
-        if(regRoot === undefined) continue;
-        for(const conf of configs){
-            if(conf === config && registryRoot === regRoot) continue;
-            // create observer if missing without getting into an infinite loop
+        if (regRoot === undefined) continue;
+        
+        // For each config, ensure an observer exists for this registry root
+        for (const conf of configs) {
+            // Skip if this is the same config + root we just created
+            if (conf === config && registryRoot === regRoot) continue;
+            
+            // Get or create observer for this conf + regRoot combination
+            // This won't cause infinite loop because we only create if missing
+            const confObserverMap = mountConfigMap.getOrInsertComputed(conf, () => new WeakMap());
+            let existingEntry = confObserverMap.get(regRoot);
+            if (!existingEntry) {
+                existingEntry = await createObserverEntry(conf, regRoot);
+                confObserverMap.set(regRoot, existingEntry);
+            }
         }
     }
+    
     return observerEntry;
 }
 
@@ -389,64 +441,23 @@ export function getOrInsertObserverEntry(
 //     }
 // }
 
-/**
- * Get all configs currently being observed for a registry.
- * Returns the MountConfig objects themselves (no deduplication needed).
- */
-export function getActiveConfigsForRegistry(
-    registry: CustomElementRegistry
-): MountConfig[] {
-    const observersByRegistry = registryObservers.get(registry);
-    if (!observersByRegistry) return [];
-    
-    // Map keys are the config objects themselves
-    return Array.from(observersByRegistry.keys());
-}
+// [TODO]  We'll worry about garbage collection later.
 
-/**
- * When a new registry root is discovered, create new MountObservers for it
- * using all the configs that are already active for this registry.
- * 
- * Returns the newly created observers.
- */
-export async function createObserversForNewRoot(
-    registry: CustomElementRegistry,
-    newRegistryRoot: Node
-): Promise<MountObserver[]> {
-    const configs = getActiveConfigsForRegistry(registry);
-    const newObservers: MountObserver[] = [];
-    
-    // Dynamically import to avoid circular dependency
-    const { MountObserver: MountObserverClass } = await import('./MountObserver.js');
-    
-    for (const config of configs) {
-        // Create a new MountObserver for this config + root combination
-        const observer = new MountObserverClass(config);
-        await observer.observe(newRegistryRoot);
-        
-        // Register it
-        registerMountObserver(registry, config, newRegistryRoot, observer);
-        newObservers.push(observer);
-    }
-    
-    return newObservers;
-}
-
-/**
- * Cleanup: Remove any entries where the registry root has been garbage collected.
- */
-export function cleanupGarbageCollectedRoots(): void {
-    for (const observersByRegistry of registryObservers.values()) {
-        for (const entries of observersByRegistry.values()) {
-            // Filter out entries with dead WeakRefs
-            for (let i = entries.length - 1; i >= 0; i--) {
-                if (entries[i].registryRoot.deref() === undefined) {
-                    entries.splice(i, 1);
-                }
-            }
-        }
-    }
-}
+// /**
+//  * Cleanup: Remove any entries where the registry root has been garbage collected.
+//  */
+// export function cleanupGarbageCollectedRoots(): void {
+//     for (const observersByRegistry of registryObservers.values()) {
+//         for (const entries of observersByRegistry.values()) {
+//             // Filter out entries with dead WeakRefs
+//             for (let i = entries.length - 1; i >= 0; i--) {
+//                 if (entries[i].registryRoot.deref() === undefined) {
+//                     entries.splice(i, 1);
+//                 }
+//             }
+//         }
+//     }
+// }
 ```
 
 ### Key Design Decisions:
