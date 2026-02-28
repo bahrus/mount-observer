@@ -186,18 +186,14 @@ For this requirement, we create a similar registry for Mount Observer Configurat
 
 ```TypeScript
 export class MountConfigRegistry extends EventTarget {
-  #items: MountConfig[] = [];
+  #items: Set<MountConfig> = new Set();
 
   get items(){
-    return [...this.#items];
+    return Array.from(this.#items);
   }
 
   push(items: MountConfig | MountConfig[]): void {
-    if (Array.isArray(items)) {
-      this.#items.push(...items);
-    } else {
-      this.#items.push(items);
-    }
+    ...
   }
   ...
 }
@@ -293,6 +289,10 @@ const registryObservers = new WeakMap<
     >
 >();
 
+const registryScopes = new WeakMap<
+    CustomElementRegistry, WeakDual<Node>
+>
+
 //assignGingerly.ts already has a polyfill for getOrInsertComputed.  
 //If it can be verified that this code will 
 // already have imported assignGingerly, then no need to add the duplicate polyfill below
@@ -324,9 +324,12 @@ export function getOrInsertObserverEntry(
     config: MountConfig,
     registryRoot: Node
 ): void {
+    registry.mountConfigRegistry.push(config);
+    
     const mountConfigMap = registryObservers.getOrInsertComputed(registry, () => new Map());
     const nodeToRootRegistryMap = mountConfigMap.getOrInsertComputed(config, () => new WeakMap());
-    const observerEntry = nodeToRoogRegistryMap.getOrInsertComputed(registryRoot, () => {
+    
+    const observerEntry = nodeToRootRegistryMap.getOrInsertComputed(registryRoot, () => {
         const observer = new MountObserver(config);
         observer.observe(registryRoot);
         return {
@@ -335,6 +338,22 @@ export function getOrInsertObserverEntry(
             observer
         }
     });
+    const configs = registry.mountConfigRegistry.items;
+    const scopes = registryScopes.getOrInsertComputed(registry, () => {
+        weakSet: new WeakSet<Node>(),
+        setWeak: new Set<WeakRef<Node>>()
+    });
+    scopes.weakSet.add(registryRoot);
+    scopes.setWeak.add(new WeakRef(registryRoot));
+    const arr = Array.from(scopes.setWeak);
+    for(const regRootRef of arr){
+        const regRoot = regRootRef.deref();
+        if(regRoot === undefined) continue;
+        for(const conf of configs){
+            if(conf === config && registryRoot === regRoot) continue;
+            // create observer if missing without getting into an infinite loop
+        }
+    }
     return observerEntry;
 }
 
