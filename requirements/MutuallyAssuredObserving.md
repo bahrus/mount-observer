@@ -1,11 +1,18 @@
 # Mutually Assured Observing
 
-## Definition of a (CustomElementRegistry) Shoreline and Island
+# Phase I
 
+## Definition of Registry Root and Registry Scope
 
-The function getRootRootRegistryContainer in getRootRootRegistryContainer.js takes a node and finds the highest level containing node that has matching customElementRegistry property.
+The function `getRegistryRoot()` (renamed from the current getRootRegistryContainer) takes a node and finds the highest-level 
+containing node that has a matching customElementRegistry property.
 
-A DOM Node n is called a CustomElementRegistry shoreline if n === getRootRootRegistryContainer(n).  The "island" corresponding to that shoreline is all the node inside the shoreline that is not contained within another shoreline.  All elements of the island have the same customElementRegistry.
+A DOM Node `n` is called a **Registry Root** if `n === getRegistryRoot(n)`.
+
+The **Registry Scope** corresponding to that root is all nodes inside the 
+root that are registry roots of other registries or anything inside such roots. Think "Donut Hole Scopeing".  All elements in a registry scope share the same customElementRegistry.
+
+# Phase II
 
 ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'registry' is selected.
 
