@@ -1,13 +1,13 @@
 # Mutually Assured Observing
 
-## Definition of a (CustomElementRegistry) Shoreline
+## Definition of a (CustomElementRegistry) Shoreline and Island
 
 
 The function getRootRootRegistryContainer in getRootRootRegistryContainer.js takes a node and finds the highest level containing node that has matching customElementRegistry property.
 
-A DOM Node n is called a CustomElementRegistry shoreline if n === getRootRootRegistryContainer(n);
+A DOM Node n is called a CustomElementRegistry shoreline if n === getRootRootRegistryContainer(n).  The "island" corresponding to that shoreline is all the node inside the shoreline that is not contained within another shoreline.  All elements of the island have the same customElementRegistry.
 
-ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'root' is selected.
+ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'registry' is selected.
 
 But here's the thing:  The scoped custom element registry feature allows for multiple "islands" of nodes that share the same customElementRegistry, as demonstrated by /demo/TestOfScope.html
 
@@ -39,14 +39,14 @@ const div5 = cloneNode(template, {customElementRegistry: reg2});
 
 #### 1. Add 'customElementRegistry' MountScope (New Default)
 
-Update `MountScope` type to include a new option:
+Update `MountScope` type to include a new option and rename an existing one:
 ```typescript
 export type MountScope = 
-    | 'customElementRegistry'  // NEW: Observe all islands with matching registry (new default)
-    | 'shoreline'               // getRootRegistryContainer (single island)
-    | 'self'                   // this element
-    | 'root'                   // getRootNode()
-    | 'shadow'                 // shadowRoot
+    | 'registry'    // NEW: Observe all islands with matching registry (new default)
+    | 'shoreline'   // was the default, and was called 'registry' getRootRegistryContainer (single island) 
+    | 'self'        // this element
+    | 'root'        // getRootNode()
+    | 'shadow'      // shadowRoot
     | Element;
 ```
 
@@ -124,9 +124,21 @@ if (typeof CustomElementRegistry !== 'undefined') {
 }
 ```
 
-#### Map:  CustomElementRegistry + MountConfig + Shoreline
+#### Map:  CustomElementRegistry + MountConfig + Shoreline => MountObserver Instance
 
-Create a global WeakMap to track mount observers per custom element registry:
+Our goal is that every combination of:
+
+1.  customElementRegistry 
+2.  + mountConfig in that registry
+3.  + shoreline matching that registry
+
+should, ideally, have one MountObserver instance where the value of this.#root that it is monitoring is the shoreline.
+
+The term "ideally" is there because each island needs an "opt-in" from the developer, as the platform doesn't have a way of auto discovering new islands.
+
+Create the following mappings:
+
+#### [TODO]  Please update this section at will
 
 ```typescript
 // In a new file: RegistryMountCoordinator.ts
@@ -151,6 +163,8 @@ export function getMountObserversForRegistry(registry: CustomElementRegistry): S
     return registryMountObservers.get(registry) || new Set();
 }
 ```
+
+####
 
 
 
