@@ -1,33 +1,6 @@
 # Mutually Assured Observing
 
-# Phase I
-
-## Definition of Registry Root and Registry Scope
-
-The function `getRegistryRoot()` takes a node and finds the highest-level 
-containing node that has a matching customElementRegistry property.
-
-A DOM Node `n` is called a **Registry Root** if `n === getRegistryRoot(n)`.
-
-The **Registry Scope** corresponding to that root is all nodes inside the 
-root that aren't registry roots of other registries or anything inside such roots. Think "Donut Hole Scoping".  All elements in a registry scope share the same customElementRegistry.
-
-# Phase II
-
-ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'registry' is selected.
-
-But here's the thing:  The scoped custom element registry feature allows for multiple "islands" of nodes that share the same customElementRegistry, as demonstrated by /demo/TestOfScope.html
-
-To my knowledge, we don't have a way for one island to automatically notify other islands that share the same customElementRegistry.  However, I think it is reasonable to expect that a developer would want all instances of elements that share the same registry to be subject to the same mounting observations.
-
-I'm thinking that we add another category to MountScope that should be the default value:  'customElementRegistry'.  When we add a mount observer, that customElementRegistry maintains a registry of "mountRegistries'.
-
-In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint mountObservers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
-
-
-## Implementation Strategy
-
-### Problem Analysis
+## Problem Analysis
 
 The current implementation has a limitation: when multiple DOM "islands" share the same `customElementRegistry`, calling `element.mount()` on one island only observes that specific island's shoreline. Other islands with the same registry remain unobserved, even though developers would reasonably expect all elements sharing a registry to be subject to the same mounting rules.
 
@@ -42,6 +15,100 @@ const div5 = cloneNode(template, {customElementRegistry: reg2});
 // Currently, mounting on div2 won't observe div4 or div5
 ```
 
+## Phase I
+
+## Definition of Registry Root and Registry Scope
+
+The function `getRegistryRoot()` takes a node and finds the highest-level 
+containing node that has a matching customElementRegistry property.
+
+A DOM Node `n` is called a **Registry Root** if `n === getRegistryRoot(n)`.
+
+The **Registry Scope** corresponding to that root is all nodes inside the 
+root that aren't registry roots of other registries or anything inside such roots. Think "Donut Hole Scoping".  All elements in a registry scope share the same customElementRegistry.
+
+# Phase II
+
+Given that we aren't (by default) really observing the passed in node of mountObserverInstance.observe(node), but rather observing various nodes relative to the passed in node, does it make sense to rename observe to something else?
+
+## Recommendation: Keep `observe()` as the method name
+
+**Reasons to keep `observe()`:**
+
+1. **Semantic accuracy**: The method IS observing - just potentially multiple nodes or scopes relative to the passed node. The node parameter acts as an "anchor" or "context" for determining what to observe.
+
+2. **Platform consistency**: Other observer APIs use `observe()`:
+   - `MutationObserver.observe(target, options)`
+   - `IntersectionObserver.observe(target)`
+   - `ResizeObserver.observe(target)`
+   
+   Even though these observers may internally track multiple things, the method is still called `observe()`.
+
+3. **Mental model**: Developers think "I want to observe this node/scope" - the method name matches that intent. The fact that it might observe related nodes is an implementation detail.
+
+4. **Backward compatibility**: Changing the name would be a breaking change for existing code.
+
+**Alternative considered: `observeScope()`**
+- Pro: More explicit about observing a scope rather than just the node
+- Con: Verbose, and "scope" might be confused with JavaScript scope
+- Con: Breaking change
+
+**Alternative considered: `watch()`**
+- Pro: Shorter, still conveys the intent
+- Con: Less consistent with platform observer APIs
+- Con: Breaking change
+
+**Recommendation**: Keep `observe()` and make the behavior clear through:
+1. Documentation explaining that the node parameter defines the observation scope
+2. The `scope` option in `MountObserverOptions` makes it explicit what's being observed
+3. JSDoc comments on the method
+4. **Consider renaming the parameter from `rootNode` to `anchorNode`** to better reflect its role
+
+```typescript
+/**
+ * Begins observing elements within the scope determined by the provided node.
+ * 
+ * @param anchorNode - The node that anchors the observation scope. Depending on the
+ *                     configured scope option, this may observe:
+ *                     - The node itself ('self')
+ *                     - The node's registry root ('registryRoot')
+ *                     - All islands sharing the node's registry ('registry')
+ *                     - The node's shadow root ('shadow')
+ *                     - The node's root node ('root')
+ */
+async observe(anchorNode: Node): Promise<void>
+```
+
+**Why "anchorNode" is better than "rootNode":**
+
+1. **Accuracy**: The parameter isn't necessarily the root of what's being observed - it's the reference point for determining the scope
+2. **Clarity**: "anchor" clearly conveys that this node is used to locate/determine what to observe
+3. **Avoids confusion**: "rootNode" suggests it's the actual root being observed, which isn't always true
+4. **Semantic precision**: An anchor is a fixed point used for navigation/reference, which is exactly what this parameter does
+
+**Implementation note**: This would be a parameter name change in the method signature, which is technically a breaking change for code that uses named parameters (though JavaScript doesn't have those). However, since it's just a parameter name in the implementation, it wouldn't break any existing code that calls `observe(someNode)`.
+
+The name `observe()` is semantically correct and consistent with web platform conventions, and `anchorNode` better describes the parameter's role.
+
+
+
+## Phase III
+
+ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'registry' is selected.
+
+But here's the thing:  The scoped custom element registry feature allows for multiple "islands" of nodes that share the same customElementRegistry, as demonstrated by /demo/TestOfScope.html
+
+To my knowledge, we don't have a way for one island to automatically notify other islands that share the same customElementRegistry.  However, I think it is reasonable to expect that a developer would want all instances of elements that share the same registry to be subject to the same mounting observations.
+
+I'm thinking that we add another category to MountScope that should be the default value:  'customElementRegistry'.  When we add a mount observer, that customElementRegistry maintains a registry of "mountRegistries'.
+
+In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint mountObservers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
+
+
+## Implementation Strategy
+
+
+
 ### Proposed Solution
 
 #### 1. Add 'customElementRegistry' MountScope (New Default)
@@ -49,11 +116,11 @@ const div5 = cloneNode(template, {customElementRegistry: reg2});
 Update `MountScope` type to include a new option and rename an existing one:
 ```typescript
 export type MountScope = 
-    | 'registry'    // NEW: Observe all islands with matching registry (new default)
+    | 'registry'       // NEW: Observe all islands with matching registry (new default)
     | 'registryRoot'   // was the default
-    | 'self'        // this element
-    | 'root'        // getRootNode()
-    | 'shadow'      // shadowRoot
+    | 'self'           // this element
+    | 'root'           // getRootNode()
+    | 'shadow'         // shadowRoot
     | Element;
 ```
 
