@@ -18,7 +18,7 @@ type ObserverEntry = {
 
 const regObsGuid = 'iqj6MOueu0OP4CQi1a_4Sw';
 
-export type TBD = WeakMap<
+export type CER2MC2N2OE = WeakMap<
     CustomElementRegistry, 
     Map<
         MountConfig, 
@@ -31,7 +31,7 @@ export type TBD = WeakMap<
  * The MountConfig object itself is used as the key (object identity).
  * The innermost WeakMap maps registry root nodes to their observer entries.
  */
-export function getRegistryObservers(): TBD{
+export function getRegistryObservers(): CER2MC2N2OE{
   if (!(globalThis as any)[regObsGuid]) {
     (globalThis as any)[regObsGuid] = new WeakMap<CustomElementRegistry, 
         Map<
@@ -40,7 +40,7 @@ export function getRegistryObservers(): TBD{
         >
     >();
   }
-  return (globalThis as any)[regObsGuid] as TBD;
+  return (globalThis as any)[regObsGuid] as CER2MC2N2OE;
 }
 
 
