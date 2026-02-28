@@ -472,6 +472,9 @@ export async function getOrInsertObserverEntry(
 
 5. **getOrInsert helper**: Temporary helper function until `Map.prototype.getOrInsert()` becomes available in browsers
 
+
+## End of Phase III
+
 ### Alternative Simpler Approach:
 
 If we don't need to automatically apply existing configs to new scopes, we can simplify to just track observers:
