@@ -280,69 +280,91 @@ type ObserverEntry = {
  * The MountConfig object itself is used as the key (object identity).
  * Each entry array contains one observer per registry root for that config.
  */
-const registryObservers = new WeakMap<CustomElementRegistry, Map<MountConfig, ObserverEntry[]>>();
+const registryObservers = new WeakMap<
+    CustomElementRegistry, Map<
+        MountConfig, WeakMap<
+            //registryRoot
+            Node, ObserverEntry 
+        >
+    >
+>();
 
-/**
- * Helper function to get or insert a value in a Map.
- * Temporary until Map.prototype.getOrInsert() is available in browsers.
- */
-function getOrInsert<K, V>(map: Map<K, V>, key: K, factory: () => V): V {
-    let value = map.get(key);
-    if (value === undefined) {
-        value = factory();
-        map.set(key, value);
-    }
+//assignGingerly.ts already has a polyfill for getOrInsertComputed.  
+//If it can be verified that this code will 
+// already have imported assignGingerly, then no need to add the duplicate polyfill below
+
+
+// Polyfill for Map.prototype.getOrInsert and WeakMap.prototype.getOrInsert
+if (typeof Map.prototype.getOrInsertComputed !== 'function') {
+  Map.prototype.getOrInsertComputed = function(key, insert) {
+    if (this.has(key)) return this.get(key);
+    const value = insert();
+    this.set(key, value);
     return value;
+  };
+}
+if (typeof WeakMap.prototype.getOrInsertComputed !== 'function') {
+  WeakMap.prototype.getOrInsertComputed = function(key, insert) {
+    if (this.has(key)) return this.get(key);
+    const value = insert();
+    this.set(key, value);
+    return value;
+  };
 }
 
 /**
  * Register a mount observer for a specific registry root.
  */
-export function registerMountObserver(
+export function getOrInsertObserverEntry(
     registry: CustomElementRegistry, 
     config: MountConfig,
-    registryRoot: Node,
-    observer: MountObserver
+    registryRoot: Node
 ): void {
-    const observersByRegistry = getOrInsert(registryObservers, registry, () => new Map());
-    const entries = getOrInsert(observersByRegistry, config, () => []);
-    
-    entries.push({
-        config,
-        registryRoot: new WeakRef(registryRoot),
-        observer
+    const mountConfigMap = registryObservers.getOrInsertComputed(registry, () => new Map());
+    const nodeToRootRegistryMap = mountConfigMap.getOrInsertComputed(config, () => new WeakMap());
+    const observerEntry = nodeToRoogRegistryMap.getOrInsertComputed(registryRoot, () => {
+        const observer = new MountObserver(config);
+        observer.observe(registryRoot);
+        return {
+            config,
+            registryRoot,
+            observer
+        }
     });
+    return observerEntry;
 }
+
+// [TODO]  Don't worry about unregistering mount observers for now.  For a later phase
 
 /**
  * Unregister a mount observer for a specific registry root.
  */
-export function unregisterMountObserver(
-    registry: CustomElementRegistry, 
-    observer: MountObserver
-): void {
-    const observersByRegistry = registryObservers.get(registry);
-    if (!observersByRegistry) return;
+// export function unregisterMountObserver(
+//     registry: CustomElementRegistry, 
+//     observer: MountObserver
+// ): void {
+//     const observersByRegistry = registryObservers.get(registry);
+//     if (!observersByRegistry) return;
     
-    // Find and remove the entry for this observer across all configs
-    for (const [config, entries] of observersByRegistry) {
-        const index = entries.findIndex(entry => entry.observer === observer);
-        if (index !== -1) {
-            entries.splice(index, 1);
+//     // Find and remove the entry for this observer across all configs
+//     for (const [config, entries] of observersByRegistry) {
+//         const index = entries.findIndex(entry => entry.observer === observer);
+//         if (index !== -1) {
+//             entries.splice(index, 1);
             
-            // If no more entries for this config, remove the config key
-            if (entries.length === 0) {
-                observersByRegistry.delete(config);
-            }
-            break;
-        }
-    }
+//             // If no more entries for this config, remove the config key
+//             if (entries.length === 0) {
+//                 observersByRegistry.delete(config);
+//             }
+//             break;
+//         }
+//     }
     
-    // If no more configs for this registry, remove the registry entry
-    if (observersByRegistry.size === 0) {
-        registryObservers.delete(registry);
-    }
-}
+//     // If no more configs for this registry, remove the registry entry
+//     if (observersByRegistry.size === 0) {
+//         registryObservers.delete(registry);
+//     }
+// }
 
 /**
  * Get all configs currently being observed for a registry.
