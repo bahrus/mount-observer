@@ -1,6 +1,13 @@
 # Mutually Assured Observing
 
-ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the highest containing node with matching customElementRegistry, and starts monitoring that node for matching elements to mount.  That is if the default option of 'root' is selected.
+## Definition of a (CustomElementRegistry) Shoreline
+
+
+The function getRootRootRegistryContainer in getRootRootRegistryContainer.js takes a node and finds the highest level containing node that has matching customElementRegistry property.
+
+A DOM Node n is called a CustomElementRegistry shoreline if n === getRootRootRegistryContainer(n);
+
+ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'root' is selected.
 
 But here's the thing:  The scoped custom element registry feature allows for multiple "islands" of nodes that share the same customElementRegistry, as demonstrated by /demo/TestOfScope.html
 
@@ -15,7 +22,7 @@ In support of that idea, we need an API of some sort an element to say "I'm here
 
 ### Problem Analysis
 
-The current implementation has a limitation: when multiple DOM "islands" share the same `customElementRegistry`, calling `element.mount()` on one island only observes that specific island's root node. Other islands with the same registry remain unobserved, even though developers would reasonably expect all elements sharing a registry to be subject to the same mounting rules.
+The current implementation has a limitation: when multiple DOM "islands" share the same `customElementRegistry`, calling `element.mount()` on one island only observes that specific island's shoreline. Other islands with the same registry remain unobserved, even though developers would reasonably expect all elements sharing a registry to be subject to the same mounting rules.
 
 **Example scenario from TestOfScope.html:**
 ```javascript
@@ -36,14 +43,16 @@ Update `MountScope` type to include a new option:
 ```typescript
 export type MountScope = 
     | 'customElementRegistry'  // NEW: Observe all islands with matching registry (new default)
-    | 'registry'               // getRootRegistryContainer (single island)
+    | 'shoreline'               // getRootRegistryContainer (single island)
     | 'self'                   // this element
     | 'root'                   // getRootNode()
     | 'shadow'                 // shadowRoot
     | Element;
 ```
 
-#### 2. Registry-Level Mount Observer Registry
+#### 2. Registry-Level Mount Config Registry
+
+#### Prior Art
 
 Polyfill package assign-gingerly/object-extension defines a property on the new CustomElementRegistry prototype:  'enhancementRegistry':
 
@@ -77,11 +86,13 @@ export class EnhancementRegistry {
 }
 ```
 
-For this requirement, we create a similar registry for Mount Observers in ElementMountExtension:
+#### New Registry Category
+
+For this requirement, we create a similar registry for Mount Observer Configurations in ElementMountExtension:
 
 ```TypeScript
-export class MountRegistry {
-    #items: MountConfig[] = [];
+export class MountConfigRegistry extends EventTarget {
+  #items: MountConfig[] = [];
 
   push(items: MountConfig | MountConfig[]): void {
     if (Array.isArray(items)) {
@@ -94,12 +105,12 @@ export class MountRegistry {
 }
 
 if (typeof CustomElementRegistry !== 'undefined') {
-  Object.defineProperty(CustomElementRegistry.prototype, 'mountRegistry', {
+  Object.defineProperty(CustomElementRegistry.prototype, 'mountConfigRegistry', {
     get: function () {
       // Create a new BaseRegistry instance on first access and cache it
-      const registry = new MountRegistry();
+      const registry = new MountConfigRegistry();
       // Replace the getter with the actual value
-      Object.defineProperty(this, 'mountRegistry', {
+      Object.defineProperty(this, 'mountConigRegistry', {
         value: registry,
         writable: true,
         enumerable: false,
@@ -110,6 +121,34 @@ if (typeof CustomElementRegistry !== 'undefined') {
     enumerable: false,
     configurable: true,
   });
+}
+```
+
+#### Map:  CustomElementRegistry + MountConfig + Shoreline
+
+Create a global WeakMap to track mount observers per custom element registry:
+
+```typescript
+// In a new file: RegistryMountCoordinator.ts
+const registryMountObservers = new WeakMap<CustomElementRegistry, Set<MountObserver>>();
+
+export function registerMountObserver(registry: CustomElementRegistry, observer: MountObserver): void {
+    const observers = registryMountObservers.getOrInsert(registry, () => new Set());
+    observers.add(observer);
+}
+
+export function unregisterMountObserver(registry: CustomElementRegistry, observer: MountObserver): void {
+    const observers = registryMountObservers.get(registry);
+    if (observers) {
+        observers.delete(observer);
+        if (observers.size === 0) {
+            registryMountObservers.delete(registry);
+        }
+    }
+}
+
+export function getMountObserversForRegistry(registry: CustomElementRegistry): Set<MountObserver> {
+    return registryMountObservers.get(registry) || new Set();
 }
 ```
 
