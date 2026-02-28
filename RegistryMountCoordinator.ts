@@ -44,13 +44,7 @@ export function getRegistryObservers(): CER2MC2N2OE{
 }
 
 
-// const registryObservers = new WeakMap<
-//     CustomElementRegistry, 
-//     Map<
-//         MountConfig, 
-//         WeakMap<Node, ObserverEntry>
-//     >
-// >();
+
 
 /**
  * Tracks all registry root nodes for each CustomElementRegistry.

@@ -15,13 +15,6 @@ export function getRegistryObservers() {
     }
     return globalThis[regObsGuid];
 }
-// const registryObservers = new WeakMap<
-//     CustomElementRegistry, 
-//     Map<
-//         MountConfig, 
-//         WeakMap<Node, ObserverEntry>
-//     >
-// >();
 /**
  * Tracks all registry root nodes for each CustomElementRegistry.
  * Used to iterate over all scopes when a new config is added.
