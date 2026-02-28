@@ -88,7 +88,7 @@ The confusion arose from the `element.mount()` convenience method, which uses th
 /**
  * Begins observing elements within the scope determined by the provided node.
  * 
- * @param anchorNode - The node that anchors the observation scope. Depending on the
+ * @param observedNode - The node that anchors the observation scope. Depending on the
  *                     configured scope option, this may observe:
  *                     - The node itself ('self')
  *                     - The node's registry root ('registryRoot')
@@ -96,7 +96,7 @@ The confusion arose from the `element.mount()` convenience method, which uses th
  *                     - The node's shadow root ('shadow')
  *                     - The node's root node ('root')
  */
-async observe(anchorNode: Node): Promise<void>
+async observe(observedNode: Node): Promise<void>
 ```
 
 **Why "anchorNode" is better than "rootNode":**
@@ -131,9 +131,9 @@ In support of that idea, we need an API of some sort an element to say "I'm here
 
 ### Proposed Solution
 
-#### 1. Add 'customElementRegistry' MountScope (New Default)
+#### 1. Add 'registry' MountScope (New Default)
 
-Update `MountScope` type to include a new option and rename an existing one:
+Update `MountScope` type to include a new option:
 ```typescript
 export type MountScope = 
     | 'registry'       // NEW: Observe all islands with matching registry (new default)
@@ -232,31 +232,236 @@ The term "ideally" is there because each island needs an "opt-in" from the devel
 
 Create the following mappings:
 
-#### [TODO]  Please update this section at will
+#### Mappings
+
+We need mappings to coordinate mount observers across registry islands. Since each `MountObserver` instance can only observe one node, we need one observer per (registry + config + registry root) combination.
+
+**Key Design Decision: Use MountConfig Object Identity as Key**
+
+Instead of serializing configs or requiring developer-provided GUIDs, we use the `MountConfig` object itself as the Map key. This leverages JavaScript's natural object identity semantics.
+
+**Benefits:**
+- No serialization complexity or performance overhead
+- No GUID management burden on developers
+- Works naturally with functions and non-serializable values in configs
+- Explicit and predictable: same object = shared observer, different object = separate observer
+- Encourages good pattern: define config once, reuse across islands
+
+**Usage Pattern:**
+```javascript
+// Define config once
+const sharedConfig = {
+    matching: '.my-element',
+    do: (el) => console.log('Mounted:', el)
+};
+
+// Island 1 - uses sharedConfig object
+await div2.mount(sharedConfig, { scope: 'registry' });
+
+// Island 2 - reuses same sharedConfig object
+await div4.registerIsland();  
+// ^ Creates new observer for div4 using sharedConfig
+```
 
 ```typescript
 // In a new file: RegistryMountCoordinator.ts
-const registryMountObservers = new WeakMap<CustomElementRegistry, Set<MountObserver>>();
+
+/**
+ * Represents a single MountObserver observing a specific registry root.
+ */
+type ObserverEntry = {
+    config: MountConfig;  // Store for reference
+    registryRoot: WeakRef<Node>;
+    observer: MountObserver;
+};
+
+/**
+ * Maps CustomElementRegistry -> Map<MountConfig, ObserverEntry[]>
+ * The MountConfig object itself is used as the key (object identity).
+ * Each entry array contains one observer per registry root for that config.
+ */
+const registryObservers = new WeakMap<CustomElementRegistry, Map<MountConfig, ObserverEntry[]>>();
+
+/**
+ * Helper function to get or insert a value in a Map.
+ * Temporary until Map.prototype.getOrInsert() is available in browsers.
+ */
+function getOrInsert<K, V>(map: Map<K, V>, key: K, factory: () => V): V {
+    let value = map.get(key);
+    if (value === undefined) {
+        value = factory();
+        map.set(key, value);
+    }
+    return value;
+}
+
+/**
+ * Register a mount observer for a specific registry root.
+ */
+export function registerMountObserver(
+    registry: CustomElementRegistry, 
+    config: MountConfig,
+    registryRoot: Node,
+    observer: MountObserver
+): void {
+    const observersByRegistry = getOrInsert(registryObservers, registry, () => new Map());
+    const entries = getOrInsert(observersByRegistry, config, () => []);
+    
+    entries.push({
+        config,
+        registryRoot: new WeakRef(registryRoot),
+        observer
+    });
+}
+
+/**
+ * Unregister a mount observer for a specific registry root.
+ */
+export function unregisterMountObserver(
+    registry: CustomElementRegistry, 
+    observer: MountObserver
+): void {
+    const observersByRegistry = registryObservers.get(registry);
+    if (!observersByRegistry) return;
+    
+    // Find and remove the entry for this observer across all configs
+    for (const [config, entries] of observersByRegistry) {
+        const index = entries.findIndex(entry => entry.observer === observer);
+        if (index !== -1) {
+            entries.splice(index, 1);
+            
+            // If no more entries for this config, remove the config key
+            if (entries.length === 0) {
+                observersByRegistry.delete(config);
+            }
+            break;
+        }
+    }
+    
+    // If no more configs for this registry, remove the registry entry
+    if (observersByRegistry.size === 0) {
+        registryObservers.delete(registry);
+    }
+}
+
+/**
+ * Get all configs currently being observed for a registry.
+ * Returns the MountConfig objects themselves (no deduplication needed).
+ */
+export function getActiveConfigsForRegistry(
+    registry: CustomElementRegistry
+): MountConfig[] {
+    const observersByRegistry = registryObservers.get(registry);
+    if (!observersByRegistry) return [];
+    
+    // Map keys are the config objects themselves
+    return Array.from(observersByRegistry.keys());
+}
+
+/**
+ * When a new registry root is discovered, create new MountObservers for it
+ * using all the configs that are already active for this registry.
+ * 
+ * Returns the newly created observers.
+ */
+export async function createObserversForNewRoot(
+    registry: CustomElementRegistry,
+    newRegistryRoot: Node
+): Promise<MountObserver[]> {
+    const configs = getActiveConfigsForRegistry(registry);
+    const newObservers: MountObserver[] = [];
+    
+    // Dynamically import to avoid circular dependency
+    const { MountObserver: MountObserverClass } = await import('./MountObserver.js');
+    
+    for (const config of configs) {
+        // Create a new MountObserver for this config + root combination
+        const observer = new MountObserverClass(config);
+        await observer.observe(newRegistryRoot);
+        
+        // Register it
+        registerMountObserver(registry, config, newRegistryRoot, observer);
+        newObservers.push(observer);
+    }
+    
+    return newObservers;
+}
+
+/**
+ * Cleanup: Remove any entries where the registry root has been garbage collected.
+ */
+export function cleanupGarbageCollectedRoots(): void {
+    for (const observersByRegistry of registryObservers.values()) {
+        for (const entries of observersByRegistry.values()) {
+            // Filter out entries with dead WeakRefs
+            for (let i = entries.length - 1; i >= 0; i--) {
+                if (entries[i].registryRoot.deref() === undefined) {
+                    entries.splice(i, 1);
+                }
+            }
+        }
+    }
+}
+```
+
+### Key Design Decisions:
+
+1. **MountConfig as Map key**: Uses object identity - same object = shared observer, different object = separate observer
+
+2. **One observer per root**: Since `MountObserver` can only observe one node, we create separate instances for each registry root, even if they share the same config
+
+3. **WeakRef for roots**: Registry roots are stored as WeakRefs to prevent memory leaks
+
+4. **Nested Map structure**: `WeakMap<Registry, Map<Config, Entry[]>>` allows efficient lookup by both registry and config
+
+5. **getOrInsert helper**: Temporary helper function until `Map.prototype.getOrInsert()` becomes available in browsers
+
+### Alternative Simpler Approach:
+
+If we don't need to automatically apply existing configs to new islands, we can simplify to just track observers:
+
+```typescript
+// Simpler version: Just track all observers per registry
+const registryObservers = new WeakMap<CustomElementRegistry, Set<MountObserver>>();
 
 export function registerMountObserver(registry: CustomElementRegistry, observer: MountObserver): void {
-    const observers = registryMountObservers.getOrInsert(registry, () => new Set());
+    const observers = registryObservers.getOrInsert(registry, () => new Set());
     observers.add(observer);
 }
 
 export function unregisterMountObserver(registry: CustomElementRegistry, observer: MountObserver): void {
-    const observers = registryMountObservers.get(registry);
+    const observers = registryObservers.get(registry);
     if (observers) {
         observers.delete(observer);
         if (observers.size === 0) {
-            registryMountObservers.delete(registry);
+            registryObservers.delete(registry);
         }
     }
 }
 
 export function getMountObserversForRegistry(registry: CustomElementRegistry): Set<MountObserver> {
-    return registryMountObservers.get(registry) || new Set();
+    return registryObservers.get(registry) || new Set();
+}
+
+export function getActiveConfigsForRegistry(registry: CustomElementRegistry): MountConfig[] {
+    const observers = getMountObserversForRegistry(registry);
+    const configs: MountConfig[] = [];
+    
+    for (const observer of observers) {
+        // Access observer's config (would need to expose this)
+        configs.push(observer.config);
+    }
+    
+    return configs;
 }
 ```
+
+**Recommendation**: Use the simpler approach. When `registerIsland()` is called, it can:
+1. Get all active configs for the registry
+2. Create new `MountObserver` instances for each config
+3. Call `observe()` on the new registry root for each observer
+
+This keeps the coordinator simple and delegates the complexity to the calling code.
 
 ####
 
