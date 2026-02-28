@@ -45,31 +45,75 @@ export type MountScope =
 
 #### 2. Registry-Level Mount Observer Registry
 
-Create a global WeakMap to track mount observers per custom element registry:
+Polyfill package assign-gingerly/object-extension defines a property on the new CustomElementRegistry prototype:  'enhancementRegistry':
 
-```typescript
-// In a new file: RegistryMountCoordinator.ts
-const registryMountObservers = new WeakMap<CustomElementRegistry, Set<MountObserver>>();
-
-export function registerMountObserver(registry: CustomElementRegistry, observer: MountObserver): void {
-    const observers = registryMountObservers.getOrInsert(registry, () => new Set());
-    observers.add(observer);
-}
-
-export function unregisterMountObserver(registry: CustomElementRegistry, observer: MountObserver): void {
-    const observers = registryMountObservers.get(registry);
-    if (observers) {
-        observers.delete(observer);
-        if (observers.size === 0) {
-            registryMountObservers.delete(registry);
-        }
-    }
-}
-
-export function getMountObserversForRegistry(registry: CustomElementRegistry): Set<MountObserver> {
-    return registryMountObservers.get(registry) || new Set();
+```JavaScript
+if (typeof CustomElementRegistry !== 'undefined') {
+  Object.defineProperty(CustomElementRegistry.prototype, 'enhancementRegistry', {
+    get: function () {
+      // Create a new BaseRegistry instance on first access and cache it
+      const registry = new EnhancementRegistry();
+      // Replace the getter with the actual value
+      Object.defineProperty(this, 'enhancementRegistry', {
+        value: registry,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      });
+      return registry;
+    },
+    enumerable: false,
+    configurable: true,
+  });
 }
 ```
+
+where EnhancementRegistry is defined in assignGingerly.ts:
+
+```TypeScript
+ */
+export class EnhancementRegistry {
+    ...
+}
+```
+
+For this requirement, we create a similar registry for Mount Observers in ElementMountExtension:
+
+```TypeScript
+export class MountRegistry {
+    #items: MountConfig[] = [];
+
+  push(items: MountConfig | MountConfig[]): void {
+    if (Array.isArray(items)) {
+      this.#items.push(...items);
+    } else {
+      this.#items.push(items);
+    }
+  }
+  ...
+}
+
+if (typeof CustomElementRegistry !== 'undefined') {
+  Object.defineProperty(CustomElementRegistry.prototype, 'mountRegistry', {
+    get: function () {
+      // Create a new BaseRegistry instance on first access and cache it
+      const registry = new MountRegistry();
+      // Replace the getter with the actual value
+      Object.defineProperty(this, 'mountRegistry', {
+        value: registry,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      });
+      return registry;
+    },
+    enumerable: false,
+    configurable: true,
+  });
+}
+```
+
+
 
 #### 3. Island Registration API
 
