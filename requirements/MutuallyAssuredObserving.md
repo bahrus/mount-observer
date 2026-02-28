@@ -67,7 +67,7 @@ Polyfill package assign-gingerly/object-extension defines a property on the new 
 if (typeof CustomElementRegistry !== 'undefined') {
   Object.defineProperty(CustomElementRegistry.prototype, 'enhancementRegistry', {
     get: function () {
-      // Create a new BaseRegistry instance on first access and cache it
+      // Create a new EnhancementRegistry instance on first access and cache it
       const registry = new EnhancementRegistry();
       // Replace the getter with the actual value
       Object.defineProperty(this, 'enhancementRegistry', {
@@ -114,7 +114,7 @@ export class MountConfigRegistry extends EventTarget {
 if (typeof CustomElementRegistry !== 'undefined') {
   Object.defineProperty(CustomElementRegistry.prototype, 'mountConfigRegistry', {
     get: function () {
-      // Create a new BaseRegistry instance on first access and cache it
+      // Create a new EnhancementRegistry instance on first access and cache it
       const registry = new MountConfigRegistry();
       // Replace the getter with the actual value
       Object.defineProperty(this, 'mountConigRegistry', {

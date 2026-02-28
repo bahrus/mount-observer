@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>getRootRegistryContainer Tests</title>
+    <title>getRegistryRoot Tests</title>
 </head>
 <body>
     <div id="container">
@@ -15,7 +15,7 @@
     <div id="shadow-host"></div>
     
     <script type="module">
-        import { getRootRegistryContainer } from '../getRootRegistryContainer.js';
+        import { getRegistryRoot } from '../getRegistryRoot.js';
         
         const results = {
             test1: { passed: false, description: 'Returns null for null input' },
@@ -29,14 +29,14 @@
         
         // Test 1: Null input
         console.log('Test 1: Null input');
-        const result1 = getRootRegistryContainer(null);
+        const result1 = getRegistryRoot(null);
         results.test1.passed = result1 === null;
         results.test1.actual = result1;
         console.log('Test 1:', results.test1);
         
         // Test 2: Undefined input
         console.log('Test 2: Undefined input');
-        const result2 = getRootRegistryContainer(undefined);
+        const result2 = getRegistryRoot(undefined);
         results.test2.passed = result2 === null;
         results.test2.actual = result2;
         console.log('Test 2:', results.test2);
@@ -44,7 +44,7 @@
         // Test 3: Element without custom registry (should return document)
         console.log('Test 3: Element without custom registry');
         const container = document.getElementById('container');
-        const result3 = getRootRegistryContainer(container);
+        const result3 = getRegistryRoot(container);
         console.log('result3 type:', result3?.constructor?.name);
         console.log('result3 === document:', result3 === document);
         console.log('result3 === container:', result3 === container);
@@ -61,7 +61,7 @@
         // Test 4: Walks up parent chain correctly
         console.log('Test 4: Walks up parent chain');
         const grandchild = document.getElementById('grandchild1');
-        const result4 = getRootRegistryContainer(grandchild);
+        const result4 = getRegistryRoot(grandchild);
         // Should walk up to document since all have undefined registry
         results.test4.passed = result4 === document || result4 === grandchild;
         results.test4.actual = result4;
@@ -76,7 +76,7 @@
         shadowDiv.id = 'shadow-child';
         shadowRoot.appendChild(shadowDiv);
         
-        const result5 = getRootRegistryContainer(shadowDiv);
+        const result5 = getRegistryRoot(shadowDiv);
         // Should return shadowRoot since it's the root of the shadow tree
         results.test5.passed = result5 === shadowRoot;
         results.test5.actual = result5;
@@ -94,7 +94,7 @@
         parent.customElementRegistry = mockRegistry;
         child.customElementRegistry = mockRegistry;
         
-        const result6 = getRootRegistryContainer(child);
+        const result6 = getRegistryRoot(child);
         // Should return parent since it has the same registry and is higher
         results.test6.passed = result6 === parent;
         results.test6.actual = result6;
@@ -104,7 +104,7 @@
         console.log('Test 7: Text node');
         const textNode = document.createTextNode('Hello');
         container.appendChild(textNode);
-        const result7 = getRootRegistryContainer(textNode);
+        const result7 = getRegistryRoot(textNode);
         // Should return document or container (walks up from text node)
         results.test7.passed = result7 === document || result7 === container || result7 === textNode;
         results.test7.actual = result7;
@@ -118,3 +118,4 @@
     </script>
 </body>
 </html>
+

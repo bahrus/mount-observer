@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('getRootRegistryContainer Tests', async ({ page }) => {
+test('getRegistryRoot Tests', async ({ page }) => {
     // Capture console logs
     const logs = [];
     page.on('console', msg => {
@@ -8,7 +8,7 @@ test('getRootRegistryContainer Tests', async ({ page }) => {
         console.log('BROWSER:', msg.text());
     });
     
-    await page.goto('/tests/test-get-root-registry-container.html');
+    await page.goto('/tests/test-get-registry-root.html');
     
     // Wait for tests to complete
     await page.waitForFunction(() => window.testResults !== undefined, { timeout: 5000 });

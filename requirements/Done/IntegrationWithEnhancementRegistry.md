@@ -425,7 +425,7 @@ observer.observe(document);
 **Store registry reference for cleanup**:
 ```typescript
 class MountObserver {
-    #registryRef: WeakRef<BaseRegistry> | undefined;
+    #registryRef: WeakRef<EnhancementRegistry> | undefined;
     
     async observe(rootNode: Node): Promise<void> {
         // ... existing code ...

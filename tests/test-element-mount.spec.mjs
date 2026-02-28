@@ -16,7 +16,7 @@ test.describe('Element Mount Extension', () => {
         // Note: elementMounted may be false in browsers without native scoped registry support
         // It works in Chrome 146+ and latest WebKit with native customElementRegistry
         
-        // Test 2: getRootRegistryContainer
+        // Test 2: getRegistryRoot
         expect(results.test2.rootContainerFound).toBe(true);
         // Note: rootIsCorrect may vary based on browser support for scoped registries
     });

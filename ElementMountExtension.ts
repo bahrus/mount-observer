@@ -4,7 +4,7 @@
  */
 
 import { MountObserver } from './MountObserver.js';
-import { getRootRegistryContainer } from './getRootRegistryContainer.js';
+import { getRegistryRoot } from './getRegistryRoot.js';
 import type { MountConfig, MountObserverOptions } from './types/mount-observer/types.js';
 
 declare global {
@@ -30,13 +30,13 @@ Object.defineProperty(Element.prototype, 'mount', {
         config: MountConfig, 
         options: MountObserverOptions = {}
     ): Promise<T> {
-        const scope = options.scope ?? 'registry';
+        const scope = options.scope ?? 'registryRoot';
         let thingToObserve: Node;
         
-        if (scope === 'registry') {
-            const registryContainer = getRootRegistryContainer(this);
+        if (scope === 'registryRoot') {
+            const registryContainer = getRegistryRoot(this);
             if (!registryContainer) {
-                throw new Error('Could not find root registry container');
+                throw new Error('Could not find registry root');
             }
             thingToObserve = registryContainer;
         } else if (scope === 'self') {

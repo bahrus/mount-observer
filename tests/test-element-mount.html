@@ -15,8 +15,8 @@
     
     <script type="module">
         import { MountObserver } from '../MountObserver.js';
-        import { BaseRegistry } from 'assign-gingerly/assignGingerly.js';
-        import { getRootRegistryContainer } from '../getRootRegistryContainer.js';
+        import { EnhancementRegistry } from 'assign-gingerly/assignGingerly.js';
+        import { getRegistryRoot } from '../getRegistryRoot.js';
         import '../ElementMountExtension.js';
         
         (async () => {
@@ -27,7 +27,7 @@
                 get() {
                     if (!this._customElementRegistry) {
                         this._customElementRegistry = {
-                            enhancementRegistry: new BaseRegistry()
+                            enhancementRegistry: new EnhancementRegistry()
                         };
                     }
                     return this._customElementRegistry;
@@ -88,11 +88,11 @@
         
         console.log('Test 1 complete:', results.test1);
         
-        // Test 2: getRootRegistryContainer utility
-        console.log('Test 2: getRootRegistryContainer utility');
+        // Test 2: getRegistryRoot utility
+        console.log('Test 2: getRegistryRoot utility');
         
         const container = document.getElementById('container');
-        const root = getRootRegistryContainer(container);
+        const root = getRegistryRoot(container);
         
         results.test2.rootContainerFound = root !== null && root !== undefined;
         results.test2.rootIsDocument = root === document;
@@ -103,7 +103,7 @@
         // Display results
         console.log('--- Test Results ---');
         console.log('Test 1 (Basic mount):', results.test1);
-        console.log('Test 2 (getRootRegistryContainer):', results.test2);
+        console.log('Test 2 (getRegistryRoot):', results.test2);
         
         window.testResults = results;
         window.testComplete = true;

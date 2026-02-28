@@ -2,34 +2,39 @@
  * Recursively traverses up the DOM tree to find the highest node
  * that shares the same customElementRegistry as the passed in node.
  * This is useful for scoped custom element registries where we want to observe within the correct scope.
- *
+ * 
  * @param node - The starting node to check
  * @returns The highest node with matching customElementRegistry, or null if node is invalid
  */
-export function getRootRegistryContainer(node) {
+export function getRegistryRoot(node: Node): Node | null {
     if (!node) {
         return null;
     }
+
     // Quick check: if root node has the same registry, return it immediately
     const rn = node.getRootNode();
-    const { customElementRegistry } = node;
-    if (rn.customElementRegistry === customElementRegistry) {
+    const { customElementRegistry } = node as any;
+    if ((rn as any).customElementRegistry === customElementRegistry) {
         return rn;
     }
-    const startRegistry = node.customElementRegistry;
-    let currentNode = node;
-    let highestMatch = node;
+
+    const startRegistry = (node as any).customElementRegistry;
+    let currentNode: Node | null = node;
+    let highestMatch: Node = node;
+
     while (currentNode) {
         // Check if current node has matching customElementRegistry
-        if (currentNode.customElementRegistry === startRegistry) {
+        if ((currentNode as any).customElementRegistry === startRegistry) {
             highestMatch = currentNode;
         }
+
         // Try to get parent element first
-        const parent = currentNode.parentElement;
+        const parent = (currentNode as any).parentElement as Element | null;
         if (parent) {
             currentNode = parent;
             continue;
         }
+
         // If no parent element, check for rootNode (shadow root case)
         const root = currentNode.getRootNode();
         if (root && root !== currentNode) {
@@ -38,12 +43,14 @@ export function getRootRegistryContainer(node) {
                 return root;
             }
             // If it's the document, check if it has the same registry
-            if (root.customElementRegistry === startRegistry) {
+            if ((root as any).customElementRegistry === startRegistry) {
                 return root;
             }
         }
+        
         // Reached the top
         break;
     }
+
     return highestMatch;
 }

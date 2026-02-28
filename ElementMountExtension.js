@@ -3,7 +3,7 @@
  * This finds the appropriate scoped registry container and observes it.
  */
 import { MountObserver } from './MountObserver.js';
-import { getRootRegistryContainer } from './getRootRegistryContainer.js';
+import { getRegistryRoot } from './getRegistryRoot.js';
 /**
  * Adds a mount method to Element.prototype that:
  * 1. Determines the observation scope based on options.scope
@@ -13,12 +13,12 @@ import { getRootRegistryContainer } from './getRootRegistryContainer.js';
  */
 Object.defineProperty(Element.prototype, 'mount', {
     value: async function (config, options = {}) {
-        const scope = options.scope ?? 'registry';
+        const scope = options.scope ?? 'registryRoot';
         let thingToObserve;
-        if (scope === 'registry') {
-            const registryContainer = getRootRegistryContainer(this);
+        if (scope === 'registryRoot') {
+            const registryContainer = getRegistryRoot(this);
             if (!registryContainer) {
-                throw new Error('Could not find root registry container');
+                throw new Error('Could not find registry root');
             }
             thingToObserve = registryContainer;
         }

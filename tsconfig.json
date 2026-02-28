@@ -13,7 +13,7 @@
 		"EvtRt.ts",
 		"index.ts",
 		"DefineCustomElementHandler.ts",
-		"getRootRegistryContainer.ts",
+		"getRegistryRoot.ts",
 		"ElementMountExtension.ts"
 	],
 	"exclude":[

@@ -161,7 +161,7 @@ observer.observe(document);  // Re-observe
 - [ ] Implement registry registration in `observe()` method
 - [ ] Implement reference equality check to prevent duplicates
 - [ ] Handle case where `enhancementConfig` is undefined (skip all registry logic)
-- [ ] Import `BaseRegistry` type from assign-gingerly
+- [ ] Import `EnhancementRegistry` type from assign-gingerly
 - [ ] Compile TypeScript: `tsc`
 - [ ] Add tests for registry integration
 - [ ] Document the feature in README.md
@@ -183,7 +183,7 @@ Create test file: `tests/test-enhancement-registry.html` and `tests/test-enhance
 
 - `types.d.ts` - `MountConfig` interface with `enhancementConfig` field
 - `MountObserver.ts` - Main implementation file
-- `node_modules/assign-gingerly/types.d.ts` - `EnhancementConfig` and `BaseRegistry` types
+- `node_modules/assign-gingerly/types.d.ts` - `EnhancementConfig` and `EnhancementRegistry` types
 - `node_modules/assign-gingerly/object-extension.ts` - Enhancement registry implementation
 
 ## Future Requirements

@@ -10,16 +10,16 @@ Successfully implemented basic integration between MountObserver and the enhance
 
 2. **Duplicate Prevention**: Uses reference equality to prevent the same `enhancementConfig` object from being registered multiple times
 
-3. **Type Safety**: Added `BaseRegistry` type import from assign-gingerly
+3. **Type Safety**: Added `EnhancementRegistry` type import from assign-gingerly
 
 ## Changes Made
 
 ### MountObserver.ts
-- Added import: `import type { BaseRegistry } from 'assign-gingerly/types.js'`
+- Added import: `import type { EnhancementRegistry } from 'assign-gingerly/types.js'`
 - Added registry registration logic in `observe()` method:
   ```typescript
   if (this.#init.enhancementConfig && rootNode instanceof Element) {
-      const registry = (rootNode as any).customElementRegistry?.enhancementRegistry as BaseRegistry | undefined;
+      const registry = (rootNode as any).customElementRegistry?.enhancementRegistry as EnhancementRegistry | undefined;
       if (registry) {
           const items = registry.getItems();
           if (!items.includes(this.#init.enhancementConfig)) {
