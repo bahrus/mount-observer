@@ -15,11 +15,21 @@ export function getRegistryObservers() {
     }
     return globalThis[regObsGuid];
 }
+const registryScopeId = 'pt9dS-V7U0SC3Yk708_5Ww';
 /**
  * Tracks all registry root nodes for each CustomElementRegistry.
  * Used to iterate over all scopes when a new config is added.
  */
-const registryScopes = new WeakMap();
+export function getRegistryScopes() {
+    if (!globalThis[registryScopeId]) {
+        globalThis[registryScopeId] = new WeakMap();
+    }
+    return globalThis[registryScopeId];
+}
+// const registryScopes = new WeakMap<
+//     CustomElementRegistry, 
+//     WeakDual<Node>
+// >();
 // Note: assignGingerly.ts already has a polyfill for getOrInsertComputed.
 // If this code will already have imported assignGingerly, then no need for the duplicate polyfill below.
 // Polyfill for Map.prototype.getOrInsertComputed and WeakMap.prototype.getOrInsertComputed
@@ -79,7 +89,7 @@ export async function getOrInsertObserverEntry(registry, config, registryRoot) {
         nodeToObserverMap.set(registryRoot, observerEntry);
     }
     // Track this registry root in the scopes set
-    const scopes = registryScopes.getOrInsertComputed(registry, () => ({
+    const scopes = getRegistryScopes().getOrInsertComputed(registry, () => ({
         weakSet: new WeakSet(),
         setWeak: new Set()
     }));
