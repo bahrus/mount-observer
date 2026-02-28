@@ -4,13 +4,13 @@
 
 ## Definition of Registry Root and Registry Scope
 
-The function `getRegistryRoot()` (renamed from the current getRootRegistryContainer) takes a node and finds the highest-level 
+The function `getRegistryRoot()` takes a node and finds the highest-level 
 containing node that has a matching customElementRegistry property.
 
 A DOM Node `n` is called a **Registry Root** if `n === getRegistryRoot(n)`.
 
 The **Registry Scope** corresponding to that root is all nodes inside the 
-root that are registry roots of other registries or anything inside such roots. Think "Donut Hole Scopeing".  All elements in a registry scope share the same customElementRegistry.
+root that aren't registry roots of other registries or anything inside such roots. Think "Donut Hole Scoping".  All elements in a registry scope share the same customElementRegistry.
 
 # Phase II
 
@@ -22,7 +22,7 @@ To my knowledge, we don't have a way for one island to automatically notify othe
 
 I'm thinking that we add another category to MountScope that should be the default value:  'customElementRegistry'.  When we add a mount observer, that customElementRegistry maintains a registry of "mountRegistries'.
 
-In support of that idea, we need an API of some sort an element to say "I'm here, please find my root scope, add all the joint mountObservers to start observing my island, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
+In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint mountObservers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
 
 
 ## Implementation Strategy
@@ -50,7 +50,7 @@ Update `MountScope` type to include a new option and rename an existing one:
 ```typescript
 export type MountScope = 
     | 'registry'    // NEW: Observe all islands with matching registry (new default)
-    | 'shoreline'   // was the default, and was called 'registry' getRootRegistryContainer (single island) 
+    | 'registryRoot'   // was the default
     | 'self'        // this element
     | 'root'        // getRootNode()
     | 'shadow'      // shadowRoot
