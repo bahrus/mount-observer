@@ -2,7 +2,7 @@
 
 ## Problem Analysis
 
-The current implementation has a limitation: when multiple DOM "islands" share the same `customElementRegistry`, calling `element.mount()` on one island only observes that specific island's shoreline. Other islands with the same registry remain unobserved, even though developers would reasonably expect all elements sharing a registry to be subject to the same mounting rules.
+The current implementation has a limitation: when multiple DOM "scopes" share the same `customElementRegistry`, calling `element.mount()` on one scope only observes that specific scope's shoreline. Other scopes with the same registry remain unobserved, even though developers would reasonably expect all elements sharing a registry to be subject to the same mounting rules.
 
 **Example scenario from TestOfScope.html:**
 ```javascript
@@ -92,7 +92,7 @@ The confusion arose from the `element.mount()` convenience method, which uses th
  *                     configured scope option, this may observe:
  *                     - The node itself ('self')
  *                     - The node's registry root ('registryRoot')
- *                     - All islands sharing the node's registry ('registry')
+ *                     - All scopes sharing the node's registry ('registry')
  *                     - The node's shadow root ('shadow')
  *                     - The node's root node ('root')
  */
@@ -122,7 +122,7 @@ To my knowledge, we don't have a way for one scope to automatically notify other
 
 I'm thinking that we add another category to MountScope that should be the default value:  'registry'.  
 
-In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint registry-scoped observers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
+In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint registry-scoped observers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other scopes as well. 
 
 
 ## Implementation Strategy
@@ -136,7 +136,7 @@ In support of that idea, we need an API of some sort an element to say "I'm here
 Update `MountScope` type to include a new option:
 ```typescript
 export type MountScope = 
-    | 'registry'       // NEW: Observe all islands with matching registry (new default)
+    | 'registry'       // NEW: Observe all scopes with matching registry (new default)
     | 'registryRoot'   // was the default
     | 'self'           // this element
     | 'root'           // getRootNode()
@@ -188,6 +188,10 @@ For this requirement, we create a similar registry for Mount Observer Configurat
 export class MountConfigRegistry extends EventTarget {
   #items: MountConfig[] = [];
 
+  get items(){
+    return [...this.#items];
+  }
+
   push(items: MountConfig | MountConfig[]): void {
     if (Array.isArray(items)) {
       this.#items.push(...items);
@@ -218,23 +222,23 @@ if (typeof CustomElementRegistry !== 'undefined') {
 }
 ```
 
-#### Map:  CustomElementRegistry + MountConfig + Shoreline => MountObserver Instance
+#### Map:  CustomElementRegistry + MountConfig + Registry Root => MountObserver Instance
 
 Our goal is that every combination of:
 
 1.  customElementRegistry 
 2.  + mountConfig in that registry
-3.  + shoreline matching that registry
+3.  + registry root
 
-should, ideally, have one MountObserver instance where the value of this.#root that it is monitoring is the shoreline.
+should, ideally, have one MountObserver instance where the value of this.#root that it is monitoring is the registry root.
 
-The term "ideally" is there because each island needs an "opt-in" from the developer, as the platform doesn't have a way of auto discovering new islands.
+The term "ideally" is there because each registry scope needs an "opt-in" from the developer, as the platform doesn't have a way of auto discovering new scopes.
 
 Create the following mappings:
 
 #### Mappings
 
-We need mappings to coordinate mount observers across registry islands. Since each `MountObserver` instance can only observe one node, we need one observer per (registry + config + registry root) combination.
+We need mappings to coordinate mount observers across registry scopes. Since each `MountObserver` instance can only observe one node, we need one observer per (registry + config + registry root) combination.
 
 **Key Design Decision: Use MountConfig Object Identity as Key**
 
@@ -245,7 +249,7 @@ Instead of serializing configs or requiring developer-provided GUIDs, we use the
 - No GUID management burden on developers
 - Works naturally with functions and non-serializable values in configs
 - Explicit and predictable: same object = shared observer, different object = separate observer
-- Encourages good pattern: define config once, reuse across islands
+- Encourages good pattern: define config once, reuse across scopes
 
 **Usage Pattern:**
 ```javascript
@@ -255,11 +259,11 @@ const sharedConfig = {
     do: (el) => console.log('Mounted:', el)
 };
 
-// Island 1 - uses sharedConfig object
+// scope 1 - uses sharedConfig object
 await div2.mount(sharedConfig, { scope: 'registry' });
 
-// Island 2 - reuses same sharedConfig object
-await div4.registerIsland();  
+// scope 2 - reuses same sharedConfig object
+await div4.registerScope();  
 // ^ Creates new observer for div4 using sharedConfig
 ```
 
@@ -440,7 +444,7 @@ export function cleanupGarbageCollectedRoots(): void {
 
 ### Alternative Simpler Approach:
 
-If we don't need to automatically apply existing configs to new islands, we can simplify to just track observers:
+If we don't need to automatically apply existing configs to new scopes, we can simplify to just track observers:
 
 ```typescript
 // Simpler version: Just track all observers per registry
@@ -478,7 +482,7 @@ export function getActiveConfigsForRegistry(registry: CustomElementRegistry): Mo
 }
 ```
 
-**Recommendation**: Use the simpler approach. When `registerIsland()` is called, it can:
+**Recommendation**: Use the simpler approach. When `registerScope()` is called, it can:
 1. Get all active configs for the registry
 2. Create new `MountObserver` instances for each config
 3. Call `observe()` on the new registry root for each observer
@@ -489,31 +493,31 @@ This keeps the coordinator simple and delegates the complexity to the calling co
 
 
 
-#### 3. Island Registration API
+#### 3. Scope Registration API
 
 Add a method for elements to announce their presence and activate all registry-scoped observers:
 
 ```typescript
 // Add to Element.prototype
 interface Element {
-    registerIsland(): void;
+    registerscope(): void;
 }
 
-Element.prototype.registerIsland = function(): void {
+Element.prototype.registerScope = function(): void {
     const registry = (this as any).customElementRegistry;
     if (!registry) return;
     
-    // Find the root of this island
-    const islandRoot = getRootRegistryContainer(this);
-    if (!islandRoot) return;
+    // Find the root of this scope
+    const registryRoot = getRegistryRoot(this);
+    if (!registryRoot) return;
     
     // Get all observers registered for this registry
     const observers = getMountObserversForRegistry(registry);
     
-    // Start observing this island with each registry-scoped observer
+    // Start observing this scope with each registry-scoped observer
     for (const observer of observers) {
         if (observer.scope === 'customElementRegistry') {
-            observer.observeAdditionalRoot(islandRoot);
+            observer.observeAdditionalRoot(registryRoot);
         }
     }
 };
@@ -604,7 +608,7 @@ Object.defineProperty(Element.prototype, 'mount', {
         let thingToObserve: Node;
         
         if (scope === 'customElementRegistry') {
-            // Find this element's island root
+            // Find this element's scope root
             const registryContainer = getRootRegistryContainer(this);
             if (!registryContainer) {
                 throw new Error('Could not find root registry container');
@@ -612,7 +616,7 @@ Object.defineProperty(Element.prototype, 'mount', {
             thingToObserve = registryContainer;
             
             // The MountObserver will register itself with the registry
-            // and automatically observe other islands when they call registerIsland()
+            // and automatically observe other scopes when they call registerIsland()
         } else if (scope === 'registry') {
             // ... existing logic
         }
@@ -635,7 +639,7 @@ const div2 = document.createElement('div', {customElementRegistry: reg2});
 div2.id = 'div2';
 document.body.append(div2);
 
-// Set up observer on island 1 - will observe all islands with reg2
+// Set up observer on scope 1 - will observe all scopes with reg2
 await div2.mount({
     matching: '.my-element',
     do: (el) => console.log('Mounted:', el.id)
@@ -646,7 +650,7 @@ const div4 = document.createElement('div', {customElementRegistry: reg2});
 div4.id = 'div4';
 document.body.append(div4);
 
-// Announce this island's presence - will activate all reg2 observers
+// Announce this scope's presence - will activate all reg2 observers
 div4.registerIsland();
 
 // Now .my-element elements in div4 will also be observed!
@@ -654,15 +658,15 @@ div4.registerIsland();
 
 ### Benefits
 
-1. **Automatic coordination**: All islands sharing a registry automatically share mount observers
+1. **Automatic coordination**: All scopes sharing a registry automatically share mount observers
 2. **Backward compatible**: Existing code using 'registry' scope continues to work
-3. **Opt-in for new islands**: New islands call `registerIsland()` to join the observation network
+3. **Opt-in for new scopes**: New scopes call `registerIsland()` to join the observation network
 4. **Memory efficient**: Uses WeakMap/WeakRef to avoid memory leaks
 5. **Clean separation**: Registry coordination logic is separate from core MountObserver
 
 ### Edge Cases to Handle
 
-1. **Registry cleanup**: When all islands with a registry are removed, clean up the registry's observer set
+1. **Registry cleanup**: When all scopes with a registry are removed, clean up the registry's observer set
 2. **Observer lifecycle**: Ensure observers are properly removed when disconnected
 3. **Race conditions**: Handle cases where `registerIsland()` is called before any observers exist
 4. **Performance**: Multiple roots means multiple mutation observers - ensure SharedMutationObserver handles this efficiently
