@@ -271,7 +271,7 @@ await div4.registerIsland();
  */
 type ObserverEntry = {
     config: MountConfig;  // Store for reference
-    registryRoot: WeakRef<Node>;
+    registryRootRef: WeakRef<Node>;
     observer: MountObserver;
 };
 
@@ -327,7 +327,7 @@ export function getOrInsertObserverEntry(
         observer.observe(registryRoot);
         return {
             config,
-            registryRoot,
+            registryRootRef: new WeakRef(registryRoot),
             observer
         }
     });
