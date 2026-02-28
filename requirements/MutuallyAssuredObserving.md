@@ -204,7 +204,7 @@ if (typeof CustomElementRegistry !== 'undefined') {
       // Create a new EnhancementRegistry instance on first access and cache it
       const registry = new MountConfigRegistry();
       // Replace the getter with the actual value
-      Object.defineProperty(this, 'mountConigRegistry', {
+      Object.defineProperty(this, 'mountConfigRegistry', {
         value: registry,
         writable: true,
         enumerable: false,
