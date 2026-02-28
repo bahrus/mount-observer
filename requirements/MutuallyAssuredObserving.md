@@ -33,14 +33,25 @@ root that aren't registry roots of other registries or anything inside such root
 
 Given that we aren't (by default) really observing the passed in node of mountObserverInstance.observe(node), but rather observing various nodes relative to the passed in node, does it make sense to rename observe to something else?
 
-## Recommendation: Keep `observe()` as the method name
+## Decision: Keep `observe()` method name, rename parameter to `observedNode`
 
 **Implementation completed:**
-- ✅ Parameter renamed from `rootNode` to `anchorNode` in method signature
-- ✅ JSDoc added to explain the anchor concept
+- ✅ Parameter renamed from `rootNode` to `observedNode` in method signature
+- ✅ JSDoc updated to clarify that this IS the node being observed
 - ✅ Type definitions updated (`types/mount-observer/types.d.ts`)
-- ✅ README documentation added explaining the observe method and anchorNode parameter
+- ✅ README documentation updated with clearer explanation
 - ✅ All internal references updated in `MountObserver.ts`
+
+**Clarification on initial misunderstanding:**
+
+The `observe()` method DOES directly observe the node passed to it. When called on a `MountObserver` instance, the `observedNode` parameter is exactly what gets observed - it's where the mutation observer is registered and where matching elements are searched for.
+
+The confusion arose from the `element.mount()` convenience method, which uses the `scope` option to determine WHICH node to pass to `observe()`. But `observe()` itself always directly observes whatever node is passed to it.
+
+**Why `observedNode` is the best name:**
+1. **Accuracy**: This IS the node being observed by the mutation observer
+2. **Clarity**: No ambiguity - it's the observed node
+3. **Simplicity**: Direct and straightforward naming
 
 **Reasons to keep `observe()`:**
 
@@ -103,15 +114,15 @@ The name `observe()` is semantically correct and consistent with web platform co
 
 ## Phase III
 
-ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the shoreline containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'registry' is selected.
+ElementMountExtension.ts adds a method to the Element prototype, 'mount', that, by default, searches for the registryRoot containing the element, and starts monitoring that node for matching elements to mount.  That is if the default option of 'registryRoot' is selected.
 
-But here's the thing:  The scoped custom element registry feature allows for multiple "islands" of nodes that share the same customElementRegistry, as demonstrated by /demo/TestOfScope.html
+But here's the thing:  The scoped custom element registry feature allows for multiple copes of nodes that share the same customElementRegistry, as demonstrated by /demo/TestOfScope.html
 
-To my knowledge, we don't have a way for one island to automatically notify other islands that share the same customElementRegistry.  However, I think it is reasonable to expect that a developer would want all instances of elements that share the same registry to be subject to the same mounting observations.
+To my knowledge, we don't have a way for one scope to automatically notify other scopes that share the same customElementRegistry.  However, I think it is reasonable to expect that a developer would want all instances of elements that share the same registry to be subject to the same mounting observations.
 
-I'm thinking that we add another category to MountScope that should be the default value:  'customElementRegistry'.  When we add a mount observer, that customElementRegistry maintains a registry of "mountRegistries'.
+I'm thinking that we add another category to MountScope that should be the default value:  'registry'.  
 
-In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint mountObservers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
+In support of that idea, we need an API of some sort an element to say "I'm here, please find my registry root, add all the joint registry-scoped observers to start observing my scope, and if a mountObserver is added withMountScope 'customElementRegistry' with my root, it should apply to all the other islands as well. 
 
 
 ## Implementation Strategy

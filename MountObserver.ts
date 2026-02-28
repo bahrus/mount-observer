@@ -281,20 +281,19 @@ export class MountObserver extends EventTarget implements IMountObserver {
     }
 
     /**
-     * Begins observing elements within the scope determined by the provided node.
+     * Begins observing elements within the provided node.
      * 
-     * @param anchorNode - The node that anchors the observation scope. Depending on the
-     *                     configured scope option (when using element.mount()), this may observe:
-     *                     - The node itself ('self')
-     *                     - The node's registry root ('registryRoot')
-     *                     - All islands sharing the node's registry ('registry')
-     *                     - The node's shadow root ('shadow')
-     *                     - The node's root node ('root')
-     *                     
-     *                     When called directly (not via element.mount()), this is the actual
-     *                     node that will be observed for matching elements.
+     * @param observedNode - The node to observe for matching elements. This is the root
+     *                       of the observation scope where the mutation observer will be
+     *                       registered. All matching elements within this node (and its
+     *                       descendants) will trigger mount callbacks.
+     *                       
+     *                       Common values:
+     *                       - `document` - Observe the entire document
+     *                       - `element` - Observe a specific subtree
+     *                       - `shadowRoot` - Observe within a shadow DOM
      */
-    async observe(anchorNode: Node): Promise<void> {
+    async observe(observedNode: Node): Promise<void> {
         if (this.#rootNode) {
             throw new Error('Already observing');
         }
@@ -306,7 +305,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
             this.#assignTentatively = assignTentatively;
         }
 
-        this.#rootNode = new WeakRef(anchorNode);
+        this.#rootNode = new WeakRef(observedNode);
 
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
@@ -335,7 +334,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         
         // Process existing elements only if all conditions match
         if (this.#mediaMatches && this.#rootSizeMatches && this.#connectionMatches) {
-            this.#processNode(anchorNode);
+            this.#processNode(observedNode);
         }
 
         // Create mutation callback
@@ -367,7 +366,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         };
 
         // Register with shared mutation observer
-        registerSharedObserver(anchorNode, this.#mutationCallback, observerConfig);
+        registerSharedObserver(observedNode, this.#mutationCallback, observerConfig);
     }
 
     disconnect(): void {

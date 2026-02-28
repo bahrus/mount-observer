@@ -285,39 +285,44 @@ This polyfill in fact only supports this latter option ("matching"), and leaves 
 
 ## The observe() method
 
-The `observe()` method begins observation of elements within a scope determined by the provided node:
+The `observe()` method begins observation of elements within the provided node:
 
 ```typescript
-async observe(anchorNode: Node): Promise<void>
+async observe(observedNode: Node): Promise<void>
 ```
 
-**Parameter: `anchorNode`**
+**Parameter: `observedNode`**
 
-The `anchorNode` parameter serves as an anchor point that determines the observation scope. When called directly on a `MountObserver` instance, this is the actual node that will be observed for matching elements.
+The `observedNode` parameter is the node where observation takes place. A mutation observer is registered on this node to detect when matching elements are added or removed. All matching elements within this node and its descendants will trigger mount callbacks.
 
-When using the `element.mount()` convenience method (which internally creates a `MountObserver`), the scope option determines what gets observed relative to the anchor:
-- `'self'` - Observes the anchor node itself
-- `'registryRoot'` - Observes the anchor's registry root
-- `'registry'` - Observes all islands sharing the anchor's registry
-- `'shadow'` - Observes the anchor's shadow root
-- `'root'` - Observes the anchor's root node (via `getRootNode()`)
-
-**Example:**
+**Common usage:**
 ```javascript
 const observer = new MountObserver({
     matching: '.my-element',
     do: (el) => console.log('Mounted:', el)
 });
 
-// Observe the document - anchorNode is document
+// Observe the entire document
 await observer.observe(document);
 
-// Or observe a specific subtree - anchorNode is the container
+// Or observe a specific subtree
 const container = document.querySelector('#container');
 await observer.observe(container);
+
+// Or observe within a shadow DOM
+const shadowRoot = element.shadowRoot;
+await observer.observe(shadowRoot);
 ```
 
-**Note:** An observer can only observe one anchor node at a time. Calling `observe()` again will throw an error. Call `disconnect()` first to observe a different node.
+**Note:** An observer can only observe one node at a time. Calling `observe()` again will throw an error. Call `disconnect()` first to observe a different node.
+
+**Relationship with element.mount():**
+
+When using the `element.mount()` convenience method, it internally determines which node to pass to `observe()` based on the `scope` option:
+- `'self'` - Observes the element itself
+- `'registry'` - Finds and observes the element's registry root
+- `'shadow'` - Observes the element's shadow root
+- `'root'` - Observes the element's root node (via `getRootNode()`)
 
 ##  The import key
 
