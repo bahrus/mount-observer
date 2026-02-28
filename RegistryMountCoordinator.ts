@@ -16,18 +16,41 @@ type ObserverEntry = {
     observer: MountObserver;
 };
 
-/**
- * Maps CustomElementRegistry -> Map<MountConfig, WeakMap<Node, ObserverEntry>>
- * The MountConfig object itself is used as the key (object identity).
- * The innermost WeakMap maps registry root nodes to their observer entries.
- */
-const registryObservers = new WeakMap<
+const regObsGuid = 'iqj6MOueu0OP4CQi1a_4Sw';
+
+export type TBD = WeakMap<
     CustomElementRegistry, 
     Map<
         MountConfig, 
         WeakMap<Node, ObserverEntry>
     >
->();
+>
+
+/**
+ * Maps CustomElementRegistry -> Map<MountConfig, WeakMap<Node, ObserverEntry>>
+ * The MountConfig object itself is used as the key (object identity).
+ * The innermost WeakMap maps registry root nodes to their observer entries.
+ */
+export function getRegistryObservers(): TBD{
+  if (!(globalThis as any)[regObsGuid]) {
+    (globalThis as any)[regObsGuid] = new WeakMap<CustomElementRegistry, 
+        Map<
+            MountConfig, 
+            WeakMap<Node, ObserverEntry>
+        >
+    >();
+  }
+  return (globalThis as any)[regObsGuid] as TBD;
+}
+
+
+// const registryObservers = new WeakMap<
+//     CustomElementRegistry, 
+//     Map<
+//         MountConfig, 
+//         WeakMap<Node, ObserverEntry>
+//     >
+// >();
 
 /**
  * Tracks all registry root nodes for each CustomElementRegistry.
@@ -97,7 +120,7 @@ export async function getOrInsertObserverEntry(
     (registry as any).mountConfigRegistry.push(config);
     
     // Get or create the nested map structure
-    const mountConfigMap = (registryObservers as any).getOrInsertComputed(registry, () => new Map());
+    const mountConfigMap = (getRegistryObservers()).getOrInsertComputed(registry, () => new Map());
     const nodeToObserverMap = mountConfigMap.getOrInsertComputed(config, () => new WeakMap());
     
     // Get or create the observer for this specific registry root

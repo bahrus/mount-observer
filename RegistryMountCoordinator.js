@@ -3,12 +3,25 @@
  * the same CustomElementRegistry. This enables "mutually assured observing"
  * where all scopes with the same registry share mount observers.
  */
+const regObsGuid = 'iqj6MOueu0OP4CQi1a_4Sw';
 /**
  * Maps CustomElementRegistry -> Map<MountConfig, WeakMap<Node, ObserverEntry>>
  * The MountConfig object itself is used as the key (object identity).
  * The innermost WeakMap maps registry root nodes to their observer entries.
  */
-const registryObservers = new WeakMap();
+export function getRegistryObservers() {
+    if (!globalThis[regObsGuid]) {
+        globalThis[regObsGuid] = new WeakMap();
+    }
+    return globalThis[regObsGuid];
+}
+// const registryObservers = new WeakMap<
+//     CustomElementRegistry, 
+//     Map<
+//         MountConfig, 
+//         WeakMap<Node, ObserverEntry>
+//     >
+// >();
 /**
  * Tracks all registry root nodes for each CustomElementRegistry.
  * Used to iterate over all scopes when a new config is added.
@@ -64,7 +77,7 @@ export async function getOrInsertObserverEntry(registry, config, registryRoot) {
     // Add config to the registry's config list (if not already there)
     registry.mountConfigRegistry.push(config);
     // Get or create the nested map structure
-    const mountConfigMap = registryObservers.getOrInsertComputed(registry, () => new Map());
+    const mountConfigMap = (getRegistryObservers()).getOrInsertComputed(registry, () => new Map());
     const nodeToObserverMap = mountConfigMap.getOrInsertComputed(config, () => new WeakMap());
     // Get or create the observer for this specific registry root
     let observerEntry = nodeToObserverMap.get(registryRoot);
