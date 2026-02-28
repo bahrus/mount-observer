@@ -54,6 +54,7 @@
     "serve": "node ./node_modules/spa-ssi/serve.js",
     "test": "playwright test",
     "safari": "npx playwright wk http://localhost:8000",
+    "chrome": "npx playwright cr http://localhost:8000",
     "update": "ncu -u && npm install"
   },
   "author": "Bruce B. Anderson <anderson.bruce.b@gmail.com>",

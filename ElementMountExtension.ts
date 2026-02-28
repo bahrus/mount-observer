@@ -5,6 +5,7 @@
 
 import { MountObserver } from './MountObserver.js';
 import { getRegistryRoot } from './getRegistryRoot.js';
+import { getOrInsertObserverEntry } from './RegistryMountCoordinator.js';
 import type { MountConfig, MountObserverOptions } from './types/mount-observer/types.js';
 
 declare global {
@@ -14,7 +15,56 @@ declare global {
             config: MountConfig, 
             options?: MountObserverOptions
         ): Promise<T>;
+        
+        registerScope(): Promise<void>;
     }
+    
+    interface CustomElementRegistry {
+        mountConfigRegistry: MountConfigRegistry;
+    }
+}
+
+/**
+ * Registry for tracking MountConfig objects associated with a CustomElementRegistry.
+ * This enables coordination of mount observers across multiple DOM scopes that share
+ * the same registry.
+ */
+export class MountConfigRegistry extends EventTarget {
+    #items: Set<MountConfig> = new Set();
+
+    get items(): MountConfig[] {
+        return Array.from(this.#items);
+    }
+
+    push(items: MountConfig | MountConfig[]): void {
+        if (Array.isArray(items)) {
+            for (const item of items) {
+                this.#items.add(item);
+            }
+        } else {
+            this.#items.add(items);
+        }
+    }
+}
+
+// Add mountConfigRegistry property to CustomElementRegistry prototype
+if (typeof CustomElementRegistry !== 'undefined') {
+    Object.defineProperty(CustomElementRegistry.prototype, 'mountConfigRegistry', {
+        get: function () {
+            // Create a new MountConfigRegistry instance on first access and cache it
+            const registry = new MountConfigRegistry();
+            // Replace the getter with the actual value
+            Object.defineProperty(this, 'mountConfigRegistry', {
+                value: registry,
+                writable: true,
+                enumerable: false,
+                configurable: true,
+            });
+            return registry;
+        },
+        enumerable: false,
+        configurable: true,
+    });
 }
 
 /**
@@ -30,10 +80,31 @@ Object.defineProperty(Element.prototype, 'mount', {
         config: MountConfig, 
         options: MountObserverOptions = {}
     ): Promise<T> {
-        const scope = options.scope ?? 'registryRoot';
+        const scope = options.scope ?? 'registry';  // NEW DEFAULT
         let thingToObserve: Node;
         
-        if (scope === 'registryRoot') {
+        if (scope === 'registry') {
+            // Find this element's registry root
+            const registryContainer = getRegistryRoot(this);
+            if (!registryContainer) {
+                throw new Error('Could not find registry root');
+            }
+            thingToObserve = registryContainer;
+            
+            // Get the registry for coordination
+            const registry = (this as any).customElementRegistry;
+            
+            // Register with coordinator if registry exists
+            if (registry) {
+                await getOrInsertObserverEntry(registry, config, thingToObserve);
+            } else {
+                // No registry, just create a standalone observer
+                const mo = new MountObserver(config, options);
+                await mo.observe(thingToObserve);
+            }
+            
+            return this;
+        } else if (scope === 'registryRoot') {
             const registryContainer = getRegistryRoot(this);
             if (!registryContainer) {
                 throw new Error('Could not find registry root');
@@ -57,6 +128,38 @@ Object.defineProperty(Element.prototype, 'mount', {
         const mo = new MountObserver(config, options);
         await mo.observe(thingToObserve);
         return this;
+    },
+    writable: true,
+    enumerable: false,
+    configurable: true,
+});
+
+/**
+ * Adds a registerScope method to Element.prototype that:
+ * 1. Finds the registry root for this element
+ * 2. Gets all active configs for this registry
+ * 3. Creates new MountObservers for each config to observe this scope
+ */
+Object.defineProperty(Element.prototype, 'registerScope', {
+    value: async function(): Promise<void> {
+        const registry = (this as any).customElementRegistry;
+        if (!registry) {
+            return;
+        }
+        
+        // Find the root of this scope
+        const registryRoot = getRegistryRoot(this);
+        if (!registryRoot) {
+            return;
+        }
+        
+        // Get all configs for this registry
+        const configs = registry.mountConfigRegistry.items;
+        
+        // For each config, ensure an observer exists for this registry root
+        for (const config of configs) {
+            await getOrInsertObserverEntry(registry, config, registryRoot);
+        }
     },
     writable: true,
     enumerable: false,
