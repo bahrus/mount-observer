@@ -29,9 +29,18 @@ root that aren't registry roots of other registries or anything inside such root
 
 # Phase II
 
+**Status**: ✅ Implemented
+
 Given that we aren't (by default) really observing the passed in node of mountObserverInstance.observe(node), but rather observing various nodes relative to the passed in node, does it make sense to rename observe to something else?
 
 ## Recommendation: Keep `observe()` as the method name
+
+**Implementation completed:**
+- ✅ Parameter renamed from `rootNode` to `anchorNode` in method signature
+- ✅ JSDoc added to explain the anchor concept
+- ✅ Type definitions updated (`types/mount-observer/types.d.ts`)
+- ✅ README documentation added explaining the observe method and anchorNode parameter
+- ✅ All internal references updated in `MountObserver.ts`
 
 **Reasons to keep `observe()`:**
 

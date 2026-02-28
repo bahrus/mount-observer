@@ -283,6 +283,41 @@ This polyfill in fact only supports this latter option ("matching"), and leaves 
 
 [Implemented as Requirement 1](requirements/Done/Requirement1.md).
 
+## The observe() method
+
+The `observe()` method begins observation of elements within a scope determined by the provided node:
+
+```typescript
+async observe(anchorNode: Node): Promise<void>
+```
+
+**Parameter: `anchorNode`**
+
+The `anchorNode` parameter serves as an anchor point that determines the observation scope. When called directly on a `MountObserver` instance, this is the actual node that will be observed for matching elements.
+
+When using the `element.mount()` convenience method (which internally creates a `MountObserver`), the scope option determines what gets observed relative to the anchor:
+- `'self'` - Observes the anchor node itself
+- `'registryRoot'` - Observes the anchor's registry root
+- `'registry'` - Observes all islands sharing the anchor's registry
+- `'shadow'` - Observes the anchor's shadow root
+- `'root'` - Observes the anchor's root node (via `getRootNode()`)
+
+**Example:**
+```javascript
+const observer = new MountObserver({
+    matching: '.my-element',
+    do: (el) => console.log('Mounted:', el)
+});
+
+// Observe the document - anchorNode is document
+await observer.observe(document);
+
+// Or observe a specific subtree - anchorNode is the container
+const container = document.querySelector('#container');
+await observer.observe(container);
+```
+
+**Note:** An observer can only observe one anchor node at a time. Calling `observe()` again will throw an error. Call `disconnect()` first to observe a different node.
 
 ##  The import key
 

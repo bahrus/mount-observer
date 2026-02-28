@@ -186,7 +186,21 @@ export class MountObserver extends EventTarget {
         this.#elementNotifiers.set(element, notifier);
         return notifier;
     }
-    async observe(rootNode) {
+    /**
+     * Begins observing elements within the scope determined by the provided node.
+     *
+     * @param anchorNode - The node that anchors the observation scope. Depending on the
+     *                     configured scope option (when using element.mount()), this may observe:
+     *                     - The node itself ('self')
+     *                     - The node's registry root ('registryRoot')
+     *                     - All islands sharing the node's registry ('registry')
+     *                     - The node's shadow root ('shadow')
+     *                     - The node's root node ('root')
+     *
+     *                     When called directly (not via element.mount()), this is the actual
+     *                     node that will be observed for matching elements.
+     */
+    async observe(anchorNode) {
         if (this.#rootNode) {
             throw new Error('Already observing');
         }
@@ -197,7 +211,7 @@ export class MountObserver extends EventTarget {
             const { assignTentatively } = await import('assign-gingerly/assignTentatively.js');
             this.#assignTentatively = assignTentatively;
         }
-        this.#rootNode = new WeakRef(rootNode);
+        this.#rootNode = new WeakRef(anchorNode);
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
@@ -220,7 +234,7 @@ export class MountObserver extends EventTarget {
         }
         // Process existing elements only if all conditions match
         if (this.#mediaMatches && this.#rootSizeMatches && this.#connectionMatches) {
-            this.#processNode(rootNode);
+            this.#processNode(anchorNode);
         }
         // Create mutation callback
         this.#mutationCallback = (mutations) => {
@@ -248,7 +262,7 @@ export class MountObserver extends EventTarget {
             subtree: true
         };
         // Register with shared mutation observer
-        registerSharedObserver(rootNode, this.#mutationCallback, observerConfig);
+        registerSharedObserver(anchorNode, this.#mutationCallback, observerConfig);
     }
     disconnect() {
         const rootNode = this.#rootNode?.deref();
