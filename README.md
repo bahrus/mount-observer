@@ -381,28 +381,6 @@ The polyfill just loads the module into memory right away.
 > [!NOTE]
 > As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
 
-## Separating JS imperative code from JSON serializable config
-
-
-In order to support pure 100% declarative syntax in the passed in MountConfig argument, we need to be able to import the do function.  This is done as follows:
-
-```JavaScript
-//module myActions.js
-const  doFunction = function({localName}, {modules, observer, MountConfig, rootNode}){
-   if(!customElements.get(localName)) {
-      // Find the first exported class constructor from the module
-      const ElementClass = Object.values(modules[0]).find(exp => 
-         typeof exp === 'function' && exp.prototype && exp.prototype.constructor === exp
-      );
-      if(ElementClass) {
-         customElements.define(localName, ElementClass);
-      }
-   }
-   observer.disconnectedSignal.abort();
-}
-export {doFunction as do}
-```
-
 ## Importing Configuration with configFrom
 
 The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability without relying on numeric indices.
