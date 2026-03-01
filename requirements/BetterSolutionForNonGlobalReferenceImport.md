@@ -65,12 +65,14 @@ const observer = new MountObserver({
     //to be removed
     reference?: number | number[];
     //new approach
-    //module reference to merge into the settings
+    //module reference(s) to merge into the settings
+    // Later configs override earlier ones: 'my-package/my-settings.js'
     //inline settings take precedence
-    settingsModuleImport: 'my-package/my-settings.js'
+    configFrom: ['./base.js', './overrides.js', 'my-package/my-settings.js']
+    
    
 });
 observer.observe(document);
 ```
 
-settingsModuleImport can only specify one ESM import, which is expected to export const with name mountConfig.  If no such constant is found, an error is thrown.
+For now, let's use the shallow Object.assign to merge all these settings together.
