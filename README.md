@@ -709,7 +709,9 @@ await div1.mount(sharedConfig, { scope: 'registry' });
 
 // Scope 2 - automatically gets the observer for sharedConfig!
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.registerScope();  // Gets all existing configs for this registry
+await div2.registerScope();  
+// ^ Makes sure all registry-wide mount configs in customElementRegistry.mountConfigRegistry 
+//   are applied evenly to all scoped elements with matching customElementRegistry
 
 // Now both scopes observe elements matching sharedConfig
 ```
@@ -721,15 +723,15 @@ await div2.registerScope();  // Gets all existing configs for this registry
 2. **Registry Tracking**: Each `CustomElementRegistry` tracks all MountConfig objects registered with it via `registry.mountConfigRegistry`.
 
 3. **Automatic Propagation**: When you call `mount()` with `scope: 'registry'`, the system:
-   - Registers the config with the registry
-   - Creates observers for all existing registry roots
-   - Ensures future roots get this observer via `registerScope()`
+   - Registers the config with the registry's `mountConfigRegistry`
+   - Creates observers for all existing registry roots with that config
+   - Ensures future roots get this observer when they call `registerScope()`
 
 4. **One Observer Per Root**: Since `MountObserver` can only observe one node, separate observer instances are created for each registry root, but they all use the same config.
 
 ### element.registerScope()
 
-The `registerScope()` method announces a new scope's presence and gets all existing observers:
+The `registerScope()` method announces a new scope's presence and ensures all registry-wide configs are applied to it:
 
 ```JavaScript
 const sharedRegistry = new CustomElementRegistry();
@@ -742,7 +744,8 @@ await div1.mount(config2, { scope: 'registry' });
 // Later, a new scope appears
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
 await div2.registerScope();  
-// ^ Automatically gets observers for config1 and config2
+// ^ Ensures all registry-wide mount configs (config1, config2) are applied 
+//   evenly to all scoped elements with matching customElementRegistry
 ```
 
 ### Key Benefits
