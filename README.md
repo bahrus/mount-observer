@@ -477,7 +477,9 @@ const observer = new MountObserver({
       effectiveTypeIn: ["slow-2g"],
    },
    import: ['./my-element-small.css', {type: 'css'}],
-   do: ...
+   do: function(mountedElement, ctx){
+      console.log({mountedElement, ctx});
+   }
 });
 ```
 
