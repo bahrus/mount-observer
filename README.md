@@ -680,14 +680,15 @@ Following an approach similar to the [speculation api](https://developer.chrome.
 
 ```JavaScript
 // myPackage/myDefiner.js
-//my all powerful custom element definer
-const doFunction = function({localNme}, {modules, observer}){
-   if(!customElements.get(localName)) {
-      customElements.define(localName, modules[1].MyElement);
+// My all powerful custom element definer
+export const mountConfig = {
+   do: function({localName}, {modules, observer}) {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[1].MyElement);
+      }
+      observer.disconnectedSignal.abort();
    }
-   observer.disconnectedSignal.abort();
-}
-export { doFunction as do };
+};
 ```
 
 ```html
@@ -695,9 +696,8 @@ export { doFunction as do };
 {
    "select":"my-element",
    "import": [
-      ["./my-element-small.css", {type: "css"}],
-      "./my-element.js",
-      "myPackage/myDefiner.js
+      ["./my-element-small.css", {"type": "css"}],
+      "./my-element.js"
    ],
    "configFrom": "myPackage/myDefiner.js"
 }
