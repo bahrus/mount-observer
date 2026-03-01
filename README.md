@@ -294,7 +294,7 @@ async observe(observedNode: Node): Promise<void>
 
 **Parameter: `observedNode`**
 
-The `observedNode` parameter is the node where observation takes place. A mutation observer is registered on this node to detect when matching elements are added or removed. All matching elements within this node and its descendants will trigger mount callbacks.
+The `observedNode` parameter is the node where observation takes place. In order to support the polyfill, a mutation observer is registered on this node to detect when matching elements are added or removed. All matching elements within this node and its descendants will trigger mount callbacks, as long as it belongs to the same scoped custom element registry as the observed node.
 
 **Common usage:**
 ```javascript
