@@ -401,62 +401,129 @@ const  doFunction = function({localName}, {modules, observer, MountConfig, rootN
    observer.disconnectedSignal.abort();
 }
 export {doFunction as do}
-
-// observer setup
-
-const observer = new MountObserver({
-   matching:'my-element',
-   import: [
-      './my-element.js',
-      ['./my-element-small.css', {type: 'css'}],
-      './myActions.js'
-   ],
-   reference: 2
-});
-observer.observe(document);
-
 ```
 
-Here "2" refers to the imported module index ('./myActions.js' in this case).
+## Importing Configuration with configFrom
 
-### How the reference property works
+The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability without relying on numeric indices.
 
-The `reference` property allows us to call `do` functions from imported modules, enabling 100% JSON-serializable configuration. This is useful when you want to separate imperative code from declarative configuration.
+### Basic Usage
 
-**Key behaviors:**
-- The `reference` property can be a single number or an array of numbers, each referring to an import index
-- Referenced modules must be JavaScript modules (not CSS, JSON, or HTML imports)
-- If a referenced module exports a `do` function, it will be called after the inline `do` callback (if present)
-- If a referenced module doesn't export a `do` function, it's silently skipped
-- The inline `do` callback runs first, then referenced `do` functions run in the order specified
-
-**Important:** Since `do` is a reserved keyword in JavaScript, you must export it using the syntax:
-```javascript
-const doFunction = function(element, context) { /* ... */ };
-export { doFunction as do };
-```
-
-**Validation:** The `reference` property is validated in the constructor:
-- Throws an error if `import` is not defined
-- Throws an error if any index is out of bounds
-- Throws an error if any index points to a non-JS module (e.g., CSS or JSON import)
-
-Multiple references can also be made.
-
-So for example:
+Create a configuration module that exports a `mountConfig` constant:
 
 ```JavaScript
-
-import: [
-    ['./my-element-small.css', {type: 'css'}],
-    './component.js',
-    './actions1.js',
-    './actions2.js'
-],
-reference: [2, 3]  // Both actions1 and actions2 will have their 'do' called if present
+// my-config.js
+export const mountConfig = {
+   matching: '.my-element',
+   do: (element, context) => {
+      element.textContent = 'Configured!';
+   }
+};
 ```
 
-[Implemented as [Requirement11](requirements/Done/Requirement11.md)]
+Then reference it in your observer:
+
+```JavaScript
+const observer = new MountObserver({
+   configFrom: './my-config.js'
+});
+observer.observe(document);
+```
+
+### Multiple Configuration Modules
+
+You can import multiple config modules. Later configs override earlier ones (left-to-right merge):
+
+```JavaScript
+const observer = new MountObserver({
+   configFrom: ['./base-config.js', './override-config.js']
+});
+```
+
+### Inline Config Takes Precedence
+
+Inline configuration always overrides imported configuration:
+
+```JavaScript
+const observer = new MountObserver({
+   configFrom: './base-config.js',
+   matching: '.custom-selector'  // Overrides matching from base-config.js
+});
+```
+
+### Merge Semantics
+
+- **Shallow merge**: Uses `Object.assign()` for merging
+- **Merge order**: First configFrom module → second configFrom module → ... → inline config
+- **Arrays are replaced**: If multiple configs define the same array property, the later array completely replaces the earlier one
+- **Inline wins**: Inline configuration always takes final precedence
+
+### Supported Properties
+
+Config modules can export any valid MountConfig property, including:
+- `matching`, `whereInstanceOf`, `withMediaMatching`
+- `whereObservedRootSizeMatches`, `whereElementIntersectsWith`
+- `whereConnectionHas`, `withScopePerimeter`
+- `import`, `do`, `loadingEagerness`
+- `assignOnMount`, `assignOnDismount`, `stageOnMount`
+- `mountedElemEmits`, `customData`, `getPlayByPlay`
+
+### Functions and Class References
+
+Config modules can include non-JSON-serializable values like functions and class constructors:
+
+```JavaScript
+// button-config.js
+export const mountConfig = {
+   matching: 'button',
+   whereInstanceOf: HTMLButtonElement,
+   do: (element, context) => {
+      element.addEventListener('click', () => {
+         console.log('Button clicked!');
+      });
+   }
+};
+```
+
+### Error Handling
+
+**Missing mountConfig export:**
+```JavaScript
+// This will throw an error
+const observer = new MountObserver({
+   configFrom: './module-without-mountConfig.js'
+});
+// Error: Module './module-without-mountConfig.js' does not export 'mountConfig'
+```
+
+**Duplicate modules:**
+```JavaScript
+// This will throw an error
+const observer = new MountObserver({
+   configFrom: ['./config.js', './config.js']
+});
+// Error: Duplicate configFrom module: './config.js'
+```
+
+### Circular Dependency Warning
+
+Be careful to avoid circular dependencies when using `configFrom`. Config modules should only export configuration and avoid importing modules that create MountObserver instances.
+
+**Safe pattern:**
+```JavaScript
+// config.js - Only exports configuration
+export const mountConfig = {
+   matching: '.element',
+   do: (el) => { /* ... */ }
+};
+```
+
+**Avoid:**
+```JavaScript
+// config.js - Creates circular dependency
+import { MountObserver } from 'mount-observer';
+// This could cause issues if the importing module also imports MountObserver
+```
 
 ## Media / container queries / instanceOf / custom checks [TODO] out of date
 
@@ -504,49 +571,6 @@ However, where this support for "whereInstanceOf" would be *most* helpful is whe
 [TODO] Maybe should also (optionally?) pass back which checks failed and which succeeded on dismount.  Not sure I really see a use case for it, but leaving the thought here for now 
 
 -->
-
-### Referenced whereInstanceOf
-
-Similar to the `do` function, the `whereInstanceOf` check can also be moved to imported modules for 100% JSON-serializable configuration:
-
-```javascript
-// module mySettings.js
-const doFunction = function({localName}, {modules, observer, MountConfig, rootNode}) {
-   if(!customElements.get(localName)) {
-      customElements.define(localName, modules[1].MyElement);
-   }
-   observer.disconnectedSignal.abort();
-};
-
-const whereInstanceOf = [HTMLMarqueeElement, SVGElement];
-
-export { doFunction as do, whereInstanceOf };
-
-// my local module
-const observer = new MountObserver({
-   matching: 'my-element',
-   import: [
-      ['./my-element-small.css', {type: 'css'}],
-      './my-element.js',
-      './mySettings.js'
-   ],
-   reference: 2
-});
-observer.observe(document);
-```
-
-**Behavior:**
-- **Combining checks**: If both inline `whereInstanceOf` and referenced `whereInstanceOf` exist, they are AND'd together (element must match both)
-- **Multiple references**: If multiple referenced modules export `whereInstanceOf`, the element must match ALL of them (AND logic)
-- **Validation**: Referenced `whereInstanceOf` is validated after imports load. Throws an error if not a Constructor or array of Constructors
-- **Optional export**: If a referenced module doesn't export `whereInstanceOf`, it's silently ignored
-- **Timing**: 
-  - With lazy loading (default): Inline `whereInstanceOf` is checked first (before imports), then referenced checks happen after imports load
-  - With `loadingEagerness: 'eager'`: Both inline and referenced checks happen together after imports are loaded
-
-This optimization ensures that with lazy loading, elements that don't match the inline `whereInstanceOf` won't trigger unnecessary imports.
-
-[Implemented as [Requirement12](requirements/Done/Requirement12.md)]
 
 ## Custom Element Registry Matching
 
@@ -677,7 +701,7 @@ export { doFunction as do };
       "./my-element.js",
       "myPackage/myDefiner.js
    ],
-   "reference": 2
+   "configFrom": "myPackage/myDefiner.js"
 }
 </script>
 ```
@@ -776,25 +800,6 @@ const observer = new MountObserver({
 ```
 
 Handlers execute in the order specified. If a handler constructor throws an error, execution stops and subsequent handlers won't run.
-
-### Interaction with the reference property
-
-When both `do` (with string/array) and `reference` are specified, the execution order is:
-
-1. Inline `do` functions and registered handlers (from `do` strings), in whatever order they appear
-2. Referenced `do` functions (from `reference` property)
-
-```JavaScript
-MountObserver.define('setup', SetupHandler);
-
-const observer = new MountObserver({
-   matching: 'button',
-   import: './button-actions.js',
-   reference: 0,
-   do: ['setup', (el) => { el.dataset.ready = 'true'; }]
-});
-// Execution order: setup handler, inline function, then imported do function
-```
 
 ### Handler requirements
 
