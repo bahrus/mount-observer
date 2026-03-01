@@ -667,14 +667,106 @@ class MyComponent extends HTMLElement {
 Browser support: Works in all browsers, but scoped registry features require Chrome 146+ or latest WebKit/Safari.
 
 [Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
- 
 
+## Mutually Assured Observing (Registry Scope Coordination)
 
+When working with scoped custom element registries, we often want multiple DOM scopes (like different shadow roots) that share the same registry to also share the same observers. This is called "Mutually Assured Observing" - when one scope registers an observer configuration, all other scopes with the same registry automatically get that observer too.
 
+### The Problem
 
+Without coordination, each scope would need to manually set up the same observers:
 
+```JavaScript
+const sharedRegistry = new CustomElementRegistry();
+const sharedConfig = {
+    matching: '.my-element',
+    do: (el) => console.log('Mounted:', el)
+};
 
+// Scope 1
+const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
+await div1.mount(sharedConfig, { scope: 'registry' });
 
+// Scope 2 - would need to manually mount the same config
+const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
+await div2.mount(sharedConfig, { scope: 'registry' }); // Redundant!
+```
+
+### The Solution: Automatic Observer Coordination
+
+With the `'registry'` scope (the default), observers are automatically coordinated across all scopes that share the same `CustomElementRegistry`:
+
+```JavaScript
+const sharedRegistry = new CustomElementRegistry();
+const sharedConfig = {
+    matching: '.my-element',
+    do: (el) => console.log('Mounted:', el)
+};
+
+// Scope 1 - registers the config with the registry
+const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
+await div1.mount(sharedConfig, { scope: 'registry' });
+
+// Scope 2 - automatically gets the observer for sharedConfig!
+const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
+await div2.registerScope();  // Gets all existing configs for this registry
+
+// Now both scopes observe elements matching sharedConfig
+```
+
+### How It Works
+
+1. **MountConfig as Identity**: The same MountConfig object is used as the coordination key. Same object = shared observer, different object = separate observer.
+
+2. **Registry Tracking**: Each `CustomElementRegistry` tracks all MountConfig objects registered with it via `registry.mountConfigRegistry`.
+
+3. **Automatic Propagation**: When you call `mount()` with `scope: 'registry'`, the system:
+   - Registers the config with the registry
+   - Creates observers for all existing registry roots
+   - Ensures future roots get this observer via `registerScope()`
+
+4. **One Observer Per Root**: Since `MountObserver` can only observe one node, separate observer instances are created for each registry root, but they all use the same config.
+
+### element.registerScope()
+
+The `registerScope()` method announces a new scope's presence and gets all existing observers:
+
+```JavaScript
+const sharedRegistry = new CustomElementRegistry();
+
+// First scope registers some configs
+const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
+await div1.mount(config1, { scope: 'registry' });
+await div1.mount(config2, { scope: 'registry' });
+
+// Later, a new scope appears
+const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
+await div2.registerScope();  
+// ^ Automatically gets observers for config1 and config2
+```
+
+### Key Benefits
+
+1. **DRY Principle**: Define observer configs once, use across all scopes
+2. **Automatic Coordination**: New scopes automatically get existing observers
+3. **Memory Efficient**: Uses WeakRef/WeakMap to prevent memory leaks
+4. **Type Safe**: Full TypeScript support with proper typing
+
+### Browser Compatibility
+
+- **Chrome 146+**: Full support with scoped custom element registries
+- **Latest WebKit/Safari**: Full support with scoped custom element registries  
+- **Other browsers**: Gracefully degrades to standalone observers (no coordination)
+
+### Implementation Details
+
+The coordination is handled by `RegistryMountCoordinator.ts`, which:
+- Uses a nested WeakMap structure for efficient lookups
+- Stores registry roots as WeakRefs to prevent memory leaks
+- Prevents infinite loops through existence checks
+- Automatically cleans up when registries/roots are garbage collected
+
+[Implemented as Phase III of Mutually Assured Observing](requirements/MutuallyAssuredObserving.md)
 
 ## Mount Observer Script Elements (MOSEs)
 
