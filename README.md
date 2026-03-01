@@ -385,6 +385,26 @@ The polyfill just loads the module into memory right away.
 
 The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability without relying on numeric indices.
 
+**Key benefit for JSON serialization**: One of the most important advantages of `configFrom` is that it allows you to separate non-JSON-serializable settings (like functions and class constructors) from JSON-serializable settings. This makes it possible to keep your inline MountConfig 100% JSON-serializable while still leveraging the full power of JavaScript in your imported configuration modules.
+
+```JavaScript
+// Inline config - 100% JSON serializable
+const observer = new MountObserver({
+   matching: '.my-element',
+   configFrom: './my-handlers.js'  // Non-serializable code lives here
+});
+
+// my-handlers.js - Contains functions and class references
+export const mountConfig = {
+   whereInstanceOf: HTMLButtonElement,  // Class constructor
+   do: (element, context) => {          // Function
+      element.addEventListener('click', () => console.log('clicked'));
+   }
+};
+```
+
+This separation is crucial for scenarios like Mount Observer Script Elements (MOSEs) where configuration needs to be embedded in HTML as JSON, but you still want to leverage imperative JavaScript code.
+
 ### Basic Usage
 
 Create a configuration module that exports a `mountConfig` constant:
