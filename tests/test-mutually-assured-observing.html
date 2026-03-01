@@ -16,7 +16,6 @@
             try {
                 // Check if CustomElementRegistry constructor is available (Chrome 146+)
                 if (typeof CustomElementRegistry === 'undefined' || !CustomElementRegistry.prototype) {
-                    console.log('CustomElementRegistry not available, skipping test');
                     window.testResult = true; // Pass test if feature not available
                     return;
                 }
@@ -26,7 +25,6 @@
                     // Create a shared registry
                     reg2 = new CustomElementRegistry();
                 } catch (e) {
-                    console.log('CustomElementRegistry constructor not available, skipping test');
                     window.testResult = true; // Pass test if feature not available
                     return;
                 }
@@ -56,7 +54,8 @@
                 await div2.mount(sharedConfig, { scope: 'registry' });
                 
                 // Add element to first scope
-                const el1 = document.createElement('div');
+                // IMPORTANT: In Chrome 146, child elements must be created with the registry option
+                const el1 = document.createElement('div', {customElementRegistry: reg2});
                 el1.className = 'test-element';
                 el1.id = 'element-in-scope1';
                 div2.appendChild(el1);
@@ -68,7 +67,7 @@
                 await div4.registerScope();
                 
                 // Add element to second scope
-                const el2 = document.createElement('div');
+                const el2 = document.createElement('div', {customElementRegistry: reg2});
                 el2.className = 'test-element';
                 el2.id = 'element-in-scope2';
                 div4.appendChild(el2);

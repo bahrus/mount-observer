@@ -21,6 +21,7 @@ import {
     type MutationCallback
 } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
+import { getRegistryRoot } from './getRegistryRoot.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
 
 export class MountObserver extends EventTarget implements IMountObserver {
@@ -485,11 +486,16 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const rootNode = this.#rootNode?.deref();
             if (rootNode) {
                 const rootRegistry = (rootNode as any).customElementRegistry;
-                const elementRegistry = (element as any).customElementRegistry;
                 
-                // If registries don't match, exclude this element
-                if (rootRegistry !== elementRegistry) {
-                    return false;
+                // If root has a registry, find the element's registry root and compare
+                if (rootRegistry) {
+                    const elementRegistryRoot = getRegistryRoot(element);
+                    const elementRegistry = elementRegistryRoot ? (elementRegistryRoot as any).customElementRegistry : undefined;
+                    
+                    // If registries don't match, exclude this element
+                    if (rootRegistry !== elementRegistry) {
+                        return false;
+                    }
                 }
             }
 
