@@ -321,7 +321,8 @@ await observer.observe(shadowRoot);
 
 When using the `element.mount()` convenience method, it internally determines which node to pass to `observe()` based on the `scope` option:
 - `'self'` - Observes the element itself
-- `'registry'` - Finds and observes the element's registry root
+- `'registryRoot'` - Finds and observes the element's registry root
+- `'registry'` - [WIP] Finds and observers all DOM nodes that have the same custom element registry
 - `'shadow'` - Observes the element's shadow root
 - `'root'` - Observes the element's root node (via `getRootNode()`)
 
