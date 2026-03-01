@@ -25,11 +25,4 @@ test('MountObserver.define Tests', async ({ page }) => {
     // Test 4: Error when registering duplicate name
     expect(results.test4.errorThrown).toBe(true);
     expect(results.test4.errorMessage).toBe('handler1 already in use');
-    
-    // Test 5: Interaction with reference property
-    expect(results.test5.handler1Called).toBe(true);
-    expect(results.test5.handler2Called).toBe(true);
-    expect(results.test5.referencedCalled).toBe(true);
-    // Registered handlers run first, then referenced
-    expect(results.test5.callOrder).toEqual(['registered1', 'registered2', 'referenced']);
 });

@@ -33,12 +33,6 @@
             test4: {
                 errorThrown: false,
                 errorMessage: ''
-            },
-            test5: {
-                handler1Called: false,
-                handler2Called: false,
-                referencedCalled: false,
-                callOrder: []
             }
         };
         
@@ -135,54 +129,12 @@
             console.log('Test 4: Error caught:', error.message);
         }
         
-        // Test 5: Interaction with reference property
-        console.log('Test 5: Interaction with reference property');
-        class Handler4 extends EvtRt {
-            mount(element, MountConfig, context) {
-                results.test5.handler1Called = true;
-                results.test5.callOrder.push('registered1');
-                console.log('Handler4.mount called (registered1)');
-            }
-        }
-        
-        class Handler5 extends EvtRt {
-            mount(element, MountConfig, context) {
-                results.test5.handler2Called = true;
-                results.test5.callOrder.push('registered2');
-                console.log('Handler5.mount called (registered2)');
-            }
-        }
-        
-        MountObserver.define('handler4', Handler4);
-        MountObserver.define('handler5', Handler5);
-        
-        const observer5 = new MountObserver({
-            matching: '#test5',
-            import: './tests/test-actions.js',
-            reference: 0,
-            do: ['handler4', 'handler5']
-        });
-        
-        await observer5.observe(document.body);
-        
-        const elem5 = document.createElement('div');
-        elem5.id = 'test5';
-        document.body.appendChild(elem5);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Check if referenced do was called
-        if (window.referencedDoCalled) {
-            results.test5.referencedCalled = true;
-            results.test5.callOrder.push('referenced');
-        }
-        
         // Display results
         console.log('--- Test Results ---');
         console.log('Test 1 (Basic string):', results.test1);
         console.log('Test 2 (Mixed array):', results.test2);
         console.log('Test 3 (Undefined handler):', results.test3);
         console.log('Test 4 (Duplicate name):', results.test4);
-        console.log('Test 5 (With reference):', results.test5);
         
         window.testResults = results;
         window.testComplete = true;

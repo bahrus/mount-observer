@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>configFrom Error Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>configFrom Error Tests</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const results = {
+            test1: {
+                errorThrown: false,
+                errorMessage: ''
+            },
+            test2: {
+                errorThrown: false,
+                errorMessage: ''
+            }
+        };
+        
+        console.log('Starting configFrom error tests...');
+        
+        // Test 1: Error when module doesn't export mountConfig
+        console.log('Test 1: Module without mountConfig export');
+        try {
+            const observer1 = new MountObserver({
+                configFrom: './tests/test-config-no-export.js'
+            });
+            await observer1.observe(document.body);
+            results.test1.errorThrown = false;
+        } catch (error) {
+            results.test1.errorThrown = true;
+            results.test1.errorMessage = error.message;
+            console.log('Test 1 error:', error.message);
+        }
+        
+        // Test 2: Error when duplicate modules specified
+        console.log('Test 2: Duplicate modules');
+        try {
+            const observer2 = new MountObserver({
+                configFrom: ['./tests/test-config-base.js', './tests/test-config-base.js']
+            });
+            await observer2.observe(document.body);
+            results.test2.errorThrown = false;
+        } catch (error) {
+            results.test2.errorThrown = true;
+            results.test2.errorMessage = error.message;
+            console.log('Test 2 error:', error.message);
+        }
+        
+        console.log('--- Test Results ---');
+        console.log('Test 1:', results.test1);
+        console.log('Test 2:', results.test2);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

@@ -16,6 +16,7 @@ export class MountObserver extends EventTarget {
     #options;
     #abortController;
     #modules = [];
+    #configFromPromise;
     #mountedElements = {
         weakSet: new WeakSet(),
         setWeak: new Set()
@@ -72,7 +73,7 @@ export class MountObserver extends EventTarget {
         this.#init = mergedConfig;
         this.#options = options;
         this.#abortController = new AbortController();
-        const { assignOnMount, assignOnDismount, stageOnMount, do: doValue, reference, loadingEagerness, import: imp } = mergedConfig;
+        const { assignOnMount, assignOnDismount, stageOnMount, do: doValue, loadingEagerness, import: imp, configFrom } = mergedConfig;
         // Make a copy of assignOnMount config using structuredClone
         if (assignOnMount !== undefined) {
             this.#asgMtSource = structuredClone(assignOnMount);
@@ -92,9 +93,9 @@ export class MountObserver extends EventTarget {
         if (doValue !== undefined) {
             this.#validateDoHandlers();
         }
-        // Validate reference property if present
-        if (reference !== undefined) {
-            this.#validateReference();
+        // Load configFrom modules if specified
+        if (configFrom !== undefined) {
+            this.#configFromPromise = this.#loadConfigFrom();
         }
         // Start loading imports if eager
         if (loadingEagerness === 'eager' && imp) {
@@ -114,28 +115,57 @@ export class MountObserver extends EventTarget {
             }
         }
     }
-    #validateReference() {
-        if (!this.#init.import) {
-            throw new Error('reference property requires import to be defined');
-        }
-        // Normalize import to array
-        const imports = Array.isArray(this.#init.import)
-            ? this.#init.import
-            : [this.#init.import];
-        // Normalize reference to array
-        const references = arr(this.#init.reference);
-        // Validate each reference index
-        for (const index of references) {
-            // Check if index is within bounds
-            if (index < 0 || index >= imports.length) {
-                throw new Error(`reference index ${index} is out of bounds (import array length: ${imports.length})`);
+    /**
+     * Loads configuration from external modules specified in configFrom property.
+     * Merges multiple configs left-to-right, with inline config taking final precedence.
+     */
+    async #loadConfigFrom() {
+        const { configFrom } = this.#init;
+        if (!configFrom)
+            return;
+        // Normalize to array
+        const configPaths = Array.isArray(configFrom) ? configFrom : [configFrom];
+        // Check for duplicates
+        const pathSet = new Set();
+        for (const path of configPaths) {
+            if (pathSet.has(path)) {
+                throw new Error(`Duplicate configFrom module: '${path}'`);
             }
-            const importItem = imports[index];
-            // Check if it's a JS module (not a 2D array with type option)
-            if (Array.isArray(importItem)) {
-                throw new Error(`reference index ${index} points to a non-JS module import (array with type option)`);
+            pathSet.add(path);
+        }
+        // Load all modules
+        const loadedConfigs = [];
+        for (const path of configPaths) {
+            try {
+                const module = await import(path);
+                if (!module.mountConfig) {
+                    throw new Error(`Module '${path}' does not export 'mountConfig'`);
+                }
+                if (typeof module.mountConfig !== 'object' || module.mountConfig === null) {
+                    throw new Error(`Module '${path}' exports invalid mountConfig: must be an object`);
+                }
+                loadedConfigs.push(module.mountConfig);
+            }
+            catch (error) {
+                // Re-throw with better context if it's not already our error
+                if (error instanceof Error && !error.message.includes(path)) {
+                    throw new Error(`Failed to load config from '${path}': ${error.message}`);
+                }
+                throw error;
             }
         }
+        // Merge configs: loaded configs first (left-to-right), then inline config
+        // Save the original inline config
+        const inlineConfig = { ...this.#init };
+        // Start with empty object, merge all loaded configs, then merge inline
+        let mergedConfig = {};
+        for (const loadedConfig of loadedConfigs) {
+            mergedConfig = Object.assign(mergedConfig, loadedConfig);
+        }
+        // Inline config takes final precedence
+        mergedConfig = Object.assign(mergedConfig, inlineConfig);
+        // Update the init config with merged result
+        this.#init = mergedConfig;
     }
     async #setupMediaQuery() {
         if (!this.#rootNode) {
@@ -203,6 +233,10 @@ export class MountObserver extends EventTarget {
     async observe(observedNode) {
         if (this.#rootNode) {
             throw new Error('Already observing');
+        }
+        // Wait for configFrom loading to complete if it was started
+        if (this.#configFromPromise) {
+            await this.#configFromPromise;
         }
         if (this.#asgMtSource || this.#asgDisMtSource) {
             await import('assign-gingerly/object-extension.js');
@@ -302,23 +336,6 @@ export class MountObserver extends EventTarget {
         const { loadImports } = await import('./loadImports.js');
         this.#modules = await loadImports(this.#init.import);
         this.#importsLoaded = true;
-        // Validate referenced whereInstanceOf if reference is specified
-        if (this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && module.whereInstanceOf !== undefined) {
-                    // Validate that it's a Constructor or array of Constructors
-                    const whereInstanceOf = module.whereInstanceOf;
-                    const constructors = arr(whereInstanceOf);
-                    for (const constructor of constructors) {
-                        if (typeof constructor !== 'function') {
-                            throw new Error(`Referenced module at index ${index} exports invalid whereInstanceOf: must be a Constructor or array of Constructors`);
-                        }
-                    }
-                }
-            }
-        }
         this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
     }
     #processNode(node) {
@@ -392,21 +409,6 @@ export class MountObserver extends EventTarget {
                 return false;
             }
         }
-        // Check referenced whereInstanceOf if imports are loaded and reference is specified
-        if (this.#importsLoaded && this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && module.whereInstanceOf !== undefined) {
-                    const constructors = arr(module.whereInstanceOf);
-                    // Element must be an instance of at least one constructor (OR logic within this module)
-                    const matchesInstanceOf = constructors.some((constructor) => element instanceof constructor);
-                    if (!matchesInstanceOf) {
-                        return false;
-                    }
-                }
-            }
-        }
         // All conditions passed
         return true;
     }
@@ -461,16 +463,6 @@ export class MountObserver extends EventTarget {
                 else if (typeof handler === 'function') {
                     // Inline function
                     handler(element, context);
-                }
-            }
-        }
-        // Call referenced do functions from imported modules
-        if (this.#init.reference !== undefined) {
-            const references = arr(this.#init.reference);
-            for (const index of references) {
-                const module = this.#modules[index];
-                if (module && typeof module.do === 'function') {
-                    module.do(element, context);
                 }
             }
         }
