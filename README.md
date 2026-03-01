@@ -167,7 +167,7 @@ element.mount({
 
 ## Enhancing Elements with assign-gingerly
 
-The `builtIns.enhanceMountedElement` handler automatically enhances mounted elements using the [assign-gingerly](https://www.npmjs.com/package/assign-gingerly) enhancement system. This allows you to attach behavior and state to elements without subclassing.
+The `builtIns.enhanceMountedElement` handler automatically enhances mounted elements using the [assign-gingerly](https://www.npmjs.com/package/assign-gingerly) enhancement system. This allows us to attach behavior and state to elements without subclassing.
 
 ```JavaScript
 // MyEnhancement.js
@@ -385,7 +385,7 @@ The polyfill just loads the module into memory right away.
 
 The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability without relying on numeric indices.
 
-**Key benefit for JSON serialization**: One of the most important advantages of `configFrom` is that it allows you to separate non-JSON-serializable settings (like functions and class constructors) from JSON-serializable settings. This makes it possible to keep your inline MountConfig 100% JSON-serializable while still leveraging the full power of JavaScript in your imported configuration modules.
+**Key benefit for JSON serialization**: One of the most important advantages of `configFrom` is that it allows us to separate non-JSON-serializable settings (like functions and class constructors) from JSON-serializable settings. This makes it possible to keep your inline MountConfig 100% JSON-serializable while still leveraging the full power of JavaScript in your imported configuration modules.
 
 ```JavaScript
 // Inline config - 100% JSON serializable
@@ -403,7 +403,7 @@ export const mountConfig = {
 };
 ```
 
-This separation is crucial for scenarios like Mount Observer Script Elements (MOSEs) where configuration needs to be embedded in HTML as JSON, but you still want to leverage imperative JavaScript code.
+This separation is crucial for scenarios like Mount Observer Script Elements (MOSEs) where configuration needs to be embedded in HTML as JSON, but we still want to leverage imperative JavaScript code.
 
 ### Basic Usage
 
@@ -599,13 +599,13 @@ observer2.observe(shadowRoot);
   - Elements in the same registry scope as the root node → mount ✓
   - Elements in different registry scopes → don't mount ✓
 
-This ensures that when you observe a shadow root with a scoped registry, you won't accidentally mount elements from the parent document or other shadow roots with different registries. The registry check happens automatically before any other `where*` conditions are evaluated.
+This ensures that when we observe a shadow root with a scoped registry, we won't accidentally mount elements from the parent document or other shadow roots with different registries. The registry check happens automatically before any other `where*` conditions are evaluated.
 
 [Implemented as [ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch](requirements/ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch.md)]
 
 ## Element Mount Extension
 
-For even more convenience, you can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with scoped custom element registries (Chrome 146+, latest WebKit/Safari).
+For even more convenience, we can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with scoped custom element registries (Chrome 146+, latest WebKit/Safari).
 
 ```JavaScript
 import 'mount-observer/ElementMountExtension.js';
@@ -630,7 +630,7 @@ Scope options (via `options.scope`):
 - `'self'`: Observes only this element
 - `'root'`: Observes the root node (document or shadow root)
 - `'shadow'`: Observes the element's shadowRoot (throws error if none exists)
-- `Element`: Observes a custom element you specify
+- `Element`: Observes a custom element we specify
 
 This is especially useful for web components that want to observe their own shadow DOM or scoped registry:
 
@@ -746,7 +746,7 @@ This allows developers to create "stylesheet" like capabilities.
 
 ## Registering reusable handlers with MountObserver.define
 
-To make MountConfig configurations more JSON-serializable and encourage code reuse, you can register handler classes with string names and reference them by name:
+To make MountConfig configurations more JSON-serializable and encourage code reuse, we can register handler classes with string names and reference them by name:
 
 ```JavaScript
 import {EvtRt} from 'mount-observer/EvtRt.js';
@@ -843,7 +843,7 @@ The handler registry is global and shared across all MountObserver instances, si
 
 ### Handler defaults with static properties
 
-Registered handler classes can specify default MountConfig properties using static class properties. When you reference a handler by name, its static properties are automatically merged with your inline configuration, with inline config always taking precedence:
+Registered handler classes can specify default MountConfig properties using static class properties. When we reference a handler by name, its static properties are automatically merged with your inline configuration, with inline config always taking precedence:
 
 ```JavaScript
 import {EvtRt} from 'mount-observer/EvtRt.js';
@@ -1098,7 +1098,7 @@ Using `assignOn*` provides several benefits:
 
 ### Dynamically updating assignGingerly configuration
 
-The `MountObserver` class provides a public `assignGingerly()` method that allows you to merge new updates into the  observer. This is useful for responding to user actions or application state changes:
+The `MountObserver` class provides a public `assignGingerly()` method that allows us to merge new updates into the  observer. This is useful for responding to user actions or application state changes:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -1125,7 +1125,7 @@ await observer.assignGingerly({
 
 3. **Applies to future elements**: Future elements that mount will receive the merged configuration.
 
-4. **Starting without initial config**: You can call the method even if no `assignGingerly` was specified in the constructor:
+4. **Starting without initial config**: We can call the method even if no `assignGingerly` was specified in the constructor:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -1159,7 +1159,7 @@ The method is async because the assign-gingerly library is loaded dynamically wh
 
 ## Reversible property assignment with stageOnMount
 
-While `assignOnMount` and `assignOnDismount` provide permanent property assignments, sometimes you need temporary changes that automatically reverse when elements dismount. The `stageOnMount` property provides this capability using the `assignTentatively` function from assign-gingerly:
+While `assignOnMount` and `assignOnDismount` provide permanent property assignments, sometimes we need temporary changes that automatically reverse when elements dismount. The `stageOnMount` property provides this capability using the `assignTentatively` function from assign-gingerly:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -1183,7 +1183,7 @@ When a matching button mounts, these properties are applied. When it dismounts (
 2. **Applies the new properties** when elements mount
 3. **Automatically reverses** to original values when elements dismount
 
-This is different from `assignOnMount`/`assignOnDismount`, where you must explicitly specify both the mount and dismount values.
+This is different from `assignOnMount`/`assignOnDismount`, where we must explicitly specify both the mount and dismount values.
 
 ### When to use stageOnMount vs assignOnMount
 
@@ -1307,7 +1307,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-This dispatches a `custom-ready` event from each matching button element when it mounts. Events bubble by default, so you can listen at the document level:
+This dispatches a `custom-ready` event from each matching button element when it mounts. Events bubble by default, so we can listen at the document level:
 
 ```JavaScript
 document.addEventListener('custom-ready', (e) => {
@@ -1475,7 +1475,7 @@ observer.observe(document);
 
 ## Element-specific lifecycle notifications with getNotifier
 
-While the MountObserver dispatches lifecycle events (mount, dismount, disconnect) at the observer level, sometimes you need to listen for events specific to a single element. The `getNotifier()` method returns an EventTarget that dispatches filtered events for only that element.
+While the MountObserver dispatches lifecycle events (mount, dismount, disconnect) at the observer level, sometimes we need to listen for events specific to a single element. The `getNotifier()` method returns an EventTarget that dispatches filtered events for only that element.
 
 ### Basic usage
 
