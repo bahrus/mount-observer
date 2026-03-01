@@ -213,6 +213,55 @@ The handler:
 
 This works with browsers that don't support scoped custom element registries by polyfilling the `customElementRegistry` property on elements.
 
+## Loading ES Modules from Script Elements
+
+The `builtIns.scriptNoModule` handler enables declarative module loading using `<script nomodule>` elements. This provides a way to import ES modules and JSON data directly from HTML without writing JavaScript.
+
+```html
+<!-- Load a JavaScript module -->
+<script nomodule src="./config.js" id="myConfig"></script>
+
+<!-- Load JSON data with import assertion -->
+<script nomodule src="./data.json" with-type="json" id="myData"></script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    // Handler provides matching and whereInstanceOf via static properties
+    const observer = new MountObserver({
+        do: 'builtIns.scriptNoModule'
+    });
+    observer.observe(document);
+    
+    // Access the imported modules
+    const config = document.getElementById('myConfig').export;
+    const data = document.getElementById('myData').export.default;
+    
+    console.log(config.mountConfig); // Access exported values
+    console.log(data); // Access JSON data
+</script>
+```
+
+**How it works:**
+1. The handler matches `script[nomodule][src]` elements (via static properties)
+2. Reads the `src` attribute and resolves it relative to the document
+3. Checks for optional `with-type` attribute for import assertions (e.g., `"json"`)
+4. Dynamically imports the module: `import(src, { with: { type: withType } })`
+5. Stores the imported module on `element.export`
+
+**Benefits:**
+- Declarative module loading directly in HTML
+- Supports JSON imports with `with-type="json"` attribute
+- No need to specify `matching` or `whereInstanceOf` (handler provides defaults)
+- Modules are accessible via `scriptElement.export`
+- Works with relative and absolute URLs
+
+**Use cases:**
+- Loading configuration files declaratively
+- Importing JSON data without fetch
+- Progressive enhancement with module loading
+- Declarative dependency management in HTML
+
 
 # Thorough Exposition Begins Here
 

@@ -6,8 +6,10 @@ export { arr } from './arr.js';
 export { EvtRt } from './EvtRt.js';
 export { DefineCustomElementHandler, DefineScopedCustomElementHandler } from './handlers/DefineCustomElement.js';
 export { EnhanceMountedElementHandler } from './handlers/EnhanceMountedElement.js';
+export { ScriptNoModuleHandler } from './handlers/ScriptNoModule.js';
 export { mountEventName, dismountEventName, disconnectEventName, loadEventName, mediamatchEventName, mediaunmatchEventName } from './Events.js';
 // Register built-in handlers
 import './EvtRt.js';
 import './handlers/DefineCustomElement.js';
 import './handlers/EnhanceMountedElement.js';
+import './handlers/ScriptNoModule.js';

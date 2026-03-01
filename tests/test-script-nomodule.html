@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script NoModule Handler Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Script NoModule Handler Test</h1>
+    
+    <!-- Test 1: Basic JS module import -->
+    <script nomodule src="./test-script-module1.js" id="test1"></script>
+    
+    <!-- Test 2: Another JS module -->
+    <script nomodule src="./test-script-module2.js" id="test3"></script>
+    
+    <!-- Test script -->
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        console.log('Starting Script NoModule Handler Tests...');
+        
+        // Create observer with just the handler name - uses handler's static properties
+        const observer = new MountObserver({
+            do: 'builtIns.scriptNoModule'
+        });
+        
+        console.log('Observer created, starting observation...');
+        observer.observe(document);
+        
+        console.log('Observation started, waiting for imports...');
+        
+        // Wait a bit for imports to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Checking results...');
+        
+        // Test 1: Check if JS module was imported
+        const script1 = document.getElementById('test1');
+        console.log('Script1 element:', script1);
+        console.log('Script1 export:', script1?.export);
+        
+        const test1Result = {
+            hasExport: script1?.export !== undefined,
+            hasMountConfig: script1?.export?.mountConfig !== undefined,
+            mountConfigMatching: script1?.export?.mountConfig?.matching
+        };
+        console.log('Test 1 (JS module):', test1Result);
+        
+        // Test 3: Check another JS module
+        const script3 = document.getElementById('test3');
+        console.log('Script3 element:', script3);
+        console.log('Script3 export:', script3?.export);
+        
+        const test3Result = {
+            hasExport: script3?.export !== undefined,
+            hasMountConfig: script3?.export?.mountConfig !== undefined,
+            mountConfigMatching: script3?.export?.mountConfig?.matching
+        };
+        console.log('Test 3 (Another JS module):', test3Result);
+        
+        // Store results for Playwright
+        window.testResults = {
+            test1: test1Result,
+            test3: test3Result
+        };
+        
+        console.log('All tests complete:', window.testResults);
+    </script>
+</body>
+</html>
