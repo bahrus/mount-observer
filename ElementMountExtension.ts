@@ -16,7 +16,7 @@ declare global {
             options?: MountObserverOptions
         ): Promise<T>;
         
-        registerScope(): Promise<void>;
+        mountScope(): Promise<void>;
     }
     
     interface CustomElementRegistry {
@@ -135,12 +135,12 @@ Object.defineProperty(Element.prototype, 'mount', {
 });
 
 /**
- * Adds a registerScope method to Element.prototype that:
+ * Adds a mountScope method to Element.prototype that:
  * 1. Finds the registry root for this element
  * 2. Gets all active configs for this registry
  * 3. Creates new MountObservers for each config to observe this scope
  */
-Object.defineProperty(Element.prototype, 'registerScope', {
+Object.defineProperty(Element.prototype, 'mountScope', {
     value: async function(): Promise<void> {
         const registry = (this as any).customElementRegistry;
         if (!registry) {

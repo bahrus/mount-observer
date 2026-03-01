@@ -63,8 +63,8 @@
                 // Wait a bit for observer to process
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
-                // Register second scope
-                await div4.registerScope();
+                // Mount second scope
+                await div4.mountScope();
                 
                 // Add element to second scope
                 const el2 = document.createElement('div', {customElementRegistry: reg2});

@@ -109,12 +109,12 @@ Object.defineProperty(Element.prototype, 'mount', {
     configurable: true,
 });
 /**
- * Adds a registerScope method to Element.prototype that:
+ * Adds a mountScope method to Element.prototype that:
  * 1. Finds the registry root for this element
  * 2. Gets all active configs for this registry
  * 3. Creates new MountObservers for each config to observe this scope
  */
-Object.defineProperty(Element.prototype, 'registerScope', {
+Object.defineProperty(Element.prototype, 'mountScope', {
     value: async function () {
         const registry = this.customElementRegistry;
         if (!registry) {

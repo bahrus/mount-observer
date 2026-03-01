@@ -38,7 +38,7 @@
   - Automatically shares observers with other scopes using same registry
 - Falls back to standalone observer if no registry
 
-### 4. New Element.prototype.registerScope()
+### 4. New Element.prototype.mountScope()
 **Purpose**: Allows a scope to announce its presence and get all existing observers.
 
 **How it works**:
@@ -77,7 +77,7 @@ await div2.mount(sharedConfig, { scope: 'registry' });
 
 // Scope 2 - reuses same sharedConfig object
 const div4 = document.createElement('div', {customElementRegistry: reg2});
-await div4.registerScope();  
+await div4.mountScope();  
 // ^ Gets observer for sharedConfig automatically
 
 // Now elements in both scopes are observed!
@@ -109,7 +109,7 @@ await div4.registerScope();
 - `ElementMountExtension.ts` (and `.js`)
   - Added MountConfigRegistry class
   - Updated mount() method
-  - Added registerScope() method
+  - Added mountScope() method
 - `types/mount-observer/types.d.ts`
   - Added 'registry' to MountScope type
   - Made it the default

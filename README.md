@@ -709,7 +709,7 @@ await div1.mount(sharedConfig, { scope: 'registry' });
 
 // Scope 2 - automatically gets the observer for sharedConfig!
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.registerScope();  
+await div2.mountScope();  
 // ^ Makes sure all registry-wide mount configs in customElementRegistry.mountConfigRegistry 
 //   are applied evenly to all scoped elements with matching customElementRegistry
 
@@ -725,13 +725,13 @@ await div2.registerScope();
 3. **Automatic Propagation**: When you call `mount()` with `scope: 'registry'`, the system:
    - Registers the config with the registry's `mountConfigRegistry`
    - Creates observers for all existing registry roots with that config
-   - Ensures future roots get this observer when they call `registerScope()`
+   - Ensures future roots get this observer when they call `mountScope()`
 
 4. **One Observer Per Root**: Since `MountObserver` can only observe one node, separate observer instances are created for each registry root, but they all use the same config.
 
-### element.registerScope()
+### element.mountScope()
 
-The `registerScope()` method announces a new scope's presence and ensures all registry-wide configs are applied to it:
+The `mountScope()` method announces a new scope's presence and ensures all registry-wide configs are applied to it:
 
 ```JavaScript
 const sharedRegistry = new CustomElementRegistry();
@@ -743,7 +743,7 @@ await div1.mount(config2, { scope: 'registry' });
 
 // Later, a new scope appears
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.registerScope();  
+await div2.mountScope();  
 // ^ Ensures all registry-wide mount configs (config1, config2) are applied 
 //   evenly to all scoped elements with matching customElementRegistry
 ```
