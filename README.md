@@ -385,9 +385,9 @@ The polyfill just loads the module into memory right away.
 
 ## Importing Configuration with configFrom
 
-The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability without relying on numeric indices.
+The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability.
 
-**Key benefit for JSON serialization**: One of the most important advantages of `configFrom` is that it allows us to separate non-JSON-serializable settings (like functions and class constructors) from JSON-serializable settings. This makes it possible to keep your inline MountConfig 100% JSON-serializable while still leveraging the full power of JavaScript in your imported configuration modules.
+**Key benefit for JSON serialization**: One of the most important advantages of `configFrom` is that it allows us to separate non-JSON-serializable settings (like functions and class constructors) from JSON-serializable settings. This makes it possible to keep our inline MountConfig 100% JSON-serializable while still leveraging the full power of JavaScript in our imported configuration modules when needed.
 
 ```JavaScript
 // Inline config - 100% JSON serializable
