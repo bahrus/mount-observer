@@ -12,7 +12,7 @@
 		"MountObserver.ts",
 		"EvtRt.ts",
 		"index.ts",
-		"DefineCustomElementHandler.ts",
+		"handlers/DefineCustomElement.ts",
 		"getRegistryRoot.ts",
 		"ElementMountExtension.ts",
 		"types/global.d.ts"

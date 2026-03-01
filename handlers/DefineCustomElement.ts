@@ -1,5 +1,5 @@
-import { EvtRt } from './EvtRt.js';
-import { MountConfig, MountContext } from './types/mount-observer/types.js';
+import { EvtRt } from '../EvtRt.js';
+import { MountConfig, MountContext } from '../types/mount-observer/types.js';
 
 export class DefineCustomElementHandler extends EvtRt {
     mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): void {
@@ -115,3 +115,9 @@ export class DefineScopedCustomElementHandler extends DefineCustomElementHandler
         registry.define(tagName, ElementClass);
     }
 }
+
+// Register built-in handlers
+import { MountObserver } from '../MountObserver.js';
+
+MountObserver.define('builtIns.defineCustomElement', DefineCustomElementHandler);
+MountObserver.define('buildIns.defineScopedCustomElement', DefineScopedCustomElementHandler);

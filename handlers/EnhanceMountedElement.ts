@@ -1,6 +1,6 @@
-import { EvtRt } from './EvtRt.js';
-import {EnhancementConfig} from './types/assign-gingerly/types.js';
-import { MountConfig, MountContext } from './types/mount-observer/types.js';
+import { EvtRt } from '../EvtRt.js';
+import {EnhancementConfig} from '../types/assign-gingerly/types.js';
+import { MountConfig, MountContext } from '../types/mount-observer/types.js';
 //import { buildCSSQuery } from 'assign-gingerly/buildCSSQuery.js';
 import 'assign-gingerly/object-extension.js';
 
@@ -109,3 +109,8 @@ export class EnhanceMountedElementHandler extends EvtRt {
         return true;
     }
 }
+
+// Register built-in handler
+import { MountObserver } from '../MountObserver.js';
+
+MountObserver.define('builtIns.enhanceMountedElement', EnhanceMountedElementHandler);
