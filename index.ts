@@ -26,9 +26,8 @@ export {
 } from './Events.js';
 
 // Register built-in handlers
-import { MountObserver } from './MountObserver.js';
-import { EvtRt } from './EvtRt.js';
+import './EvtRt.js';
 import './handlers/DefineCustomElement.js';
 import './handlers/EnhanceMountedElement.js';
 
-MountObserver.define('builtIns.logToConsole', EvtRt);
+

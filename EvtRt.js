@@ -1,4 +1,5 @@
 import { DismountEvent, MountEvent, DisconnectEvent, dismountEventName, disconnectEventName, mountEventName } from './Events.js';
+import { MountObserver } from './MountObserver.js';
 export class EvtRt {
     #ac;
     constructor(mountedElement, ctx) {
@@ -37,3 +38,4 @@ export class EvtRt {
         }
     }
 }
+MountObserver.define('builtIns.logToConsole', EvtRt);
