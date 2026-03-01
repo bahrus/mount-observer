@@ -3,7 +3,6 @@
 [![How big is this package in your project?](https://img.shields.io/bundlephobia/minzip/mount-observer?style=for-the-badge)](https://bundlephobia.com/result?p=mount-observer)
 <img src="http://img.badgesize.io/https://cdn.jsdelivr.net/npm/mount-observer?compression=gzip">
 
-Note that much of what is described below has not yet been polyfilled.
 
 ## Implementation Status
 
@@ -81,7 +80,9 @@ There is quite a bit of functionality this proposal would open up that is exceed
 
 3. Knowing when an element previously being monitored passes totally "out-of-scope" so that no more hard references to the element remain. This would allow for cleanup of no longer needed weak references without requiring polling.
 
-4. Some CSS selectors, such as the [scope donut hole range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope), aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
+4. Some CSS selectors, such as the [donut hole scope range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope), aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
+
+5. Scoped custom element registries form natural "islands" of DOM that has many commonalities with css "donut hole scoping", and which mutation observers aren't really designed around.  The mount-observer is designed to work with scoped custom element registries as first-class citizens. 
 
 
 ###  Most significant use cases
