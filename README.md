@@ -685,11 +685,11 @@ const sharedConfig = {
 
 // Scope 1
 const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div1.mount(sharedConfig, { scope: 'registry' });
+await div1.mount(sharedConfig);  // Uses default scope: 'registry'
 
 // Scope 2 - would need to manually mount the same config
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.mount(sharedConfig, { scope: 'registry' }); // Redundant!
+await div2.mount(sharedConfig);  // Redundant! Same config again
 ```
 
 ### The Solution: Automatic Observer Coordination
@@ -704,8 +704,9 @@ const sharedConfig = {
 };
 
 // Scope 1 - registers the config with the registry
+// Note: scope: 'registry' is the default, so we can omit it
 const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div1.mount(sharedConfig, { scope: 'registry' });
+await div1.mount(sharedConfig);  // Uses default scope: 'registry'
 
 // Scope 2 - automatically gets the observer for sharedConfig!
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
@@ -722,7 +723,7 @@ await div2.mountScope();
 
 2. **Registry Tracking**: Each `CustomElementRegistry` tracks all MountConfig objects registered with it via `registry.mountConfigRegistry`.
 
-3. **Automatic Propagation**: When you call `mount()` with `scope: 'registry'`, the system:
+3. **Automatic Propagation**: When you call `mount()` with `scope: 'registry'` (or omit the scope since it's the default), the system:
    - Registers the config with the registry's `mountConfigRegistry`
    - Creates observers for all existing registry roots with that config
    - Ensures future roots get this observer when they call `mountScope()`
@@ -736,10 +737,10 @@ The `mountScope()` method announces a new scope's presence and ensures all regis
 ```JavaScript
 const sharedRegistry = new CustomElementRegistry();
 
-// First scope registers some configs
+// First scope registers some configs (scope: 'registry' is the default)
 const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div1.mount(config1, { scope: 'registry' });
-await div1.mount(config2, { scope: 'registry' });
+await div1.mount(config1);  // Implicitly uses scope: 'registry'
+await div1.mount(config2);  // Implicitly uses scope: 'registry'
 
 // Later, a new scope appears
 const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
