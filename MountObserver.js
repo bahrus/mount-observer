@@ -2,7 +2,6 @@ import { arr } from './arr.js';
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
 import { withScopePerimeter } from './withScopePerimeter.js';
-import { getRegistryRoot } from './getRegistryRoot.js';
 export class MountObserver extends EventTarget {
     // Static registry for registered handlers
     static #handlerRegistry = new Map();
@@ -380,15 +379,8 @@ export class MountObserver extends EventTarget {
         const rootNode = this.#rootNode?.deref();
         if (rootNode) {
             const rootRegistry = rootNode.customElementRegistry;
-            // If root has a registry, find the element's registry root and compare
-            if (rootRegistry) {
-                const elementRegistryRoot = getRegistryRoot(element);
-                const elementRegistry = elementRegistryRoot ? elementRegistryRoot.customElementRegistry : undefined;
-                // If registries don't match, exclude this element
-                if (rootRegistry !== elementRegistry) {
-                    return false;
-                }
-            }
+            if (rootRegistry !== element.customElementRegistry)
+                return false;
         }
         // Check withScopePerimeter condition if specified (donut hole scoping)
         if (this.#init.withScopePerimeter) {
