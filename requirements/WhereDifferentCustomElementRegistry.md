@@ -42,7 +42,7 @@ Add another where condition to MountConfig:
 ```TypeScript
 export interface MountConfig {
     ...
-    whereDifferentScope?: boolean
+    whereDifferentCustomElementRegistry?: boolean
 }
 ```
 
