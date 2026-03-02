@@ -11,6 +11,7 @@ The following features have been implemented and tested:
 ### Core Functionality
 - ✅ **matching**: CSS selector-based element matching
 - ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
+- ✅ **whereLocalNameMatches**: Regular expression-based localName filtering
 - ✅ **Registry matching**: Automatic filtering by customElementRegistry (Chrome 146+)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
@@ -684,8 +685,63 @@ const observer = new MountObserver({
 [whereObservedRootSizeMatches implemented]
 [whereElementIntersectsWith implemented]
 [whereConnectionHas implemented]
+[whereLocalNameMatches implemented as [RegularExpressionNameMatching](requirements/Done/RegularExpressionNameMatching.md)]
 
 [withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
+
+## LocalName Pattern Matching
+
+The `whereLocalNameMatches` property allows filtering elements by their `localName` using regular expressions. This is useful when you need to match elements based on naming patterns rather than CSS selectors.
+
+```javascript
+const observer = new MountObserver({
+    matching: '*',  // Match all elements
+    whereLocalNameMatches: /^my-/,  // Only mount elements starting with 'my-'
+    do: (element) => {
+        console.log('Mounted:', element.localName);
+    }
+});
+observer.observe(document);
+```
+
+**String patterns are automatically converted to RegExp:**
+
+```javascript
+// These are equivalent
+whereLocalNameMatches: 'button|input'
+whereLocalNameMatches: /button|input/
+```
+
+**Common use cases:**
+
+```javascript
+// Match custom elements with a specific prefix
+whereLocalNameMatches: /^app-/
+
+// Match elements ending with a suffix
+whereLocalNameMatches: /-widget$/
+
+// Match multiple element types
+whereLocalNameMatches: /^(button|input|select)$/
+
+// Match elements containing a pattern
+whereLocalNameMatches: /dialog/
+```
+
+**AND condition logic:**
+
+Like all `where*` properties, `whereLocalNameMatches` forms an AND condition with other filters:
+
+```javascript
+const observer = new MountObserver({
+    matching: '[data-enhanced]',           // Must have data-enhanced attribute
+    whereLocalNameMatches: /^custom-/,     // AND localName starts with 'custom-'
+    whereInstanceOf: HTMLElement,          // AND is an HTMLElement instance
+    do: (element) => { /* ... */ }
+});
+```
+
+This will only mount elements that satisfy ALL three conditions.
 
 ## InstanceOf checks in detail
 

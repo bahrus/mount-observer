@@ -33,6 +33,28 @@ The library provides several built-in handlers registered with `MountObserver.de
 - `builtIns.scriptNoModule` - Imports ES modules from script[nomodule] elements and stores them on element.export
 - `builtIns.mountObserverScript` - Processes script[type="mountobserver"] elements to declaratively configure mount observers
 
+## MountConfig Properties
+
+### Filtering Conditions (where*)
+
+All `where*` properties form AND conditions - elements must satisfy ALL specified conditions to mount.
+
+**whereLocalNameMatches**: Regular expression or string pattern to match against element's localName
+- Accepts `string | RegExp`
+- String values are automatically converted to RegExp
+- Tests against `element.localName`
+- Example: `/^my-/` matches elements starting with 'my-'
+- Example: `'button|input'` matches button or input elements
+
+**whereInstanceOf**: Constructor or array of constructors to filter by instance type
+- Elements must be instances of at least one constructor (OR logic for arrays)
+- Example: `HTMLButtonElement` or `[HTMLInputElement, HTMLTextAreaElement]`
+
+**whereDifferentCustomElementRegistry**: Boolean to invert registry matching
+- Default (false): Only mount elements with SAME registry as root node
+- When true: Only mount elements with DIFFERENT registry than root node
+- Useful for cross-registry observation scenarios
+
 ### Handler Static Properties (Default Configuration)
 
 **IMPORTANT**: Handler classes can define static properties that serve as default MountConfig values. When you reference a handler by name in the `do` property, its static properties are automatically merged with your inline configuration.

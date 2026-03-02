@@ -541,6 +541,17 @@ export class MountObserver extends EventTarget implements IMountObserver {
                 }
             }
 
+            // Check whereLocalNameMatches condition if specified
+            if (this.#init.whereLocalNameMatches) {
+                const pattern = typeof this.#init.whereLocalNameMatches === 'string' 
+                    ? new RegExp(this.#init.whereLocalNameMatches)
+                    : this.#init.whereLocalNameMatches;
+                
+                if (!pattern.test(element.localName)) {
+                    return false;
+                }
+            }
+
             // All conditions passed
             return true;
         }
