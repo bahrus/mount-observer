@@ -6,10 +6,17 @@
     <title>Custom Registry Islands</title>
 </head>
 <body>
+    <mount-scope id=ms1></mount-scope>
     <template id=myTemplate>
         <div id="div5">i am hee</div>
     </template>
     <script>
+        class MountScope extends HTMLElement{
+            connectedCallback(){
+                console.log('in mount-scope ' + this.id);
+            }
+        }
+        customElements.define('mount-scope', MountScope);
         const reg1 = new CustomElementRegistry();
         const div1 = document.createElement('div', {customElementRegistry: reg1});
         div1.id = 'div1';
@@ -18,7 +25,12 @@
         const reg2 = new CustomElementRegistry;
         const div2 = document.createElement('div', {customElementRegistry: reg2});
         div2.id = 'div2';
-        div2.textContent = 'div2';
+        div2.innerHTML = String.raw `
+            <span>div2</span>
+            <mount-scope id=ms2></mount-scope>
+        `;
+
+
 
 
         const reg3 = new CustomElementRegistry;
