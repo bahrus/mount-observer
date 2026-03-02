@@ -506,8 +506,8 @@ export class MountObserver extends EventTarget implements IMountObserver {
             // Check that element's customElementRegistry matches root node's registry
             const rootNode = this.#rootNode?.deref();
             if (rootNode) {
-                const rootRegistry = (rootNode as any).customElementRegistry;
-                if(rootRegistry !== (element as any).customElementRegistry) return false;
+                const registriesMatch = (rootNode as any).customElementRegistry === (element as any).customElementRegistry;
+                if(!registriesMatch) return false;
                 
             }
 

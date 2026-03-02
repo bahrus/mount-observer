@@ -378,8 +378,8 @@ export class MountObserver extends EventTarget {
         // Check that element's customElementRegistry matches root node's registry
         const rootNode = this.#rootNode?.deref();
         if (rootNode) {
-            const rootRegistry = rootNode.customElementRegistry;
-            if (rootRegistry !== element.customElementRegistry)
+            const registriesMatch = rootNode.customElementRegistry === element.customElementRegistry;
+            if (!registriesMatch)
                 return false;
         }
         // Check withScopePerimeter condition if specified (donut hole scoping)
