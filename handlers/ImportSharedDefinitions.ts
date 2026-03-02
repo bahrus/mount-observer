@@ -1,5 +1,5 @@
 import { EvtRt } from '../EvtRt.js';
-import { MountContext } from '../types/mount-observer/types.js';
+import { MountContext, MountConfig } from '../types/mount-observer/types.js';
 import { SharedDefinitionRegistry } from '../SharedDefinitionRegistry.js';
 
 /**
@@ -17,40 +17,22 @@ export class ImportSharedDefinitionsHandler extends EvtRt {
     // Track event listener to avoid duplicate subscriptions
     static #eventListenerAdded = false;
     
-    constructor(element: Element, context: MountContext) {
-        super(element, context);
-        
+    mount(mountedElement: Element, mountConfig: MountConfig, context: MountContext): void {
         // Set up event listener for future definitions (only once)
         if (!ImportSharedDefinitionsHandler.#eventListenerAdded) {
-            this.#setupEventListener();
+            const sharedRegistry = SharedDefinitionRegistry.getInstance();
+            sharedRegistry.addEventListener('definition-shared', ((event: CustomEvent) => {
+                const { tagName, constructor } = event.detail;
+                // Future enhancement: could handle new definitions here
+            }) as EventListener);
             ImportSharedDefinitionsHandler.#eventListenerAdded = true;
         }
         
         // Import definitions into this element's registry
-        this.#importDefinitions(element);
-    }
-    
-    #setupEventListener(): void {
-        const sharedRegistry = SharedDefinitionRegistry.getInstance();
-        
-        // Listen for new definitions being published
-        sharedRegistry.addEventListener('definition-shared', ((event: CustomEvent) => {
-            const { tagName, constructor } = event.detail;
-            
-            // Note: We can't iterate processedRegistries (WeakSet), so this
-            // only helps with definitions published after we've seen registries
-            // The main registration happens in #importDefinitions
-            // This listener is here for future enhancements
-        }) as EventListener);
-    }
-    
-    #importDefinitions(element: Element): void {
-        // Get the element's custom element registry
-        const registry = (element as any).customElementRegistry;
+        const registry = (mountedElement as any).customElementRegistry;
         
         // Handle browsers without scoped registry support
         if (!registry) {
-            // No scoped registries, nothing to do
             return;
         }
         
@@ -68,29 +50,19 @@ export class ImportSharedDefinitionsHandler extends EvtRt {
         
         // Register each shared definition in this registry
         for (const [tagName, constructor] of sharedDefinitions) {
-            this.#registerDefinition(registry, tagName, constructor);
-        }
-    }
-    
-    #registerDefinition(
-        registry: CustomElementRegistry,
-        tagName: string,
-        constructor: CustomElementConstructor
-    ): void {
-        try {
-            // Check if already defined
-            const existing = registry.get(tagName);
-            if (existing) {
-                // Already defined, skip
-                return;
+            try {
+                // Check if already defined
+                const existing = registry.get(tagName);
+                if (existing) {
+                    continue;
+                }
+                
+                // Register the definition
+                registry.define(tagName, constructor);
+            } catch (error) {
+                // Ignore errors (likely already defined or invalid constructor)
+                console.debug(`[ImportSharedDefinitions] Could not register ${tagName}:`, error);
             }
-            
-            // Register the definition
-            registry.define(tagName, constructor);
-        } catch (error) {
-            // Ignore errors (likely already defined or invalid constructor)
-            // This can happen in race conditions
-            console.debug(`[ImportSharedDefinitions] Could not register ${tagName}:`, error);
         }
     }
 }

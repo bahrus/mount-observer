@@ -8,48 +8,39 @@ export class ShareDefinitionHandler extends EvtRt {
     // Static properties define default matching criteria
     static matching = '[share-definition]';
     static whereLocalNameMatches = /-/; // Must have dash (custom element)
-    constructor(element, context) {
-        super(element, context);
-        this.#publishDefinition(element);
-    }
-    async #publishDefinition(element) {
-        const tagName = element.localName;
+    mount(mountedElement, mountConfig, context) {
+        const tagName = mountedElement.localName;
+        const sharedRegistry = SharedDefinitionRegistry.getInstance();
         // Get the element's custom element registry
-        const registry = element.customElementRegistry;
+        const registry = mountedElement.customElementRegistry;
         // Handle browsers without scoped registry support
         if (!registry) {
             // Fall back to global registry
             const globalRegistry = customElements;
             // Wait for definition in global registry
-            await globalRegistry.whenDefined(tagName);
-            // Get constructor
-            const constructor = globalRegistry.get(tagName);
-            if (!constructor) {
-                console.warn(`[ShareDefinition] Definition not found for ${tagName}`);
-                return;
-            }
-            // Publish to shared registry
-            const sharedRegistry = SharedDefinitionRegistry.getInstance();
-            sharedRegistry.publish(tagName, constructor);
+            globalRegistry.whenDefined(tagName).then(() => {
+                const constructor = globalRegistry.get(tagName);
+                if (!constructor) {
+                    console.warn(`[ShareDefinition] Definition not found for ${tagName}`);
+                    return;
+                }
+                sharedRegistry.publish(tagName, constructor);
+            }).catch(error => {
+                console.error(`[ShareDefinition] Error waiting for ${tagName}:`, error);
+            });
             return;
         }
         // Wait for the element to be defined in its registry
-        try {
-            await registry.whenDefined(tagName);
-        }
-        catch (error) {
+        registry.whenDefined(tagName).then(() => {
+            const constructor = registry.get(tagName);
+            if (!constructor) {
+                console.warn(`[ShareDefinition] Definition not found for ${tagName} after whenDefined resolved`);
+                return;
+            }
+            sharedRegistry.publish(tagName, constructor);
+        }).catch((error) => {
             console.error(`[ShareDefinition] Error waiting for ${tagName}:`, error);
-            return;
-        }
-        // Get the constructor from the registry
-        const constructor = registry.get(tagName);
-        if (!constructor) {
-            console.warn(`[ShareDefinition] Definition not found for ${tagName} after whenDefined resolved`);
-            return;
-        }
-        // Publish to the shared registry
-        const sharedRegistry = SharedDefinitionRegistry.getInstance();
-        sharedRegistry.publish(tagName, constructor);
+        });
     }
 }
 // Register built-in handler

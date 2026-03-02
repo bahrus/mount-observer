@@ -12,33 +12,20 @@ export class ImportSharedDefinitionsHandler extends EvtRt {
     static #processedRegistries = new WeakSet();
     // Track event listener to avoid duplicate subscriptions
     static #eventListenerAdded = false;
-    constructor(element, context) {
-        super(element, context);
+    mount(mountedElement, mountConfig, context) {
         // Set up event listener for future definitions (only once)
         if (!ImportSharedDefinitionsHandler.#eventListenerAdded) {
-            this.#setupEventListener();
+            const sharedRegistry = SharedDefinitionRegistry.getInstance();
+            sharedRegistry.addEventListener('definition-shared', ((event) => {
+                const { tagName, constructor } = event.detail;
+                // Future enhancement: could handle new definitions here
+            }));
             ImportSharedDefinitionsHandler.#eventListenerAdded = true;
         }
         // Import definitions into this element's registry
-        this.#importDefinitions(element);
-    }
-    #setupEventListener() {
-        const sharedRegistry = SharedDefinitionRegistry.getInstance();
-        // Listen for new definitions being published
-        sharedRegistry.addEventListener('definition-shared', ((event) => {
-            const { tagName, constructor } = event.detail;
-            // Note: We can't iterate processedRegistries (WeakSet), so this
-            // only helps with definitions published after we've seen registries
-            // The main registration happens in #importDefinitions
-            // This listener is here for future enhancements
-        }));
-    }
-    #importDefinitions(element) {
-        // Get the element's custom element registry
-        const registry = element.customElementRegistry;
+        const registry = mountedElement.customElementRegistry;
         // Handle browsers without scoped registry support
         if (!registry) {
-            // No scoped registries, nothing to do
             return;
         }
         // Skip if we've already processed this registry
@@ -52,24 +39,19 @@ export class ImportSharedDefinitionsHandler extends EvtRt {
         const sharedDefinitions = sharedRegistry.getAll();
         // Register each shared definition in this registry
         for (const [tagName, constructor] of sharedDefinitions) {
-            this.#registerDefinition(registry, tagName, constructor);
-        }
-    }
-    #registerDefinition(registry, tagName, constructor) {
-        try {
-            // Check if already defined
-            const existing = registry.get(tagName);
-            if (existing) {
-                // Already defined, skip
-                return;
+            try {
+                // Check if already defined
+                const existing = registry.get(tagName);
+                if (existing) {
+                    continue;
+                }
+                // Register the definition
+                registry.define(tagName, constructor);
             }
-            // Register the definition
-            registry.define(tagName, constructor);
-        }
-        catch (error) {
-            // Ignore errors (likely already defined or invalid constructor)
-            // This can happen in race conditions
-            console.debug(`[ImportSharedDefinitions] Could not register ${tagName}:`, error);
+            catch (error) {
+                // Ignore errors (likely already defined or invalid constructor)
+                console.debug(`[ImportSharedDefinitions] Could not register ${tagName}:`, error);
+            }
         }
     }
 }
