@@ -1,0 +1,4 @@
+{
+    "matching": "div.test2",
+    "do": "builtIns.logToConsole"
+}

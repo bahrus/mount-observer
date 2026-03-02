@@ -31,6 +31,7 @@ The library provides several built-in handlers registered with `MountObserver.de
 - `buildIns.defineScopedCustomElement` - Defines custom elements in scoped registries
 - `builtIns.enhanceMountedElement` - Enhances elements using assign-gingerly
 - `builtIns.scriptNoModule` - Imports ES modules from script[nomodule] elements and stores them on element.export
+- `builtIns.mountObserverScript` - Processes script[type="mountobserver"] elements to declaratively configure mount observers
 
 ### Handler Static Properties (Default Configuration)
 

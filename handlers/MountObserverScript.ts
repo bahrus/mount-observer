@@ -1,0 +1,66 @@
+import { EvtRt } from '../EvtRt.js';
+import { MountConfig, MountContext } from '../types/mount-observer/types.js';
+import '../ElementMountExtension.js';
+
+/**
+ * Handler for Mount Observer Script Elements (MOSEs).
+ * Processes script[type="mountobserver"] elements to declaratively configure mount observers.
+ * 
+ * Supports two modes:
+ * 1. External JSON: <script type="mountobserver" src="./config.json"></script>
+ * 2. Inline JSON: <script type="mountobserver">{ "matching": "div" }</script>
+ */
+export class MountObserverScriptHandler extends EvtRt {
+    // Static properties define default MountConfig constraints
+    static matching = 'script[type="mountobserver"]';
+    static whereInstanceOf = HTMLScriptElement;
+    
+    async mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): Promise<void> {
+        this.abort(); // Clean up event listeners (one-time operation)
+        
+        const scriptElement = mountedElement as HTMLScriptElement;
+        
+        let config: any;
+        
+        // Check if script has src attribute
+        const srcAttr = scriptElement.getAttribute('src');
+        
+        if (srcAttr) {
+            // External JSON mode: import from src
+            const resolvedUrl = new URL(srcAttr, document.baseURI).href;
+            
+            try {
+                const module = await import(resolvedUrl, { with: { type: 'json' } } as any);
+                config = module.default;
+            } catch (error) {
+                throw new Error(`Failed to import JSON from '${srcAttr}': ${error instanceof Error ? error.message : String(error)}`);
+            }
+        } else {
+            // Inline JSON mode: parse textContent
+            const jsonText = scriptElement.textContent?.trim();
+            
+            if (!jsonText) {
+                throw new Error('Script element must have either src attribute or JSON content');
+            }
+            
+            try {
+                config = JSON.parse(jsonText);
+            } catch (error) {
+                throw new Error(`Failed to parse JSON content: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
+        
+        // Validate that config is an object
+        if (typeof config !== 'object' || config === null) {
+            throw new Error('Mount observer config must be an object');
+        }
+        
+        // Call element.mount() with the parsed config
+        await scriptElement.mount(config);
+    }
+}
+
+// Register built-in handler
+import { MountObserver } from '../MountObserver.js';
+
+MountObserver.define('builtIns.mountObserverScript', MountObserverScriptHandler);

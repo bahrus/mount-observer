@@ -262,6 +262,87 @@ The `builtIns.scriptNoModule` handler enables declarative module loading using `
 - Progressive enhancement with module loading
 - Declarative dependency management in HTML
 
+## Mount Observer Script Elements (MOSEs)
+
+The `builtIns.mountObserverScript` handler enables fully declarative mount observer configuration using `<script type="mountobserver">` elements. This provides the ultimate in HTML-first progressive enhancement.
+
+```html
+<!-- Inline JSON configuration -->
+<script type="mountobserver">
+{
+    "matching": "button.fancy",
+    "import": "./fancy-button.js",
+    "do": "builtIns.defineCustomElement"
+}
+</script>
+
+<!-- External JSON configuration -->
+<script type="mountobserver" src="./observer-config.json"></script>
+
+<!-- Bootstrap the handler -->
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    // Handler provides matching and whereInstanceOf via static properties
+    const observer = new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    });
+    observer.observe(document);
+</script>
+```
+
+**How it works:**
+1. The handler matches `script[type="mountobserver"]` elements (via static properties)
+2. If the script has a `src` attribute, imports JSON from that URL
+3. Otherwise, parses the script's textContent as JSON
+4. Calls `scriptElement.mount(config)` with the parsed configuration
+5. The `mount()` method creates a MountObserver for that configuration
+
+**Benefits:**
+- Zero JavaScript required for observer configuration
+- Configurations are pure JSON (fully serializable)
+- Easy to generate server-side or from build tools
+- Supports both inline and external configurations
+- Leverages the `element.mount()` API for automatic scope management
+- No need to specify `matching` or `whereInstanceOf` for the handler itself
+
+**Use cases:**
+- Server-side rendering with progressive enhancement
+- Build-time generation of observer configurations
+- CMS-driven component loading
+- Declarative micro-frontend architecture
+- Configuration management without JavaScript bundling
+
+**Example with multiple configurations:**
+```html
+<!-- Load custom elements -->
+<script type="mountobserver">
+{
+    "matching": "my-button",
+    "import": "./components/my-button.js",
+    "do": "builtIns.defineCustomElement"
+}
+</script>
+
+<!-- Enhance existing elements -->
+<script type="mountobserver">
+{
+    "matching": ".interactive",
+    "import": "./enhancements/interactive.js",
+    "do": "builtIns.enhanceMountedElement"
+}
+</script>
+
+<!-- Single bootstrap script activates all configurations -->
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
 
 # Thorough Exposition Begins Here
 
