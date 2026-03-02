@@ -34,6 +34,7 @@ The following features have been implemented and tested:
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
 - ✅ **Memory management**: WeakRef usage for DOM node references
+- ✅ **Cross-scope registry sharing**: Share custom element definitions across scoped registries
 
 ### Not Yet Implemented
 - ❌ Reconnect event handling
@@ -343,6 +344,72 @@ The `builtIns.mountObserverScript` handler enables fully declarative mount obser
     }).observe(document);
 </script>
 ```
+
+## Cross-Scope Registry Sharing
+
+The `builtIns.shareDefinition` and `builtIns.importSharedDefinitions` handlers enable sharing custom element definitions across scoped registries. This is useful when you have multiple shadow roots with scoped registries and want to share element definitions between them without re-registering in each registry.
+
+**How it works:**
+1. Publisher: Elements with `share-definition` attribute publish their definitions to a shared registry
+2. Consumer: Shadow roots with different registries automatically import all shared definitions
+
+```html
+<div id="publisher-host"></div>
+<div id="consumer-host"></div>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    // Define element in publisher's scoped registry
+    const publisherHost = document.getElementById('publisher-host');
+    const publisherShadow = publisherHost.attachShadow({ mode: 'open' });
+    const publisherRegistry = publisherShadow.customElementRegistry;
+    
+    class MySharedElement extends HTMLElement {
+        constructor() {
+            super();
+            this.textContent = 'Shared Element';
+        }
+    }
+    publisherRegistry.define('my-shared-element', MySharedElement);
+    
+    // Set up publisher observer
+    const publisherObserver = new MountObserver({
+        do: 'builtIns.shareDefinition'
+    });
+    await publisherObserver.observe(publisherShadow);
+    
+    // Set up consumer observer (observes document to catch all shadow roots)
+    const consumerObserver = new MountObserver({
+        do: 'builtIns.importSharedDefinitions'
+    });
+    await consumerObserver.observe(document.body);
+    
+    // Add element with share-definition attribute
+    const elem = document.createElement('my-shared-element');
+    elem.setAttribute('share-definition', '');
+    publisherShadow.appendChild(elem);
+    
+    // Now consumer shadow roots can use my-shared-element
+    const consumerHost = document.getElementById('consumer-host');
+    const consumerShadow = consumerHost.attachShadow({ mode: 'open' });
+    const consumerElem = document.createElement('my-shared-element');
+    consumerShadow.appendChild(consumerElem); // Works! Definition was imported
+</script>
+```
+
+**Key features:**
+- `builtIns.shareDefinition` - Publishes definitions from elements with `share-definition` attribute
+- `builtIns.importSharedDefinitions` - Imports shared definitions into different registries
+- Automatic idempotent registration (won't re-register existing definitions)
+- Memory-safe tracking using WeakSet
+- Event-based communication via SharedDefinitionRegistry
+- Graceful fallback for browsers without scoped registry support
+
+**Requirements:**
+- Chrome 146+ or latest WebKit/Safari for scoped custom element registries
+- Elements must have a dash in their localName (custom element naming requirement)
+- Publisher and consumer must use separate MountObserver instances
 
 
 # Thorough Exposition Begins Here

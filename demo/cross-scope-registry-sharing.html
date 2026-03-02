@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Scope Registry Sharing Demo</title>
+    <!-- #include virtual="/imports.html" -->
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .host {
+            border: 2px solid #333;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        .publisher {
+            border-color: #0066cc;
+            background: #e6f2ff;
+        }
+        .consumer {
+            border-color: #00aa00;
+            background: #e6ffe6;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .status {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            background: #f0f0f0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cross-Scope Registry Sharing Demo</h1>
+    
+    <p>This demo shows how custom element definitions can be shared across scoped registries using the <code>builtIns.shareDefinition</code> and <code>builtIns.importSharedDefinitions</code> handlers.</p>
+    
+    <div id="status" class="status">Initializing...</div>
+    
+    <div class="host publisher">
+        <h2>Publisher Shadow Root</h2>
+        <p>This shadow root defines custom elements and publishes them with the <code>share-definition</code> attribute.</p>
+        <div id="publisher-host"></div>
+    </div>
+    
+    <div class="host consumer">
+        <h2>Consumer Shadow Root 1</h2>
+        <p>This shadow root automatically receives shared definitions.</p>
+        <div id="consumer-host-1"></div>
+    </div>
+    
+    <div class="host consumer">
+        <h2>Consumer Shadow Root 2</h2>
+        <p>This shadow root also receives shared definitions.</p>
+        <div id="consumer-host-2"></div>
+    </div>
+    
+    <script type="module">
+        const statusEl = document.getElementById('status');
+        
+        function updateStatus(message, isError = false) {
+            statusEl.textContent = message;
+            statusEl.className = isError ? 'status error' : 'status success';
+            console.log(message);
+        }
+        
+        try {
+            const { MountObserver } = await import('../index.js');
+            
+            // Check browser support
+            const testHost = document.createElement('div');
+            const testShadow = testHost.attachShadow({ mode: 'open' });
+            
+            if (!testShadow.customElementRegistry) {
+                updateStatus('⚠️ Browser does not support scoped custom element registries. This demo requires Chrome 146+ or latest WebKit/Safari.', true);
+                throw new Error('Scoped registries not supported');
+            }
+            
+            // Define custom elements
+            class SharedButton extends HTMLElement {
+                constructor() {
+                    super();
+                    this.attachShadow({ mode: 'open' });
+                    this.shadowRoot.innerHTML = `
+                        <style>
+                            button {
+                                padding: 0.5rem 1rem;
+                                background: #0066cc;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            }
+                            button:hover {
+                                background: #0052a3;
+                            }
+                        </style>
+                        <button>Shared Button (click me)</button>
+                    `;
+                    this.shadowRoot.querySelector('button').addEventListener('click', () => {
+                        alert('Shared button clicked!');
+                    });
+                }
+            }
+            
+            class SharedCard extends HTMLElement {
+                constructor() {
+                    super();
+                    this.attachShadow({ mode: 'open' });
+                    this.shadowRoot.innerHTML = `
+                        <style>
+                            .card {
+                                border: 1px solid #ddd;
+                                padding: 1rem;
+                                border-radius: 4px;
+                                background: white;
+                            }
+                        </style>
+                        <div class="card">
+                            <slot></slot>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Set up publisher shadow root
+            const publisherHost = document.getElementById('publisher-host');
+            const publisherShadow = publisherHost.attachShadow({ mode: 'open' });
+            const publisherRegistry = publisherShadow.customElementRegistry;
+            
+            // Define elements in publisher registry
+            publisherRegistry.define('shared-button', SharedButton);
+            publisherRegistry.define('shared-card', SharedCard);
+            updateStatus('✓ Defined elements in publisher registry');
+            
+            // Set up publisher observer
+            const publisherObserver = new MountObserver({
+                do: 'builtIns.shareDefinition'
+            });
+            await publisherObserver.observe(publisherShadow);
+            updateStatus('✓ Publisher observer created');
+            
+            // Set up consumer observer
+            const consumerObserver = new MountObserver({
+                do: 'builtIns.importSharedDefinitions'
+            });
+            await consumerObserver.observe(document.body);
+            updateStatus('✓ Consumer observer created');
+            
+            // Add elements to publisher with share-definition attribute
+            publisherShadow.innerHTML = `
+                <shared-button share-definition></shared-button>
+                <br><br>
+                <shared-card share-definition>
+                    <h3>Shared Card</h3>
+                    <p>This card element is also shared!</p>
+                </shared-card>
+            `;
+            
+            // Wait for publishing
+            await new Promise(resolve => setTimeout(resolve, 200));
+            updateStatus('✓ Published definitions to shared registry');
+            
+            // Create consumer shadow roots
+            const consumerHost1 = document.getElementById('consumer-host-1');
+            const consumerShadow1 = consumerHost1.attachShadow({ mode: 'open' });
+            
+            const consumerHost2 = document.getElementById('consumer-host-2');
+            const consumerShadow2 = consumerHost2.attachShadow({ mode: 'open' });
+            
+            // Add trigger elements to consumers
+            consumerShadow1.innerHTML = '<div>Trigger element</div>';
+            consumerShadow2.innerHTML = '<div>Trigger element</div>';
+            
+            // Wait for import
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Verify definitions were imported
+            const registry1 = consumerShadow1.customElementRegistry;
+            const registry2 = consumerShadow2.customElementRegistry;
+            
+            if (!registry1.get('shared-button') || !registry1.get('shared-card')) {
+                throw new Error('Definitions not imported to consumer 1');
+            }
+            if (!registry2.get('shared-button') || !registry2.get('shared-card')) {
+                throw new Error('Definitions not imported to consumer 2');
+            }
+            
+            updateStatus('✓ Definitions imported to consumer registries');
+            
+            // Now use the shared elements in consumers
+            consumerShadow1.innerHTML = `
+                <h3>Using Shared Elements:</h3>
+                <shared-button></shared-button>
+                <br><br>
+                <shared-card>
+                    <p>This card is using the shared definition!</p>
+                </shared-card>
+            `;
+            
+            consumerShadow2.innerHTML = `
+                <h3>Also Using Shared Elements:</h3>
+                <shared-card>
+                    <p>Multiple shadow roots can use the same shared definitions.</p>
+                </shared-card>
+                <br>
+                <shared-button></shared-button>
+            `;
+            
+            updateStatus('✅ Demo complete! Shared elements are working in all consumer shadow roots.');
+            
+        } catch (error) {
+            console.error('Demo error:', error);
+            updateStatus(`❌ Error: ${error.message}`, true);
+        }
+    </script>
+</body>
+</html>

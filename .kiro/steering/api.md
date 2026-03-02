@@ -32,6 +32,22 @@ The library provides several built-in handlers registered with `MountObserver.de
 - `builtIns.enhanceMountedElement` - Enhances elements using assign-gingerly
 - `builtIns.scriptNoModule` - Imports ES modules from script[nomodule] elements and stores them on element.export
 - `builtIns.mountObserverScript` - Processes script[type="mountobserver"] elements to declaratively configure mount observers
+- `builtIns.shareDefinition` - Publishes custom element definitions to shared registry from elements with `share-definition` attribute
+- `builtIns.importSharedDefinitions` - Imports shared definitions into scoped registries that differ from the observed root
+
+## SharedDefinitionRegistry API
+
+The `SharedDefinitionRegistry` is a singleton service that facilitates sharing custom element definitions across scoped registries.
+
+**Methods:**
+- `getInstance()` - Returns the singleton instance
+- `publish(tagName: string, constructor: CustomElementConstructor)` - Publishes a definition (idempotent)
+- `get(tagName: string)` - Retrieves a published constructor
+- `getAll()` - Returns a Map copy of all published definitions
+- `has(tagName: string)` - Checks if a definition exists
+
+**Events:**
+- `definition-shared` - Dispatched when a new definition is published (detail: `{tagName, constructor}`)
 
 ## MountConfig Properties
 
