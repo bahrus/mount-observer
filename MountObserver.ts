@@ -507,8 +507,14 @@ export class MountObserver extends EventTarget implements IMountObserver {
             const rootNode = this.#rootNode?.deref();
             if (rootNode) {
                 const registriesMatch = (rootNode as any).customElementRegistry === (element as any).customElementRegistry;
-                if(!registriesMatch) return false;
                 
+                // If whereDifferentCustomElementRegistry is true, exclude matching registries
+                if (this.#init.whereDifferentCustomElementRegistry) {
+                    if (registriesMatch) return false;
+                } else {
+                    // Default behavior: exclude non-matching registries
+                    if (!registriesMatch) return false;
+                }
             }
 
             // Check withScopePerimeter condition if specified (donut hole scoping)

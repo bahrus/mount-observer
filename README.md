@@ -704,7 +704,7 @@ However, where this support for "whereInstanceOf" would be *most* helpful is whe
 
 ## Custom Element Registry Matching
 
-MountObserver automatically respects scoped custom element registry boundaries. When observing a root node, only elements that share the same `customElementRegistry` as the root node will be mounted. This is an implicit AND condition that applies to all observations.
+MountObserver automatically respects scoped custom element registry boundaries. When observing a root node, only elements that share the same `customElementRegistry` as the root node will be mounted by default. This is an implicit AND condition that applies to all observations.
 
 **How it works:**
 
@@ -725,13 +725,38 @@ const observer2 = new MountObserver({
 observer2.observe(shadowRoot);
 ```
 
-**Behavior across browser versions:**
-- **Pre-Chrome 146**: Both `customElementRegistry` properties are `undefined`, so all elements within the observed scope match (backward compatible)
-- **Chrome 146+ with scoped registries**: Elements are filtered by registry reference equality
-  - Elements in the same registry scope as the root node → mount ✓
-  - Elements in different registry scopes → don't mount ✓
+**Registry matching logic:**
 
-This ensures that when we observe a shadow root with a scoped registry, we won't accidentally mount elements from the parent document or other shadow roots with different registries. The registry check happens automatically before any other `where*` conditions are evaluated.
+The implementation is straightforward - it compares the `customElementRegistry` property of the root node with the `customElementRegistry` property of each candidate element:
+
+```javascript
+const registriesMatch = rootNode.customElementRegistry === element.customElementRegistry;
+```
+
+**Default behavior** (same registry):
+- Elements with matching registries → mount ✓
+- Elements with different registries → don't mount ✓
+
+**Inverted behavior** with `whereDifferentCustomElementRegistry: true`:
+- Elements with matching registries → don't mount ✓
+- Elements with different registries → mount ✓
+
+**Use case for inverted matching:**
+```javascript
+// Mount elements from OTHER registries (cross-registry observation)
+const observer = new MountObserver({
+    matching: '.external-component',
+    whereDifferentCustomElementRegistry: true,
+    do: (el) => { /* Handle elements from different registries */ }
+});
+observer.observe(shadowRoot);
+```
+
+**Behavior across browser versions:**
+- **Pre-Chrome 146**: Both `customElementRegistry` properties are `undefined`, so `undefined === undefined` is `true` and elements match (backward compatible)
+- **Chrome 146+ with scoped registries**: Elements are filtered by registry reference equality
+
+This ensures that when we observe a shadow root with a scoped registry, we won't accidentally mount elements from the parent document or other shadow roots with different registries (unless explicitly requested with `whereDifferentCustomElementRegistry: true`). The registry check happens automatically before any other `where*` conditions are evaluated.
 
 [Implemented as [ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch](requirements/ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch.md)]
 
