@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cross-Scope Registry Sharing Integration</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Test Cross-Scope Registry Sharing Integration</h1>
+    
+    <div id="publisher-host"></div>
+    <div id="consumer-host-1"></div>
+    <div id="consumer-host-2"></div>
+    
+    <script type="module">
+        console.log('Integration test starting...');
+        
+        try {
+            const { MountObserver } = await import('../index.js');
+            const { SharedDefinitionRegistry } = await import('../SharedDefinitionRegistry.js');
+            
+            // Check if browser supports scoped registries
+            const testHost = document.createElement('div');
+            const testShadow = testHost.attachShadow({ mode: 'open' });
+            
+            if (!testShadow.customElementRegistry) {
+                console.log('⚠ Browser does not support scoped registries, skipping integration tests');
+                window.testComplete = true;
+                return;
+            }
+            
+            // Define test custom elements
+            class IntegrationElement1 extends HTMLElement {
+                constructor() {
+                    super();
+                    this.textContent = 'Integration Element 1';
+                }
+            }
+            
+            class IntegrationElement2 extends HTMLElement {
+                constructor() {
+                    super();
+                    this.textContent = 'Integration Element 2';
+                }
+            }
+            
+            // Set up publisher shadow root
+            const publisherHost = document.getElementById('publisher-host');
+            const publisherShadow = publisherHost.attachShadow({ mode: 'open' });
+            const publisherRegistry = publisherShadow.customElementRegistry;
+            
+            // Define elements in publisher registry
+            publisherRegistry.define('integration-element-1', IntegrationElement1);
+            publisherRegistry.define('integration-element-2', IntegrationElement2);
+            console.log('✓ Elements defined in publisher registry');
+            
+            // Set up publisher observer
+            const publisherObserver = new MountObserver({
+                do: 'builtIns.shareDefinition'
+            });
+            await publisherObserver.observe(publisherShadow);
+            console.log('✓ Publisher observer created');
+            
+            // Set up consumer observer (observing document.body to catch all shadow roots)
+            const consumerObserver = new MountObserver({
+                do: 'builtIns.importSharedDefinitions'
+            });
+            await consumerObserver.observe(document.body);
+            console.log('✓ Consumer observer created');
+            
+            // Test 1: Publisher → Consumer flow
+            const elem1 = document.createElement('integration-element-1');
+            elem1.setAttribute('share-definition', '');
+            publisherShadow.appendChild(elem1);
+            
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            const sharedRegistry = SharedDefinitionRegistry.getInstance();
+            if (!sharedRegistry.has('integration-element-1')) {
+                throw new Error('Test 1 failed: Element not published');
+            }
+            console.log('✓ Test 1: Publisher → Consumer flow works');
+            
+            // Test 2: Multiple registries receive definition
+            const consumerHost1 = document.getElementById('consumer-host-1');
+            const consumerShadow1 = consumerHost1.attachShadow({ mode: 'open' });
+            const consumerElem1 = document.createElement('div');
+            consumerShadow1.appendChild(consumerElem1);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const consumerRegistry1 = consumerShadow1.customElementRegistry;
+            if (!consumerRegistry1.get('integration-element-1')) {
+                throw new Error('Test 2 failed: Definition not in consumer registry 1');
+            }
+            console.log('✓ Test 2: First consumer registry receives definition');
+            
+            // Test 3: Multiple definitions shared
+            const elem2 = document.createElement('integration-element-2');
+            elem2.setAttribute('share-definition', '');
+            publisherShadow.appendChild(elem2);
+            
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            if (!sharedRegistry.has('integration-element-2')) {
+                throw new Error('Test 3 failed: Second element not published');
+            }
+            console.log('✓ Test 3: Multiple definitions can be shared');
+            
+            // Test 4: New consumer gets all existing definitions
+            const consumerHost2 = document.getElementById('consumer-host-2');
+            const consumerShadow2 = consumerHost2.attachShadow({ mode: 'open' });
+            const consumerElem2 = document.createElement('div');
+            consumerShadow2.appendChild(consumerElem2);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const consumerRegistry2 = consumerShadow2.customElementRegistry;
+            if (!consumerRegistry2.get('integration-element-1')) {
+                throw new Error('Test 4 failed: integration-element-1 not in new consumer');
+            }
+            if (!consumerRegistry2.get('integration-element-2')) {
+                throw new Error('Test 4 failed: integration-element-2 not in new consumer');
+            }
+            console.log('✓ Test 4: New consumer receives all existing definitions');
+            
+            // Test 5: Dynamic element creation
+            class DynamicElement extends HTMLElement {
+                constructor() {
+                    super();
+                    this.textContent = 'Dynamic Element';
+                }
+            }
+            publisherRegistry.define('dynamic-element', DynamicElement);
+            
+            const dynamicElem = document.createElement('dynamic-element');
+            dynamicElem.setAttribute('share-definition', '');
+            publisherShadow.appendChild(dynamicElem);
+            
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            if (!sharedRegistry.has('dynamic-element')) {
+                throw new Error('Test 5 failed: Dynamic element not published');
+            }
+            console.log('✓ Test 5: Dynamic element creation works');
+            
+            // Test 6: Verify constructors match
+            const retrievedConstructor = sharedRegistry.get('integration-element-1');
+            if (retrievedConstructor !== IntegrationElement1) {
+                throw new Error('Test 6 failed: Constructor mismatch');
+            }
+            console.log('✓ Test 6: Constructors match correctly');
+            
+            console.log('All integration tests passed!');
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Integration test error:', error);
+            window.testError = error.message;
+            window.testComplete = true;
+        }
+    </script>
+</body>
+</html>
