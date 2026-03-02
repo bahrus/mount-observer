@@ -74,22 +74,23 @@ With scoped custom element registries (Chrome 146+, Safari), each shadow root ca
 **Requirement:** Provide a handler that automatically registers shared definitions in new scopes
 
 **Behavior:**
-1. Detect elements from different registries than the observed root -- they don't have to be custom elements
-~~2. Check if the element's tag name has a shared definition available~~
-3. If the element's registry doesn't have this definition, register it
-4. Track processed registries to avoid duplicate work
-5. Listen for new shared definitions and apply them to known registries
+1. Detect elements from different registries than the observed root (they don't have to be custom elements)
+2. For each shared definition available in the shared registry:
+   - Check if the element's registry already has this definition
+   - If missing, register it in the element's registry
+3. Track processed registries to avoid duplicate work
+4. Listen for new shared definitions and apply them to known registries
 
 **Example:**
 ```html
 <!-- In a different custom element registry -->
 <my-custom-element>
     #shadow
-    
-</my-custom-element> <!-- Auto-registers my-button constructor in my-custom-element's custom element registry -->
+    <!-- my-button can now be used here -->
+</my-custom-element>
 ```
 
-This is done *just in case* my-custom-element wants to reuse my-button inside its shadow DOM, for example.
+**Rationale:** When we encounter an element with a different registry, we proactively register ALL shared definitions in that registry. This is done preemptively so that if `my-custom-element` wants to use `my-button` inside its shadow DOM, the definition is already available.
 
 ### FR3: Shared Definition Registry Service
 **Requirement:** Provide a centralized service for storing and retrieving shared definitions
@@ -191,26 +192,40 @@ interface SharedDefinitionRegistry {
 ## Open Questions
 
 1. **Attribute Name:** Which attribute name should we use?
-   - Recommendation: `share-definition` -- agreed
+   - ✅ **DECISION:** `share-definition`
 
 2. **Handler Names:** What should the built-in handler names be?
-   - Recommendation: `builtIns.shareDefinition` and `builtIns.importSharedDefinitions` -- agreed
+   - ✅ **DECISION:** `builtIns.shareDefinition` and `builtIns.importSharedDefinitions`
 
 3. **Automatic vs Explicit:** Should the consumer handler be:
-   - Automatically enabled when using `whereDifferentCustomElementRegistry`?  No, have to specify that handler as part of the "do" array of strings.
-   - Or explicitly enabled via a separate observer?  The do property supports multiple built-ins, so can be the same observer
-   - Recommendation: Explicit - ~~user creates two observers~~  User should be able to list both built-ins in the do: property -- we should confirm that works
+   - ✅ **DECISION:** Two separate observers are required
+   - Reason: Each handler has different static properties (matching criteria, whereDifferentCustomElementRegistry)
+   - When handlers are merged, their static properties conflict
+   - Example:
+     ```javascript
+     // Observer 1: Publish shared definitions
+     const publisher = new MountObserver({
+         do: 'builtIns.shareDefinition'
+     });
+     publisher.observe(document);
+     
+     // Observer 2: Import shared definitions
+     const consumer = new MountObserver({
+         do: 'builtIns.importSharedDefinitions'
+     });
+     consumer.observe(document);
+     ```
 
 4. **Scope of Sharing:** Should we support:
-   - Only explicitly marked elements (current proposal)? Yes
-   - All elements from a registry?
-   - Recommendation: Only explicit marking for safety -- agreed
+   - ✅ **DECISION:** Only explicitly marked elements (with `share-definition` attribute)
+   - This provides safety and explicit control over what gets shared
 
 5. **Timing:** What if consumer encounters element before publisher has processed it?
-   - Recommendation: Consumer subscribes to future publications, retries on new definitions
+   - ✅ **DECISION:** Consumer subscribes to future publications via event listener
+   - When new definitions are published, consumer checks all known registries and registers as needed
 
 6. **Unsharing:** Should there be a way to "unshare" or revoke a definition?
-   - Recommendation: No for v1, can add later if needed -- agreed
+   - ✅ **DECISION:** No for v1, can add later if needed
 
 ## Success Criteria
 
