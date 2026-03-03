@@ -52,7 +52,7 @@ export function setupRootSizeObserver(init, rootNodeRef, mountedElements, module
             modules,
             observer: observer,
             rootNode,
-            MountConfig: init
+            mountConfig: init
         };
         // Get all mounted elements from the WeakDual setWeak
         const mountedElementsList = [];

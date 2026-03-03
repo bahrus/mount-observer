@@ -40,6 +40,7 @@ export class MountObserver extends EventTarget {
     #assignTentatively;
     #elementNotifiers = new WeakMap();
     #notifierMountedElements = new WeakSet();
+    #subObservers;
     #mergeHandlerDefaults(config) {
         const doValue = config.do;
         // Only process if do is a string (single handler reference)
@@ -166,6 +167,22 @@ export class MountObserver extends EventTarget {
         // Update the init config with merged result
         this.#init = mergedConfig;
     }
+    /**
+     * Creates and initializes sub-observers from the `with` property.
+     * Each sub-observer observes the same root node as the parent.
+     * Sub-observers are stored in #subObservers Map for lifecycle management.
+     */
+    async #createSubObservers(rootNode) {
+        const withConfig = this.#init.with;
+        if (!withConfig)
+            return;
+        this.#subObservers = new Map();
+        for (const [key, subConfig] of Object.entries(withConfig)) {
+            const subObserver = new MountObserver(subConfig);
+            this.#subObservers.set(key, subObserver);
+            await subObserver.observe(rootNode);
+        }
+    }
     async #setupMediaQuery() {
         if (!this.#rootNode) {
             throw new Error('Cannot setup media query before observe() is called');
@@ -255,6 +272,8 @@ export class MountObserver extends EventTarget {
             this.#assignTentatively = assignTentatively;
         }
         this.#rootNode = new WeakRef(observedNode);
+        // Create sub-observers from `with` property
+        await this.#createSubObservers(observedNode);
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
@@ -309,6 +328,14 @@ export class MountObserver extends EventTarget {
     }
     disconnect() {
         const rootNode = this.#rootNode?.deref();
+        // Disconnect all sub-observers first (recursive)
+        if (this.#subObservers) {
+            for (const subObserver of this.#subObservers.values()) {
+                subObserver.disconnect();
+            }
+            this.#subObservers.clear();
+            this.#subObservers = undefined;
+        }
         // Unregister from shared mutation observer
         if (rootNode && this.#mutationCallback) {
             unregisterSharedObserver(rootNode, this.#mutationCallback);
@@ -454,8 +481,15 @@ export class MountObserver extends EventTarget {
             modules: this.#modules,
             observer: this,
             rootNode,
-            MountConfig: this.#init,
+            mountConfig: this.#init,
         };
+        // Add withObservers if sub-observers exist
+        if (this.#subObservers && this.#subObservers.size > 0) {
+            context.withObservers = {};
+            for (const [key, subObserver] of this.#subObservers.entries()) {
+                context.withObservers[key] = subObserver;
+            }
+        }
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
             element.assignGingerly(this.#asgMtSource);
@@ -567,8 +601,15 @@ export class MountObserver extends EventTarget {
             modules: this.#modules,
             observer: this,
             rootNode,
-            MountConfig: this.#init,
+            mountConfig: this.#init,
         };
+        // Add withObservers if sub-observers exist
+        if (this.#subObservers && this.#subObservers.size > 0) {
+            context.withObservers = {};
+            for (const [key, subObserver] of this.#subObservers.entries()) {
+                context.withObservers[key] = subObserver;
+            }
+        }
         // Dispatch dismount event
         const dismountEvent = new DismountEvent(element, 'with-matching-failed', this.#init);
         this.dispatchEvent(dismountEvent);

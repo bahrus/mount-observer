@@ -49,7 +49,7 @@ export function setupMediaQuery(init, rootNodeRef, mountedElements, modules, obs
             modules,
             observer: observer,
             rootNode,
-            MountConfig: init
+            mountConfig: init
         };
         // Get all mounted elements from the WeakDual setWeak
         const mountedElementsList = [];

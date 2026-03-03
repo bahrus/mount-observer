@@ -47,7 +47,7 @@ export function setupConnectionMonitor(init, rootNodeRef, mountedElements, modul
             modules,
             observer: observer,
             rootNode,
-            MountConfig: init
+            mountConfig: init
         };
         // Get all mounted elements from the WeakDual setWeak
         const mountedElementsList = [];

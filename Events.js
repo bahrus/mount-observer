@@ -8,62 +8,62 @@ export const mediaunmatchEventName = 'mediaunmatch';
 export class MountEvent extends Event {
     mountedElement;
     modules;
-    MountConfig;
+    mountConfig;
     mountContext;
     static eventName = mountEventName;
-    constructor(mountedElement, modules, MountConfig, mountContext) {
+    constructor(mountedElement, modules, mountConfig, mountContext) {
         super(MountEvent.eventName);
         this.mountedElement = mountedElement;
         this.modules = modules;
-        this.MountConfig = MountConfig;
+        this.mountConfig = mountConfig;
         this.mountContext = mountContext;
     }
 }
 export class DismountEvent extends Event {
     mountedElement;
     reason;
-    MountConfig;
+    mountConfig;
     static eventName = dismountEventName;
-    constructor(mountedElement, reason, MountConfig) {
+    constructor(mountedElement, reason, mountConfig) {
         super(DismountEvent.eventName);
         this.mountedElement = mountedElement;
         this.reason = reason;
-        this.MountConfig = MountConfig;
+        this.mountConfig = mountConfig;
     }
 }
 export class DisconnectEvent extends Event {
     mountedElement;
-    MountConfig;
+    mountConfig;
     static eventName = disconnectEventName;
-    constructor(mountedElement, MountConfig) {
+    constructor(mountedElement, mountConfig) {
         super(DisconnectEvent.eventName);
         this.mountedElement = mountedElement;
-        this.MountConfig = MountConfig;
+        this.mountConfig = mountConfig;
     }
 }
 export class LoadEvent extends Event {
     modules;
-    MountConfig;
+    mountConfig;
     static eventName = loadEventName;
-    constructor(modules, MountConfig) {
+    constructor(modules, mountConfig) {
         super(LoadEvent.eventName);
         this.modules = modules;
-        this.MountConfig = MountConfig;
+        this.mountConfig = mountConfig;
     }
 }
 export class MediaMatchEvent extends Event {
-    MountConfig;
+    mountConfig;
     static eventName = mediamatchEventName;
-    constructor(MountConfig) {
+    constructor(mountConfig) {
         super(MediaMatchEvent.eventName);
-        this.MountConfig = MountConfig;
+        this.mountConfig = mountConfig;
     }
 }
 export class MediaUnmatchEvent extends Event {
-    MountConfig;
+    mountConfig;
     static eventName = mediaunmatchEventName;
-    constructor(MountConfig) {
+    constructor(mountConfig) {
         super(MediaUnmatchEvent.eventName);
-        this.MountConfig = MountConfig;
+        this.mountConfig = mountConfig;
     }
 }

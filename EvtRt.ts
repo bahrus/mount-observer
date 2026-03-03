@@ -11,13 +11,13 @@ export class EvtRt implements EventListenerObject{
     #ac: AbortController;
 
     constructor(mountedElement: Element, ctx: MountContext ){
-        const {observer, MountConfig} = ctx;
+        const {observer, mountConfig} = ctx;
         this.#ac = new AbortController();
         const et = observer.getNotifier(mountedElement);
         et.addEventListener(mountEventName, this, {signal: this.#ac.signal});
         et.addEventListener(disconnectEventName, this, {signal: this.#ac.signal});
         et.addEventListener(dismountEventName, this, {signal: this.#ac.signal});
-        this.mount(mountedElement, MountConfig, ctx);
+        this.mount(mountedElement, mountConfig, ctx);
 
     }
 
@@ -25,28 +25,28 @@ export class EvtRt implements EventListenerObject{
         this.#ac.abort();
     }
 
-    mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext){
-        console.log({mountedElement, MountConfig, context});
+    mount(mountedElement: Element, mountConfig: MountConfig, context: MountContext){
+        console.log({mountedElement, mountConfig, context});
     }
 
-    disconnect(mountedElement: Element, MountConfig: MountConfig){
-        console.log({mountedElement, MountConfig});
+    disconnect(mountedElement: Element, mountConfig: MountConfig){
+        console.log({mountedElement, mountConfig});
     }
 
-    dismount(mountedElement: Element, MountConfig: MountConfig){
-        console.log({mountedElement, MountConfig});
+    dismount(mountedElement: Element, mountConfig: MountConfig){
+        console.log({mountedElement, mountConfig});
     }
 
     handleEvent(evt: Event): void {
         if(evt instanceof MountEvent){
-            const {mountedElement, mountContext, MountConfig} = evt;
-            this.mount(mountedElement, MountConfig, mountContext);
+            const {mountedElement, mountContext, mountConfig} = evt;
+            this.mount(mountedElement, mountConfig, mountContext);
         }else if(evt instanceof DismountEvent){
-            const {mountedElement, MountConfig} = evt;
-            this.dismount(mountedElement, MountConfig);
+            const {mountedElement, mountConfig} = evt;
+            this.dismount(mountedElement, mountConfig);
         }else if(evt instanceof DisconnectEvent){
-            const {mountedElement, MountConfig} = evt;
-            this.disconnect(mountedElement, MountConfig);
+            const {mountedElement, mountConfig} = evt;
+            this.disconnect(mountedElement, mountConfig);
         }
     }
 }

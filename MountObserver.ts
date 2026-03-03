@@ -24,7 +24,7 @@ import { withScopePerimeter } from './withScopePerimeter.js';
 import { getRegistryRoot } from './getRegistryRoot.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
 
-export class MountObserver extends EventTarget implements IMountObserver {
+export class MountObserver<TKeys extends string = string> extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
     static #handlerRegistry = new Map<string, Constructor>();
     
@@ -64,6 +64,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
     #assignTentatively: typeof AssignTentativelyType | undefined;
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
+    #subObservers: Map<string, MountObserver> | undefined;
 
     #mergeHandlerDefaults(config: MountConfig): MountConfig {
         const doValue = config.do;
@@ -96,7 +97,7 @@ export class MountObserver extends EventTarget implements IMountObserver {
         return { ...handlerDefaults, ...config };
     }
 
-    constructor(config: MountConfig, options: MountObserverOptions = {}) {
+    constructor(config: MountConfig<TKeys>, options: MountObserverOptions = {}) {
         super();
         
         // Merge handler defaults if do is a string reference
@@ -217,6 +218,24 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         // Update the init config with merged result
         this.#init = mergedConfig;
+    }
+
+    /**
+     * Creates and initializes sub-observers from the `with` property.
+     * Each sub-observer observes the same root node as the parent.
+     * Sub-observers are stored in #subObservers Map for lifecycle management.
+     */
+    async #createSubObservers(rootNode: Node): Promise<void> {
+        const withConfig = this.#init.with;
+        if (!withConfig) return;
+        
+        this.#subObservers = new Map();
+        
+        for (const [key, subConfig] of Object.entries(withConfig)) {
+            const subObserver = new MountObserver(subConfig as MountConfig);
+            this.#subObservers.set(key, subObserver);
+            await subObserver.observe(rootNode);
+        }
     }
 
     
@@ -360,6 +379,9 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
         this.#rootNode = new WeakRef(observedNode);
 
+        // Create sub-observers from `with` property
+        await this.#createSubObservers(observedNode);
+
         // Set up media query if specified (needs rootNode to be set first)
         if (this.#init.withMediaMatching) {
             await this.#setupMediaQuery();
@@ -424,6 +446,15 @@ export class MountObserver extends EventTarget implements IMountObserver {
 
     disconnect(): void {
         const rootNode = this.#rootNode?.deref();
+        
+        // Disconnect all sub-observers first (recursive)
+        if (this.#subObservers) {
+            for (const subObserver of this.#subObservers.values()) {
+                subObserver.disconnect();
+            }
+            this.#subObservers.clear();
+            this.#subObservers = undefined;
+        }
         
         // Unregister from shared mutation observer
         if (rootNode && this.#mutationCallback) {
@@ -592,12 +623,20 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return;
         }
 
-        const context: MountContext = {
+        const context: MountContext<TKeys> = {
             modules: this.#modules,
             observer: this,
             rootNode,
-            MountConfig: this.#init,
+            mountConfig: this.#init,
         };
+        
+        // Add withObservers if sub-observers exist
+        if (this.#subObservers && this.#subObservers.size > 0) {
+            context.withObservers = {} as {[K in TKeys]: IMountObserver};
+            for (const [key, subObserver] of this.#subObservers.entries()) {
+                (context.withObservers as any)[key] = subObserver;
+            }
+        }
 
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
@@ -722,12 +761,20 @@ export class MountObserver extends EventTarget implements IMountObserver {
             return;
         }
 
-        const context: MountContext = {
+        const context: MountContext<TKeys> = {
             modules: this.#modules,
             observer: this,
             rootNode,
-            MountConfig: this.#init,
+            mountConfig: this.#init,
         };
+        
+        // Add withObservers if sub-observers exist
+        if (this.#subObservers && this.#subObservers.size > 0) {
+            context.withObservers = {} as {[K in TKeys]: IMountObserver};
+            for (const [key, subObserver] of this.#subObservers.entries()) {
+                (context.withObservers as any)[key] = subObserver;
+            }
+        }
 
 
         // Dispatch dismount event

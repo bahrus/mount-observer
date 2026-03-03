@@ -6,42 +6,42 @@ This implementation adds hierarchical composition support to MountObserver throu
 
 ## Tasks
 
-- [ ] 1. Update type definitions with generics and new properties
-  - [ ] 1.1 Add generic type parameter and with property to MountConfig interface
+- [x] 1. Update type definitions with generics and new properties
+  - [x] 1.1 Add generic type parameter and with property to MountConfig interface
     - Add `<TKeys extends string = string>` generic parameter to MountConfig
     - Add optional `with?: {[K in TKeys]: MountConfig}` property
     - Include JSDoc documentation for the with property
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 7.1_
   
-  - [ ] 1.2 Update MountContext interface with generics and new properties
+  - [x] 1.2 Update MountContext interface with generics and new properties
     - Add `<TKeys extends string = string>` generic parameter to MountContext
     - Rename `MountConfig` property to `mountConfig`
     - Add optional `withObservers?: {[K in TKeys]: IMountObserver}` property
     - Include JSDoc documentation for both properties
     - _Requirements: 5.1, 5.2, 5.3, 6.1, 7.3_
   
-  - [ ] 1.3 Update event interfaces to use mountConfig naming
+  - [x] 1.3 Update event interfaces to use mountConfig naming
     - Update IMountEvent interface to use mountConfig property
     - Update IDismountEvent interface to use mountConfig property
     - _Requirements: 6.1, 6.2_
   
-  - [ ] 1.4 Compile TypeScript and verify no type errors
+  - [x] 1.4 Compile TypeScript and verify no type errors
     - Run `tsc` to compile with new type definitions
     - Verify compilation succeeds with no errors
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 2. Implement MountObserver core changes
-  - [ ] 2.1 Add generic type parameter to MountObserver class
+- [x] 2. Implement MountObserver core changes
+  - [x] 2.1 Add generic type parameter to MountObserver class
     - Update class declaration: `class MountObserver<TKeys extends string = string>`
     - Update constructor signature to accept `MountConfig<TKeys>`
     - _Requirements: 7.1, 7.2_
   
-  - [ ] 2.2 Add private field for sub-observer storage
+  - [x] 2.2 Add private field for sub-observer storage
     - Add `#subObservers: Map<string, MountObserver> | undefined` field
     - Initialize as undefined (created only when needed)
     - _Requirements: 2.4, 9.2_
   
-  - [ ] 2.3 Implement #createSubObservers() private method
+  - [x] 2.3 Implement #createSubObservers() private method
     - Check if `this.#init.with` exists, return early if not
     - Create `Map<string, MountObserver>` and store in `#subObservers`
     - Iterate over `Object.entries(this.#init.with)`
@@ -50,13 +50,13 @@ This implementation adds hierarchical composition support to MountObserver throu
     - Store sub-observer in Map with its key
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 8.1_
   
-  - [ ] 2.4 Update observe() method to create sub-observers
+  - [x] 2.4 Update observe() method to create sub-observers
     - After setting `this.#rootNode = new WeakRef(observedNode)`
     - Call `await this.#createSubObservers(observedNode)`
     - Ensure sub-observers are created before starting observation
     - _Requirements: 2.1, 2.2_
   
-  - [ ] 2.5 Update disconnect() method for recursive disconnection
+  - [x] 2.5 Update disconnect() method for recursive disconnection
     - Add check for `this.#subObservers` at start of method
     - If exists, iterate over `this.#subObservers.values()`
     - Call `disconnect()` on each sub-observer
@@ -65,42 +65,42 @@ This implementation adds hierarchical composition support to MountObserver throu
     - Ensure this happens before existing disconnection logic
     - _Requirements: 4.1, 4.2, 8.3, 9.3_
   
-  - [ ] 2.6 Update #createMountContext() to use mountConfig and add withObservers
+  - [x] 2.6 Update #createMountContext() to use mountConfig and add withObservers
     - Rename `MountConfig: this.#init` to `mountConfig: this.#init`
     - After creating base context object, check if `this.#subObservers` exists and has size > 0
     - If yes, create `context.withObservers = {} as {[K in TKeys]: IMountObserver}`
     - Iterate over `this.#subObservers.entries()` and populate withObservers
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 6.1, 6.2_
 
-- [ ] 3. Checkpoint - Compile and verify core implementation
+- [x] 3. Checkpoint - Compile and verify core implementation
   - Ensure TypeScript compiles without errors, ask the user if questions arise.
 
-- [ ] 4. Migrate breaking change throughout codebase
-  - [ ] 4.1 Update MountObserver.ts internal references
+- [x] 4. Migrate breaking change throughout codebase
+  - [x] 4.1 Update MountObserver.ts internal references
     - Search for all occurrences of `context.MountConfig` or `.MountConfig`
     - Replace with `context.mountConfig` or `.mountConfig`
     - Verify all internal methods use new naming
     - _Requirements: 6.2, 6.3_
   
-  - [ ] 4.2 Update handler classes to use mountConfig
+  - [x] 4.2 Update handler classes to use mountConfig
     - Search handler files for `context.MountConfig` or `ctx.MountConfig`
     - Update to `context.mountConfig` or `ctx.mountConfig`
     - Check built-in handlers and any custom handler examples
     - _Requirements: 6.2, 6.3_
   
-  - [ ] 4.3 Update event classes to use mountConfig
+  - [x] 4.3 Update event classes to use mountConfig
     - Update MountEvent class to use mountConfig property
     - Update DismountEvent class to use mountConfig property
     - Update any other event classes that reference MountConfig
     - _Requirements: 6.1, 6.2_
   
-  - [ ] 4.4 Update all test files to use mountConfig
+  - [x] 4.4 Update all test files to use mountConfig
     - Search test files for `context.MountConfig` or `ctx.MountConfig`
     - Replace with `context.mountConfig` or `ctx.mountConfig`
     - Update test assertions and expectations
     - _Requirements: 6.4_
 
-- [ ] 5. Checkpoint - Verify breaking change migration
+- [x] 5. Checkpoint - Verify breaking change migration
   - Ensure all tests pass with new naming, ask the user if questions arise.
 
 - [ ] 6. Write unit tests for sub-observer functionality

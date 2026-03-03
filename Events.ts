@@ -15,7 +15,7 @@ export class MountEvent extends Event implements IMountEvent {
     constructor(
         public mountedElement: Element, 
         public modules: any[], 
-        public MountConfig: MountConfig,
+        public mountConfig: MountConfig,
         public mountContext: MountContext
     ) {
         super(MountEvent.eventName);
@@ -25,7 +25,7 @@ export class MountEvent extends Event implements IMountEvent {
 export class DismountEvent extends Event implements IDismountEvent {
     static eventName: typeof dismountEventName = dismountEventName;
     
-    constructor(public mountedElement: Element, public reason: DismountReason, public MountConfig: MountConfig) {
+    constructor(public mountedElement: Element, public reason: DismountReason, public mountConfig: MountConfig) {
         super(DismountEvent.eventName);
     }
 }
@@ -33,7 +33,7 @@ export class DismountEvent extends Event implements IDismountEvent {
 export class DisconnectEvent extends Event {
     static eventName: typeof disconnectEventName = disconnectEventName;
     
-    constructor(public mountedElement: Element, public MountConfig: MountConfig) {
+    constructor(public mountedElement: Element, public mountConfig: MountConfig) {
         super(DisconnectEvent.eventName);
     }
 }
@@ -41,7 +41,7 @@ export class DisconnectEvent extends Event {
 export class LoadEvent extends Event {
     static eventName: typeof loadEventName = loadEventName;
     
-    constructor(public modules: any[], public MountConfig: MountConfig) {
+    constructor(public modules: any[], public mountConfig: MountConfig) {
         super(LoadEvent.eventName);
     }
 }
@@ -49,7 +49,7 @@ export class LoadEvent extends Event {
 export class MediaMatchEvent extends Event {
     static eventName: typeof mediamatchEventName = mediamatchEventName;
     
-    constructor(public MountConfig: MountConfig) {
+    constructor(public mountConfig: MountConfig) {
         super(MediaMatchEvent.eventName);
     }
 }
@@ -57,7 +57,7 @@ export class MediaMatchEvent extends Event {
 export class MediaUnmatchEvent extends Event {
     static eventName: typeof mediaunmatchEventName = mediaunmatchEventName;
     
-    constructor(public MountConfig: MountConfig) {
+    constructor(public mountConfig: MountConfig) {
         super(MediaUnmatchEvent.eventName);
     }
 }
