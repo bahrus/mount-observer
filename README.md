@@ -814,7 +814,7 @@ shouldMount: (el, ctx) => {
 
 ## InstanceOf checks in detail
 
-Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
+Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "shouldMount" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
 The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that superclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each sub class, which might not always be all that high as a percentage, compared to the base class.
 
@@ -2028,7 +2028,8 @@ const observer = new MountObserver({
 Subscribing can be done via:
 
 ```JavaScript
-observer.addEventListener('confirm', e => {
+//[TODO] not implemented yet
+observer.addEventListener('shouldMount', e => {
   e.isSatisfied = true; //or false to prevent the mount event below
 });
 observer.addEventListener('mount', e => {
@@ -2043,18 +2044,23 @@ observer.addEventListener('dismount', e => {
 observer.addEventListener('disconnect', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('move', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('reconnect', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('reconfirm', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('exit', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('forget', e => {
   ...
 });
