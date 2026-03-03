@@ -751,6 +751,8 @@ This will only mount elements that satisfy ALL three conditions.
 
 The `shouldMount` property provides a final JavaScript-based check that runs after all declarative `where*` conditions have passed. This is useful for complex logic that can't be expressed declaratively.
 
+It's useful to be able to provide this check outside of the do method for separation of concerns reasons, and also because the do function only gets called once, and having this extra check allows us to combine all the checks together in a consistent way.
+
 ```javascript
 const observer = new MountObserver({
     matching: '.protected-feature',
