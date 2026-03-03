@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>With Property Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test-container"></div>
+    
+    <script type="module">
+        import { MountObserver } from './MountObserver.js';
+        
+        // Test 1: Basic sub-observer creation
+        async function test1() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = '<div class="parent"><div class="child">Child</div></div>';
+            
+            let parentMounted = false;
+            let childMounted = false;
+            let contextWithObservers = null;
+            
+            const observer = new MountObserver({
+                matching: '.parent',
+                with: {
+                    childObserver: {
+                        matching: '.child',
+                        do: (el, ctx) => {
+                            childMounted = true;
+                        }
+                    }
+                },
+                do: (el, ctx) => {
+                    parentMounted = true;
+                    contextWithObservers = ctx.withObservers;
+                }
+            });
+            
+            await observer.observe(document);
+            
+            // Wait a bit for observers to process
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                parentMounted,
+                childMounted,
+                hasWithObservers: contextWithObservers !== null && contextWithObservers !== undefined,
+                hasChildObserver: contextWithObservers?.childObserver !== undefined,
+                childObserverIsInstance: contextWithObservers?.childObserver instanceof MountObserver
+            };
+            
+            observer.disconnect();
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Test 2: Multiple sub-observers
+        async function test2() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = `
+                <div class="parent">
+                    <div class="child1">Child 1</div>
+                    <div class="child2">Child 2</div>
+                </div>
+            `;
+            
+            let child1Mounted = false;
+            let child2Mounted = false;
+            let observerKeys = null;
+            
+            const observer = new MountObserver({
+                matching: '.parent',
+                with: {
+                    observer1: {
+                        matching: '.child1',
+                        do: () => { child1Mounted = true; }
+                    },
+                    observer2: {
+                        matching: '.child2',
+                        do: () => { child2Mounted = true; }
+                    }
+                },
+                do: (el, ctx) => {
+                    if (ctx.withObservers) {
+                        observerKeys = Object.keys(ctx.withObservers);
+                    }
+                }
+            });
+            
+            await observer.observe(document);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                child1Mounted,
+                child2Mounted,
+                hasCorrectKeys: observerKeys?.includes('observer1') && observerKeys?.includes('observer2'),
+                keyCount: observerKeys?.length || 0
+            };
+            
+            observer.disconnect();
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Test 3: withObservers in MountContext
+        async function test3() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = '<div class="parent"><div class="sub">Sub</div></div>';
+            
+            let capturedContext = null;
+            
+            const observer = new MountObserver({
+                matching: '.parent',
+                with: {
+                    subObs: {
+                        matching: '.sub'
+                    }
+                },
+                do: (el, ctx) => {
+                    capturedContext = ctx;
+                }
+            });
+            
+            await observer.observe(document);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                hasWithObservers: capturedContext?.withObservers !== undefined,
+                hasSubObs: capturedContext?.withObservers?.subObs !== undefined,
+                hasMountConfig: capturedContext?.mountConfig !== undefined,
+                hasOldMountConfig: capturedContext?.MountConfig !== undefined // Should be false
+            };
+            
+            observer.disconnect();
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Test 4: Sub-observer disconnection
+        async function test4() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = '<div class="parent"><div class="sub">Sub</div></div>';
+            
+            let parentMounted = false;
+            let subObserverExists = false;
+            
+            const observer = new MountObserver({
+                matching: '.parent',
+                with: {
+                    subObs: {
+                        matching: '.sub'
+                    }
+                },
+                do: (el, ctx) => {
+                    parentMounted = true;
+                    subObserverExists = ctx.withObservers?.subObs !== undefined;
+                }
+            });
+            
+            await observer.observe(document);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const existsBeforeDisconnect = subObserverExists;
+            
+            // Disconnect should clean up sub-observers
+            observer.disconnect();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                parentMounted,
+                subObserverExisted: existsBeforeDisconnect
+            };
+            
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Test 5: Nested sub-observers
+        async function test5() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = `
+                <div class="level1">
+                    <div class="level2">
+                        <div class="level3">Level 3</div>
+                    </div>
+                </div>
+            `;
+            
+            let level1Mounted = false;
+            let level2Mounted = false;
+            let level3Mounted = false;
+            
+            const observer = new MountObserver({
+                matching: '.level1',
+                with: {
+                    level2Obs: {
+                        matching: '.level2',
+                        with: {
+                            level3Obs: {
+                                matching: '.level3',
+                                do: () => { level3Mounted = true; }
+                            }
+                        },
+                        do: () => { level2Mounted = true; }
+                    }
+                },
+                do: () => { level1Mounted = true; }
+            });
+            
+            await observer.observe(document);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                level1Mounted,
+                level2Mounted,
+                level3Mounted
+            };
+            
+            observer.disconnect();
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Test 6: Observer without with property
+        async function test6() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = '<div class="test">Test</div>';
+            
+            let capturedContext = null;
+            
+            const observer = new MountObserver({
+                matching: '.test',
+                do: (el, ctx) => {
+                    capturedContext = ctx;
+                }
+            });
+            
+            await observer.observe(document);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                withObserversIsUndefined: capturedContext?.withObservers === undefined,
+                hasMountConfig: capturedContext?.mountConfig !== undefined
+            };
+            
+            observer.disconnect();
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Test 7: Empty with property
+        async function test7() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = '<div class="test">Test</div>';
+            
+            let capturedContext = null;
+            
+            const observer = new MountObserver({
+                matching: '.test',
+                with: {},
+                do: (el, ctx) => {
+                    capturedContext = ctx;
+                }
+            });
+            
+            await observer.observe(document);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const result = {
+                withObserversIsUndefined: capturedContext?.withObservers === undefined,
+                hasMountConfig: capturedContext?.mountConfig !== undefined
+            };
+            
+            observer.disconnect();
+            container.innerHTML = '';
+            
+            return result;
+        }
+        
+        // Run all tests
+        async function runTests() {
+            console.log('Starting With Property Tests...');
+            
+            const results = {
+                test1: await test1(),
+                test2: await test2(),
+                test3: await test3(),
+                test4: await test4(),
+                test5: await test5(),
+                test6: await test6(),
+                test7: await test7()
+            };
+            
+            console.log('Test Results:', results);
+            window.testResults = results;
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>

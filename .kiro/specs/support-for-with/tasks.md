@@ -103,46 +103,46 @@ This implementation adds hierarchical composition support to MountObserver throu
 - [x] 5. Checkpoint - Verify breaking change migration
   - Ensure all tests pass with new naming, ask the user if questions arise.
 
-- [ ] 6. Write unit tests for sub-observer functionality
-  - [ ] 6.1 Write test for basic sub-observer creation
+- [x] 6. Write unit tests for sub-observer functionality
+  - [x] 6.1 Write test for basic sub-observer creation
     - Create MountObserver with single sub-observer in with property
     - Call observe() on parent
     - Verify sub-observer is created and observing same root node
     - _Requirements: 2.1, 2.2, 2.3_
   
-  - [ ] 6.2 Write test for multiple sub-observers
+  - [x] 6.2 Write test for multiple sub-observers
     - Create MountObserver with multiple entries in with property
     - Verify all sub-observers are created with correct keys
     - Verify each uses its own configuration
     - _Requirements: 2.1, 2.4, 3.1, 3.2, 3.3_
   
-  - [ ] 6.3 Write test for withObservers in MountContext
+  - [x] 6.3 Write test for withObservers in MountContext
     - Create observer with sub-observers
     - Mount an element and capture MountContext in handler
     - Verify withObservers property exists and contains all sub-observers
     - Verify keys match the with property keys
     - _Requirements: 5.1, 5.2, 5.3_
   
-  - [ ]* 6.4 Write test for sub-observer disconnection
+  - [x]* 6.4 Write test for sub-observer disconnection
     - Create observer with sub-observers
     - Call disconnect() on parent
     - Verify all sub-observers are disconnected
     - Verify sub-observers Map is cleared
     - _Requirements: 4.1, 4.2, 9.3_
   
-  - [ ]* 6.5 Write test for nested sub-observers
+  - [x]* 6.5 Write test for nested sub-observers
     - Create observer with sub-observer that has its own sub-observers
     - Verify recursive creation works
     - Verify recursive disconnection works
     - _Requirements: 2.5, 8.1, 8.3_
   
-  - [ ]* 6.6 Write test for observer without with property
+  - [x]* 6.6 Write test for observer without with property
     - Create observer without with property
     - Verify withObservers is undefined in MountContext
     - Verify no sub-observers are created
     - _Requirements: 5.4_
   
-  - [ ]* 6.7 Write test for empty with property
+  - [x]* 6.7 Write test for empty with property
     - Create observer with empty with object `{}`
     - Verify no sub-observers are created
     - Verify withObservers is undefined or empty
@@ -237,52 +237,52 @@ This implementation adds hierarchical composition support to MountObserver throu
 - [ ] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Update API documentation
-  - [ ] 10.1 Document with property in MountConfig
+- [x] 10. Update API documentation
+  - [x] 10.1 Document with property in MountConfig
     - Add with property to API documentation
     - Include type signature and description
     - Add basic usage example
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
   
-  - [ ] 10.2 Document withObservers in MountContext
+  - [x] 10.2 Document withObservers in MountContext
     - Add withObservers property to API documentation
     - Explain when it's present vs undefined
     - Add example of accessing sub-observers in handlers
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
   
-  - [ ] 10.3 Document mountConfig naming change
+  - [x] 10.3 Document mountConfig naming change
     - Update all API docs that reference MountConfig property
     - Change to mountConfig throughout documentation
     - _Requirements: 6.1, 6.2_
   
-  - [ ] 10.4 Add migration guide for breaking change
+  - [x] 10.4 Add migration guide for breaking change
     - Create migration guide section
     - Document MountConfig → mountConfig rename
     - Provide before/after code examples
     - List migration steps for users
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
   
-  - [ ] 10.5 Add examples of common patterns
+  - [x] 10.5 Add examples of common patterns
     - Add example: Registry management with sub-observers
     - Add example: Progressive enhancement with multiple layers
     - Add example: Nested sub-observers for complex hierarchies
     - Add example: Accessing sub-observers in handlers
     - _Requirements: 1.4, 5.2, 5.3, 8.1_
   
-  - [ ] 10.6 Document type safety features
+  - [x] 10.6 Document type safety features
     - Explain generic type parameter TKeys
     - Show how TypeScript infers keys from with property
     - Demonstrate autocomplete for withObservers access
     - Show compile-time error examples
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
   
-  - [ ] 10.7 Document known limitations
+  - [x] 10.7 Document known limitations
     - Document circular reference limitation
     - Explain why circular configs are not prevented
     - Recommend against circular configurations
     - _Requirements: 2.5, 8.2_
 
-- [ ] 11. Final checkpoint - Verify implementation complete
+- [x] 11. Final checkpoint - Verify implementation complete
   - Ensure all tests pass, documentation is updated, ask the user if questions arise.
 
 ## Notes
