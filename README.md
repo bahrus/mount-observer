@@ -30,6 +30,7 @@ The following features have been implemented and tested:
 - ✅ **assignOnDismount**: Property assignment when elements dismount
 - ✅ **stageOnMount**: Reversible property assignment (auto-restores on dismount)
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
+- ✅ **with property**: Hierarchical observer composition with sub-observers
 - ✅ **Element mount extension**: element.mount() method for scoped registry observation
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
@@ -880,109 +881,162 @@ Browser support: Works in all browsers, but scoped registry features require Chr
 
 [Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
 
-## Mutually Assured Observing (Registry Scope Coordination)
+## Hierarchical Observer Composition with the `with` Property
 
-When working with scoped custom element registries, we often want multiple DOM scopes (like different shadow roots) that share the same registry to also share the same observers. This is called "Mutually Assured Observing" - when one scope registers an observer configuration, all other scopes with the same registry automatically get that observer too.
+The `with` property enables hierarchical composition of MountObservers, allowing a parent observer to declaratively create and manage multiple sub-observers that observe the same root node. This provides a clean way to organize complex observation scenarios and coordinate multiple observers.
 
-### The Problem
-
-Without coordination, each scope would need to manually set up the same observers:
+### Basic Usage
 
 ```JavaScript
-const sharedRegistry = new CustomElementRegistry();
-const sharedConfig = {
-    matching: '.my-element',
-    do: (el) => console.log('Mounted:', el)
-};
+const observer = new MountObserver({
+    matching: '.container',
+    with: {
+        // Sub-observer for custom elements
+        registry: {
+            matching: 'my-element',
+            import: './my-element.js',
+            do: 'builtIns.defineCustomElement'
+        },
+        // Sub-observer for styles
+        styles: {
+            matching: '.styled',
+            import: './styles.css'
+        }
+    }
+});
 
-// Scope 1
-const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div1.mount(sharedConfig);  // Uses default scope: 'registry'
-
-// Scope 2 - would need to manually mount the same config
-const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.mount(sharedConfig);  // Redundant! Same config again
-```
-
-### The Solution: Automatic Observer Coordination
-
-With the `'registry'` scope (the default), observers are automatically coordinated across all scopes that share the same `CustomElementRegistry`:
-
-```JavaScript
-const sharedRegistry = new CustomElementRegistry();
-const sharedConfig = {
-    matching: '.my-element',
-    do: (el) => console.log('Mounted:', el)
-};
-
-// Scope 1 - registers the config with the registry
-// Note: scope: 'registry' is the default, so we can omit it
-const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div1.mount(sharedConfig);  // Uses default scope: 'registry'
-
-// Scope 2 - automatically gets the observer for sharedConfig!
-const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.mountScope();  
-// ^ Makes sure all registry-wide mount configs in customElementRegistry.mountConfigRegistry 
-//   are applied evenly to all scoped elements with matching customElementRegistry
-
-// Now both scopes observe elements matching sharedConfig
+await observer.observe(document);
 ```
 
 ### How It Works
 
-1. **MountConfig as Identity**: The same MountConfig object is used as the coordination key. Same object = shared observer, different object = separate observer.
+1. **Automatic Creation**: When the parent observer's `observe()` method is called, it automatically creates sub-observers for each entry in the `with` property.
 
-2. **Registry Tracking**: Each `CustomElementRegistry` tracks all MountConfig objects registered with it via `registry.mountConfigRegistry`.
+2. **Same Root Node**: All sub-observers observe the same root node as the parent.
 
-3. **Automatic Propagation**: When you call `mount()` with `scope: 'registry'` (or omit the scope since it's the default), the system:
-   - Registers the config with the registry's `mountConfigRegistry`
-   - Creates observers for all existing registry roots with that config
-   - Ensures future roots get this observer when they call `mountScope()`
+3. **Independent Configuration**: Each sub-observer operates independently with its own configuration. Sub-observers do NOT inherit properties from the parent.
 
-4. **One Observer Per Root**: Since `MountObserver` can only observe one node, separate observer instances are created for each registry root, but they all use the same config.
+4. **Automatic Lifecycle**: Sub-observers are automatically disconnected when the parent disconnects.
 
-### element.mountScope()
+5. **Unlimited Nesting**: Sub-observers can have their own `with` property for unlimited nesting depth.
 
-The `mountScope()` method announces a new scope's presence and ensures all registry-wide configs are applied to it:
+### Accessing Sub-Observers in Handlers
+
+Sub-observers are accessible in mount handlers via the `context.withObservers` property:
 
 ```JavaScript
-const sharedRegistry = new CustomElementRegistry();
+const observer = new MountObserver({
+    matching: '.parent',
+    with: {
+        registry: { matching: 'custom-element' },
+        styles: { matching: '.styled' }
+    },
+    do: (el, ctx) => {
+        // Access sub-observers with type safety
+        const registryObserver = ctx.withObservers?.registry;
+        const stylesObserver = ctx.withObservers?.styles;
+        
+        if (registryObserver) {
+            console.log('Registry observer:', registryObserver);
+            console.log('Mounted elements:', registryObserver.mountedElements);
+        }
+    }
+});
+```
 
-// First scope registers some configs (scope: 'registry' is the default)
-const div1 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div1.mount(config1);  // Implicitly uses scope: 'registry'
-await div1.mount(config2);  // Implicitly uses scope: 'registry'
+### Nested Sub-Observers
 
-// Later, a new scope appears
-const div2 = document.createElement('div', {customElementRegistry: sharedRegistry});
-await div2.mountScope();  
-// ^ Ensures all registry-wide mount configs (config1, config2) are applied 
-//   evenly to all scoped elements with matching customElementRegistry
+Sub-observers can have their own sub-observers, creating a tree structure:
+
+```JavaScript
+const observer = new MountObserver({
+    matching: '.root',
+    with: {
+        level1: {
+            matching: '.level1',
+            with: {
+                level2: {
+                    matching: '.level2',
+                    do: (el) => console.log('Level 2 mounted:', el)
+                }
+            }
+        }
+    }
+});
+```
+
+### Use Case: Cross-Scope Registry Management
+
+A practical use case is managing custom elements across different scoped registries:
+
+```JavaScript
+const observer = new MountObserver({
+    matching: 'div[shadowroot]',
+    with: {
+        // Observe elements in the main registry
+        mainRegistry: {
+            matching: 'my-element',
+            whereDifferentCustomElementRegistry: false,
+            do: 'builtIns.defineCustomElement'
+        },
+        // Observe elements in shadow DOM registries
+        shadowRegistry: {
+            matching: 'shadow-element',
+            whereDifferentCustomElementRegistry: true,
+            do: 'builtIns.defineScopedCustomElement'
+        }
+    }
+});
+```
+
+### Type Safety
+
+When using TypeScript, the keys in the `with` property are inferred and provide autocomplete:
+
+```TypeScript
+const observer = new MountObserver({
+    matching: '.parent',
+    with: {
+        registry: { matching: 'my-element' },
+        styles: { import: './styles.css' }
+    },
+    do: (el, ctx) => {
+        ctx.withObservers?.registry  // ✓ TypeScript knows this exists
+        ctx.withObservers?.unknown   // ✗ TypeScript error
+    }
+});
 ```
 
 ### Key Benefits
 
-1. **DRY Principle**: Define observer configs once, use across all scopes
-2. **Automatic Coordination**: New scopes automatically get existing observers
-3. **Memory Efficient**: Uses WeakRef/WeakMap to prevent memory leaks
-4. **Type Safe**: Full TypeScript support with proper typing
+1. **Declarative Composition**: Define complex observer hierarchies in a single configuration
+2. **Automatic Lifecycle**: Sub-observers are created and cleaned up automatically
+3. **Independent Operation**: Each sub-observer has its own configuration and state
+4. **Type Safety**: Full TypeScript support with key inference
+5. **Unlimited Nesting**: Create arbitrarily deep observer hierarchies
 
-### Browser Compatibility
+### Known Limitations
 
-- **Chrome 146+**: Full support with scoped custom element registries
-- **Latest WebKit/Safari**: Full support with scoped custom element registries  
-- **Other browsers**: Gracefully degrades to standalone observers (no coordination)
+- **Circular References**: The library does not detect or prevent circular references in `with` configurations. Avoid configurations where observer A's `with` references observer B, and B's `with` references A, as this will cause a stack overflow.
 
-### Implementation Details
+### Breaking Change: MountConfig → mountConfig
 
-The coordination is handled by `RegistryMountCoordinator.ts`, which:
-- Uses a nested WeakMap structure for efficient lookups
-- Stores registry roots as WeakRefs to prevent memory leaks
-- Prevents infinite loops through existence checks
-- Automatically cleans up when registries/roots are garbage collected
+In v2.x, the `MountContext.MountConfig` property was renamed to `MountContext.mountConfig` for consistency with JavaScript naming conventions (properties use camelCase, types use PascalCase).
 
-[Implemented as Phase III of Mutually Assured Observing](requirements/MutuallyAssuredObserving.md)
+**Migration:**
+```JavaScript
+// Before (v1.x)
+do: (el, ctx) => {
+    console.log(ctx.MountConfig.matching);  // Old name
+}
+
+// After (v2.x)
+do: (el, ctx) => {
+    console.log(ctx.mountConfig.matching);  // New name
+}
+```
+
+[Implemented as support-for-with spec](.kiro/specs/support-for-with/)
 
 ## Mount Observer Script Elements (MOSEs)
 
