@@ -658,13 +658,14 @@ import { MountObserver } from 'mount-observer';
 // This could cause issues if the importing module also imports MountObserver
 ```
 
-## Media / container queries / instanceOf / custom checks [TODO] out of date
+## Media / container queries / instanceOf
 
 Unlike traditional CSS @import, CSS Modules don't support specifying different imports based on media queries.  That can be another condition we can attach (and why not throw in container queries, based on the rootNode?):
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'div > p + p ~ span[class$="name"]', // not supported by polyfill
+   // not supported by polyfill
+   select: 'div > p + p ~ span[class$="name"]', 
    withMediaMatching: '(max-width: 1250px)',
    whereObservedRootSizeMatches: '(min-width: 700px)',
    whereElementIntersectsWith:{
