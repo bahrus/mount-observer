@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shouldMount Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>shouldMount Tests</h1>
+    
+    <!-- Test 1: shouldMount returns true -->
+    <div id="test1-container">
+        <div class="test1" data-allowed="true">Should mount</div>
+    </div>
+    
+    <!-- Test 2: shouldMount returns false -->
+    <div id="test2-container">
+        <div class="test2" data-allowed="false">Should NOT mount</div>
+    </div>
+    
+    <!-- Test 3: shouldMount with permission check -->
+    <div id="test3-container">
+        <div class="test3" data-role="admin">Admin only</div>
+        <div class="test3" data-role="user">User element</div>
+    </div>
+    
+    <!-- Test 4: shouldMount with data validation -->
+    <div id="test4-container">
+        <div class="test4" data-api-key="abc123" data-api-endpoint="/api">Valid</div>
+        <div class="test4" data-api-key="">Missing key</div>
+        <div class="test4" data-api-endpoint="/api">Missing endpoint</div>
+    </div>
+    
+    <!-- Test 5: shouldMount throws error -->
+    <div id="test5-container">
+        <div class="test5">Will throw error</div>
+    </div>
+    
+    <!-- Test 6: shouldMount with context access -->
+    <div id="test6-container">
+        <div class="test6" data-feature="enabled">Feature enabled</div>
+    </div>
+    
+    <!-- Test 7: Re-evaluation after DOM change -->
+    <div id="test7-container">
+        <!-- Element will be added dynamically -->
+    </div>
+
+    <script type="module">
+        import { MountObserver } from './MountObserver.js';
+        
+        const results = {
+            test1: { mounted: false },
+            test2: { mounted: false },
+            test3: { adminMounted: false, userMounted: false },
+            test4: { validMounted: false, invalidCount: 0 },
+            test5: { mounted: false, errorLogged: false },
+            test6: { mounted: false, contextReceived: false },
+            test7: { firstAttempt: false, secondAttempt: false }
+        };
+        
+        // Capture console.error to detect error logging
+        const originalError = console.error;
+        console.error = (...args) => {
+            if (args[0] === 'shouldMount check failed:') {
+                results.test5.errorLogged = true;
+            }
+            originalError.apply(console, args);
+        };
+        
+        // Test 1: shouldMount returns true
+        const observer1 = new MountObserver({
+            matching: '.test1',
+            shouldMount: (el) => {
+                return el.dataset.allowed === 'true';
+            },
+            do: (el) => {
+                results.test1.mounted = true;
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer1.observe(document.getElementById('test1-container'));
+        
+        // Test 2: shouldMount returns false
+        const observer2 = new MountObserver({
+            matching: '.test2',
+            shouldMount: (el) => {
+                return el.dataset.allowed === 'true';
+            },
+            do: (el) => {
+                results.test2.mounted = true;
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer2.observe(document.getElementById('test2-container'));
+        
+        // Test 3: shouldMount with permission check
+        const currentUserRole = 'admin';
+        const observer3 = new MountObserver({
+            matching: '.test3',
+            shouldMount: (el) => {
+                const requiredRole = el.dataset.role;
+                return requiredRole === currentUserRole;
+            },
+            do: (el) => {
+                if (el.dataset.role === 'admin') {
+                    results.test3.adminMounted = true;
+                } else {
+                    results.test3.userMounted = true;
+                }
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer3.observe(document.getElementById('test3-container'));
+        
+        // Test 4: shouldMount with data validation
+        const observer4 = new MountObserver({
+            matching: '.test4',
+            shouldMount: (el) => {
+                const hasKey = el.dataset.apiKey && el.dataset.apiKey.length > 0;
+                const hasEndpoint = el.dataset.apiEndpoint && el.dataset.apiEndpoint.length > 0;
+                if (!hasKey || !hasEndpoint) {
+                    results.test4.invalidCount++;
+                    return false;
+                }
+                return true;
+            },
+            do: (el) => {
+                results.test4.validMounted = true;
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer4.observe(document.getElementById('test4-container'));
+        
+        // Test 5: shouldMount throws error
+        const observer5 = new MountObserver({
+            matching: '.test5',
+            shouldMount: (el) => {
+                throw new Error('Intentional error for testing');
+            },
+            do: (el) => {
+                results.test5.mounted = true;
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer5.observe(document.getElementById('test5-container'));
+        
+        // Test 6: shouldMount with context access
+        const observer6 = new MountObserver({
+            matching: '.test6',
+            shouldMount: (el, ctx) => {
+                results.test6.contextReceived = !!(ctx && ctx.mountConfig && ctx.observer);
+                return el.dataset.feature === 'enabled';
+            },
+            do: (el) => {
+                results.test6.mounted = true;
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer6.observe(document.getElementById('test6-container'));
+        
+        // Test 7: Re-evaluation after DOM change
+        let test7AllowMount = false;
+        const observer7 = new MountObserver({
+            matching: '.test7',
+            shouldMount: (el) => {
+                if (!test7AllowMount) {
+                    results.test7.firstAttempt = true;
+                    return false;
+                }
+                results.test7.secondAttempt = true;
+                return true;
+            },
+            do: (el) => {
+                el.setAttribute('data-mounted', 'true');
+            }
+        });
+        await observer7.observe(document.getElementById('test7-container'));
+        
+        // Add element (should not mount)
+        const test7El = document.createElement('div');
+        test7El.className = 'test7';
+        test7El.textContent = 'Re-evaluation test';
+        document.getElementById('test7-container').appendChild(test7El);
+        
+        // Wait a bit
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Remove and re-add with permission (should mount)
+        test7AllowMount = true;
+        test7El.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        document.getElementById('test7-container').appendChild(test7El);
+        
+        // Wait for re-evaluation
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Restore console.error
+        console.error = originalError;
+        
+        // Export results for Playwright
+        window.testResults = results;
+        console.log('Test results:', results);
+    </script>
+</body>
+</html>

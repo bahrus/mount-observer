@@ -12,6 +12,7 @@ The following features have been implemented and tested:
 - ✅ **matching**: CSS selector-based element matching
 - ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
 - ✅ **whereLocalNameMatches**: Regular expression-based localName filtering
+- ✅ **shouldMount**: Custom JavaScript check for complex mounting conditions
 - ✅ **Registry matching**: Automatic filtering by customElementRegistry (Chrome 146+)
 - ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
 - ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
@@ -745,6 +746,71 @@ const observer = new MountObserver({
 ```
 
 This will only mount elements that satisfy ALL three conditions.
+
+## Custom JavaScript Checks with shouldMount
+
+The `shouldMount` property provides a final JavaScript-based check that runs after all declarative `where*` conditions have passed. This is useful for complex logic that can't be expressed declaratively.
+
+```javascript
+const observer = new MountObserver({
+    matching: '.protected-feature',
+    shouldMount: (el, ctx) => {
+        // Check user permission
+        const requiredRole = el.dataset.requiredRole;
+        return currentUser.hasRole(requiredRole);
+    },
+    do: (el) => {
+        // Only called if shouldMount returned true
+        enhanceProtectedFeature(el);
+    }
+});
+```
+
+**Behavior:**
+- `shouldMount` is called after ALL `where*` conditions pass
+- If it returns `true`, the element mounts (do callback + mount event)
+- If it returns `false`, the element does NOT mount (no do callback, no mount event)
+- If it throws an error, it's treated as `false` and the error is logged
+- The element can be re-evaluated if removed and re-added to the DOM
+
+**Use Cases:**
+
+Authorization checks:
+```javascript
+shouldMount: (el) => currentUser.hasPermission(el.dataset.permission)
+```
+
+Feature flags:
+```javascript
+shouldMount: (el) => featureFlags.isEnabled(el.dataset.feature)
+```
+
+Data validation:
+```javascript
+shouldMount: (el) => {
+    return el.dataset.apiKey && 
+           el.dataset.apiEndpoint && 
+           el.dataset.apiKey.length > 0;
+}
+```
+
+Complex conditional logic:
+```javascript
+shouldMount: (el, ctx) => {
+    const parent = el.closest('[data-context]');
+    if (!parent) return false;
+    
+    const isActive = parent.dataset.context === 'active';
+    const widgetType = el.dataset.widgetType;
+    const enabledWidgets = parent.dataset.enabledWidgets?.split(',') || [];
+    
+    return isActive && enabledWidgets.includes(widgetType);
+}
+```
+
+**Note:** For event-driven mounting (waiting for user clicks, etc.), use the `do` callback with event listeners rather than `shouldMount`. The `shouldMount` callback is for checking conditions, not waiting for events.
+
+[Implemented as SupportForShouldMount requirement](requirements/Done/SupportForShouldMount.md)
 
 ## InstanceOf checks in detail
 

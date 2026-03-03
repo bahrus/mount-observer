@@ -490,6 +490,41 @@ export class MountObserver extends EventTarget {
                 context.withObservers[key] = subObserver;
             }
         }
+        // Check shouldMount condition if specified (final gate before mounting)
+        if (this.#init.shouldMount) {
+            try {
+                const shouldMount = this.#init.shouldMount(element, context);
+                if (!shouldMount) {
+                    // shouldMount returned false - don't mount this element
+                    // Remove from processed set so it can be re-evaluated later
+                    this.#processedDoForElement.delete(element);
+                    // Remove from mounted elements tracking
+                    this.#mountedElements.weakSet.delete(element);
+                    for (const ref of this.#mountedElements.setWeak) {
+                        if (ref.deref() === element) {
+                            this.#mountedElements.setWeak.delete(ref);
+                            break;
+                        }
+                    }
+                    return;
+                }
+            }
+            catch (error) {
+                // shouldMount threw an error - treat as false and log
+                console.error('shouldMount check failed:', error);
+                // Remove from processed set so it can be re-evaluated later
+                this.#processedDoForElement.delete(element);
+                // Remove from mounted elements tracking
+                this.#mountedElements.weakSet.delete(element);
+                for (const ref of this.#mountedElements.setWeak) {
+                    if (ref.deref() === element) {
+                        this.#mountedElements.setWeak.delete(ref);
+                        break;
+                    }
+                }
+                return;
+            }
+        }
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
             element.assignGingerly(this.#asgMtSource);
