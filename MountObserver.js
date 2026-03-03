@@ -205,6 +205,16 @@ export class MountObserver extends EventTarget {
     get disconnectedSignal() {
         return this.#abortController.signal;
     }
+    get mountedElements() {
+        const elements = [];
+        for (const ref of this.#mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element !== undefined) {
+                elements.push(element);
+            }
+        }
+        return elements;
+    }
     getNotifier(element) {
         // Return cached notifier if it exists
         let notifier = this.#elementNotifiers.get(element);
