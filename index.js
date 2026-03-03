@@ -8,9 +8,6 @@ export { DefineCustomElementHandler, DefineScopedCustomElementHandler } from './
 export { EnhanceMountedElementHandler } from './handlers/EnhanceMountedElement.js';
 export { ScriptNoModuleHandler } from './handlers/ScriptNoModule.js';
 export { MountObserverScriptHandler } from './handlers/MountObserverScript.js';
-export { ShareDefinitionHandler } from './handlers/ShareDefinition.js';
-export { ImportSharedDefinitionsHandler } from './handlers/ImportSharedDefinitions.js';
-export { SharedDefinitionRegistry } from './SharedDefinitionRegistry.js';
 export { mountEventName, dismountEventName, disconnectEventName, loadEventName, mediamatchEventName, mediaunmatchEventName } from './Events.js';
 // Register built-in handlers
 import './EvtRt.js';
@@ -18,5 +15,3 @@ import './handlers/DefineCustomElement.js';
 import './handlers/EnhanceMountedElement.js';
 import './handlers/ScriptNoModule.js';
 import './handlers/MountObserverScript.js';
-import './handlers/ShareDefinition.js';
-import './handlers/ImportSharedDefinitions.js';

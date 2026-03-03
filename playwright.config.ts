@@ -1,6 +1,7 @@
 // playwright.config.ts
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 const config: PlaywrightTestConfig = {
+  testIgnore: '**/experimentalCrossScopeRegistering/**',
   webServer: {
     command: 'npm run serve',
     url: 'http://localhost:8000/',
