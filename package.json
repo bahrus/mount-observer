@@ -43,6 +43,10 @@
     "./EnhanceMountedElementHandler.js": {
       "default": "./EnhanceMountedElementHandler.js",
       "types": "./EnhanceMountedElementHandler.ts"
+    },
+    "./upShadowSearch.js": {
+      "default": "./upShadowSearch.js",
+      "types": "./upShadowSearch.ts"
     }
   },
   "files": [

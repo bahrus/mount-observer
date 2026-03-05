@@ -9,6 +9,8 @@ export { EnhanceMountedElementHandler } from './handlers/EnhanceMountedElement.j
 export { ScriptNoModuleHandler } from './handlers/ScriptNoModule.js';
 export { MountObserverScriptHandler } from './handlers/MountObserverScript.js';
 export { HoistTemplateHandler } from './handlers/HoistTemplate.js';
+export { HTMLIncludeHandler } from './handlers/HTMLInclude.js';
+export { upShadowSearch } from './upShadowSearch.js';
 export type {
     MountConfig,
     MountObserverOptions,
@@ -35,4 +37,5 @@ import './handlers/EnhanceMountedElement.js';
 import './handlers/ScriptNoModule.js';
 import './handlers/MountObserverScript.js';
 import './handlers/HoistTemplate.js';
+import './handlers/HTMLInclude.js';
 
