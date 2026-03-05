@@ -128,3 +128,13 @@ TypeScript types and JSDoc
 Better handling of disconnected nodes
 Return type annotation
 Null safety improvements
+
+## Not to be implemented for now:
+
+##  Template Removal Decision
+
+Consider keeping the template after cloning for debugging purposes, but add a data-included="true" attribute so it's clear it's been processed. This helps with:
+
+- Debugging in DevTools
+- Understanding the document structure
+- Preventing re-processing if the handler runs again
