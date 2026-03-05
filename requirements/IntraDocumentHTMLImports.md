@@ -63,6 +63,7 @@ We need a builtIns.HTMLInclude that watches for elements matching
 and replaces that node with the clone of the remoteContent.
 
 ```JavaScript
+//simplified
 class HTMLIncludeHandler extends EvtRt {
     static matching = 'template[src^="#"]';
     static whereInstanceOf = HTMLTemplateElement;
@@ -91,3 +92,39 @@ class HTMLIncludeHandler extends EvtRt {
     }
 }
 ```
+
+## Support for remoteContent property
+
+The hoisted templates define a remoteContent getter. The HTMLInclude handler should check for this property first before falling back to regular content:
+
+// Priority order:
+1. Check if sourceElement has remoteContent property (hoisted template)
+2. Fall back to content property (regular template)
+3. Fall back to cloning the element itself (any element with an id)
+
+## Caching Strategy
+
+const idCache = new WeakMap<Node, Map<string, WeakRef<Element>>>();
+This caches per root node, so shadow roots have independent caches.
+
+## Circular Reference Detection
+
+Since templates can reference other templates, we should detect circular references:
+
+```TypeScript
+const visiting = new Set<string>();
+// Check if we're already processing this id
+if (visiting.has(id)) {
+    template.setAttribute('data-include-error', `Circular reference detected: #${id}`);
+    return;
+}
+```
+
+## Modern upShadowSearch
+
+The legacy version looks good but could use:
+
+TypeScript types and JSDoc
+Better handling of disconnected nodes
+Return type annotation
+Null safety improvements
