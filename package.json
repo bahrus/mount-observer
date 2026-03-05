@@ -5,7 +5,8 @@
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "dependencies": {
-    "assign-gingerly": "0.0.22"
+    "assign-gingerly": "0.0.22",
+    "id-generation": "0.0.2"
   },
   "devDependencies": {
     "@playwright/test": "1.59.0-alpha-2026-02-28",

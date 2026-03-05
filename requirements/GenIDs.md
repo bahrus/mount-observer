@@ -2,20 +2,15 @@
 
 *mount-observer* has a uil-in handler that serves as a polyfill for [this proposal](https://github.com/whatwg/html/issues/11585), but with some differences due to the limited ability a polyfill can provide compared to the platform.
 
-## Legacy implementation
+## Dependency
 
-A legacy implementation of this requirement can be seen here:
-
-```JavaScript
-import {genIds} from 'legacy/refid/genIds.js';
-genIds(oElementContainer);
-```
-
-I think the logic contained in that file should be largely maintained (and modernized as needs warrant).
-
-What is changing is how mount-observer activates it.
+This package has a new dependency on the package [id-generation](https://github.com/bahrus/id-generation).  Please read and understand what that does.
 
 ## Activation
+
+Currently, that package reverses the dependency -- it has a dependency on the legacy version of this package.  This requirement will reverse the dependency.
+
+We need a built-in handler, "buildIns.generateIds" that watches for elements with attribute -id and applies 
 
 To activate a scoped id generation, add attribute -id to the last streamed element inside either the fieldset element, or an element adorned by the itemscope attribute, or the (Shadow) root.  
 
