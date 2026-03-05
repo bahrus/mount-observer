@@ -37,12 +37,33 @@ What this does:
 
     1.  Has an id attribute 
     2.  no src attribute
-    3.  templ.isConnected = false (discovered while cloning another template getting ready to be added to shadowRoot), or is connected but root node is a shadow root.
+    3.  templ.isConnected = false (discovered while cloning another template getting ready to be added to shadowRoot), or is connected but root node is a shadow root.  The Mount Observer automatically checks for the conditions being fulfilled even before the fragment becomes connected. 
 
 2.  Does this logic (correct as needed):
 
 ```JavaScript
 
+class HoistTemplateHandler extends EvtRt {
+    static matching = 'template[id]:not([src])';
+    static whereInstanceOf = HTMLTemplateElement;
+    
+    static shouldMount(el) {
+        const template = el;
+        // Case 1: Not connected (being cloned)
+        if (!template.isConnected) return true;
+        
+        // Case 2: Connected but in a shadow root
+        const root = template.getRootNode();
+        return root instanceof ShadowRoot;
+    }
+    
+    mount(element, context) {
+        hoistTemplate(element);
+    }
+}
+
+//use compact guid to ensure uniqueness, no one externally
+//should care what it is (basically private)
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
 
 if(!templ.hasOwnProperty('remoteContent')){
@@ -64,7 +85,8 @@ if(!templ.hasOwnProperty('remoteContent')){
             const src = this.getAttribute('src');
             const test = (<any>this)[remoteTemplElSym]?.deref();
             if(test !== undefined) return test.content;
-            throw 404;
+            throw new Error('Hoisted template not found or was garbage collected');
+
             // if(templ.getAttribute('rel') !== 'preload') throw 'NI';
             // const isIntraDoc = src[0] === '#';
             // if(!isIntraDoc) throw 'NI';
@@ -80,3 +102,5 @@ if(!templ.hasOwnProperty('remoteContent')){
 
 
 ```
+
+Don't implement the commented code yet (or put the commented code in the implementation).  This is just something to refer to for future requirements.
