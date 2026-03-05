@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Hoist Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Simple Hoist Test</h1>
+    <div id="container"></div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        console.log('Starting simple hoist test...');
+        
+        try {
+            // Check if handler is registered
+            console.log('Creating observer with builtIns.hoistTemplate...');
+            const observer = new MountObserver({
+                do: 'builtIns.hoistTemplate'
+            });
+            console.log('Observer created successfully:', observer);
+            
+            // Create a shadow root with a template
+            const container = document.getElementById('container');
+            const shadow = container.attachShadow({ mode: 'open' });
+            
+            const template = document.createElement('template');
+            template.id = 'test-template';
+            template.innerHTML = '<div>Test Content</div>';
+            shadow.appendChild(template);
+            
+            console.log('Template created:', template);
+            console.log('Template has content:', template.content.childNodes.length > 0);
+            console.log('Template isConnected:', template.isConnected);
+            console.log('Template root:', template.getRootNode());
+            console.log('Is ShadowRoot:', template.getRootNode() instanceof ShadowRoot);
+            
+            // Observe
+            console.log('Starting observation...');
+            await observer.observe(shadow);
+            console.log('Observation started');
+            
+            // Wait
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            console.log('After wait:');
+            console.log('Template has src:', template.hasAttribute('src'));
+            console.log('Template src:', template.getAttribute('src'));
+            console.log('Templates in head:', document.head.querySelectorAll('template').length);
+            
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Error:', error);
+            window.testError = error.message;
+        }
+    </script>
+</body>
+</html>

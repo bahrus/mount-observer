@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('shouldMount Tests', async ({ page }) => {
     // Navigate to test page
-    await page.goto('/test-should-mount.html');
+    await page.goto('/tests/test-should-mount.html');
     
     // Wait for tests to complete
     await page.waitForFunction(() => window.testResults !== undefined, { timeout: 5000 });

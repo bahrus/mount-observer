@@ -346,6 +346,80 @@ The `builtIns.mountObserverScript` handler enables fully declarative mount obser
 </script>
 ```
 
+## Hoisting Templates for Performance
+
+The `builtIns.hoistTemplate` handler optimizes template usage by moving template elements from shadow roots to `document.head`. This is particularly useful when templates with IDs are repeated across multiple custom elements.
+
+**Why hoist templates?**
+
+When custom elements repeat throughout a page, each instance typically contains its own copy of template content. Moving these templates to a centralized location:
+- Reduces memory usage (one template instead of many copies)
+- Improves cloning performance (single source of truth)
+- Maintains the same API through the `remoteContent` getter
+
+**Basic usage:**
+
+```html
+<my-web-component>
+    #shadow
+        <template id="my-template">
+            <div>My content</div>
+        </template>
+</my-web-component>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.hoistTemplate'
+    });
+    observer.observe(document);
+</script>
+```
+
+**What happens:**
+1. The handler finds templates with IDs in shadow roots
+2. Moves the template content to a new template in `<head>`
+3. Updates the original template with `src="#mount-observer-0"` (unique ID)
+4. Defines a `remoteContent` getter that returns the hoisted template's content
+
+**Accessing hoisted content:**
+
+```javascript
+const template = shadowRoot.querySelector('#my-template');
+
+// After hoisting, use remoteContent to access the content
+const content = template.remoteContent;  // Returns DocumentFragment
+const clone = content.cloneNode(true);   // Clone the content
+```
+
+**Matching criteria:**
+
+The handler automatically hoists templates that:
+- Have an `id` attribute
+- Don't already have a `src` attribute
+- Are in a shadow root (or disconnected, being cloned)
+- Have content (empty templates are skipped)
+
+**Declarative usage with MOSE:**
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.hoistTemplate"
+}
+</script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+[Implemented as HoistingTemplates requirement](requirements/Done/HoistingTemplates.md)
 
 
 # Thorough Exposition Begins Here

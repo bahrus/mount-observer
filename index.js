@@ -8,6 +8,7 @@ export { DefineCustomElementHandler, DefineScopedCustomElementHandler } from './
 export { EnhanceMountedElementHandler } from './handlers/EnhanceMountedElement.js';
 export { ScriptNoModuleHandler } from './handlers/ScriptNoModule.js';
 export { MountObserverScriptHandler } from './handlers/MountObserverScript.js';
+export { HoistTemplateHandler } from './handlers/HoistTemplate.js';
 export { mountEventName, dismountEventName, disconnectEventName, loadEventName, mediamatchEventName, mediaunmatchEventName } from './Events.js';
 // Register built-in handlers
 import './EvtRt.js';
@@ -15,3 +16,4 @@ import './handlers/DefineCustomElement.js';
 import './handlers/EnhanceMountedElement.js';
 import './handlers/ScriptNoModule.js';
 import './handlers/MountObserverScript.js';
+import './handlers/HoistTemplate.js';
