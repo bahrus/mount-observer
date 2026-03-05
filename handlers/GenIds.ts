@@ -29,13 +29,13 @@ export class ProcessIdGenerationHandler extends EvtRt {
         this.abort();
         
         // Dynamically import processScope from id-generation
-        const { processScope } = await import('id-generation/processScope.js');
+        const { genIds } = await import('id-generation/genIds.js');
         
         // Get the root node for fallback container
         const rootNode = context.rootNode || document;
         
         // Process the scope starting from this trigger element
-        processScope(mountedElement, rootNode);
+        genIds(mountedElement, rootNode);
     }
 }
 

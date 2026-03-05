@@ -13,6 +13,7 @@
 		"EvtRt.ts",
 		"index.ts",
 		"handlers/DefineCustomElement.ts",
+		"handlers/GenIds.ts",
 		"getRegistryRoot.ts",
 		"ElementMountExtension.ts",
 		"types/global.d.ts"
