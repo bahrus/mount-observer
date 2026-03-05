@@ -59,9 +59,13 @@ A global template needs to be made out of
 </div>
 ```
 
+and that DOM element above needs to have property "remoteContent" added to it, by reusing "builtIns.hoistTemplate"
+
 
 We need a builtIns.HTMLInclude that watches for elements matching
 
 ```html
 <template src...>
 ```
+
+and replaces that node with the clone of the remoteContent.
