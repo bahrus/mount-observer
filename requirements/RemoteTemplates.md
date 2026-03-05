@@ -1,4 +1,4 @@
-# Remote Teamplates
+# Hoisting Templates
 
 If a template has an id:
 
@@ -27,7 +27,7 @@ So now let's discuss the requirement, which is to create another built-in handle
 </div>
 
 <script type=mountobserver>{
-    "do": "builtIns.globalizeTemplate"
+    "do": "builtIns.hoistTemplate"
 }</script>
 ```
 
@@ -37,7 +37,7 @@ What this does:
 
     1.  Has an id attribute 
     2.  no src attribute
-    3.  parent element is not the head element
+    3.  templ.isConnected = false (discovered while cloning another template getting ready to be added to shadowRoot), or is connected but root node is a shadow root.
 
 2.  Does this logic (correct as needed):
 
@@ -45,12 +45,12 @@ What this does:
 
 const remoteTemplElSym = Symbol.for('du3y+tfsAUGFHMG/iHZiMQ');
 
-if(!('remoteContent') in templ){
-    const head = document.head;
-    if((<any>window)[remoteTemplElSym] === undefined ){
-        (<any>window)[remoteTemplElSym] = 0;
+if(!templ.hasOwnProperty('remoteContent')){
+    const {head} = document;
+    if((<any>globalThis)[remoteTemplElSym] === undefined ){
+        (<any>globalThis)[remoteTemplElSym] = 0;
     }
-    const id = `mount-observer-${(<any>window)[remoteTemplElSym]++}`;
+    const id = `mount-observer-${(<any>globalThis)[remoteTemplElSym]++}`;
     const sourceTempl = document.createElement('template');
     sourceTempl.id = id;
     sourceTempl.content.appendChild(templ.content);
