@@ -423,7 +423,7 @@ The handler automatically hoists templates that:
 
 ## Automatic ID Generation with genIds
 
-The `builtIns.processIdGeneration` handler automatically generates unique IDs for elements within scoped containers using the [id-generation](https://www.npmjs.com/package/id-generation) package. This is particularly useful for forms, microdata structures, and any scenario where you need unique IDs for accessibility or linking purposes.
+The `builtIns.generateIds` handler automatically generates unique IDs for elements within scoped containers using the [id-generation](https://www.npmjs.com/package/id-generation) package. This is particularly useful for forms, microdata structures, and any scenario where you need unique IDs for accessibility or linking purposes.
 
 **Why use automatic ID generation?**
 
@@ -450,7 +450,7 @@ The `builtIns.processIdGeneration` handler automatically generates unique IDs fo
     import { MountObserver } from 'mount-observer';
     
     const observer = new MountObserver({
-        do: 'builtIns.processIdGeneration'
+        do: 'builtIns.generateIds'
     });
     observer.observe(document);
 </script>
@@ -541,7 +541,7 @@ The handler automatically replaces `#{{name}}` references in these attributes:
 ```html
 <script type="mountobserver">
 {
-    "do": "builtIns.processIdGeneration"
+    "do": "builtIns.generateIds"
 }
 </script>
 
