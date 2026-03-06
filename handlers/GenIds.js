@@ -20,7 +20,7 @@ import { EvtRt } from '../EvtRt.js';
  */
 export class ProcessIdGenerationHandler extends EvtRt {
     // Static properties to define matching criteria
-    static matching = '[\\-id]';
+    static matching = '[-id]';
     static whereInstanceOf = Element;
     async mount(mountedElement, mountConfig, context) {
         this.abort();

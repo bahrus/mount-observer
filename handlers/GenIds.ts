@@ -22,7 +22,7 @@ import { MountConfig, MountContext } from '../types/mount-observer/types.js';
  */
 export class ProcessIdGenerationHandler extends EvtRt {
     // Static properties to define matching criteria
-    static matching = '[\\-id]';
+    static matching = '[-id]';
     static whereInstanceOf = Element;
     
     async mount(mountedElement: Element, mountConfig: MountConfig, context: MountContext) {

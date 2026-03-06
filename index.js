@@ -16,6 +16,7 @@ export { mountEventName, dismountEventName, disconnectEventName, loadEventName, 
 import './EvtRt.js';
 import './handlers/DefineCustomElement.js';
 import './handlers/EnhanceMountedElement.js';
+import './handlers/GenIds.js';
 import './handlers/ScriptNoModule.js';
 import './handlers/MountObserverScript.js';
 import './handlers/HoistTemplate.js';
