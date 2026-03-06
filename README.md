@@ -421,6 +421,150 @@ The handler automatically hoists templates that:
 
 [Implemented as HoistingTemplates requirement](requirements/Done/HoistingTemplates.md)
 
+## Automatic ID Generation with genIds
+
+The `builtIns.processIdGeneration` handler automatically generates unique IDs for elements within scoped containers using the [id-generation](https://www.npmjs.com/package/id-generation) package. This is particularly useful for forms, microdata structures, and any scenario where you need unique IDs for accessibility or linking purposes.
+
+**Why use automatic ID generation?**
+
+- Eliminates manual ID management and conflicts
+- Supports scoped ID generation within fieldsets or itemscope containers
+- Automatically updates ID references in attributes (aria-labelledby, for, etc.)
+- Provides shorthand syntax for common patterns
+- Handles deferred attribute activation
+
+**Basic usage:**
+
+```html
+<fieldset disabled>
+    <label defer-for="for: #{{username}}">Username:</label>
+    <input data-id="username" type="text">
+    
+    <label defer-for="for: #{{password}}">Password:</label>
+    <input data-id="password" type="password">
+    
+    <button -id>Generate IDs</button>
+</fieldset>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.processIdGeneration'
+    });
+    observer.observe(document);
+</script>
+```
+
+**What happens:**
+
+1. The handler watches for elements with the `-id` attribute (the trigger)
+2. Finds the nearest scope container (fieldset, [itemscope], or root)
+3. Generates unique IDs for elements with `data-id`, `#`, `@`, or `|` attributes
+4. Replaces `#{{name}}` references with generated IDs in attributes
+5. Removes `-id` and `defer-*` attributes after processing
+6. Removes `disabled` from fieldset containers
+
+**Shorthand attributes:**
+
+```html
+<fieldset>
+    <!-- # uses element's tag name -->
+    <input # type="text">  <!-- becomes data-id="input" -->
+    
+    <!-- @ uses element's name attribute -->
+    <input @ name="email" type="email">  <!-- becomes data-id="email" -->
+    
+    <!-- | uses element's itemprop attribute -->
+    <span | itemprop="price">$99</span>  <!-- becomes data-id="price" -->
+    
+    <button -id>Generate IDs</button>
+</fieldset>
+```
+
+**Side effects with data-id:**
+
+The `data-id` attribute supports special symbols that trigger side effects:
+
+```html
+<fieldset>
+    <!-- @ sets name attribute -->
+    <input data-id="@ username" type="text">
+    <!-- Result: id="gid-0" name="username" data-id="username" -->
+    
+    <!-- | sets itemprop attribute -->
+    <span data-id="| price">$99</span>
+    <!-- Result: id="gid-1" itemprop="price" data-id="price" -->
+    
+    <!-- $ sets itemscope and itemprop -->
+    <div data-id="$ product">...</div>
+    <!-- Result: id="gid-2" itemscope itemprop="product" data-id="product" -->
+    
+    <!-- . adds to class attribute -->
+    <div data-id=". highlight">Content</div>
+    <!-- Result: id="gid-3" class="highlight" data-id="highlight" -->
+    
+    <!-- % adds to part attribute -->
+    <div data-id="% header">Header</div>
+    <!-- Result: id="gid-4" part="header" data-id="header" -->
+    
+    <button -id>Generate IDs</button>
+</fieldset>
+```
+
+**Deferred attributes:**
+
+Use `defer-*` prefix to prevent attributes from being applied until IDs are generated:
+
+```html
+<fieldset disabled>
+    <!-- These attributes won't work until IDs are generated -->
+    <label defer-for="for: #{{email}}">Email:</label>
+    <input data-id="email" type="email" defer-aria-describedby="aria-describedby: #{{emailHelp}}">
+    <span data-id="emailHelp">Enter your email address</span>
+    
+    <button -id>Activate Form</button>
+</fieldset>
+```
+
+**Supported reference attributes:**
+
+The handler automatically replaces `#{{name}}` references in these attributes:
+- ARIA: `aria-labelledby`, `aria-describedby`, `aria-controls`, `aria-owns`, `aria-flowto`, `aria-activedescendant`
+- Form: `for`, `form`, `list`
+- Microdata: `itemref`
+- Any `data-*` attribute
+- Any attribute with a `defer-*` prefix
+
+**Declarative usage with MOSE:**
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.processIdGeneration"
+}
+</script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+**Scope containers:**
+
+The handler looks for the nearest scope container using `.closest()`:
+- `<fieldset>` elements
+- Elements with `[itemscope]` attribute
+- Falls back to the root node if no scope is found
+
+**Global counter:**
+
+IDs are generated using a global counter (via `Symbol.for`) to ensure uniqueness across multiple module instances. Generated IDs follow the pattern `gid-0`, `gid-1`, `gid-2`, etc.
+
 
 # Thorough Exposition Begins Here
 
