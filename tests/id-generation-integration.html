@@ -33,12 +33,12 @@
             log.innerHTML += msg + '<br>';
         }
         
-        addLog('Testing MountObserver with builtIns.processIdGeneration...');
+        addLog('Testing MountObserver with builtIns.generateIds...');
         
         (async () => {
             try {
                 const observer = new MountObserver({
-                    do: 'builtIns.processIdGeneration'
+                    do: 'builtIns.generateIds'
                 });
                 
                 await observer.observe(document.body);

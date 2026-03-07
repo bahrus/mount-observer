@@ -15,7 +15,7 @@
 <body>
     <h1>ID Generation with Mount Observer</h1>
     
-    <p>This demo shows the new <code>builtIns.processIdGeneration</code> handler automatically processing ID generation when elements with <code>-id</code> attribute are added to the DOM.</p>
+    <p>This demo shows the new <code>builtIns.generateIds</code> handler automatically processing ID generation when elements with <code>-id</code> attribute are added to the DOM.</p>
     
     <button id="addFieldset">Add Fieldset with ID Generation</button>
     
@@ -28,7 +28,7 @@
         
         // Set up the mount observer to watch for [-id] elements
         const observer = new MountObserver({
-            do: 'builtIns.processIdGeneration'
+            do: 'builtIns.generateIds'
         });
         await observer.observe(document.body);
         

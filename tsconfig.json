@@ -13,7 +13,8 @@
 		"EvtRt.ts",
 		"index.ts",
 		"handlers/DefineCustomElement.ts",
-		"handlers/GenIds.ts",
+		"handlers/HTMLInclude.ts",
+		"upShadowSearch.ts",
 		"getRegistryRoot.ts",
 		"ElementMountExtension.ts",
 		"types/global.d.ts"

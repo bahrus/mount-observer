@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Matching Insertion Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test">
+        <div itemscope id="love">
+            <data value="false" itemprop="todayIsFriday">It's Thursday</data>
+        </div>
+        
+        <template src="#love">
+            <data value="true" itemprop="todayIsFriday" -i="value"></data>
+        </template>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        console.log('Starting test...');
+        
+        const observer = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        
+        await observer.observe(document.getElementById('test'));
+        
+        console.log('Test div HTML:', document.getElementById('test').innerHTML);
+        
+        window.testsReady = true;
+    </script>
+</body>
+</html>
