@@ -50,9 +50,9 @@
         logs.push('Component added to DOM');
         
         // Wait a bit
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        logs.push('After 500ms wait');
+        logs.push('After 100ms wait');
         
         // Check results
         const targetInShadow = component.shadowRoot.querySelector('.target');
