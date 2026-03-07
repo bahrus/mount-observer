@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('With Property Tests', async ({ page }) => {
-    await page.goto('/test-with-property.html');
+    await page.goto('/tests/test-with-property.html');
     
     // Wait for tests to complete
     await page.waitForFunction(() => window.testResults !== undefined, { timeout: 5000 });
