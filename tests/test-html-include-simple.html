@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple HTMLInclude Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test">
+        <div id="source">
+            <p>Source content</p>
+        </div>
+        <template src="#source"></template>
+    </div>
+
+    <script type="module">
+        import { MountObserver, HTMLIncludeHandler } from '../index.js';
+
+        console.log('Starting simple test');
+        console.log('HTMLIncludeHandler:', HTMLIncludeHandler);
+        console.log('HTMLIncludeHandler.matching:', HTMLIncludeHandler.matching);
+        console.log('HTMLIncludeHandler.whereInstanceOf:', HTMLIncludeHandler.whereInstanceOf);
+        
+        const observer = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        
+        console.log('Observer created');
+        
+        // Try to access the merged config through a mount event
+        observer.addEventListener('mount', (e) => {
+            console.log('Mount event fired!', e);
+        });
+        
+        // Check if template matches the selector
+        const template = document.querySelector('template[src^="#"]');
+        console.log('Template element:', template);
+        console.log('Template matches selector:', template?.matches('template[src^="#"]'));
+        console.log('Template instanceof HTMLTemplateElement:', template instanceof HTMLTemplateElement);
+        
+        await observer.observe(document.getElementById('test'));
+        
+        console.log('Observer observing');
+        console.log('Mounted elements:', observer.mountedElements);
+        console.log('Test div:', document.getElementById('test').innerHTML);
+        
+        window.testsReady = true;
+    </script>
+</body>
+</html>

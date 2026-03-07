@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MountObserver.define Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>MountObserver.define Test</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { EvtRt } from '../EvtRt.js';
+        
+        const results = {
+            test1: {
+                handlerCalled: false,
+                elementText: ''
+            },
+            test2: {
+                handler1Called: false,
+                handler2Called: false,
+                inlineCalled: false,
+                callOrder: []
+            },
+            test3: {
+                errorThrown: false,
+                errorMessage: ''
+            },
+            test4: {
+                errorThrown: false,
+                errorMessage: ''
+            }
+        };
+        
+        console.log('Starting MountObserver.define Tests...');
+        
+        // Test 1: Basic string reference
+        console.log('Test 1: Basic string reference');
+        class Handler1 extends EvtRt {
+            mount(element, MountConfig, context) {
+                results.test1.handlerCalled = true;
+                element.textContent = 'Handler1 mounted';
+                results.test1.elementText = element.textContent;
+                console.log('Handler1.mount called');
+            }
+        }
+        
+        MountObserver.define('handler1', Handler1);
+        
+        const observer1 = new MountObserver({
+            matching: '#test1',
+            do: 'handler1'
+        });
+        
+        await observer1.observe(document.body);
+        
+        const elem1 = document.createElement('div');
+        elem1.id = 'test1';
+        document.body.appendChild(elem1);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Test 2: Array with mixed types (strings and functions)
+        console.log('Test 2: Array with mixed types');
+        class Handler2 extends EvtRt {
+            mount(element, MountConfig, context) {
+                results.test2.handler1Called = true;
+                results.test2.callOrder.push('handler1');
+                console.log('Handler2.mount called (handler1)');
+            }
+        }
+        
+        class Handler3 extends EvtRt {
+            mount(element, MountConfig, context) {
+                results.test2.handler2Called = true;
+                results.test2.callOrder.push('handler2');
+                console.log('Handler3.mount called (handler2)');
+            }
+        }
+        
+        MountObserver.define('handler2', Handler2);
+        MountObserver.define('handler3', Handler3);
+        
+        const observer2 = new MountObserver({
+            matching: '#test2',
+            do: [
+                'handler2',
+                (element, context) => {
+                    results.test2.inlineCalled = true;
+                    results.test2.callOrder.push('inline');
+                    console.log('Inline function called');
+                },
+                'handler3'
+            ]
+        });
+        
+        await observer2.observe(document.body);
+        
+        const elem2 = document.createElement('div');
+        elem2.id = 'test2';
+        document.body.appendChild(elem2);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Test 3: Error when handler not defined
+        console.log('Test 3: Error when handler not defined');
+        try {
+            const observer3 = new MountObserver({
+                matching: '#test3',
+                do: 'nonexistent'
+            });
+            results.test3.errorThrown = false;
+        } catch (error) {
+            results.test3.errorThrown = true;
+            results.test3.errorMessage = error.message;
+            console.log('Test 3: Error caught:', error.message);
+        }
+        
+        // Test 4: Error when trying to register same name twice
+        console.log('Test 4: Error when registering duplicate name');
+        try {
+            MountObserver.define('handler1', Handler1);
+            results.test4.errorThrown = false;
+        } catch (error) {
+            results.test4.errorThrown = true;
+            results.test4.errorMessage = error.message;
+            console.log('Test 4: Error caught:', error.message);
+        }
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (Basic string):', results.test1);
+        console.log('Test 2 (Mixed array):', results.test2);
+        console.log('Test 3 (Undefined handler):', results.test3);
+        console.log('Test 4 (Duplicate name):', results.test4);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

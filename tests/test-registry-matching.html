@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Element Registry Matching Test</title>
+</head>
+<body>
+    <h1>Custom Element Registry Matching Test</h1>
+
+    <div id="container">
+        <div class="test-element" id="elem1">Element 1</div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        const results = [];
+        let testResult = false;
+
+        // Test 1: Elements in same registry scope should mount
+        const observer1 = new MountObserver({
+            matching: '.test-element',
+            do: (el) => {
+                results.push(`Mounted: ${el.id}`);
+            }
+        });
+
+        await observer1.observe(document.body);
+
+        // Test 2: Create a shadow root with potentially different registry
+        const host = document.createElement('div');
+        host.id = 'shadow-host';
+        document.body.appendChild(host);
+        
+        const shadowRoot = host.attachShadow({ mode: 'open' });
+        shadowRoot.innerHTML = '<div class="test-element" id="shadow-elem">Shadow Element</div>';
+
+        // Observer on shadow root should only mount elements in that shadow root
+        const observer2 = new MountObserver({
+            matching: '.test-element',
+            do: (el) => {
+                results.push(`Shadow mounted: ${el.id}`);
+            }
+        });
+
+        await observer2.observe(shadowRoot);
+
+        // Wait for observers to process
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            // In older browsers (pre-Chrome 146), both registries are undefined
+            // so elements should mount regardless
+            // In Chrome 146+, registries should match within their scope
+            
+            const hasElem1 = results.some(r => r.includes('elem1'));
+            const hasShadowElem = results.some(r => r.includes('shadow-elem'));
+            
+            // elem1 should be mounted by observer1
+            const test1Pass = hasElem1;
+            
+            // shadow-elem should be mounted by observer2
+            const test2Pass = hasShadowElem;
+            
+            // elem1 should NOT be mounted by observer2 (different scope)
+            const test3Pass = !results.some(r => r.includes('Shadow mounted: elem1'));
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <pre>${results.join('\n')}</pre>
+                
+                <h3>Test Results</h3>
+                <p>Test 1 (Document element mounts): ${test1Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Test 2 (Shadow element mounts): ${test2Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Test 3 (Registry isolation): ${test3Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                
+                <h3>Expected</h3>
+                <ul>
+                    <li>Observer on document.body should mount elem1</li>
+                    <li>Observer on shadowRoot should mount shadow-elem</li>
+                    <li>Observers should respect registry boundaries</li>
+                </ul>
+            `;
+            
+            testResult = test1Pass && test2Pass && test3Pass;
+            window.testResult = testResult;
+        }, 100);
+    </script>
+</body>
+</html>

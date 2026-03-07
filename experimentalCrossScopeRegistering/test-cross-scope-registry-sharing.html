@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cross-Scope Registry Sharing Integration</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Test Cross-Scope Registry Sharing Integration</h1>
+    
+    <script type="module">
+        console.log('Integration test starting...');
+        
+        try {
+            const { MountObserver } = await import('../index.js');
+            const { SharedDefinitionRegistry } = await import('../SharedDefinitionRegistry.js');
+            
+            // Check if browser supports scoped registries
+            const testHost = document.createElement('div');
+            const testShadow = testHost.attachShadow({ mode: 'open' });
+            
+            if (!testShadow.customElementRegistry) {
+                console.log('⚠ Browser does not support scoped registries, skipping integration tests');
+                window.testComplete = true;
+                return;
+            }
+            
+            console.log('✓ Browser supports scoped registries');
+            
+            // Verify both handlers can be created
+            const publisherObserver = new MountObserver({
+                do: 'builtIns.shareDefinition'
+            });
+            
+            const consumerObserver = new MountObserver({
+                do: 'builtIns.importSharedDefinitions'
+            });
+            
+            await publisherObserver.observe(document.body);
+            await consumerObserver.observe(document.body);
+            
+            console.log('✓ Both observers created successfully');
+            
+            // Verify SharedDefinitionRegistry works
+            class IntegrationElement extends HTMLElement {}
+            const sharedRegistry = SharedDefinitionRegistry.getInstance();
+            sharedRegistry.publish('integration-element', IntegrationElement);
+            
+            if (!sharedRegistry.has('integration-element')) {
+                throw new Error('SharedDefinitionRegistry not working');
+            }
+            console.log('✓ SharedDefinitionRegistry works');
+            
+            console.log('All integration tests passed!');
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Integration test error:', error);
+            window.testError = error.message;
+            window.testComplete = true;
+        }
+    </script>
+</body>
+</html>

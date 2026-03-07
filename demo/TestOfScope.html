@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Registry Islands</title>
+</head>
+<body>
+    <mount-scope id=ms1></mount-scope>
+    <template id=myTemplate>
+        <div id="div5">i am hee</div>
+    </template>
+    <script>
+        class MountScope extends HTMLElement{
+            connectedCallback(){
+                console.log('in mount-scope ' + this.id);
+            }
+        }
+        customElements.define('mount-scope', MountScope);
+        const reg1 = new CustomElementRegistry();
+        const div1 = document.createElement('div', {customElementRegistry: reg1});
+        div1.id = 'div1';
+        div1.textContent = 'div1';
+
+        const reg2 = new CustomElementRegistry;
+        const div2 = document.createElement('div', {customElementRegistry: reg2});
+        div2.id = 'div2';
+        div2.innerHTML = String.raw `
+            <span>div2</span>
+            <mount-scope id=ms2></mount-scope>
+        `;
+
+
+
+
+        const reg3 = new CustomElementRegistry;
+        const div3 = document.createElement('div', {customElementRegistry: reg3});
+        div3.id = 'div3';
+        div3.textContent = 'div3';
+
+        const div4 = document.createElement('div', {customElementRegistry: reg2});
+        div4.id = 'div4';
+        div4.textContent = 'div4';
+
+        div1.append(div2, div3, div4);
+        const clone = myTemplate.content.cloneNode(true, {customElementRegistry: reg2});
+        console.log(clone.querySelector('div').customElementRegistry === reg2);
+        div1.append(clone);
+        document.body.append(div1);
+    </script>
+</body>
+</html>

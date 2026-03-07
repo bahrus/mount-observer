@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Built-in Handlers Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Built-in Handlers Test</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        const results = {
+            logToConsole: {
+                mountLogged: false,
+                dismountLogged: false,
+                disconnectLogged: false
+            },
+            defineCustomElement: {
+                defaultExport: {
+                    defined: false,
+                    upgraded: false,
+                    textContent: ''
+                },
+                namedExport: {
+                    defined: false,
+                    upgraded: false,
+                    innerHTML: ''
+                },
+                multipleExports: {
+                    defined: false
+                },
+                noSuitableClass: {
+                    defined: false
+                },
+                alreadyDefined: {
+                    skipped: false
+                },
+                noModule: {
+                    defined: false
+                },
+                reusableClass: {
+                    firstDefined: false,
+                    secondDefined: false,
+                    firstText: '',
+                    secondText: ''
+                }
+            }
+        };
+        
+        console.log('Starting Built-in Handlers Tests...');
+        
+        // Test 1: logToConsole handler
+        console.log('Test 1: logToConsole handler');
+        
+        // Capture console.log calls
+        const originalLog = console.log;
+        let logCalls = [];
+        console.log = function(...args) {
+            logCalls.push(args);
+            originalLog.apply(console, args);
+        };
+        
+        const observer1 = new MountObserver({
+            matching: '#log-test',
+            do: 'builtIns.logToConsole'
+        });
+        
+        await observer1.observe(document.body);
+        
+        const logElem = document.createElement('div');
+        logElem.id = 'log-test';
+        document.body.appendChild(logElem);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Check if mount was logged
+        results.logToConsole.mountLogged = logCalls.some(call => 
+            call.some(arg => arg && typeof arg === 'object' && arg.mountedElement === logElem)
+        );
+        
+        // Test dismount
+        logCalls = [];
+        logElem.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.logToConsole.dismountLogged = logCalls.some(call =>
+            call.some(arg => arg && typeof arg === 'object' && arg.mountedElement === logElem)
+        );
+        
+        // Restore console.log
+        console.log = originalLog;
+        
+        console.log('Test 1 complete:', results.logToConsole);
+        
+        // Test 2: defineCustomElement with default export
+        console.log('Test 2: defineCustomElement with default export');
+        
+        const observer2 = new MountObserver({
+            matching: 'fancy-button',
+            import: './tests/fancy-button.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer2.observe(document.body);
+        
+        const fancyBtn = document.createElement('fancy-button');
+        document.body.appendChild(fancyBtn);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.defineCustomElement.defaultExport.defined = customElements.get('fancy-button') !== undefined;
+        results.defineCustomElement.defaultExport.upgraded = fancyBtn.textContent === 'Fancy Button!';
+        results.defineCustomElement.defaultExport.textContent = fancyBtn.textContent;
+        
+        console.log('Test 2 complete:', results.defineCustomElement.defaultExport);
+        
+        // Test 3: defineCustomElement with named export
+        console.log('Test 3: defineCustomElement with named export');
+        
+        const observer3 = new MountObserver({
+            matching: 'simple-card',
+            import: './tests/simple-card.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer3.observe(document.body);
+        
+        const simpleCard = document.createElement('simple-card');
+        document.body.appendChild(simpleCard);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.defineCustomElement.namedExport.defined = customElements.get('simple-card') !== undefined;
+        results.defineCustomElement.namedExport.upgraded = simpleCard.innerHTML.includes('Simple Card');
+        results.defineCustomElement.namedExport.innerHTML = simpleCard.innerHTML;
+        
+        console.log('Test 3 complete:', results.defineCustomElement.namedExport);
+        
+        // Test 4: Multiple exports (should not define - errors are logged to console)
+        console.log('Test 4: Multiple exports error');
+        
+        const observer4 = new MountObserver({
+            matching: 'multi-elem',
+            import: './tests/multiple-exports.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer4.observe(document.body);
+        
+        const multiElem = document.createElement('multi-elem');
+        document.body.appendChild(multiElem);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Check if element was defined (should not be)
+        results.defineCustomElement.multipleExports.defined = customElements.get('multi-elem') !== undefined;
+        
+        console.log('Test 4 complete:', results.defineCustomElement.multipleExports);
+        
+        // Test 5: No suitable class (should not define - errors are logged to console)
+        console.log('Test 5: No suitable class error');
+        
+        const observer5 = new MountObserver({
+            matching: 'no-elem',
+            import: './tests/no-suitable-class.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer5.observe(document.body);
+        
+        const noElem = document.createElement('no-elem');
+        document.body.appendChild(noElem);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Check if element was defined (should not be)
+        results.defineCustomElement.noSuitableClass.defined = customElements.get('no-elem') !== undefined;
+        
+        console.log('Test 5 complete:', results.defineCustomElement.noSuitableClass);
+        
+        // Test 6: Already defined element (should skip)
+        console.log('Test 6: Already defined element');
+        
+        // Define it first
+        class PreDefinedElement extends HTMLElement {
+            connectedCallback() {
+                this.textContent = 'Pre-defined';
+            }
+        }
+        customElements.define('pre-defined', PreDefinedElement);
+        
+        const observer6 = new MountObserver({
+            matching: 'pre-defined',
+            import: './tests/fancy-button.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer6.observe(document.body);
+        
+        const preDefined = document.createElement('pre-defined');
+        document.body.appendChild(preDefined);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Should still have original definition
+        results.defineCustomElement.alreadyDefined.skipped = preDefined.textContent === 'Pre-defined';
+        
+        console.log('Test 6 complete:', results.defineCustomElement.alreadyDefined);
+        
+        // Test 7: No module specified (should not define - errors are logged to console)
+        console.log('Test 7: No module specified');
+        
+        const observer7 = new MountObserver({
+            matching: 'no-module-elem',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer7.observe(document.body);
+        
+        const noModuleElem = document.createElement('no-module-elem');
+        document.body.appendChild(noModuleElem);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Check if element was defined (should not be)
+        results.defineCustomElement.noModule.defined = customElements.get('no-module-elem') !== undefined;
+        
+        console.log('Test 7 complete:', results.defineCustomElement.noModule);
+        
+        // Test 8: Reusable class for multiple tag names
+        console.log('Test 8: Reusable class');
+        
+        const observer8a = new MountObserver({
+            matching: 'reusable-one',
+            import: './tests/reusable-element.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer8a.observe(document.body);
+        
+        const reusableOne = document.createElement('reusable-one');
+        document.body.appendChild(reusableOne);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.defineCustomElement.reusableClass.firstDefined = customElements.get('reusable-one') !== undefined;
+        results.defineCustomElement.reusableClass.firstText = reusableOne.textContent;
+        
+        // Now use same class for different tag name
+        const observer8b = new MountObserver({
+            matching: 'reusable-two',
+            import: './tests/reusable-element.js',
+            do: 'builtIns.defineCustomElement'
+        });
+        
+        await observer8b.observe(document.body);
+        
+        const reusableTwo = document.createElement('reusable-two');
+        document.body.appendChild(reusableTwo);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.defineCustomElement.reusableClass.secondDefined = customElements.get('reusable-two') !== undefined;
+        results.defineCustomElement.reusableClass.secondText = reusableTwo.textContent;
+        
+        console.log('Test 8 complete:', results.defineCustomElement.reusableClass);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('logToConsole:', results.logToConsole);
+        console.log('defineCustomElement:', results.defineCustomElement);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

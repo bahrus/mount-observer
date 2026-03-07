@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoist Template Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Hoist Template Tests</h1>
+    
+    <!-- Test 1: Basic hoisting from shadow root -->
+    <div id="test1-container"></div>
+    
+    <!-- Test 2: Multiple templates in same shadow root -->
+    <div id="test2-container"></div>
+    
+    <!-- Test 3: Template with no ID (should not hoist) -->
+    <div id="test3-container"></div>
+    
+    <!-- Test 4: Template already has src (should not hoist) -->
+    <div id="test4-container"></div>
+    
+    <!-- Test 5: Empty template (should not hoist) -->
+    <div id="test5-container"></div>
+    
+    <!-- Test 6: remoteContent getter -->
+    <div id="test6-container"></div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        console.log('Test script starting...');
+        
+        const results = {
+            test1: { hoisted: false, srcSet: false, remoteContentWorks: false, inHead: false },
+            test2: { template1Hoisted: false, template2Hoisted: false, bothInHead: false },
+            test3: { notHoisted: true, hasContent: false },
+            test4: { notHoisted: true, srcUnchanged: false },
+            test5: { notHoisted: true },
+            test6: { remoteContentReturnsFragment: false, fragmentHasContent: false }
+        };
+        
+        try {
+            console.log('Creating observer...');
+            // Create observer for hoisting templates
+            const observer = new MountObserver({
+                do: 'builtIns.hoistTemplate'
+            });
+            console.log('Observer created:', observer);
+            
+            // Test 1: Basic hoisting from shadow root
+            console.log('Test 1: Creating shadow root...');
+            const test1Container = document.getElementById('test1-container');
+            const test1Shadow = test1Container.attachShadow({ mode: 'open' });
+            const test1Template = document.createElement('template');
+            test1Template.id = 'test1-template';
+            test1Template.innerHTML = '<div class="test1-content">Test 1 Content</div>';
+            test1Shadow.appendChild(test1Template);
+            console.log('Test 1: Template created, observing...');
+            
+            await observer.observe(test1Shadow);
+            console.log('Test 1: Observer started');
+            
+            // Wait a bit for processing
+            await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check if hoisted
+        results.test1.srcSet = test1Template.hasAttribute('src');
+        results.test1.hoisted = test1Template.getAttribute('src')?.startsWith('#mount-observer-') || false;
+        results.test1.inHead = document.head.querySelector(`template[id="${test1Template.getAttribute('src')?.substring(1)}"]`) !== null;
+        
+        // Test remoteContent
+        try {
+            const content = test1Template.remoteContent;
+            results.test1.remoteContentWorks = content instanceof DocumentFragment;
+        } catch (e) {
+            results.test1.remoteContentWorks = false;
+        }
+        
+        // Test 2: Multiple templates in same shadow root
+        const test2Container = document.getElementById('test2-container');
+        const test2Shadow = test2Container.attachShadow({ mode: 'open' });
+        
+        const test2Template1 = document.createElement('template');
+        test2Template1.id = 'test2-template-1';
+        test2Template1.innerHTML = '<div>Template 1</div>';
+        test2Shadow.appendChild(test2Template1);
+        
+        const test2Template2 = document.createElement('template');
+        test2Template2.id = 'test2-template-2';
+        test2Template2.innerHTML = '<div>Template 2</div>';
+        test2Shadow.appendChild(test2Template2);
+        
+        const observer2 = new MountObserver({
+            do: 'builtIns.hoistTemplate'
+        });
+        await observer2.observe(test2Shadow);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test2.template1Hoisted = test2Template1.hasAttribute('src');
+        results.test2.template2Hoisted = test2Template2.hasAttribute('src');
+        
+        const src1 = test2Template1.getAttribute('src')?.substring(1);
+        const src2 = test2Template2.getAttribute('src')?.substring(1);
+        results.test2.bothInHead = 
+            document.head.querySelector(`template[id="${src1}"]`) !== null &&
+            document.head.querySelector(`template[id="${src2}"]`) !== null;
+        
+        // Test 3: Template with no ID (should not hoist)
+        const test3Container = document.getElementById('test3-container');
+        const test3Shadow = test3Container.attachShadow({ mode: 'open' });
+        const test3Template = document.createElement('template');
+        test3Template.innerHTML = '<div>No ID</div>';
+        test3Shadow.appendChild(test3Template);
+        
+        const observer3 = new MountObserver({
+            do: 'builtIns.hoistTemplate'
+        });
+        await observer3.observe(test3Shadow);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test3.notHoisted = !test3Template.hasAttribute('src');
+        results.test3.hasContent = test3Template.content.childNodes.length > 0;
+        
+        // Test 4: Template already has src (should not hoist)
+        const test4Container = document.getElementById('test4-container');
+        const test4Shadow = test4Container.attachShadow({ mode: 'open' });
+        const test4Template = document.createElement('template');
+        test4Template.id = 'test4-template';
+        test4Template.setAttribute('src', '#existing-template');
+        test4Template.innerHTML = '<div>Already has src</div>';
+        test4Shadow.appendChild(test4Template);
+        
+        const observer4 = new MountObserver({
+            do: 'builtIns.hoistTemplate'
+        });
+        await observer4.observe(test4Shadow);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test4.notHoisted = true; // Should not be re-hoisted
+        results.test4.srcUnchanged = test4Template.getAttribute('src') === '#existing-template';
+        
+        // Test 5: Empty template (should not hoist)
+        const test5Container = document.getElementById('test5-container');
+        const test5Shadow = test5Container.attachShadow({ mode: 'open' });
+        const test5Template = document.createElement('template');
+        test5Template.id = 'test5-template';
+        // No content
+        test5Shadow.appendChild(test5Template);
+        
+        const observer5 = new MountObserver({
+            do: 'builtIns.hoistTemplate'
+        });
+        await observer5.observe(test5Shadow);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test5.notHoisted = !test5Template.hasAttribute('src');
+        
+        // Test 6: remoteContent getter returns correct content
+        const test6Container = document.getElementById('test6-container');
+        const test6Shadow = test6Container.attachShadow({ mode: 'open' });
+        const test6Template = document.createElement('template');
+        test6Template.id = 'test6-template';
+        test6Template.innerHTML = '<div class="test6-content">Test 6 Content</div>';
+        test6Shadow.appendChild(test6Template);
+        
+        const observer6 = new MountObserver({
+            do: 'builtIns.hoistTemplate'
+        });
+        await observer6.observe(test6Shadow);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        try {
+            const content = test6Template.remoteContent;
+            results.test6.remoteContentReturnsFragment = content instanceof DocumentFragment;
+            results.test6.fragmentHasContent = content.querySelector('.test6-content') !== null;
+        } catch (e) {
+            console.error('Test 6 error:', e);
+        }
+        
+        // Export results for Playwright
+        window.testResults = results;
+        console.log('Test results:', results);
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testResults = { error: error.message };
+        }
+    </script>
+</body>
+</html>

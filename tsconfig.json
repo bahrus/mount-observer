@@ -10,19 +10,14 @@
 	},
 	"files": [
 		"MountObserver.ts",
-		"Synthesizer.ts",
-		"waitForIsh.ts",
-		"refid/camelToKebab.ts",
-		"refid/getContext.ts",
-		"refid/genIds.ts",
-		"refid/joinMatching.ts",
-		"refid/ism.ts",
-		"refid/itemprops.ts",
-		"refid/splitRefs.ts",
-		"refid/via.ts",
-		"slotkin/beKindred.ts",
-		"slotkin/getFrag.ts",
-		"slotkin/getBreadth.ts"
+		"EvtRt.ts",
+		"index.ts",
+		"handlers/DefineCustomElement.ts",
+		"handlers/HTMLInclude.ts",
+		"upShadowSearch.ts",
+		"getRegistryRoot.ts",
+		"ElementMountExtension.ts",
+		"types/global.d.ts"
 	],
 	"exclude":[
 		"node_modules"

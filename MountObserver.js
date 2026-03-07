@@ -1,574 +1,671 @@
-import { RootMutObs } from './RootMutObs.js';
-import { bindish, bindishIt } from './bindish.js';
-import './refid/hostish.js'; // gets embedded even if not used
-export const guid = '5Pv6bHOVH0ae07opRZ8N/g';
-export const wasItemReffed = Symbol.for('8aA6xB8+PkScmivaslBk5Q');
-export const mutationObserverLookup = new WeakMap();
-const refCount = new WeakMap();
+import { arr } from './arr.js';
+import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, } from './Events.js';
+import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
+import { withScopePerimeter } from './withScopePerimeter.js';
 export class MountObserver extends EventTarget {
-    #mountInit;
+    // Static registry for registered handlers
+    static #handlerRegistry = new Map();
+    static define(name, handler) {
+        if (this.#handlerRegistry.has(name)) {
+            throw new Error(`${name} already in use`);
+        }
+        this.#handlerRegistry.set(name, handler);
+    }
+    #init;
     #options;
-    //#rootMutObs: RootMutObs | undefined;
     #abortController;
-    mountedElements;
-    #mountedList;
-    #disconnected;
-    //#unmounted: WeakSet<Element>;
-    #isComplex;
-    objNde;
-    constructor(init) {
+    #modules = [];
+    #configFromPromise;
+    #mountedElements = {
+        weakSet: new WeakSet(),
+        setWeak: new Set()
+    };
+    #processedDoForElement = new WeakSet();
+    #processedEventsForElement = new WeakMap();
+    #mutationCallback;
+    #rootNode;
+    #importsLoaded = false;
+    #mediaQueryCleanup;
+    #rootSizeCleanup;
+    #intersectionCleanup;
+    #connectionCleanup;
+    #intersectionObserver;
+    #mediaMatches = true;
+    #rootSizeMatches = true;
+    #connectionMatches = true;
+    #asgMtSource;
+    #asgDisMtSource;
+    #stageMtSource;
+    #stageReversals = new WeakMap();
+    #assignTentatively;
+    #elementNotifiers = new WeakMap();
+    #notifierMountedElements = new WeakSet();
+    #subObservers;
+    #mergeHandlerDefaults(config) {
+        const doValue = config.do;
+        // Only process if do is a string (single handler reference)
+        if (typeof doValue !== 'string') {
+            return config;
+        }
+        // Look up the handler class
+        const HandlerClass = MountObserver.#handlerRegistry.get(doValue);
+        if (!HandlerClass) {
+            // Validation will catch this later
+            return config;
+        }
+        // Extract static properties from the handler class
+        const handlerDefaults = {};
+        const proto = HandlerClass;
+        // Get all static properties
+        for (const key of Object.getOwnPropertyNames(proto)) {
+            if (key !== 'prototype' && key !== 'length' && key !== 'name') {
+                handlerDefaults[key] = proto[key];
+            }
+        }
+        // Merge: handler defaults first, then inline config (inline trumps)
+        // Using object spread - inline config overwrites handler defaults
+        return { ...handlerDefaults, ...config };
+    }
+    constructor(config, options = {}) {
         super();
-        const { on, whereElementIntersectsWith, whereMediaMatches } = init;
-        let isComplex = false;
-        //TODO:  study this problem further.  Starting to think this is basically not polyfillable
-        if (on !== undefined) {
-            const reducedMatch = on.replaceAll(':not(', '');
-            isComplex = reducedMatch.includes(' ') || (reducedMatch.includes(':') && reducedMatch.includes('('));
-        }
-        this.#isComplex = isComplex;
-        if (whereElementIntersectsWith)
-            throw 'NI'; //not implemented
-        this.#mountInit = init;
-        this.#abortController = new AbortController();
-        this.mountedElements = {
-            weakSet: new WeakSet(),
-            setWeak: new Set(),
-        };
-        this.#disconnected = new WeakSet();
-        //this.#unmounted = new WeakSet();
-    }
-    #calculatedSelector;
-    #attrParts;
-    #fullListOfEnhancementAttrs;
-    async observedAttrs() {
-        await this.#selector();
-        return this.#fullListOfEnhancementAttrs;
-    }
-    //get #attrVals
-    async #selector() {
-        if (this.#calculatedSelector !== undefined)
-            return this.#calculatedSelector;
-        const { on, whereAttr } = this.#mountInit;
-        const withoutAttrs = on || '*';
-        if (whereAttr === undefined)
-            return withoutAttrs;
-        const { getWhereAttrSelector } = await import('./getWhereAttrSelector.js');
-        const info = await getWhereAttrSelector(whereAttr, withoutAttrs);
-        const { fullListOfAttrs, calculatedSelector, partitionedAttrs } = info;
-        this.#fullListOfEnhancementAttrs = fullListOfAttrs;
-        this.#attrParts = partitionedAttrs;
-        this.#calculatedSelector = calculatedSelector;
-        return this.#calculatedSelector;
-    }
-    //This method is called publicly from outside mount-observer -- keep it public
-    async composeFragment(fragment, level) {
-        const bis = fragment.querySelectorAll(`${inclTemplQry}`);
-        for (const bi of bis) {
-            if (bi.getAttribute('rel') === 'preload') {
-                (await import('./preloadContent.js')).preloadContent(bi);
-            }
-            else {
-                await this.#compose(bi, level);
-            }
-        }
-    }
-    async #compose(el, level) {
-        //[TODO]: load async, not used often
-        const src = el.getAttribute('src');
-        if (src === null || src.length < 2)
-            return;
-        const refType = src[0];
-        if (!['!', '#'].includes(refType))
-            return;
-        const { compose } = await import('./compose.js');
-        await compose(this, el, level, src.substring(1), refType);
-    }
-    #templLookUp = new Map();
-    #searchForComment(refName, fragment) {
-        //get rid of
-        const iterator = document.evaluate(`//comment()[.="${refName}"]`, fragment, null, XPathResult.ANY_TYPE, null);
-        //console.log({xpathResult})
-        try {
-            let thisNode = iterator.iterateNext();
-            return thisNode;
-        }
-        catch (e) {
-            return null;
-        }
-    }
-    async findByID(
-    //[TODO]: make external, not always used
-    refName, fragment, refType) {
-        if (this.#templLookUp.has(refName))
-            return this.#templLookUp.get(refName);
-        let templ = null;
-        templ = refType === '#' ? fragment.querySelector(`#${refName}`) : this.#searchForComment(refName, fragment);
-        if (templ === null) {
-            let rootToSearchOutwardFrom = ((fragment.isConnected ? fragment.getRootNode() : this.#mountInit.withTargetShadowRoot) || document);
-            templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
-            while (templ === null && rootToSearchOutwardFrom !== document) {
-                rootToSearchOutwardFrom = (rootToSearchOutwardFrom.host || rootToSearchOutwardFrom).getRootNode();
-                templ = refType === '#' ? rootToSearchOutwardFrom.getElementById(refName) : this.#searchForComment(refName, rootToSearchOutwardFrom);
-            }
-        }
-        if (templ !== null) {
-            if (!(templ instanceof HTMLTemplateElement)) {
-                const newTempl = document.createElement('template');
-                const { getAdjRefs } = await import('./refid/getAdjRefs.js');
-                const adjRefs = getAdjRefs(templ);
-                // if(adjRefs.length > 1){
-                //     (<any>newTempl)[wasItemReffed] = true;
-                //     adjRefs[0].setAttribute('itemref', '<autogen>');
-                // }
-                const fragment = document.createDocumentFragment();
-                let first = true;
-                for (const adjRef of adjRefs) {
-                    const clone = adjRef.cloneNode(true);
-                    if (refType === '#' && clone instanceof Element) {
-                        if (first && adjRefs.length > 1) {
-                            clone.setAttribute('itemref', '<autogen>');
-                            newTempl[wasItemReffed] = true;
-                            first = false;
-                        }
-                        clone.removeAttribute('id');
-                    }
-                    fragment.appendChild(clone);
-                }
-                if (templ instanceof Element) {
-                    const { doCleanup } = await import('./doCleanup.js');
-                    doCleanup(templ, fragment);
-                }
-                else {
-                    //TODO: cleanup
-                }
-                newTempl.content.appendChild(fragment);
-                templ = newTempl;
-            }
-            this.#templLookUp.set(refName, templ);
-        }
-        return templ;
-    }
-    disconnect(within) {
-        const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
-        const currentCount = refCount.get(nodeToMonitor);
-        if (currentCount !== undefined) {
-            if (currentCount <= 1) {
-                const observer = mutationObserverLookup.get(nodeToMonitor);
-                if (observer === undefined) {
-                    console.warn(refCountErr);
-                }
-                else {
-                    observer.disconnect();
-                    mutationObserverLookup.delete(nodeToMonitor);
-                    refCount.delete(nodeToMonitor);
-                }
-            }
-            else {
-                refCount.set(nodeToMonitor, currentCount + 1);
-            }
-        }
-        else {
-            if (mutationObserverLookup.has(nodeToMonitor)) {
-                console.warn(refCountErr);
-            }
-        }
-        this.dispatchEvent(new Event('disconnectedCallback'));
-    }
-    async observe(within, options) {
+        // Merge handler defaults if do is a string reference
+        const mergedConfig = this.#mergeHandlerDefaults(config);
+        this.#init = mergedConfig;
         this.#options = options;
-        const init = this.#mountInit;
-        const { whereMediaMatches } = init;
-        if (whereMediaMatches === undefined) {
-            await this.#observe2(within);
-            return;
+        this.#abortController = new AbortController();
+        const { assignOnMount, assignOnDismount, stageOnMount, do: doValue, loadingEagerness, import: imp, configFrom } = mergedConfig;
+        // Make a copy of assignOnMount config using structuredClone
+        if (assignOnMount !== undefined) {
+            this.#asgMtSource = structuredClone(assignOnMount);
         }
-        const mql = window.matchMedia(whereMediaMatches);
-        if (mql.matches) {
-            await this.#observe2(within);
+        if (assignOnDismount !== undefined) {
+            this.#asgDisMtSource = structuredClone(assignOnDismount);
         }
-        mql.addEventListener('change', async (e) => {
-            if (e.matches) {
-                if (this.objNde === undefined) {
-                    await this.#observe2(within);
-                }
-                else {
-                    await this.#mountAll();
-                }
-            }
-            else {
-                if (this.objNde !== undefined) {
-                    await this.#dismountAll();
-                }
-            }
-        });
+        if (stageOnMount !== undefined) {
+            this.#stageMtSource = structuredClone(stageOnMount);
+        }
+        if (options.disconnectedSignal) {
+            options.disconnectedSignal.addEventListener('abort', () => {
+                this.disconnect();
+            });
+        }
+        // Validate do property if it contains string references
+        if (doValue !== undefined) {
+            this.#validateDoHandlers();
+        }
+        // Load configFrom modules if specified
+        if (configFrom !== undefined) {
+            this.#configFromPromise = this.#loadConfigFrom();
+        }
+        // Start loading imports if eager
+        if (loadingEagerness === 'eager' && imp) {
+            this.#loadImports();
+        }
     }
-    async #observe2(within) {
-        await this.#selector();
-        this.objNde = new WeakRef(within);
-        const nodeToMonitor = this.#isComplex ? (within instanceof ShadowRoot ? within : within.getRootNode()) : within;
-        if (!mutationObserverLookup.has(nodeToMonitor)) {
-            mutationObserverLookup.set(nodeToMonitor, new RootMutObs(nodeToMonitor, this.#mountInit));
-            refCount.set(nodeToMonitor, 1);
-        }
-        else {
-            const currentCount = refCount.get(nodeToMonitor);
-            if (currentCount === undefined) {
-                console.warn(refCountErr);
-            }
-            else {
-                refCount.set(nodeToMonitor, currentCount + 1);
+    #validateDoHandlers() {
+        const doValue = this.#init.do;
+        if (doValue === undefined)
+            return;
+        const handlers = Array.isArray(doValue) ? doValue : [doValue];
+        for (const handler of handlers) {
+            if (typeof handler === 'string') {
+                if (!MountObserver.#handlerRegistry.has(handler)) {
+                    throw new Error(`No handler defined for ${handler}`);
+                }
             }
         }
-        const rootMutObs = mutationObserverLookup.get(within);
-        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
-        rootMutObs.addEventListener('mutation-event', async (e) => {
-            //TODO:  disconnected
-            if (this.#isComplex) {
-                this.#inspectWithin(within, false);
+    }
+    /**
+     * Loads configuration from external modules specified in configFrom property.
+     * Merges multiple configs left-to-right, with inline config taking final precedence.
+     */
+    async #loadConfigFrom() {
+        const { configFrom } = this.#init;
+        if (!configFrom)
+            return;
+        // Normalize to array
+        const configPaths = Array.isArray(configFrom) ? configFrom : [configFrom];
+        // Check for duplicates
+        const pathSet = new Set();
+        for (const path of configPaths) {
+            if (pathSet.has(path)) {
+                throw new Error(`Duplicate configFrom module: '${path}'`);
+            }
+            pathSet.add(path);
+        }
+        // Load all modules
+        const loadedConfigs = [];
+        for (const path of configPaths) {
+            try {
+                const module = await import(path);
+                if (!module.mountConfig) {
+                    throw new Error(`Module '${path}' does not export 'mountConfig'`);
+                }
+                if (typeof module.mountConfig !== 'object' || module.mountConfig === null) {
+                    throw new Error(`Module '${path}' exports invalid mountConfig: must be an object`);
+                }
+                loadedConfigs.push(module.mountConfig);
+            }
+            catch (error) {
+                // Re-throw with better context if it's not already our error
+                if (error instanceof Error && !error.message.includes(path)) {
+                    throw new Error(`Failed to load config from '${path}': ${error.message}`);
+                }
+                throw error;
+            }
+        }
+        // Merge configs: loaded configs first (left-to-right), then inline config
+        // Save the original inline config
+        const inlineConfig = { ...this.#init };
+        // Start with empty object, merge all loaded configs, then merge inline
+        let mergedConfig = {};
+        for (const loadedConfig of loadedConfigs) {
+            mergedConfig = Object.assign(mergedConfig, loadedConfig);
+        }
+        // Inline config takes final precedence
+        mergedConfig = Object.assign(mergedConfig, inlineConfig);
+        // Update the init config with merged result
+        this.#init = mergedConfig;
+    }
+    /**
+     * Creates and initializes sub-observers from the `with` property.
+     * Each sub-observer observes the same root node as the parent.
+     * Sub-observers are stored in #subObservers Map for lifecycle management.
+     */
+    async #createSubObservers(rootNode) {
+        const withConfig = this.#init.with;
+        if (!withConfig)
+            return;
+        this.#subObservers = new Map();
+        for (const [key, subConfig] of Object.entries(withConfig)) {
+            const subObserver = new MountObserver(subConfig);
+            this.#subObservers.set(key, subObserver);
+            await subObserver.observe(rootNode);
+        }
+    }
+    async #setupMediaQuery() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup media query before observe() is called');
+        }
+        const { setupMediaQuery } = await import('./mediaQuery.js');
+        const result = setupMediaQuery(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (node) => this.#processNode(node));
+        this.#mediaMatches = result.mediaMatches;
+        this.#mediaQueryCleanup = result.cleanup;
+    }
+    async #setupRootSizeObserver() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup root size observer before observe() is called');
+        }
+        const { setupRootSizeObserver } = await import('./rootSizeObserver.js');
+        const result = setupRootSizeObserver(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (node) => this.#processNode(node));
+        this.#rootSizeMatches = result.conditionMatches;
+        this.#rootSizeCleanup = result.cleanup;
+    }
+    async #setupElementIntersection() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup element intersection before observe() is called');
+        }
+        const { setupElementIntersection } = await import('./elementIntersection.js');
+        const result = setupElementIntersection(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (element) => this.#matchesSelector(element), (element) => this.#handleMatch(element));
+        this.#intersectionObserver = result.intersectionObserver;
+        this.#intersectionCleanup = result.cleanup;
+    }
+    async #setupConnectionMonitor() {
+        if (!this.#rootNode) {
+            throw new Error('Cannot setup connection monitor before observe() is called');
+        }
+        const { setupConnectionMonitor } = await import('./connectionMonitor.js');
+        const result = setupConnectionMonitor(this.#init, this.#rootNode, this.#mountedElements, this.#modules, this, (node) => this.#processNode(node));
+        this.#connectionMatches = result.conditionMatches;
+        this.#connectionCleanup = result.cleanup;
+    }
+    get disconnectedSignal() {
+        return this.#abortController.signal;
+    }
+    get mountedElements() {
+        const elements = [];
+        for (const ref of this.#mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element !== undefined) {
+                elements.push(element);
+            }
+        }
+        return elements;
+    }
+    getNotifier(element) {
+        // Return cached notifier if it exists
+        let notifier = this.#elementNotifiers.get(element);
+        if (notifier) {
+            return notifier;
+        }
+        // Create new EventTarget for this element
+        notifier = new EventTarget();
+        this.#elementNotifiers.set(element, notifier);
+        return notifier;
+    }
+    /**
+     * Begins observing elements within the provided node.
+     *
+     * @param observedNode - The node to observe for matching elements. This is the root
+     *                       of the observation scope where the mutation observer will be
+     *                       registered. All matching elements within this node (and its
+     *                       descendants) will trigger mount callbacks.
+     *
+     *                       Common values:
+     *                       - `document` - Observe the entire document
+     *                       - `element` - Observe a specific subtree
+     *                       - `shadowRoot` - Observe within a shadow DOM
+     */
+    async observe(observedNode) {
+        if (this.#rootNode) {
+            throw new Error('Already observing');
+        }
+        // Wait for configFrom loading to complete if it was started
+        if (this.#configFromPromise) {
+            await this.#configFromPromise;
+        }
+        if (this.#asgMtSource || this.#asgDisMtSource) {
+            await import('assign-gingerly/object-extension.js');
+        }
+        if (this.#stageMtSource) {
+            const { assignTentatively } = await import('assign-gingerly/assignTentatively.js');
+            this.#assignTentatively = assignTentatively;
+        }
+        this.#rootNode = new WeakRef(observedNode);
+        // Create sub-observers from `with` property
+        await this.#createSubObservers(observedNode);
+        // Set up media query if specified (needs rootNode to be set first)
+        if (this.#init.withMediaMatching) {
+            await this.#setupMediaQuery();
+        }
+        // Set up root size observer if specified (needs rootNode to be set first)
+        if (this.#init.whereObservedRootSizeMatches) {
+            await this.#setupRootSizeObserver();
+        }
+        // Set up element intersection observer if specified (needs rootNode to be set first)
+        if (this.#init.whereElementIntersectsWith) {
+            await this.#setupElementIntersection();
+        }
+        // Set up connection monitor if specified (needs rootNode to be set first)
+        if (this.#init.whereConnectionHas) {
+            await this.#setupConnectionMonitor();
+        }
+        // Wait for eager imports to complete if they were started in constructor
+        if (this.#init.loadingEagerness === 'eager' && this.#init.import && !this.#importsLoaded) {
+            await this.#loadImports();
+        }
+        // Process existing elements only if all conditions match
+        if (this.#mediaMatches && this.#rootSizeMatches && this.#connectionMatches) {
+            this.#processNode(observedNode);
+        }
+        // Create mutation callback
+        this.#mutationCallback = (mutations) => {
+            // Skip processing if any condition doesn't match
+            if (!this.#mediaMatches || !this.#rootSizeMatches || !this.#connectionMatches) {
                 return;
             }
-            const { mutationRecords } = e;
-            const elsToInspect = [];
-            //const elsToDisconnect: Array<Element> = [];
-            const doDisconnect = this.#mountInit.do?.disconnect;
-            let attrChangeInfosMap;
-            for (const mutationRecord of mutationRecords) {
-                const { addedNodes, type, removedNodes } = mutationRecord;
-                const addedElements = Array.from(addedNodes).filter(x => x instanceof Element);
-                addedElements.forEach(x => elsToInspect.push(x));
-                if (type === 'attributes') {
-                    const { target, attributeName, oldValue } = mutationRecord;
-                    if (target instanceof Element && attributeName !== null /*&& this.#mounted.has(target)*/) {
-                        if (fullListOfAttrs !== undefined) {
-                            const idx = fullListOfAttrs.indexOf(attributeName);
-                            if (idx !== -1) {
-                                if (attrChangeInfosMap === undefined)
-                                    attrChangeInfosMap = new Map();
-                                let attrChangeInfos = attrChangeInfosMap.get(target);
-                                if (attrChangeInfos === undefined) {
-                                    attrChangeInfos = [];
-                                    attrChangeInfosMap.set(target, attrChangeInfos);
-                                }
-                                const newValue = target.getAttribute(attributeName);
-                                const parts = this.#attrParts[idx];
-                                const attrChangeInfo = {
-                                    isSOfTAttr: false,
-                                    oldValue,
-                                    name: attributeName,
-                                    newValue,
-                                    idx,
-                                    parts
-                                };
-                                attrChangeInfos.push(attrChangeInfo);
-                            }
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            this.#processNode(node);
                         }
                     }
-                    elsToInspect.push(target);
-                }
-                const deletedElements = Array.from(removedNodes).filter(x => x instanceof Element);
-                const { DisconnectEvent } = await import('./Events.js');
-                for (const deletedElement of deletedElements) {
-                    this.#disconnected.add(deletedElement);
-                    if (doDisconnect !== undefined) {
-                        doDisconnect(deletedElement, this, {});
-                    }
-                    this.dispatchEvent(new DisconnectEvent(deletedElement));
+                    mutation.removedNodes.forEach(node => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            this.#handleRemoval(node);
+                        }
+                    });
                 }
             }
-            if (attrChangeInfosMap !== undefined) {
-                const { AttrChangeEvent } = await import('./Events.js');
-                for (const [key, value] of attrChangeInfosMap) {
-                    this.dispatchEvent(new AttrChangeEvent(key, value));
-                }
-            }
-            this.#filterAndMount(elsToInspect, within, true, false);
-            for (const el of elsToInspect) {
-                await this.#inspectWithin(el, false);
-            }
-        }, { signal: this.#abortController.signal });
-        await this.#inspectWithin(within, true);
+        };
+        const observerConfig = {
+            childList: true,
+            subtree: true
+        };
+        // Register with shared mutation observer
+        registerSharedObserver(observedNode, this.#mutationCallback, observerConfig);
     }
-    static synthesize(within, customElement, mose) {
-        //TODO:  make external
-        mose.type = 'mountobserver';
-        const name = customElements.getName(customElement);
-        if (name === null)
-            throw 400;
-        let instance = within.querySelector(name);
-        if (instance === null) {
-            instance = new customElement();
-            if (within === document) {
-                within.head.appendChild(instance);
+    disconnect() {
+        const rootNode = this.#rootNode?.deref();
+        // Disconnect all sub-observers first (recursive)
+        if (this.#subObservers) {
+            for (const subObserver of this.#subObservers.values()) {
+                subObserver.disconnect();
+            }
+            this.#subObservers.clear();
+            this.#subObservers = undefined;
+        }
+        // Unregister from shared mutation observer
+        if (rootNode && this.#mutationCallback) {
+            unregisterSharedObserver(rootNode, this.#mutationCallback);
+            this.#mutationCallback = undefined;
+        }
+        // Remove media query listener
+        if (this.#mediaQueryCleanup) {
+            this.#mediaQueryCleanup();
+            this.#mediaQueryCleanup = undefined;
+        }
+        // Remove root size observer
+        if (this.#rootSizeCleanup) {
+            this.#rootSizeCleanup();
+            this.#rootSizeCleanup = undefined;
+        }
+        // Remove intersection observer
+        if (this.#intersectionCleanup) {
+            this.#intersectionCleanup();
+            this.#intersectionCleanup = undefined;
+        }
+        // Remove connection monitor
+        if (this.#connectionCleanup) {
+            this.#connectionCleanup();
+            this.#connectionCleanup = undefined;
+        }
+        this.#abortController.abort();
+        this.#rootNode = undefined;
+    }
+    async #loadImports() {
+        if (this.#importsLoaded || !this.#init.import) {
+            return;
+        }
+        // Dynamically load the import utilities only when needed
+        const { loadImports } = await import('./loadImports.js');
+        this.#modules = await loadImports(this.#init.import);
+        this.#importsLoaded = true;
+        this.dispatchEvent(new LoadEvent(this.#modules, this.#init));
+    }
+    #processNode(node) {
+        // If it's an element node, check if it matches
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node;
+            // If intersection observer is active, start observing the element
+            // The intersection callback will handle mounting when it intersects
+            if (this.#intersectionObserver) {
+                this.#intersectionObserver.observe(element);
+            }
+            else if (this.#matchesSelector(element)) {
+                this.#handleMatch(element);
+            }
+        }
+        // Process children
+        if ('querySelectorAll' in node && this.#init.matching) {
+            const root = node;
+            // Get all elements matching the CSS selector first
+            const matches = root.querySelectorAll(this.#init.matching);
+            matches.forEach(child => {
+                // If intersection observer is active, start observing the element
+                if (this.#intersectionObserver) {
+                    this.#intersectionObserver.observe(child);
+                }
+                else if (this.#matchesSelector(child)) {
+                    this.#handleMatch(child);
+                }
+            });
+        }
+    }
+    #matchesSelector(element) {
+        //TODO:  reduce redundncy with this.#init?
+        // Check matching condition
+        if (!this.#init.matching) {
+            return false;
+        }
+        const matchesElement = element.matches(this.#init.matching);
+        if (!matchesElement) {
+            return false;
+        }
+        // Check that element's customElementRegistry matches root node's registry
+        const rootNode = this.#rootNode?.deref();
+        if (rootNode) {
+            const registriesMatch = rootNode.customElementRegistry === element.customElementRegistry;
+            // If whereDifferentCustomElementRegistry is true, exclude matching registries
+            if (this.#init.whereDifferentCustomElementRegistry) {
+                if (registriesMatch)
+                    return false;
             }
             else {
-                within.appendChild(instance);
-            }
-        }
-        instance.appendChild(mose);
-    }
-    #confirmInstanceOf(el, whereInstanceOf) {
-        for (const test of whereInstanceOf) {
-            if (el instanceof test)
-                return true;
-        }
-        return false;
-    }
-    async #mount(matching, initializing) {
-        //first unmount non matching
-        const alreadyMounted = await this.#filterAndDismount();
-        const mount = this.#mountInit.do?.mount;
-        const { import: imp } = this.#mountInit;
-        const me = this.mountedElements;
-        const options = this.#options;
-        for (const match of matching) {
-            if (alreadyMounted.has(match))
-                continue;
-            if (!me.weakSet.has(match)) {
-                me.setWeak.add(new WeakRef(match));
-                me.weakSet.add(match);
-            }
-            if (imp !== undefined) {
-                switch (typeof imp) {
-                    case 'string':
-                        this.module = await import(imp);
-                        break;
-                    case 'object':
-                        if (Array.isArray(imp)) {
-                            throw 'NI: Firefox';
-                        }
-                        break;
-                    case 'function':
-                        this.module = await imp(match, this, {
-                            stage: 'Import',
-                            initializing
-                        });
-                        break;
-                }
-            }
-            if (mount !== undefined) {
-                mount(match, this, {
-                    stage: 'PostImport',
-                    initializing
-                });
-            }
-            if (options?.leaveBreadcrumb) {
-                if (match[guid] === undefined) {
-                    match[guid] = new Set();
-                }
-                match[guid].add(this);
-            }
-            const { MountEvent } = await import('./Events.js');
-            this.dispatchEvent(new MountEvent(match, initializing));
-            //should we automatically call readAttrs?
-            //the thinking is it might make more sense to call that after mounting
-            this.#mountedList?.push(new WeakRef(match));
-        }
-    }
-    readAttrs(match, branchIndexes) {
-        //TODO:  externalize
-        const fullListOfAttrs = this.#fullListOfEnhancementAttrs;
-        const attrChangeInfos = [];
-        const oldValue = null;
-        if (fullListOfAttrs !== undefined) {
-            const attrParts = this.#attrParts;
-            for (let idx = 0, ii = fullListOfAttrs.length; idx < ii; idx++) {
-                const parts = attrParts[idx];
-                const { branchIdx } = parts;
-                if (branchIndexes !== undefined) {
-                    if (!branchIndexes.has(branchIdx))
-                        continue;
-                }
-                const name = fullListOfAttrs[idx];
-                const newValue = match.getAttribute(name);
-                attrChangeInfos.push({
-                    idx,
-                    isSOfTAttr: false,
-                    newValue,
-                    oldValue,
-                    name,
-                    parts
-                });
-            }
-        }
-        const { observedAttrsWhenMounted } = this.#mountInit;
-        if (observedAttrsWhenMounted !== undefined) {
-            for (const observedAttr of observedAttrsWhenMounted) {
-                const attrIsString = typeof observedAttr === 'string';
-                const name = attrIsString ? observedAttr : observedAttr.name;
-                let mapsTo;
-                let newValue = match.getAttribute(name);
-                if (!attrIsString) {
-                    const { customParser, instanceOf, mapsTo: mt, valIfNull } = observedAttr;
-                    if (instanceOf || customParser)
-                        throw 'NI';
-                    if (newValue === null)
-                        newValue = valIfNull;
-                    mapsTo = mt;
-                }
-                attrChangeInfos.push({
-                    isSOfTAttr: true,
-                    newValue,
-                    oldValue,
-                    name,
-                    mapsTo
-                });
-            }
-        }
-        return attrChangeInfos;
-    }
-    async #dismount(unmatching) {
-        const onDismount = this.#mountInit.do?.dismount;
-        const { DismountEvent } = await import('./Events.js');
-        for (const unmatch of unmatching) {
-            if (onDismount !== undefined) {
-                onDismount(unmatch, this, {});
-            }
-            this.dispatchEvent(new DismountEvent(unmatch));
-        }
-    }
-    async #dismountAll() {
-        const mounted = this.#mountedList;
-        if (mounted === undefined)
-            return;
-        this.#dismount(mounted.map(x => x.deref()).filter(x => x !== undefined));
-    }
-    async #mountAll() {
-        //TODO:  copilot created, check if needed
-        const { whereSatisfies, whereInstanceOf } = this.#mountInit;
-        const match = await this.#selector();
-        const els = Array.from(document.querySelectorAll(match));
-        this.#filterAndMount(els, document.body, false, true);
-    }
-    async #filterAndDismount() {
-        const returnSet = new Set();
-        if (this.#mountedList !== undefined) {
-            const previouslyMounted = this.#mountedList.map(x => x.deref());
-            const { whereSatisfies, whereInstanceOf } = this.#mountInit;
-            const match = await this.#selector();
-            const elsToUnMount = previouslyMounted.filter(x => {
-                if (x === undefined)
+                // Default behavior: exclude non-matching registries
+                if (!registriesMatch)
                     return false;
-                if (!x.matches(match))
-                    return true;
-                //TODO:  add check for outside
-                if (whereSatisfies !== undefined) {
-                    if (!whereSatisfies(x, this, { stage: 'Inspecting', initializing: false }))
-                        return true;
-                }
-                returnSet.add(x);
-                return false;
-            });
-            this.#dismount(elsToUnMount);
+            }
         }
-        this.#mountedList = Array.from(returnSet).map(x => new WeakRef(x));
-        return returnSet;
-    }
-    #outsideCheck(oElement, matchCandidate, outside) {
-        const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
-        for (const elementToExclude of elementsToExclude) {
-            if (elementToExclude === matchCandidate || elementToExclude.contains(matchCandidate))
+        // Check withScopePerimeter condition if specified (donut hole scoping)
+        if (this.#init.withScopePerimeter) {
+            if (!rootNode || !withScopePerimeter(rootNode, element, this.#init.withScopePerimeter)) {
                 return false;
+            }
         }
+        // Check whereObservedRootSizeMatches condition if specified
+        if (this.#init.whereObservedRootSizeMatches && !this.#rootSizeMatches) {
+            return false;
+        }
+        // Check whereInstanceOf condition if specified
+        if (this.#init.whereInstanceOf) {
+            const constructors = arr(this.#init.whereInstanceOf);
+            // Element must be an instance of at least one constructor (OR logic for array)
+            const matchesInstanceOf = constructors.some(constructor => element instanceof constructor);
+            if (!matchesInstanceOf) {
+                return false;
+            }
+        }
+        // Check whereLocalNameMatches condition if specified
+        if (this.#init.whereLocalNameMatches) {
+            const pattern = typeof this.#init.whereLocalNameMatches === 'string'
+                ? new RegExp(this.#init.whereLocalNameMatches)
+                : this.#init.whereLocalNameMatches;
+            if (!pattern.test(element.localName)) {
+                return false;
+            }
+        }
+        // All conditions passed
         return true;
     }
-    async #filterAndMount(els, target, checkMatch, initializing) {
-        const { whereSatisfies, whereInstanceOf, assigner, outside } = this.#mountInit;
-        const match = await this.#selector();
-        const elsToMount = els.filter(x => {
-            if (checkMatch) {
-                if (!x.matches(match))
-                    return false;
-                //TODO:  check for outside
-            }
-            if (outside !== undefined) {
-                if (!this.#outsideCheck(this.objNde.deref(), x, outside))
-                    return false;
-            }
-            if (whereSatisfies !== undefined) {
-                if (!whereSatisfies(x, this, { stage: 'Inspecting', initializing }))
-                    return false;
-            }
-            if (whereInstanceOf !== undefined) {
-                if (!this.#confirmInstanceOf(x, whereInstanceOf))
-                    return false;
-            }
-            return true;
-        });
-        for (const elToMount of elsToMount) {
-            if (elToMount.matches(inclTemplQry)) {
-                if (elToMount instanceof HTMLTemplateElement && elToMount.getAttribute('rel') === 'preload') {
-                    (await import('./preloadContent.js')).preloadContent(elToMount /*, this.#mountInit.withTargetShadowRoot*/);
-                }
-                else {
-                    await this.#compose(elToMount, 0);
-                }
-            }
-        }
-        await bindishIt(els, target, { assigner });
-        if (elsToMount.length === 0)
+    async #handleMatch(element) {
+        if (this.#processedDoForElement.has(element)) {
             return;
-        this.#mount(elsToMount, initializing);
-    }
-    async #inspectWithin(within, initializing) {
-        //the line below had an await for bindish, consistent with the rest of the code, but it was
-        //getting into a catch-22 scenario frequently, blocking the code for resuming.
-        //This was observed with per-each package, demo/ScopeScript.html, clicking refresh a few times
-        //one will see the inconsistent behavior if await is added below.
-        const idGenerators = Array.from(within.querySelectorAll('[-id]'));
-        if (idGenerators[0]) {
-            const { genIds } = await import('./refid/genIds.js');
-            for (const el of idGenerators) {
-                genIds(el);
-                el.removeAttribute('-id');
+        }
+        // Load imports if not already loaded
+        if (!this.#importsLoaded && this.#init.import) {
+            await this.#loadImports();
+        }
+        this.#processedDoForElement.add(element);
+        // Add to both WeakSet and Set<WeakRef> for efficient operations
+        if (!this.#mountedElements.weakSet.has(element)) {
+            this.#mountedElements.weakSet.add(element);
+            this.#mountedElements.setWeak.add(new WeakRef(element));
+        }
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Root node was garbage collected
+            return;
+        }
+        const context = {
+            modules: this.#modules,
+            observer: this,
+            rootNode,
+            mountConfig: this.#init,
+        };
+        // Add withObservers if sub-observers exist
+        if (this.#subObservers && this.#subObservers.size > 0) {
+            context.withObservers = {};
+            for (const [key, subObserver] of this.#subObservers.entries()) {
+                context.withObservers[key] = subObserver;
             }
         }
-        bindish(within, within, { assigner: this.#mountInit.assigner });
-        await this.composeFragment(within, 0);
-        const match = await this.#selector();
-        const els = Array.from(within.querySelectorAll(match));
-        this.#filterAndMount(els, within, false, initializing);
-    }
-}
-//ToDO:  make external
-export function waitForIdleNodes(nodes, idleTimeout) {
-    const mountInit = {
-        idleTimeout
-    };
-    return new Promise((resolve) => {
-        const mutObservers = [];
-        for (const node of nodes) {
-            const mutObs = mutationObserverLookup.get(node);
-            if (mutObs !== undefined) {
-                mutObservers.push(mutObs);
-            }
-            else {
-                const currentCount = refCount.get(node) || 0;
-                const newMutObs = new RootMutObs(node, mountInit);
-                mutationObserverLookup.set(node, newMutObs);
-                refCount.set(node, currentCount + 1);
-                mutObservers.push(newMutObs);
-            }
-        }
-        if (areAllIdle(mutObservers)) {
-            resolve();
-        }
-        for (const obs of mutObservers) {
-            obs.addEventListener('is-idle', () => {
-                if (areAllIdle(mutObservers)) {
-                    resolve();
+        // Check shouldMount condition if specified (final gate before mounting)
+        if (this.#init.shouldMount) {
+            try {
+                const shouldMount = this.#init.shouldMount(element, context);
+                if (!shouldMount) {
+                    // shouldMount returned false - don't mount this element
+                    // Remove from processed set so it can be re-evaluated later
+                    this.#processedDoForElement.delete(element);
+                    // Remove from mounted elements tracking
+                    this.#mountedElements.weakSet.delete(element);
+                    for (const ref of this.#mountedElements.setWeak) {
+                        if (ref.deref() === element) {
+                            this.#mountedElements.setWeak.delete(ref);
+                            break;
+                        }
+                    }
+                    return;
                 }
-            });
+            }
+            catch (error) {
+                // shouldMount threw an error - treat as false and log
+                console.error('shouldMount check failed:', error);
+                // Remove from processed set so it can be re-evaluated later
+                this.#processedDoForElement.delete(element);
+                // Remove from mounted elements tracking
+                this.#mountedElements.weakSet.delete(element);
+                for (const ref of this.#mountedElements.setWeak) {
+                    if (ref.deref() === element) {
+                        this.#mountedElements.setWeak.delete(ref);
+                        break;
+                    }
+                }
+                return;
+            }
         }
-    });
-}
-//make external
-function areAllIdle(mutObs) {
-    for (const mo of mutObs) {
-        if (!mo.isIdle)
-            return false;
+        // Apply assignGingerly if specified
+        if (this.#asgMtSource) {
+            element.assignGingerly(this.#asgMtSource);
+        }
+        // Apply assignTentatively if specified (staged assignments)
+        if (this.#stageMtSource && this.#assignTentatively) {
+            const reversal = {};
+            this.#assignTentatively(element, this.#stageMtSource, { reversal });
+            this.#stageReversals.set(element, reversal);
+        }
+        // Check if notifier exists BEFORE calling do callback
+        const notifierExistedBeforeDo = this.#elementNotifiers.has(element);
+        // Call do callback(s) - can be string, function, or array
+        if (this.#init.do !== undefined) {
+            const doHandlers = Array.isArray(this.#init.do) ? this.#init.do : [this.#init.do];
+            for (const handler of doHandlers) {
+                if (typeof handler === 'string') {
+                    // Registered handler - instantiate it
+                    const HandlerClass = MountObserver.#handlerRegistry.get(handler);
+                    if (HandlerClass) {
+                        new HandlerClass(element, context);
+                    }
+                }
+                else if (typeof handler === 'function') {
+                    // Inline function
+                    handler(element, context);
+                }
+            }
+        }
+        // Dispatch mount event
+        const mountEvent = new MountEvent(element, this.#modules, this.#init, context);
+        this.dispatchEvent(mountEvent);
+        // Dispatch to element-specific notifier only if:
+        // 1. Notifier existed before do callback (wasn't just created), AND
+        // 2. Element hasn't already received a mount event on its notifier
+        if (notifierExistedBeforeDo && !this.#notifierMountedElements.has(element)) {
+            const notifier = this.#elementNotifiers.get(element);
+            if (notifier) {
+                this.#notifierMountedElements.add(element);
+                notifier.dispatchEvent(mountEvent);
+            }
+        }
+        // Emit events from mounted element if configured
+        if (this.#init.mountedElemEmits) {
+            const { emitMountedElementEvents } = await import('./emitEvents.js');
+            await emitMountedElementEvents(element, this.#init, this.#processedEventsForElement);
+        }
     }
-    return true;
+    async assignGingerly(config) {
+        // Handle undefined case
+        if (config === undefined) {
+            this.#asgMtSource = undefined;
+            return;
+        }
+        await import('assign-gingerly/object-extension.js');
+        // Update the source config for future mounted elements
+        if (this.#asgMtSource === undefined) {
+            // No existing config, just clone the passed in object
+            this.#asgMtSource = structuredClone(config);
+        }
+        else {
+            // Merge into existing config using assignGingerly
+            this.#asgMtSource.assignGingerly(config);
+            //assignGingerly(this.#asgMtSource, config);
+        }
+        // Apply to already mounted elements using setWeak for iteration
+        for (const ref of this.#mountedElements.setWeak) {
+            const element = ref.deref();
+            if (element) {
+                element.assignGingerly(config);
+                //assignGingerly(element, config);
+            }
+        }
+    }
+    async #handleRemoval(element) {
+        if (!this.#mountedElements.weakSet.has(element)) {
+            return;
+        }
+        // Reverse tentative assignments first (restore original values)
+        if (this.#stageMtSource && this.#assignTentatively) {
+            const reversal = this.#stageReversals.get(element);
+            if (reversal) {
+                this.#assignTentatively(element, reversal);
+                this.#stageReversals.delete(element);
+            }
+        }
+        // Apply assignGingerly if specified for dismount
+        if (this.#asgDisMtSource) {
+            element.assignGingerly(this.#asgDisMtSource);
+        }
+        // Remove from both structures
+        this.#mountedElements.weakSet.delete(element);
+        for (const ref of this.#mountedElements.setWeak) {
+            if (ref.deref() === element) {
+                this.#mountedElements.setWeak.delete(ref);
+                break;
+            }
+        }
+        // Remove from processed set so element can be re-mounted
+        this.#processedDoForElement.delete(element);
+        // Remove from notifier mounted tracking so mount event can fire again
+        this.#notifierMountedElements.delete(element);
+        const rootNode = this.#rootNode?.deref();
+        if (!rootNode) {
+            // Root node was garbage collected
+            return;
+        }
+        const context = {
+            modules: this.#modules,
+            observer: this,
+            rootNode,
+            mountConfig: this.#init,
+        };
+        // Add withObservers if sub-observers exist
+        if (this.#subObservers && this.#subObservers.size > 0) {
+            context.withObservers = {};
+            for (const [key, subObserver] of this.#subObservers.entries()) {
+                context.withObservers[key] = subObserver;
+            }
+        }
+        // Dispatch dismount event
+        const dismountEvent = new DismountEvent(element, 'with-matching-failed', this.#init);
+        this.dispatchEvent(dismountEvent);
+        // Dispatch to element-specific notifier
+        const notifier = this.#elementNotifiers.get(element);
+        if (notifier) {
+            notifier.dispatchEvent(dismountEvent);
+        }
+        // Check if element is being moved within the same root
+        // If it's truly disconnected, dispatch disconnect event
+        setTimeout(() => {
+            if (!rootNode.contains(element)) {
+                const disconnectEvent = new DisconnectEvent(element, this.#init);
+                this.dispatchEvent(disconnectEvent);
+                // Dispatch to element-specific notifier
+                const notifier = this.#elementNotifiers.get(element);
+                if (notifier) {
+                    notifier.dispatchEvent(disconnectEvent);
+                }
+            }
+        }, 0);
+    }
 }
-const refCountErr = 'mount-observer ref count mismatch';
-export const inclTemplQry = 'template[src^="#"]:not([hidden]),template[src^="!"]:not([hidden])';
-//const hasRootInDefault =  ['data', 'enh', 'data-enh']

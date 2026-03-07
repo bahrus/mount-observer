@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhance Mounted Element Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Enhance Mounted Element Test</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        const results = {
+            test1: {
+                enhancementSpawned: false,
+                enhancementHasElement: false,
+                enhancementHasContext: false,
+                clickCountWorks: false
+            },
+            test2: {
+                multipleElementsEnhanced: false,
+                separateInstances: false
+            },
+            test3: {
+                errorOnNoModule: false,
+                errorMessage: ''
+            },
+            test4: {
+                errorOnNoSpawn: false,
+                errorMessage: ''
+            }
+        };
+        
+        console.log('Starting Enhance Mounted Element Tests...');
+        
+        // Test 1: Basic enhancement spawning
+        console.log('Test 1: Basic enhancement spawning');
+        
+        const observer1 = new MountObserver({
+            matching: '.enhance-me',
+            import: '/tests/test-enhancement.js',
+            do: 'builtIns.enhanceMountedElement'
+        });
+        
+        await observer1.observe(document.body);
+        
+        const elem1 = document.createElement('button');
+        elem1.className = 'enhance-me';
+        elem1.id = 'btn1';
+        elem1.textContent = 'Click me';
+        document.getElementById('container').appendChild(elem1);
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Check if enhancement was spawned
+        results.test1.enhancementSpawned = elem1.enh && elem1.enh.buttonEnh && elem1.enh.buttonEnh.initialized === true;
+        results.test1.enhancementHasElement = elem1.enh && elem1.enh.buttonEnh && elem1.enh.buttonEnh.element === elem1;
+        results.test1.enhancementHasContext = elem1.enh && elem1.enh.buttonEnh && elem1.enh.buttonEnh.ctx !== undefined;
+        
+        // Test click functionality
+        if (elem1.enh && elem1.enh.buttonEnh) {
+            elem1.click();
+            results.test1.clickCountWorks = elem1.enh.buttonEnh.clickCount === 1 && elem1.getAttribute('data-clicks') === '1';
+        }
+        
+        console.log('Test 1 complete:', results.test1);
+        
+        // Test 2: Multiple elements get separate instances
+        console.log('Test 2: Multiple elements get separate instances');
+        
+        const elem2 = document.createElement('button');
+        elem2.className = 'enhance-me';
+        elem2.id = 'btn2';
+        elem2.textContent = 'Click me too';
+        document.getElementById('container').appendChild(elem2);
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        results.test2.multipleElementsEnhanced = 
+            !!(elem1.enh && elem1.enh.buttonEnh && 
+            elem2.enh && elem2.enh.buttonEnh);
+        
+        results.test2.separateInstances = 
+            elem1.enh && elem2.enh && 
+            elem1.enh.buttonEnh !== elem2.enh.buttonEnh;
+        
+        console.log('Test 2 complete:', results.test2);
+        
+        // Test 3: Error when no module specified
+        console.log('Test 3: Error when no module specified');
+        
+        try {
+            const observer3 = new MountObserver({
+                matching: '.no-module',
+                do: 'builtIns.enhanceMountedElement'
+            });
+            
+            await observer3.observe(document.body);
+            
+            const elem3 = document.createElement('div');
+            elem3.className = 'no-module';
+            document.getElementById('container').appendChild(elem3);
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+        } catch (error) {
+            results.test3.errorOnNoModule = true;
+            results.test3.errorMessage = error.message;
+        }
+        
+        console.log('Test 3 complete:', results.test3);
+        
+        // Test 4: Error when module has no spawn property
+        console.log('Test 4: Error when module has no spawn property');
+        
+        try {
+            const observer4 = new MountObserver({
+                matching: '.no-spawn',
+                import: '../MountObserver.js', // This module has no spawn property
+                do: 'builtIns.enhanceMountedElement'
+            });
+            
+            await observer4.observe(document.body);
+            
+            const elem4 = document.createElement('div');
+            elem4.className = 'no-spawn';
+            document.getElementById('container').appendChild(elem4);
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+        } catch (error) {
+            results.test4.errorOnNoSpawn = true;
+            results.test4.errorMessage = error.message;
+        }
+        
+        console.log('Test 4 complete:', results.test4);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (Basic enhancement):', results.test1);
+        console.log('Test 2 (Multiple elements):', results.test2);
+        console.log('Test 3 (No module error):', results.test3);
+        console.log('Test 4 (No spawn error):', results.test4);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MutationObserver Performance Test - Shared vs Separate</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .results {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .metric {
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        .winner {
+            color: green;
+            font-weight: bold;
+        }
+        .loser {
+            color: #666;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>MutationObserver Performance Test</h1>
+    <p>Comparing performance of <strong>shared</strong> vs <strong>separate</strong> MutationObserver instances for multiple observers on the same DOM fragment.</p>
+
+    <div id="test-controls">
+        <button id="run-test">Run Performance Test</button>
+        <label>
+            Number of observers: 
+            <input type="number" id="observer-count" value="10" min="1" max="100">
+        </label>
+        <label>
+            Number of mutations: 
+            <input type="number" id="mutation-count" value="1000" min="100" max="10000">
+        </label>
+    </div>
+
+    <div id="results"></div>
+
+    <script type="module">
+        // Simulate separate MutationObserver approach (current implementation)
+        class SeparateObserverManager {
+            constructor(rootNode, observerCount) {
+                this.rootNode = rootNode;
+                this.observers = [];
+                this.callbacks = [];
+                
+                // Create separate MutationObserver for each "MountObserver"
+                for (let i = 0; i < observerCount; i++) {
+                    const callback = (mutations) => {
+                        // Simulate processing mutations
+                        for (const mutation of mutations) {
+                            if (mutation.type === 'childList') {
+                                mutation.addedNodes.forEach(node => {
+                                    if (node.nodeType === 1) {
+                                        // Simulate element matching logic
+                                        const matches = node.matches && node.matches('.test-element');
+                                    }
+                                });
+                            }
+                        }
+                    };
+                    
+                    this.callbacks.push(callback);
+                    const observer = new MutationObserver(callback);
+                    observer.observe(rootNode, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true
+                    });
+                    this.observers.push(observer);
+                }
+            }
+            
+            disconnect() {
+                this.observers.forEach(obs => obs.disconnect());
+            }
+        }
+
+        // Simulate shared MutationObserver approach (proposed optimization)
+        class SharedObserverManager {
+            static instances = new WeakMap();
+            
+            constructor(rootNode, observerCount) {
+                this.rootNode = rootNode;
+                this.callbacks = [];
+                
+                // Get or create shared observer for this root node
+                let sharedData = SharedObserverManager.instances.get(rootNode);
+                if (!sharedData) {
+                    const observer = new MutationObserver((mutations) => {
+                        // Call all registered callbacks
+                        const callbacks = sharedData.callbacks;
+                        for (const callback of callbacks) {
+                            callback(mutations);
+                        }
+                    });
+                    
+                    observer.observe(rootNode, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true
+                    });
+                    
+                    sharedData = {
+                        observer,
+                        callbacks: [],
+                        refCount: 0
+                    };
+                    SharedObserverManager.instances.set(rootNode, sharedData);
+                }
+                
+                // Register callbacks for each "MountObserver"
+                for (let i = 0; i < observerCount; i++) {
+                    const callback = (mutations) => {
+                        // Simulate processing mutations
+                        for (const mutation of mutations) {
+                            if (mutation.type === 'childList') {
+                                mutation.addedNodes.forEach(node => {
+                                    if (node.nodeType === 1) {
+                                        // Simulate element matching logic
+                                        const matches = node.matches && node.matches('.test-element');
+                                    }
+                                });
+                            }
+                        }
+                    };
+                    
+                    this.callbacks.push(callback);
+                    sharedData.callbacks.push(callback);
+                    sharedData.refCount++;
+                }
+                
+                this.sharedData = sharedData;
+            }
+            
+            disconnect() {
+                // Remove callbacks and disconnect if no more references
+                for (const callback of this.callbacks) {
+                    const index = this.sharedData.callbacks.indexOf(callback);
+                    if (index > -1) {
+                        this.sharedData.callbacks.splice(index, 1);
+                    }
+                }
+                
+                this.sharedData.refCount -= this.callbacks.length;
+                
+                if (this.sharedData.refCount <= 0) {
+                    this.sharedData.observer.disconnect();
+                    SharedObserverManager.instances.delete(this.rootNode);
+                }
+            }
+        }
+
+        // Test runner
+        async function runPerformanceTest(observerCount, mutationCount) {
+            const results = {
+                separate: {},
+                shared: {},
+                observerCount,
+                mutationCount
+            };
+
+            // Test 1: Separate observers
+            console.log('Testing separate observers...');
+            const separateContainer = document.createElement('div');
+            separateContainer.id = 'separate-test';
+            document.body.appendChild(separateContainer);
+            
+            const separateStart = performance.now();
+            const separateManager = new SeparateObserverManager(separateContainer, observerCount);
+            const separateSetupTime = performance.now() - separateStart;
+            
+            // Perform mutations
+            const separateMutationStart = performance.now();
+            for (let i = 0; i < mutationCount; i++) {
+                const el = document.createElement('div');
+                el.className = i % 2 === 0 ? 'test-element' : 'other-element';
+                el.textContent = `Element ${i}`;
+                separateContainer.appendChild(el);
+            }
+            
+            // Wait for mutations to be processed
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const separateMutationTime = performance.now() - separateMutationStart;
+            
+            const separateCleanupStart = performance.now();
+            separateManager.disconnect();
+            const separateCleanupTime = performance.now() - separateCleanupStart;
+            
+            separateContainer.remove();
+            
+            results.separate = {
+                setupTime: separateSetupTime,
+                mutationTime: separateMutationTime,
+                cleanupTime: separateCleanupTime,
+                totalTime: separateSetupTime + separateMutationTime + separateCleanupTime
+            };
+
+            // Test 2: Shared observer
+            console.log('Testing shared observer...');
+            const sharedContainer = document.createElement('div');
+            sharedContainer.id = 'shared-test';
+            document.body.appendChild(sharedContainer);
+            
+            const sharedStart = performance.now();
+            const sharedManager = new SharedObserverManager(sharedContainer, observerCount);
+            const sharedSetupTime = performance.now() - sharedStart;
+            
+            // Perform mutations
+            const sharedMutationStart = performance.now();
+            for (let i = 0; i < mutationCount; i++) {
+                const el = document.createElement('div');
+                el.className = i % 2 === 0 ? 'test-element' : 'other-element';
+                el.textContent = `Element ${i}`;
+                sharedContainer.appendChild(el);
+            }
+            
+            // Wait for mutations to be processed
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const sharedMutationTime = performance.now() - sharedMutationStart;
+            
+            const sharedCleanupStart = performance.now();
+            sharedManager.disconnect();
+            const sharedCleanupTime = performance.now() - sharedCleanupStart;
+            
+            sharedContainer.remove();
+            
+            results.shared = {
+                setupTime: sharedSetupTime,
+                mutationTime: sharedMutationTime,
+                cleanupTime: sharedCleanupTime,
+                totalTime: sharedSetupTime + sharedMutationTime + sharedCleanupTime
+            };
+
+            return results;
+        }
+
+        // Display results
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            
+            const separateTotal = results.separate.totalTime;
+            const sharedTotal = results.shared.totalTime;
+            const improvement = ((separateTotal - sharedTotal) / separateTotal * 100).toFixed(1);
+            const winner = sharedTotal < separateTotal ? 'shared' : 'separate';
+            
+            resultsDiv.innerHTML = `
+                <div class="test-section">
+                    <h2>Test Configuration</h2>
+                    <div class="metric">Number of observers: ${results.observerCount}</div>
+                    <div class="metric">Number of mutations: ${results.mutationCount}</div>
+                </div>
+
+                <div class="test-section">
+                    <h2>Results</h2>
+                    
+                    <h3>Separate MutationObservers (Current)</h3>
+                    <div class="results ${winner === 'separate' ? 'winner' : 'loser'}">
+                        <div class="metric">Setup time: ${results.separate.setupTime.toFixed(2)}ms</div>
+                        <div class="metric">Mutation processing: ${results.separate.mutationTime.toFixed(2)}ms</div>
+                        <div class="metric">Cleanup time: ${results.separate.cleanupTime.toFixed(2)}ms</div>
+                        <div class="metric"><strong>Total time: ${separateTotal.toFixed(2)}ms</strong></div>
+                    </div>
+
+                    <h3>Shared MutationObserver (Proposed)</h3>
+                    <div class="results ${winner === 'shared' ? 'winner' : 'loser'}">
+                        <div class="metric">Setup time: ${results.shared.setupTime.toFixed(2)}ms</div>
+                        <div class="metric">Mutation processing: ${results.shared.mutationTime.toFixed(2)}ms</div>
+                        <div class="metric">Cleanup time: ${results.shared.cleanupTime.toFixed(2)}ms</div>
+                        <div class="metric"><strong>Total time: ${sharedTotal.toFixed(2)}ms</strong></div>
+                    </div>
+
+                    <h3>Performance Comparison</h3>
+                    <div class="results">
+                        <div class="metric">Winner: <span class="winner">${winner.toUpperCase()}</span></div>
+                        <div class="metric">Performance difference: ${Math.abs(improvement)}% ${improvement > 0 ? 'faster' : 'slower'}</div>
+                        <div class="metric">Setup speedup: ${(results.separate.setupTime / results.shared.setupTime).toFixed(2)}x</div>
+                        <div class="metric">Mutation speedup: ${(results.separate.mutationTime / results.shared.mutationTime).toFixed(2)}x</div>
+                    </div>
+                </div>
+
+                <div class="test-section">
+                    <h2>Analysis</h2>
+                    <h3>Separate Observers (Current Implementation)</h3>
+                    <ul>
+                        <li><strong>Pros:</strong>
+                            <ul>
+                                <li>Simpler implementation</li>
+                                <li>Each observer is independent</li>
+                                <li>No coordination overhead</li>
+                            </ul>
+                        </li>
+                        <li><strong>Cons:</strong>
+                            <ul>
+                                <li>Creates ${results.observerCount} MutationObserver instances</li>
+                                <li>Each observer processes the same mutations independently</li>
+                                <li>Higher memory overhead</li>
+                                <li>Browser must call ${results.observerCount} callbacks for each mutation</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h3>Shared Observer (Proposed Optimization)</h3>
+                    <ul>
+                        <li><strong>Pros:</strong>
+                            <ul>
+                                <li>Only 1 MutationObserver instance per root node</li>
+                                <li>Mutations processed once, then distributed to callbacks</li>
+                                <li>Lower memory overhead</li>
+                                <li>Better performance with many observers</li>
+                            </ul>
+                        </li>
+                        <li><strong>Cons:</strong>
+                            <ul>
+                                <li>More complex implementation</li>
+                                <li>Requires reference counting for cleanup</li>
+                                <li>WeakMap management overhead</li>
+                                <li>Slight coordination overhead for callback distribution</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h3>Recommendation</h3>
+                    <p style="font-size: 1.1em; ${winner === 'shared' ? 'color: green;' : 'color: orange;'}">
+                        ${winner === 'shared' 
+                            ? `✅ <strong>Shared observer is ${Math.abs(improvement)}% faster.</strong> Consider implementing this optimization, especially for applications with multiple MountObserver instances on the same DOM fragment.`
+                            : `⚠️ <strong>Separate observers performed better in this test.</strong> The overhead of coordination may outweigh benefits. Consider keeping current implementation or testing with different scenarios.`
+                        }
+                    </p>
+                    
+                    ${winner === 'shared' ? `
+                        <h3>Implementation Notes</h3>
+                        <ul>
+                            <li>Use a WeakMap to store shared observers keyed by root node</li>
+                            <li>Implement reference counting to know when to disconnect</li>
+                            <li>Each MountObserver registers its callback with the shared observer</li>
+                            <li>On disconnect, remove callback and decrement ref count</li>
+                            <li>When ref count reaches 0, disconnect the shared observer</li>
+                        </ul>
+                    ` : ''}
+                </div>
+
+                <div class="test-section">
+                    <h2>Memory Usage Estimate</h2>
+                    <div class="metric">Separate observers: ~${(results.observerCount * 1).toFixed(1)}KB (${results.observerCount} MutationObserver instances)</div>
+                    <div class="metric">Shared observer: ~1KB (1 MutationObserver instance + callback array)</div>
+                    <div class="metric">Memory savings: ~${((results.observerCount - 1) * 1).toFixed(1)}KB</div>
+                </div>
+            `;
+        }
+
+        // Event handlers
+        document.getElementById('run-test').addEventListener('click', async () => {
+            const button = document.getElementById('run-test');
+            button.disabled = true;
+            button.textContent = 'Running test...';
+            
+            const observerCount = parseInt(document.getElementById('observer-count').value);
+            const mutationCount = parseInt(document.getElementById('mutation-count').value);
+            
+            try {
+                const results = await runPerformanceTest(observerCount, mutationCount);
+                displayResults(results);
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="test-section" style="color: red;">
+                        <h2>Error</h2>
+                        <pre>${error.message}\n${error.stack}</pre>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Run Performance Test';
+            }
+        });
+
+        // Run initial test
+        window.addEventListener('load', () => {
+            document.getElementById('run-test').click();
+        });
+    </script>
+</body>
+</html>

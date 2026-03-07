@@ -1,0 +1,75 @@
+# Donut Hole Support
+
+For the polyfill, we need to support donut hole scoping.
+
+For example:
+
+```html
+<div id=myTest itemscope>
+   <span itemprop=name>
+    <div itemscope>
+        <data itemprop=ssn>
+    </div>
+</div>
+```
+
+We want to find all elements with attribute itemprop outside any itemscope, so the span and not the data element.
+
+```JavaScript
+const oContainerNode = document.getElementById('myTest');
+const observer = new MountObserver({
+   matching:'[itemprop]',
+   withScopePerimeter: '[itemscope]'
+   do: {
+      mount: ({localName}, {modules, observer}) => {
+        ...
+      },
+   },
+   disconnectedSignal: new AbortController().signal
+});
+observer.observe(oContainerNode);
+```
+
+The MountConfig interface should amended:
+
+```TypeScript
+interface MountConfig {
+    withScopePerimeter?: string
+}
+```
+
+withScopePerimeter should only support a string (or undefined), not an array of strings for now.
+
+
+
+The check for "withScopePerimeter" is done via script:
+
+```JavaScript
+outsideCheck(oContainerNode: Node, matchCandidate: Element, outside: string){
+    let current = matchCandidate.parentElement;
+    
+    while (current && current !== oContainerNode) {
+        if (current.matches(outside)) {
+            return false;  // Found an excluding ancestor
+        }
+        current = current.parentElement;
+    }
+    
+    return true;  // No excluding ancestors found
+}
+
+```
+
+This is an AND condition, so that if an element matches matching but its parent (between it and root) matches withScopePerimeter it would not mount.
+
+The root node (oContainerNode) should not be checked against the outside selector
+
+## Integration with other conditions:
+
+ The check order should be:
+
+- matching (cheapest - CSS selector)
+- withScopePerimeter (medium - upward traversal) add on to matching
+- whereAttr (expensive - complex logic)
+- whereInstanceOf (cheap - instanceof check)
+withMediaMatching (already checked globally)

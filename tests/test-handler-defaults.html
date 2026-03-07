@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handler Defaults Test</title>
+</head>
+<body>
+    <h1>Handler Defaults Test</h1>
+
+    <!-- Test elements -->
+    <div class="test-default">Default Matching</div>
+    <span class="test-override">Override Matching</span>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { EvtRt } from '../EvtRt.js';
+
+        const results = [];
+
+        // Define a handler with default matching selector
+        class MyHandler extends EvtRt {
+            static matching = '.test-default';
+            
+            mount(mountedElement, MountConfig, context) {
+                results.push(`Mounted: ${mountedElement.className}`);
+            }
+        }
+
+        // Register the handler
+        MountObserver.define('myHandler', MyHandler);
+
+        // Test 1: Use handler with its default matching
+        const observer1 = new MountObserver({
+            do: 'myHandler'
+        });
+
+        await observer1.observe(document.body);
+
+        // Test 2: Override the matching selector
+        const observer2 = new MountObserver({
+            matching: '.test-override',
+            do: 'myHandler'
+        });
+
+        await observer2.observe(document.body);
+
+        // Wait for observers to process
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            // Expected results:
+            // Test 1 should mount .test-default (from handler's static matching)
+            // Test 2 should mount .test-override (inline config trumps)
+            
+            const hasDefault = results.some(r => r.includes('test-default'));
+            const hasOverride = results.some(r => r.includes('test-override'));
+            
+            const test1Pass = hasDefault;
+            const test2Pass = hasOverride;
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <pre>${results.join('\n')}</pre>
+                
+                <h3>Test Results</h3>
+                <p>Test 1 (Handler defaults): ${test1Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Test 2 (Inline override): ${test2Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                
+                <h3>Expected</h3>
+                <ul>
+                    <li>Test 1 should mount .test-default using handler's static matching</li>
+                    <li>Test 2 should mount .test-override (inline config trumps handler defaults)</li>
+                </ul>
+            `;
+            
+            // Set test result for Playwright
+            window.testResult = test1Pass && test2Pass;
+        }, 100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mount Observer Script Element Handler Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Mount Observer Script Element Handler Test</h1>
+    
+    <!-- Test 1: Inline JSON config -->
+    <script type="mountobserver" id="test1">
+    {
+        "matching": "div.test1",
+        "do": "builtIns.logToConsole"
+    }
+    </script>
+    
+    <!-- Test 2: External JSON config -->
+    <script type="mountobserver" src="./test-mose-config.json" id="test2"></script>
+    
+    <!-- Test elements that should be observed -->
+    <div class="test1" id="div1">Test 1 Element</div>
+    <div class="test2" id="div2">Test 2 Element</div>
+    
+    <!-- Test script -->
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        console.log('Starting Mount Observer Script Element Tests...');
+        
+        // Create observer to process script[type="mountobserver"] elements
+        const observer = new MountObserver({
+            do: 'builtIns.mountObserverScript'
+        });
+        
+        console.log('Observer created, starting observation...');
+        await observer.observe(document);
+        
+        console.log('Observation started, waiting for processing...');
+        
+        // Wait a bit for the mount observers to be set up and process elements
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Checking results...');
+        
+        // Check if the script elements were processed
+        const script1 = document.getElementById('test1');
+        const script2 = document.getElementById('test2');
+        
+        console.log('Script1 element:', script1);
+        console.log('Script2 element:', script2);
+        
+        // The scripts should have called element.mount() which creates observers
+        // We can't directly check if observers were created, but we can verify
+        // the scripts exist and have the right type
+        const test1Result = {
+            scriptExists: script1 !== null,
+            hasCorrectType: script1?.getAttribute('type') === 'mountobserver',
+            hasContent: (script1?.textContent?.trim().length ?? 0) > 0
+        };
+        
+        const test2Result = {
+            scriptExists: script2 !== null,
+            hasCorrectType: script2?.getAttribute('type') === 'mountobserver',
+            hasSrc: script2?.hasAttribute('src') ?? false
+        };
+        
+        console.log('Test 1 (Inline JSON):', test1Result);
+        console.log('Test 2 (External JSON):', test2Result);
+        
+        // Store results for Playwright
+        window.testResults = {
+            test1: test1Result,
+            test2: test2Result
+        };
+        
+        console.log('All tests complete:', window.testResults);
+    </script>
+</body>
+</html>

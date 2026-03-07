@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Generation with Mount Observer Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        fieldset { margin: 20px 0; padding: 15px; }
+        .result { background: #f0f0f0; padding: 10px; margin-top: 10px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>ID Generation with Mount Observer</h1>
+    
+    <p>This demo shows the new <code>builtIns.generateIds</code> handler automatically processing ID generation when elements with <code>-id</code> attribute are added to the DOM.</p>
+    
+    <button id="addFieldset">Add Fieldset with ID Generation</button>
+    
+    <div id="container"></div>
+    
+    <div class="result" id="result"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        // Set up the mount observer to watch for [-id] elements
+        const observer = new MountObserver({
+            do: 'builtIns.generateIds'
+        });
+        await observer.observe(document.body);
+        
+        console.log('Mount observer initialized and watching for [-id] elements');
+        
+        let counter = 0;
+        
+        document.getElementById('addFieldset').addEventListener('click', () => {
+            counter++;
+            const container = document.getElementById('container');
+            
+            // Create a fieldset with elements that need ID generation
+            const fieldset = document.createElement('fieldset');
+            fieldset.setAttribute('disabled', '');
+            fieldset.innerHTML = `
+                <legend>Example ${counter}</legend>
+                <label>
+                    LHS: <input data-id="lhs${counter}">
+                </label>
+                
+                <label for="rhs${counter}">
+                    RHS: <input data-id="rhs${counter}">
+                </label>
+                
+                <template -id defer-data-test data-test="based on #{{lhs${counter}}} and #{{rhs${counter}}}">
+                    <div>LHS === RHS</div>
+                </template>
+            `;
+            
+            container.appendChild(fieldset);
+            
+            // Wait a bit for processing
+            setTimeout(() => {
+                const lhsInput = fieldset.querySelector('[data-id="lhs${counter}"]');
+                const rhsInput = fieldset.querySelector('[data-id="rhs${counter}"]');
+                const template = fieldset.querySelector('template');
+                
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h3>Example ${counter} Results:</h3>
+                    <div class="${lhsInput.id ? 'success' : 'error'}">
+                        LHS Input ID: ${lhsInput.id || 'NOT GENERATED'}
+                    </div>
+                    <div class="${rhsInput.id ? 'success' : 'error'}">
+                        RHS Input ID: ${rhsInput.id || 'NOT GENERATED'}
+                    </div>
+                    <div class="${template.hasAttribute('data-test') ? 'success' : 'error'}">
+                        Template data-test: ${template.getAttribute('data-test') || 'NOT PROCESSED'}
+                    </div>
+                    <div class="${!template.hasAttribute('defer-data-test') ? 'success' : 'error'}">
+                        defer-data-test removed: ${!template.hasAttribute('defer-data-test')}
+                    </div>
+                    <div class="${!fieldset.hasAttribute('disabled') ? 'success' : 'error'}">
+                        Fieldset disabled removed: ${!fieldset.hasAttribute('disabled')}
+                    </div>
+                `;
+            }, 100);
+        });
+    </script>
+</body>
+</html>

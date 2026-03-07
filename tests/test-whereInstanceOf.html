@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>whereInstanceOf Test</title>
+</head>
+<body>
+    <h1>whereInstanceOf Test</h1>
+
+    <!-- Test elements -->
+    <input id="input1" type="text" class="test">
+    <button id="button1" class="test">Button</button>
+    <div id="div1" class="test">Div</div>
+    <span id="span1" class="test">Span</span>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        const results = [];
+
+        // Test 1: Single constructor
+        const observer1 = new MountObserver({
+            matching: '.test',
+            whereInstanceOf: HTMLInputElement,
+            do: (el) => {
+                results.push(`Test 1: Mounted ${el.id} (${el.constructor.name})`);
+            }
+        });
+
+        await observer1.observe(document.body);
+
+        // Test 2: Array of constructors
+        const observer2 = new MountObserver({
+            matching: '.test',
+            whereInstanceOf: [HTMLButtonElement, HTMLDivElement],
+            do: (el) => {
+                results.push(`Test 2: Mounted ${el.id} (${el.constructor.name})`);
+            }
+        });
+
+        await observer2.observe(document.body);
+
+        // Wait a bit for observers to process
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            // Expected results:
+            // Test 1 should only mount input1 (HTMLInputElement)
+            // Test 2 should mount button1 (HTMLButtonElement) and div1 (HTMLDivElement)
+            
+            const test1Count = results.filter(r => r.startsWith('Test 1')).length;
+            const test2Count = results.filter(r => r.startsWith('Test 2')).length;
+            
+            const test1Pass = test1Count === 1 && results.some(r => r.includes('input1'));
+            const test2Pass = test2Count === 2 && 
+                             results.some(r => r.includes('button1')) && 
+                             results.some(r => r.includes('div1'));
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <pre>${results.join('\n')}</pre>
+                
+                <h3>Test Results</h3>
+                <p>Test 1 (Single constructor): ${test1Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Test 2 (Array of constructors): ${test2Pass ? '✅ PASS' : '❌ FAIL'}</p>
+                
+                <h3>Expected</h3>
+                <ul>
+                    <li>Test 1 should mount only input1 (HTMLInputElement)</li>
+                    <li>Test 2 should mount button1 and div1 (HTMLButtonElement, HTMLDivElement)</li>
+                    <li>span1 should not be mounted by either test</li>
+                </ul>
+            `;
+            
+            // Set test result for Playwright
+            window.testResult = test1Pass && test2Pass;
+        }, 100);
+    </script>
+</body>
+</html>

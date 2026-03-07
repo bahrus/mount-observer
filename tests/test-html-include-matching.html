@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMLInclude Matching Insertions Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <!-- Test 1: Basic matching insertion with attribute update -->
+    <div id="test1">
+        <div itemscope id="love">
+            <data value="false" itemprop="todayIsFriday">It's Thursday</data>
+        </div>
+        
+        <template src="#love">
+            <data value="true" itemprop="todayIsFriday" -i="value"></data>
+        </template>
+    </div>
+
+    <!-- Test 2: Matching insertion with content replacement -->
+    <div id="test2">
+        <div id="greeting">
+            <p class="message">Hello</p>
+        </div>
+        
+        <template src="#greeting">
+            <p class="message">Goodbye</p>
+        </template>
+    </div>
+
+    <!-- Test 3: Multiple matching elements -->
+    <div id="test3">
+        <div id="list">
+            <span class="item">Item 1</span>
+            <span class="item">Item 2</span>
+            <span class="item">Item 3</span>
+        </div>
+        
+        <template src="#list">
+            <span class="item">Updated</span>
+        </template>
+    </div>
+
+    <!-- Test 4: Matching with multiple attributes -->
+    <div id="test4">
+        <form id="myForm">
+            <input type="text" name="username" value="old" placeholder="Enter username">
+        </form>
+        
+        <template src="#myForm">
+            <input type="text" name="username" value="new" placeholder="New placeholder" -i="value placeholder">
+        </template>
+    </div>
+
+    <!-- Test 5: No matching elements (template children don't match) -->
+    <div id="test5">
+        <div id="container">
+            <p class="text">Original</p>
+        </div>
+        
+        <template src="#container">
+            <span class="different">New content</span>
+        </template>
+    </div>
+
+    <!-- Test 6: Empty template content (no matching insertions) -->
+    <div id="test6">
+        <div id="simple">
+            <p>Simple content</p>
+        </div>
+        
+        <template src="#simple"></template>
+    </div>
+
+    <!-- Test 7: Nulling out content with -i attribute -->
+    <div id="test7">
+        <div id="status">
+            <span data-active="false" class="indicator">Inactive</span>
+        </div>
+        
+        <template src="#status">
+            <span data-active="true" class="indicator" -i="data-active"></span>
+        </template>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        // Test 1: Basic matching insertion
+        const observer1 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer1.observe(document.getElementById('test1'));
+
+        // Test 2: Content replacement
+        const observer2 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer2.observe(document.getElementById('test2'));
+
+        // Test 3: Multiple matching elements
+        const observer3 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer3.observe(document.getElementById('test3'));
+
+        // Test 4: Multiple attributes
+        const observer4 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer4.observe(document.getElementById('test4'));
+
+        // Test 5: No matching elements
+        const observer5 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer5.observe(document.getElementById('test5'));
+
+        // Test 6: Empty template
+        const observer6 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer6.observe(document.getElementById('test6'));
+
+        // Test 7: Nulling out content
+        const observer7 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer7.observe(document.getElementById('test7'));
+
+        window.testsReady = true;
+    </script>
+</body>
+</html>

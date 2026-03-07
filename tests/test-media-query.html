@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Query Test</title>
+</head>
+<body>
+    <h1>Media Query Test</h1>
+
+    <!-- Test elements -->
+    <div id="div1" class="test">Div 1</div>
+    <div id="div2" class="test">Div 2</div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+
+        const eventLog = [];
+        let mediaQueryList;
+
+        // Create a media query that we can control
+        mediaQueryList = window.matchMedia('(min-width: 500px)');
+
+        // Test: withMediaMatching should control mounting
+        const observer = new MountObserver({
+            matching: '.test',
+            withMediaMatching: mediaQueryList,
+            getPlayByPlay: true,
+            do: (el) => {
+                eventLog.push({ type: 'mount', id: el.id });
+            }
+        });
+
+        observer.addEventListener('mount', (e) => {
+            eventLog.push({ type: 'mount-event', id: e.mountedElement.id });
+        });
+
+        observer.addEventListener('dismount', (e) => {
+            eventLog.push({ type: 'dismount-event', id: e.mountedElement.id, reason: e.reason });
+        });
+
+        observer.addEventListener('mediamatch', () => {
+            eventLog.push({ type: 'mediamatch' });
+        });
+
+        observer.addEventListener('mediaunmatch', () => {
+            eventLog.push({ type: 'mediaunmatch' });
+        });
+
+        await observer.observe(document.body);
+
+        // Wait a bit then check results
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('results');
+            
+            // Check if media matches initially
+            const initiallyMatches = mediaQueryList.matches;
+            const expectedMountCount = initiallyMatches ? 2 : 0;
+            const actualMountCount = eventLog.filter(e => e.type === 'mount-event').length;
+            
+            const testPass = actualMountCount === expectedMountCount;
+            
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <p>Test: ${testPass ? '✅ PASS' : '❌ FAIL'}</p>
+                <p>Media query matches: ${initiallyMatches}</p>
+                <p>Expected mounts: ${expectedMountCount}</p>
+                <p>Actual mounts: ${actualMountCount}</p>
+                
+                <h3>Event Log</h3>
+                <pre>${JSON.stringify(eventLog, null, 2)}</pre>
+                
+                <h3>Expected Behavior</h3>
+                <ul>
+                    <li>If media matches: Elements should mount</li>
+                    <li>If media doesn't match: Elements should NOT mount</li>
+                    <li>getPlayByPlay events should fire when media state changes</li>
+                </ul>
+            `;
+            
+            // Set test result for Playwright
+            window.testResult = testPass;
+            window.eventLog = eventLog;
+            window.mediaMatches = initiallyMatches;
+        }, 100);
+    </script>
+</body>
+</html>

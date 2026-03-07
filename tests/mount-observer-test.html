@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mount Observer Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="log"></div>
+    
+    <fieldset disabled>
+        <label>
+            LHS: <input data-id="{{lhs}}">
+        </label>
+        
+        <template -id defer-🎚️ 🎚️='on if isEqual, based on #{{lhs}} and #{{rhs}}.'>
+            <div>LHS === RHS</div>
+        </template>
+    </fieldset>
+    <div id=target></div>
+    <script type="module">
+        import { MountObserver } from '/MountObserver.js';
+        
+        const log = document.getElementById('log');
+        function addLog(msg) {
+            console.log(msg);
+            log.innerHTML += msg + '<br>';
+        }
+        
+        addLog('Testing MountObserver with -id attribute...');
+        
+        (async () => {
+            try {
+                const observer = new MountObserver({
+                    matching: '[\\-id]',
+                    do: (element, info) => {
+                        addLog('MountObserver triggered!');
+                        addLog('Element: ' + element.localName);
+                        addLog('Has -id: ' + element.hasAttribute('-id'));
+                        addLog('Info: ' + JSON.stringify(Object.keys(info)));
+                        target.setAttribute('mark', 'good');
+                    }
+                });
+                
+                await observer.observe(document.body);
+                addLog('MountObserver created and observing');
+                
+                // Wait a bit to see if it triggers
+                setTimeout(() => {
+                    addLog('After timeout - checking if observer triggered');
+                }, 500);
+                
+            } catch (e) {
+                addLog('ERROR: ' + e.message);
+                addLog('Stack: ' + e.stack);
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ShareDefinition Handler</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Test ShareDefinition Handler</h1>
+    
+    <script type="module">
+        console.log('Test starting...');
+        
+        try {
+            const { MountObserver } = await import('../index.js');
+            const { SharedDefinitionRegistry } = await import('../SharedDefinitionRegistry.js');
+            
+            // Define a test custom element
+            class MyTestElement extends HTMLElement {
+                constructor() {
+                    super();
+                    this.textContent = 'Test Element';
+                }
+            }
+            customElements.define('my-test-element', MyTestElement);
+            
+            // Test 1: Handler matches [share-definition] elements
+            const observer = new MountObserver({
+                do: 'builtIns.shareDefinition'
+            });
+            await observer.observe(document.body);
+            console.log('✓ Observer created');
+            
+            // Test 2: Handler matches elements with dash in localName
+            const elem = document.createElement('my-test-element');
+            elem.setAttribute('share-definition', '');
+            document.body.appendChild(elem);
+            console.log('✓ Element with share-definition added');
+            
+            // Wait for async processing
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Test 3: Handler publishes to shared registry
+            const registry = SharedDefinitionRegistry.getInstance();
+            if (!registry.has('my-test-element')) {
+                throw new Error('Definition not published to shared registry');
+            }
+            console.log('✓ Definition published to shared registry');
+            
+            // Test 4: Published constructor matches
+            const publishedConstructor = registry.get('my-test-element');
+            if (publishedConstructor !== MyTestElement) {
+                throw new Error('Published constructor does not match');
+            }
+            console.log('✓ Published constructor matches');
+            
+            // Test 5: Handler ignores elements without dash
+            const divElem = document.createElement('div');
+            divElem.setAttribute('share-definition', '');
+            document.body.appendChild(divElem);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            // Should not throw, just not match
+            console.log('✓ Handler correctly ignores elements without dash');
+            
+            console.log('All tests passed!');
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testComplete = true;
+        }
+    </script>
+</body>
+</html>

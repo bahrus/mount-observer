@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssignGingerly Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>AssignGingerly Test</h1>
+    
+    <div id="container">
+        <input id="existing-input" type="text" placeholder="Existing input">
+    </div>
+    
+    <button id="addBtn" type="button">Add Input</button>
+    
+    <div id="log"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const log = document.getElementById('log');
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            log.appendChild(p);
+        }
+        
+        // Create observer that will apply properties to all input elements
+        const observer = new MountObserver({
+            matching: 'input',
+            assignOnMount: {
+                disabled: true,
+                value: 'Test value',
+                title: 'This is a test',
+                '?.dataset.test': 'data-test value'
+            }
+        });
+        
+        observer.addEventListener('mount', (e) => {
+            addLog(`Mount event: ${e.mountedElement.id}`);
+        });
+        
+        observer.observe(document);
+        addLog('Observer started');
+        
+        // Add button to dynamically add inputs
+        let counter = 0;
+        document.getElementById('addBtn').addEventListener('click', () => {
+            counter++;
+            const input = document.createElement('input');
+            input.id = `dynamic-input-${counter}`;
+            input.type = 'text';
+            input.placeholder = `Dynamic input ${counter}`;
+            document.getElementById('container').appendChild(input);
+            addLog(`Added input: dynamic-input-${counter}`);
+        });
+    </script>
+</body>
+</html>

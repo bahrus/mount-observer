@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log-To-Console</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div log-to-console="clicked on a div">hello</div>
+
+    <script type=module>
+        import 'mount-observer/ElementMountExtension.js';
+        document.body.mount([{
+            withAttrs:{
+                base: 'log-to-console'
+            },
+            spawn: function(el, {config}){
+                el.addEventListener('click', e => {
+                    const base = config.withAttrs.base;
+                    const {target} = e;
+                    const msg = target.getAttribute(`enh-${base}`) || target.getAttribute(base);
+                    console.log({msg});
+                });
+            },
+        }])
+    </script>
+</body>
+</html>

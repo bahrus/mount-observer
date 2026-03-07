@@ -3,23 +3,58 @@
 [![How big is this package in your project?](https://img.shields.io/bundlephobia/minzip/mount-observer?style=for-the-badge)](https://bundlephobia.com/result?p=mount-observer)
 <img src="http://img.badgesize.io/https://cdn.jsdelivr.net/npm/mount-observer?compression=gzip">
 
-Note that much of what is described below has not yet been polyfilled.
 
-# The MountObserver api.
+## Implementation Status
 
-Author:  Bruce B. Anderson (with valuable feedback from @doeixd )
+The following features have been implemented and tested:
 
-Issues / pr's / polyfill:  [mount-observer](https://github.com/bahrus/mount-observer)
+### Core Functionality
+- ✅ **matching**: CSS selector-based element matching
+- ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
+- ✅ **whereLocalNameMatches**: Regular expression-based localName filtering
+- ✅ **shouldMount**: Custom JavaScript check for complex mounting conditions
+- ✅ **Registry matching**: Automatic filtering by customElementRegistry (Chrome 146+)
+- ✅ **withMediaMatching**: Media query-based conditional mounting (string or MediaQueryList)
+- ✅ **whereObservedRootSizeMatches**: Container query-based conditional mounting (observes root element size)
+- ✅ **whereElementIntersectsWith**: Intersection observer-based conditional mounting (observes element visibility)
+- ✅ **whereConnectionHas**: Network connection-based conditional mounting (observes connection speed/type)
+- ✅ **withScopePerimeter**: Donut hole scoping (exclude elements inside matching ancestors)
 
-Last Update: Aug 7, 2025
+### Lifecycle & Events
+- ✅ **mount/dismount/disconnect events**: Element lifecycle tracking
+- ✅ **mediamatch/mediaunmatch events**: Media query state change notifications (with `getPlayByPlay` option)
+- ✅ **load event**: Import completion notification
+
+### Advanced Features
+- ✅ **Dynamic imports**: Lazy loading of JavaScript modules
+- ✅ **assignOnMount**: Property assignment when elements mount
+- ✅ **assignOnDismount**: Property assignment when elements dismount
+- ✅ **stageOnMount**: Reversible property assignment (auto-restores on dismount)
+- ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
+- ✅ **with property**: Hierarchical observer composition with sub-observers
+- ✅ **Element mount extension**: element.mount() method for scoped registry observation
+- ✅ **Shared MutationObserver**: Efficient observer sharing across instances
+- ✅ **Code splitting**: Conditional features loaded on-demand
+- ✅ **Memory management**: WeakRef usage for DOM node references
+
+### Not Yet Implemented
+- ❌ Reconnect event handling
+
+# The MountObserver API
+
+Author: Bruce B. Anderson (with valuable feedback from @doeixd)
+
+Issues / PRs / polyfill: [mount-observer](https://github.com/bahrus/mount-observer/tree/v2)
+
+Last Update: Feb 23, 2026
 
 ## Benefits of this API
 
-What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782).  The goals of the MountObserver api are more encompassing, and less focused on registering custom elements.  In fact, this proposal addresses numerous use cases in one api.  It is basically mapping common filtering conditions in the DOM, to mounting a "campaign" of some sort, like importing a resource, and/or progressively enhancing an element, and/or "binding from a distance".
+What follows is a far more ambitious alternative to the [lazy custom element proposal](https://github.com/w3c/webcomponents/issues/782). The goals of the MountObserver API are more encompassing and less focused on registering custom elements. In fact, this proposal addresses numerous use cases in one API. It basically maps common filtering conditions in the DOM to mounting a "campaign" of some sort, like importing a resource, and/or progressively enhancing an element, and/or "binding from a distance".
 
 ["Binding from a distance"](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) refers to empowering the developer to essentially manage their own "stylesheets" -- but rather than for purposes of styling, using these rules to attach behaviors, set property values, etc, to the HTML as it streams in.  Libraries that take this approach include [Corset](https://corset.dev/) and [trans-render](https://github.com/bahrus/trans-render), [selector-observer](https://github.com/josh/selector-observer), [pure](http://web.archive.org/web/20160313152905/https://beebole.com/pure/), [weld](https://github.com/tmpvar/weld), [bess](https://github.com/bkardell/bess).  The concept has been promoted by a [number](https://bkardell.com/blog/CSSLike.html) [of](https://www.w3.org/TR/NOTE-AS)  [prominent](https://www.xanthir.com/blog/b4K_0) voices in the community. 
 
-The underlying theme is this api is meant to make it easy for the developer to do the right thing, by encouraging lazy loading and smaller footprints. It rolls up most all the other observer api's into one, including, potentially, [a selector observer](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
+The underlying theme is that this API is meant to make it easy for developers to do the right thing by encouraging lazy loading and smaller footprints. It rolls up most of the other observer APIs into one, including, potentially, [a selector observer](https://github.com/whatwg/dom/issues/1285), which may be a similar duplicate to [the match-media counterpart proposal](https://github.com/whatwg/dom/issues/1225).
 
 ### Finite Element Analysis
 
@@ -38,41 +73,856 @@ ES module based web components may or may not be the best fit for these applicat
 A significant pain point has to do with downloading all the third-party web components and/or (progressive) enhancements that these macro components / compositions require, and loading them into memory only when needed.
 
 
-### Does this api make the impossible possible?
+### Does this API make the impossible possible?
 
-There is quite a bit of functionality this proposal would open up, that is exceedingly difficult to polyfill reliably:  
+There is quite a bit of functionality this proposal would open up that is exceedingly difficult to polyfill reliably:  
 
-1.  It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet).  The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren't visible, or during template instantiation, and requires carefully constructed "negating" queries if needing to know when the css selector is no longer matching.
+1. It is unclear how to use mutation observers to observe changes to [custom state](https://developer.mozilla.org/en-US/docs/Web/API/CustomStateSet). The closest thing might be a solution like [this](https://davidwalsh.name/detect-node-insertion), but that falls short for elements that aren't visible or during template instantiation, and requires carefully constructed "negating" queries if needing to know when the CSS selector is no longer matching.
 
-2.  For simple css matches, like "my-element", or "[name='hello']" it is enough to use a mutation observer, and only observe the elements within the specified DOM region (more on that below).  But as CSS has evolved, it is quite easy to think of numerous css selectors that would require us to expand our mutation observer to need to scan the entire Shadow DOM realm, or the entire DOM tree outside any Shadow DOM, for any and all mutations (including attribute changes), and re-evaluate every single element within the specified DOM region for new matches or old matches that no longer match.  Things like child selectors, :has, and so on. All this is done, miraculously, by the browser in a performant way.  Reproducing this in userland using JavaScript alone, matching the same performance seems impossible.  
+2. For simple CSS matches, like "my-element" or "[name='hello']", it is enough to use a mutation observer and only observe the elements within the specified DOM region (more on that below). But as CSS has evolved, it is quite easy to think of numerous CSS selectors that would require us to expand our mutation observer to scan the entire Shadow DOM realm, or the entire DOM tree outside any Shadow DOM, for any and all mutations (including attribute changes), and re-evaluate every single element within the specified DOM region for new matches or old matches that no longer match. Things like child selectors, :has, and so on. All this is done miraculously by the browser in a performant way. Reproducing this in userland using JavaScript alone while matching the same performance seems impossible.  
 
-3.  Knowing when an element, previously being monitored for, passes totally "out-of-scope", so that no more hard references to the element remain.  This would allow for cleanup of no longer needed weak references without requiring polling.
+3. Knowing when an element previously being monitored passes totally "out-of-scope" so that no more hard references to the element remain. This would allow for cleanup of no longer needed weak references without requiring polling.
 
-4.  Some css selectors, such as the [scope donut hole range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope) aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
+4. Some CSS selectors, such as the [donut hole scope range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope), aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
 
-###  Most significant use cases.
+5. Scoped custom element registries form natural "islands" of DOM that have many commonalities with css "donut hole scoping", and which mutation observers aren't really designed around.  The mount-observer is designed to work with scoped custom element registries as first-class citizens. 
 
-The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant.  Building it into the platform would potentially:
 
-1.  Give the developer a strong signal to do the right thing, by 
-    1.  Making lazy loading of resource dependencies easy, to the benefit of users with expensive networks.
-    2.  Supporting "binding from a distance" that can set property values of elements in bulk as the HTML streams in.  For example, say a web page is streaming in HTML with thousands of input elements (say a long tax form).  We want to have some indication in the head tag of the HTML (for example) to make all the input elements read only as they stream through the page. With css, we could do similar things, for example set the background to red of all input elements. Why can't we do something similar with setting properties like readOnly, disabled, etc?  With this api, giving developers the "keys" to css filtering, so they can "mount a campaign" to apply common settings on them all feels like something that almost every web developer has mentally screamed to themselves "why can't I do that?", doesn't it? 
-    3.  Supporting "progressive enhancement" more effectively.
-2.  Potentially by allowing the platform to do more work in the low-level (c/c++/rust?) code, without as much context switching into the JavaScript memory space, which may reduce cpu cycles as well.  This is done by passing into the API substantial number of conditions, which can all be evaluated at a lower level, before the api needs to surface up to the developer "found one!".
-3.  As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector.  Surely, the platform has found ways to do this more efficiently?  
+###  Most significant use cases
+
+The amount of code necessary to accomplish these common tasks designed to improve the user experience is significant. Building it into the platform would potentially:
+
+1. Give developers a strong signal to do the right thing by:
+    1. Making lazy loading of resource dependencies easy, to the benefit of users with expensive networks.
+    2. Supporting "binding from a distance" that can set property values of elements in bulk as the HTML streams in. For example, say a web page is streaming in HTML with thousands of input elements (say a long tax form). We want to have some indication in the head tag of the HTML (for example) to make all the input elements read-only as they stream through the page. With CSS, we could do similar things, for example set the background to red of all input elements. Why can't we do something similar with setting properties like readOnly, disabled, etc? With this API, giving developers the "keys" to CSS filtering so they can "mount a campaign" to apply common settings on them all feels like something that almost every web developer has mentally screamed to themselves "why can't I do that?", doesn't it?
+    3. Supporting "progressive enhancement" more effectively.
+2. Potentially allow the platform to do more work in low-level (C/C++/Rust?) code without as much context switching into the JavaScript memory space, which may reduce CPU cycles as well. This is done by passing a substantial number of conditions into the API, which can all be evaluated at a lower level before the API needs to surface up to the developer "found one!".
+3. As discussed earlier, to do the job right, polyfills really need to reexamine **all** the elements within the observed node for matches **anytime any element within the Shadow Root so much as sneezes (has an attribute modified, changes custom state, etc)**, due to modern selectors such as the :has selector. Surely the platform has found ways to do this more efficiently?  
 
 The extra flexibility this new primitive would provide could be quite useful to things other than lazy loading of custom elements, such as implementing [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) as well as [binding from a distance](https://github.com/WICG/webcomponents/issues/1035#issuecomment-1806393525) in userland.
- 
 
-## First use case -- lazy loading custom elements
+## Quick Examples of the Most Common Use Cases
 
-To specify the equivalent of what the alternative proposal linked to above would do, we can do the following:
+Before getting into the weeds, let's demonstrate the two most prominent use cases:
+
+### Use Case 1:  Custom Attribute Enhancement
+
+```html
+<body>
+    <div log-to-console="clicked on a div">hello</div>
+
+    <script type=module>
+        document.body.mount({
+            matching: '[log-to-console]',
+            do: (el) => {
+                el.addEventListener('click', e => {
+                  console.log(e.target.getAttribute('log-to-console'));
+                });
+            }
+        })
+    </script>
+</body>
+```
+
+
+
+### Use Case 2: Lazy Global Custom Element Definition
+
+To specify the equivalent of what the [alternative proposal linked to above would do](https://github.com/WICG/webcomponents/issues/782), we can do the following:
+
+```JavaScript
+// MyElement.js
+export default class MyElement extends HTMLElement {
+    connectedCallback() {
+        this.textContent = 'Hello!';
+    }
+}
+
+// main.js
+import 'mount-observer/ElementMountExtension.js';
+
+document.mount({
+    matching: 'my-element',
+    import: './MyElement.js',
+    do: 'builtIns.defineCustomElement'
+});
+
+// HTML - elements will be upgraded when discovered
+// by the mount observer
+<my-element></my-element>
+
+```
+
+This registers custom elements with the global customElements registry.
+
+See [this extending package](https://github.com/bahrus/mount-observer-script-element) that provides for a more declarative approach.
+
+### Scoped
+
+To register the class in the same custom element registry as the element which calls the "mount" method (element in this case), use "builtIns.defineScopedCustomElement":
+
+```JavaScript
+element.mount({
+    matching: 'my-element',
+    import: './MyElement.js',
+    do: 'builtIns.defineScopedCustomElement'
+});
+```
+
+## Enhancing Elements with assign-gingerly
+
+The `builtIns.enhanceMountedElement` handler automatically enhances mounted elements using the [assign-gingerly](https://www.npmjs.com/package/assign-gingerly) enhancement system. This allows us to attach behavior and state to elements without subclassing.
+
+```JavaScript
+// MyEnhancement.js
+class ButtonEnhancement {
+    constructor(element, ctx, initVals) {
+        this.element = new WeakRef(element);
+        this.ctx = ctx;
+        this.clickCount = 0;
+        
+        element.addEventListener('click', ({target}) => {
+            this.clickCount++;
+            target.setAttribute('data-clicks', this.clickCount);
+        });
+    }
+}
+
+export default {
+    spawn: ButtonEnhancement,
+    enhKey: 'buttonEnh'
+};
+
+// main.js
+
+document.mount({
+    matching: '.enhance-me',
+    import: './MyEnhancement.js',
+    do: 'builtIns.enhanceMountedElement'
+});
+
+// HTML
+<button class="enhance-me">Click me</button>
+
+// Access the enhancement
+const button = document.querySelector('.enhance-me');
+console.log(button.enh.buttonEnh.clickCount); // 0
+button.click();
+console.log(button.enh.buttonEnh.clickCount); // 1
+```
+
+The handler:
+1. Searches the imported module for an export with a `spawn` property (the enhancement class), starting with default.
+2. Calls `element.enh.get(registryItem, context)` to spawn the enhancement
+3. Stores the enhancement instance on `element.enh[enhKey]` if an `enhKey` is provided
+
+
+## Loading ES Modules from Script Elements
+
+The `builtIns.scriptNoModule` handler enables declarative module loading using `<script nomodule>` elements. This provides a way to import ES modules and JSON data directly from HTML without writing JavaScript.
+
+```html
+<!-- Load a JavaScript module -->
+<script nomodule src="./config.js" id="myConfig"></script>
+
+<!-- Load JSON data with import assertion -->
+<script nomodule src="./data.json" with-type="json" id="myData"></script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    // Handler provides matching and whereInstanceOf via static properties
+    const observer = new MountObserver({
+        do: 'builtIns.scriptNoModule'
+    });
+    observer.observe(document);
+    
+    // Access the imported modules
+    const config = document.getElementById('myConfig').export;
+    const data = document.getElementById('myData').export.default;
+    
+    console.log(config.mountConfig); // Access exported values
+    console.log(data); // Access JSON data
+</script>
+```
+
+**How it works:**
+1. The handler matches `script[nomodule][src]` elements (via static properties)
+2. Reads the `src` attribute and resolves it relative to the document
+3. Checks for optional `with-type` attribute for import assertions (e.g., `"json"`)
+4. Dynamically imports the module: `import(src, { with: { type: withType } })`
+5. Stores the imported module on `element.export`
+
+**Benefits:**
+- Declarative module loading directly in HTML
+- Supports JSON imports with `with-type="json"` attribute
+- No need to specify `matching` or `whereInstanceOf` (handler provides defaults)
+- Modules are accessible via `scriptElement.export`
+- Works with relative and absolute URLs
+
+**Use cases:**
+- Loading configuration files declaratively
+- Importing JSON data without fetch
+- Progressive enhancement with module loading
+- Declarative dependency management in HTML
+
+## Mount Observer Script Elements (MOSEs)
+
+The `builtIns.mountObserverScript` handler enables fully declarative mount observer configuration using `<script type="mountobserver">` elements. This provides the ultimate in HTML-first progressive enhancement.
+
+```html
+<!-- Inline JSON configuration -->
+<script type="mountobserver">
+{
+    "matching": "my-fancy-button",
+    "import": "./fancy-button.js",
+    "do": "builtIns.defineCustomElement"
+}
+</script>
+
+<!-- External JSON configuration -->
+<script type="mountobserver" src="./observer-config.json"></script>
+
+<!-- Bootstrap the handler -->
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    // Handler provides matching and whereInstanceOf via static properties
+    const observer = new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    });
+    observer.observe(document);
+</script>
+```
+
+**How it works:**
+1. The handler matches `script[type="mountobserver"]` elements (via static properties)
+2. If the script has a `src` attribute, imports JSON from that URL
+3. Otherwise, parses the script's textContent as JSON
+4. Calls `scriptElement.mount(config)` with the parsed configuration
+5. The `mount()` method creates a MountObserver for that configuration
+
+**Benefits:**
+- Zero JavaScript required for observer configuration
+- Configurations are pure JSON (fully serializable)
+- Easy to generate server-side or from build tools
+- Supports both inline and external configurations
+- Leverages the `element.mount()` API for automatic scope management
+- No need to specify `matching` or `whereInstanceOf` for the handler itself
+
+**Use cases:**
+- Server-side rendering with progressive enhancement
+- Build-time generation of observer configurations
+- CMS-driven component loading
+- Declarative micro-frontend architecture
+- Configuration management without JavaScript bundling
+
+**Example with multiple configurations:**
+```html
+<!-- Load custom elements -->
+<script type="mountobserver">
+{
+    "matching": "my-button",
+    "import": "./components/my-button.js",
+    "do": "builtIns.defineCustomElement"
+}
+</script>
+
+<!-- Enhance existing elements -->
+<script type="mountobserver">
+{
+    "matching": ".interactive",
+    "import": "./enhancements/interactive.js",
+    "do": "builtIns.enhanceMountedElement"
+}
+</script>
+
+<!-- Single bootstrap script activates all configurations -->
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+## Hoisting Templates for Performance
+
+The `builtIns.hoistTemplate` handler optimizes template usage by moving a template element's content from shadow roots to `document.head`. This is particularly useful when templates with IDs are repeated across multiple custom elements.
+
+**Why hoist templates?**
+
+When HTML-first custom elements repeat throughout a page, each instance typically contains its own copy of template content. Moving these templates to a centralized location:
+- Reduces memory usage (one template instead of many copies)
+- Improves cloning performance (single source of truth)
+- Maintains the same API through the `remoteContent` getter
+
+**Basic usage:**
+
+```html
+<my-web-component>
+    #shadow
+        <template id="my-template">
+            <div>My content</div>
+        </template>
+</my-web-component>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.hoistTemplate'
+    });
+    observer.observe(document);
+</script>
+```
+
+**What happens:**
+1. The handler finds templates with IDs in shadow roots
+2. Moves the template content to a new template in `<head>`
+3. Updates the original template with `src="#mount-observer-0"` (unique ID)
+4. Defines a `remoteContent` getter that returns the hoisted template's content
+
+**Accessing hoisted content:**
+
+```javascript
+const template = shadowRoot.querySelector('#my-template');
+
+// After hoisting, use remoteContent to access the content
+const content = template.remoteContent;  // Returns DocumentFragment
+const clone = content.cloneNode(true);   // Clone the content
+```
+<details>
+   <summary>Matching criteria
+
+The handler automatically hoists templates that:
+- Have an `id` attribute
+- Don't already have a `src` attribute
+- Are in a shadow root (or disconnected, being cloned)
+- Have content (empty templates are skipped)
+
+**Declarative usage with MOSE:**
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.hoistTemplate"
+}
+</script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+[Implemented as HoistingTemplates requirement](requirements/Done/HoistingTemplates.md)
+
+</details>
+
+## Intra-Document HTML Includes with HTMLInclude
+
+The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse within a document using `<template src="#id">` syntax. Think of it as "constants for HTML" - define content once with an ID, then reference it multiple times throughout your document.
+
+**Why use HTML includes?**
+
+- Reduces duplication of repeated HTML structures
+- Enables template-based content generation
+- Supports partial updates via matching insertions
+- Works across shadow DOM boundaries
+- Caches lookups for performance
+- Detects circular references automatically
+- Can be used to inherit from MOSEs
+
+**Basic usage - Simple cloning:**
+
+```html
+<!-- Define reusable content -->
+<div id="reusable">
+    <p>This content can be reused</p>
+    <button>Click me</button>
+</div>
+
+<!-- Reference it with a template -->
+<template src="#reusable"></template>
+
+<!-- Results in: -->
+<div>
+    <p>This content can be reused</p>
+    <button>Click me</button>
+</div>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    });
+    observer.observe(document);
+</script>
+```
+
+**What happens:**
+1. The handler finds templates with `src` attributes starting with `#`
+2. Searches for an element with that ID (across shadow boundaries)
+3. Clones the content from the source element
+4. Replaces the template with the cloned content
+5. Removes the `id` attribute from cloned elements to avoid duplicate IDs
+
+**Cloning priority:**
+1. `remoteContent` property (hoisted templates) - highest priority
+2. `content` property (regular templates)
+3. The element itself (any element with an ID)
+
+**Works with hoisted templates:**
+
+```html
+<my-web-component>
+    #shadow
+        <template id="my-template">
+            <div>Hoisted content</div>
+        </template>
+</my-web-component>
+
+<!-- After hoisting, this still works -->
+<template src="#my-template"></template>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    // First hoist templates
+    new MountObserver({
+        do: 'builtIns.hoistTemplate'
+    }).observe(document);
+    
+    // Then use them
+    new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    }).observe(document);
+</script>
+```
+
+### Matching Insertions - Partial Updates
+
+When a template has children, they are used to match elements in the cloned content and selectively update them. This enables partial modifications and "nulling out" content without duplicating the entire structure.
+
+**How it works:**
+1. Template children generate CSS selectors (tag, classes, attributes)
+2. Matching elements in the cloned content are found
+3. Matched elements have their children replaced and attributes updated
+4. The `-i` attribute specifies which attributes to update
+
+**Example - Updating attributes:**
+
+```html
+<!-- Source content -->
+<div itemscope id="love">
+    <data value="false" itemprop="todayIsFriday">It's Thursday</data>
+</div>
+
+<!-- Template with matching insertion -->
+<template src="#love">
+    <data value="true" itemprop="todayIsFriday" -i="value"></data>
+</template>
+
+<!-- Results in: -->
+<div itemscope>
+    <data value="true" itemprop="todayIsFriday">It's Thursday</data>
+</div>
+<!-- The value attribute is updated, but content stays "It's Thursday" -->
+```
+
+**The `-i` attribute:**
+
+The `-i` (insert) attribute is a space-separated list of attribute names to update on matched elements. Attributes listed in `-i` are:
+- Excluded from the CSS selector (allows matching elements with different values)
+- Updated on matched elements with values from the template child
+
+```html
+<template src="#form">
+    <!-- Update both value and placeholder -->
+    <input type="text" name="username" value="new" placeholder="Updated" -i="value placeholder">
+</template>
+```
+
+**Example - Replacing content:**
+
+```html
+<!-- Source -->
+<div id="greeting">
+    <p class="message">Hello</p>
+</div>
+
+<!-- Template replaces content -->
+<template src="#greeting">
+    <p class="message">Goodbye</p>
+</template>
+
+<!-- Results in: -->
+<div>
+    <p class="message">Goodbye</p>
+</div>
+```
+
+**Example - Multiple matching elements:**
+
+```html
+<!-- Source with multiple items -->
+<div id="list">
+    <span class="item">Item 1</span>
+    <span class="item">Item 2</span>
+    <span class="item">Item 3</span>
+</div>
+
+<!-- Update all matching items -->
+<template src="#list">
+    <span class="item">Updated</span>
+</template>
+
+<!-- Results in: -->
+<div>
+    <span class="item">Updated</span>
+    <span class="item">Updated</span>
+    <span class="item">Updated</span>
+</div>
+```
+
+**Example - Nulling out content:**
+
+```html
+<!-- Source -->
+<div id="status">
+    <span data-active="false" class="indicator">Inactive</span>
+</div>
+
+<!-- Update attribute, remove content -->
+<template src="#status">
+    <span data-active="true" class="indicator" -i="data-active"></span>
+</template>
+
+<!-- Results in: -->
+<div>
+    <span data-active="true" class="indicator"></span>
+</div>
+<!-- Content is removed, attribute is updated -->
+```
+
+### Use Case: Inheriting Groups of Mount-Observers
+
+Matching insertions become particularly powerful when combined with Mount Observer Script Elements (MOSEs) for inheriting and customizing groups of mount-observers across shadow DOM boundaries.
+
+**Scenario:** You have a base component with a set of mount-observers defined in its shadow root, and you want to reuse those observers in other components while making targeted modifications.
+
+```html
+<!-- Base component with mount-observers -->
+<template id="base-observers">
+    <script type="mountobserver">
+    {
+        "matching": "button.primary",
+        "import": "./primary-button.js",
+        "do": "builtIns.defineCustomElement"
+    }
+    </script>
+    
+    <script type="mountobserver">
+    {
+        "matching": ".interactive",
+        "import": "./interactive.js",
+        "do": "builtIns.enhanceMountedElement"
+    }
+    </script>
+    
+    <script type="mountobserver">
+    {
+        "matching": "form",
+        "import": "./form-validator.js",
+        "do": "builtIns.enhanceMountedElement"
+    }
+    </script>
+</template>
+
+<!-- Derived component - inherit and customize -->
+<my-derived-component>
+    #shadow
+        <!-- Include base observers -->
+        <template src="#base-observers">
+            <!-- Override the form validator with a different one -->
+            <script type="mountobserver">
+            {
+                "matching": "form",
+                "import": "./custom-form-validator.js",
+                "do": "builtIns.enhanceMountedElement"
+            }
+            </script>
+        </template>
+        
+        <!-- Component content -->
+        <form>...</form>
+        <button class="primary">Submit</button>
+</my-derived-component>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    // Bootstrap HTMLInclude handler
+    new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    }).observe(document);
+    
+    // Bootstrap MOSE handler to activate the observers
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+**What happens:**
+1. The `<template src="#base-observers">` clones all three MOSE scripts
+2. The matching insertion finds the form validator script (matching by `matching` attribute)
+3. Replaces its content with the custom validator configuration
+4. All three scripts are inserted into the shadow root
+5. The MOSE handler activates all observers in the shadow root's registry scope
+
+**Benefits:**
+- **Composition**: Build complex observer configurations from reusable pieces
+- **Inheritance**: Derive new components with modified observer behavior
+- **Scoped registries**: Each shadow root gets its own set of observers
+- **Declarative**: No JavaScript required for observer inheritance
+- **Maintainable**: Update base observers in one place, changes propagate
+
+**Advanced pattern - Multiple inheritance:**
+
+```html
+<!-- Base UI observers -->
+<template id="ui-observers">
+    <script type="mountobserver">{"matching": "button", ...}</script>
+    <script type="mountobserver">{"matching": "input", ...}</script>
+</template>
+
+<!-- Base data observers -->
+<template id="data-observers">
+    <script type="mountobserver">{"matching": "[itemscope]", ...}</script>
+</template>
+
+<!-- Component combines both -->
+<my-component>
+    #shadow
+        <template src="#ui-observers"></template>
+        <template src="#data-observers"></template>
+        
+        <!-- Add component-specific observers -->
+        <script type="mountobserver">
+        {
+            "matching": ".special",
+            "import": "./special.js",
+            "do": "builtIns.enhanceMountedElement"
+        }
+        </script>
+</my-component>
+```
+
+This pattern enables:
+- **Mixins**: Combine multiple observer groups
+- **Layering**: Stack observers from different concerns (UI, data, behavior)
+- **Customization**: Override specific observers while keeping others
+- **Reusability**: Share observer configurations across components
+
+**Declarative usage with MOSE:**
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.HTMLInclude"
+}
+</script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+**Error handling:**
+
+The handler provides helpful error messages:
+- Missing elements: `data-include-error="Element with id='foo' not found"`
+- Circular references: `data-include-error="Circular reference detected: #foo"`
+- Clone failures: `data-include-error="Unable to clone content from #foo"`
+
+**Performance:**
+
+- Uses WeakMap caching for repeated ID lookups
+- Efficient for scenarios like periodic tables with many repeated elements
+- Searches across shadow boundaries using `upShadowSearch`
+- Cleans up cache entries when elements are garbage collected
+
+[Implemented as MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes requirement](requirements/Done/MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes.md)
+
+## Automatic ID Generation with genIds
+
+The `builtIns.generateIds` handler automatically generates unique IDs for elements within scoped containers using the [id-generation](https://www.npmjs.com/package/id-generation) package. This is particularly useful for forms, microdata structures, and any scenario where you need unique IDs for accessibility or linking purposes.
+
+**Why use automatic ID generation?**
+
+- Eliminates manual ID management and conflicts
+- Supports scoped ID generation within fieldsets or itemscope containers
+- Automatically updates ID references in attributes (aria-labelledby, for, etc.)
+- Provides shorthand syntax for common patterns
+- Handles deferred attribute activation
+
+**Basic usage:**
+
+```html
+<fieldset disabled>
+    <label defer-for="for: #{{username}}">Username:</label>
+    <input data-id="username" type="text">
+    
+    <label defer-for="for: #{{password}}">Password:</label>
+    <input data-id="password" type="password">
+    
+    <button -id>Generate IDs</button>
+</fieldset>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.generateIds'
+    });
+    observer.observe(document);
+</script>
+```
+
+**What happens:**
+
+1. The handler watches for elements with the `-id` attribute (the trigger)
+2. Finds the nearest scope container (fieldset, [itemscope], or root)
+3. Generates unique IDs for elements with `data-id`, `#`, `@`, or `|` attributes
+4. Replaces `#{{name}}` references with generated IDs in attributes
+5. Removes `-id` and `defer-*` attributes after processing
+6. Removes `disabled` from fieldset containers
+
+**Shorthand attributes:**
+
+```html
+<fieldset>
+    <!-- # uses element's tag name -->
+    <input # type="text">  <!-- becomes data-id="input" -->
+    
+    <!-- @ uses element's name attribute -->
+    <input @ name="email" type="email">  <!-- becomes data-id="email" -->
+    
+    <!-- | uses element's itemprop attribute -->
+    <span | itemprop="price">$99</span>  <!-- becomes data-id="price" -->
+    
+    <button -id>Generate IDs</button>
+</fieldset>
+```
+
+**Side effects with data-id:**
+
+The `data-id` attribute supports special symbols that trigger side effects:
+
+```html
+<fieldset>
+    <!-- @ sets name attribute -->
+    <input data-id="@ username" type="text">
+    <!-- Result: id="gid-0" name="username" data-id="username" -->
+    
+    <!-- | sets itemprop attribute -->
+    <span data-id="| price">$99</span>
+    <!-- Result: id="gid-1" itemprop="price" data-id="price" -->
+    
+    <!-- $ sets itemscope and itemprop -->
+    <div data-id="$ product">...</div>
+    <!-- Result: id="gid-2" itemscope itemprop="product" data-id="product" -->
+    
+    <!-- . adds to class attribute -->
+    <div data-id=". highlight">Content</div>
+    <!-- Result: id="gid-3" class="highlight" data-id="highlight" -->
+    
+    <!-- % adds to part attribute -->
+    <div data-id="% header">Header</div>
+    <!-- Result: id="gid-4" part="header" data-id="header" -->
+    
+    <button -id>Generate IDs</button>
+</fieldset>
+```
+
+**Deferred attributes:**
+
+Use `defer-*` prefix to prevent attributes from being applied until IDs are generated:
+
+```html
+<fieldset disabled>
+    <!-- These attributes won't work until IDs are generated -->
+    <label defer-for="for: #{{email}}">Email:</label>
+    <input data-id="email" type="email" defer-aria-describedby="aria-describedby: #{{emailHelp}}">
+    <span data-id="emailHelp">Enter your email address</span>
+    
+    <button -id>Activate Form</button>
+</fieldset>
+```
+
+**Supported reference attributes:**
+
+The handler automatically replaces `#{{name}}` references in these attributes:
+- ARIA: `aria-labelledby`, `aria-describedby`, `aria-controls`, `aria-owns`, `aria-flowto`, `aria-activedescendant`
+- Form: `for`, `form`, `list`
+- Microdata: `itemref`
+- Any `data-*` attribute
+- Any attribute with a `defer-*` prefix
+
+**Declarative usage with MOSE:**
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.generateIds"
+}
+</script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+**Scope containers:**
+
+The handler looks for the nearest scope container using `.closest()`:
+- `<fieldset>` elements
+- Elements with `[itemscope]` attribute
+- Falls back to the root node if no scope is found
+
+**Global counter:**
+
+IDs are generated using a global counter (via `Symbol.for`) to ensure uniqueness across multiple module instances. Generated IDs follow the pattern `gid-0`, `gid-1`, `gid-2`, etc.
+
+
+# Thorough Exposition Begins Here
+
+Okay, let's get into the weeds.  First, we strongly recommend studying the core package that mount-observer extends, [assign-gingerly](https://www.npmjs.com/package/assign-gingerly).
+
+## First use case -- lazy loading custom elements without sugar coating
+
+This registers the custom element in the global registry.
 
 ```JavaScript
 const observer = new MountObserver({
-   select:'my-element',
+   select:'my-element', //not supported by this polyfill
    import: './my-element.js',
-   do: ({localName}, {modules, observer, observeInfo}) => {
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
       }
@@ -83,7 +933,7 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, as well as more structured inline functions also as discussed below, will continue to be called repeatedly.
+The do function will *only be called once per matching element* -- i.e. if the element stops matching the "select" criteria, then matches again, the do function won't be called again.  It will be called for all elements when they match within the scope passed in to the observe method.  However, the events discussed below, will continue to be called repeatedly.
 
 The constructor argument can also be an array of objects that fit the pattern shown above.
 
@@ -100,19 +950,20 @@ The "observer" constant above is a class instance that inherits from EventTarget
 > [!Note]
 > Reading through the historical links tied to the selector-observer proposal this proposal helped spawn, I may have painted an overly optimistic picture of [what the platform is capable of](https://github.com/whatwg/dom/issues/398).  It does leave me a little puzzled why this isn't an issue when it comes to styling, and also if some of the advances that were utilized to support :has could be applied to this problem space, so that maybe the arguments raised there have weakened.  Even if the concerns raised are as relevant today, I think considering the use cases this proposal envisions, that the objections could be overcome, for the following reasons: 1.  For scenarios where lazy loading is the primary objective, "bunching" multiple DOM mutations together and only reevaluating when things are quite idle is perfectly reasonable.  Also, for binding from a distance, most of the mutations that need responding to quickly will be when the *state of the host* changes, so DOM mutations play a somewhat muted role in that regard. Again, bunching multiple DOM mutations together, even if adds a bit of a delay, also seems reasonable.  I also think the platform could add an "analysis" step to look at the query and categorize it as "simple" queries vs complex.  Selector queries that are driven by the characteristics of the element itself (localName, attributes, etc) could be handled in a more expedited fashion.  Those that the platform does expect to require more babysitting could be monitored for less vigilantly.  Maybe in the latter case, a console.warning could be emitted during initialization.  The other use case, for lazy loading custom elements and custom enhancements based on attributes, I think most of the time this would fit the "simple" scenario, so again there wouldn't be much of an issue.
 
-In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but has to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable.
+In fact, I have encountered statements made by the browser vendors that some queries supported by css can't be evaluated simply by looking at the layout of the HTML, but have to be made after rendering and performing style calculations.  This necessitates having to delay the notification, which would be unacceptable in some circumstances.
 
-If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "on" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support.
+If the developer has a simple query in mind that needs no such nuance, I'm thinking it might be helpful to provide an alternative key to "select" that is used specifically for (a subset?) of queries supported by the existing "matches" method that elements support, maybe even after the browser vendors provide a selector-observer (if ever).
 
 So the developer could use:
 
-## Polyfill Supported Scenario I
+## Polyfill Supported Mount Observer
 
 ```JavaScript
 const observer = new MountObserver({
+   //supported by this polyfill
+   matching:'my-element',
    import: './my-element.js',
-   whereElementMatches:'my-element',
-   do: ({localName}, {modules, observer, observeInfo}) => {
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
       if(!customElements.get(localName)) {
          customElements.define(localName, modules[0].MyElement);
       }
@@ -123,9 +974,53 @@ const observer = new MountObserver({
 observer.observe(document);
 ```
 
-and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*"
+and could perhaps expect faster binding as a result of the more limited supported expressions.  Since "select" is not specified, it is assumed to be "*".
 
-This polyfill in fact only supports this latter option ("whreElementMatches"), and leaves "select" for such a time as when a selector observer is available in the platform.
+This polyfill in fact only supports this latter option ("matching"), and leaves "select" for such a time as when a selector observer is available in the platform.
+
+[Implemented as Requirement 1](requirements/Done/Requirement1.md).
+
+## The observe() method
+
+The `observe()` method begins observation of elements within the provided node:
+
+```typescript
+async observe(observedNode: Node): Promise<void>
+```
+
+**Parameter: `observedNode`**
+
+The `observedNode` parameter is the node where observation takes place. In order to support the polyfill, a mutation observer is registered on this node to detect when matching elements are added or removed. All matching elements within this node and its descendants will trigger mount callbacks, as long as it belongs to the same scoped custom element registry as the observed node.
+
+**Common usage:**
+```javascript
+const observer = new MountObserver({
+    matching: '.my-element',
+    do: (el) => console.log('Mounted:', el)
+});
+
+// Observe the entire document
+await observer.observe(document);
+
+// Or observe a specific subtree
+const container = document.querySelector('#container');
+await observer.observe(container);
+
+// Or observe within a shadow DOM
+const shadowRoot = element.shadowRoot;
+await observer.observe(shadowRoot);
+```
+
+**Note:** An observer can only observe one node at a time. Calling `observe()` again will throw an error. Call `disconnect()` first to observe a different node.
+
+**Relationship with element.mount():**
+
+When using the `element.mount()` convenience method, it internally determines which node to pass to `observe()` based on the `scope` option:
+- `'self'` - Observes the element itself
+- `'registryRoot'` - Finds and observes the element's registry root
+- `'registry'` - Finds and observes all DOM nodes that have the same custom element registry
+- `'shadow'` - Observes the element's shadow root
+- `'root'` - Observes the element's root node (via `getRootNode()`)
 
 ##  The import key
 
@@ -133,16 +1028,13 @@ This proposal has been amended to support multiple imports, including of differe
 
 ```JavaScript
 const observer = new MountObserver({
-   select:'my-element',
+   matching:'my-element',
    import: [
       ['./my-element-small.css', {type: 'css'}],
       './my-element.js',
    ],
-   do: ({localName}, {modules, observer}) => {
-      if(!customElements.get(localName)) {
-         customElements.define(localName, modules[1].MyElement);
-      }
-      observer.disconnectedSignal.abort();
+   do: ({localName}, {modules, observer, MountConfig, rootNode}) => {
+      ...
    }
 });
 observer.observe(document);
@@ -154,7 +1046,9 @@ The do function won't be invoked until all the imports have been successfully co
 
 Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
 
-This proposal would also include support for JSON and HTML module imports (really, all types). 
+This proposal would also include support for JSON and HTML module imports (really, all types).
+
+[Implemented as Requirement 1](requirements/Done/Requirement1.md).
 
 ## Preemptive downloading
 
@@ -165,14 +1059,14 @@ There are two significant steps to imports, each of which imposes a cost:
 
 What if we want to *download* the resource ahead of time, but only load into memory when needed?
 
-The link rel=modulepreload option provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
+The link rel=modulepreload option (and maybe the new defer tc39 proposal) provides an already existing platform support for this, but the browser complains when no use of the resource is used within a short time span of page load.  That doesn't really fit the bill for lazy loading custom elements and other resources.
 
 So for this we add loadingEagerness:
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'my-element',
-   loadingEagerness: 'eager',
+   select: 'my-element', //not supported by this polyfill
+   loadingEagerness: 'eager', //partially supported by this polyfill
    import: './my-element.js',
    do: ({localName}, {modules}) => customElements.define(localName, modules[0].MyElement),
 });
@@ -180,182 +1074,311 @@ const observer = new MountObserver({
 
 So what this does is only check for the presence of an element with tag name "my-element", and it starts downloading the resource, even before the element has "mounted" based on other criteria.
 
+The polyfill just loads the module into memory right away.
+
 > [!NOTE]
 > As a result of the google IO 2024 talks, I became aware that there is some similarity between this proposal and the [speculation rules api](https://developer.chrome.com/blog/speculation-rules-improvements).  This motivated the change to the property from "loading" to loadingEagerness above.
 
+## Importing Configuration with configFrom
 
+The `configFrom` property provides a clean way to import MountConfig settings from external modules, enabling better code organization and reusability.
 
-## Mount Observer Script Elements (MOSEs)
-
-Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
-
-```html
-<script type="mountobserver" onload="{...}"  onmount="{
-   const {matchingElement} = event;
-   const {localName} = matchingElement;
-   if(!customElements.get(localName)) {
-      customElements.define(localName, modules[1].MyElement);
-   }
-   observer.disconnectedSignal.abort();
-}">
-{
-   "select":"my-element",
-   "import": [
-      ["./my-element-small.css", {type: "css"}],
-      "./my-element.js",
-   ]
-}
-</script>
-```
-
-The things that make this API work together, namely the "modules", "observer", and "mountedElements" (an array of an array of weak refs to elements that match all the criteria for the i<sup>th</sup> "on" selector) would be accessible as properties of the script element:
+**Key benefit for JSON serialization**: One of the most important advantages of `configFrom` is that it allows us to separate non-JSON-serializable settings (like functions and class constructors) from JSON-serializable settings. This makes it possible to keep our inline MountConfig 100% JSON-serializable while still leveraging the full power of JavaScript in our imported configuration modules when needed.
 
 ```JavaScript
-const {modules, observer, mountedElements, mountInit} = myMountObserver;
-```
+// Inline config - 100% JSON serializable
+const observer = new MountObserver({
+   matching: '.my-element',
+   configFrom: './my-handlers.js'  // Non-serializable code lives here
+});
 
-The "scope" of the observer would be the ShadowRoot containing the script element (or the document outside Shadow if placed outside any shadow DOM, like in the head element).
-
-Once again, arrays of settings could be supported, which, in practice, would greatly increase the ratio between declarative, JSON-parsable instructions that could be performed in low-level c++/rust threads, vs custom JavaScript in the example above.  The events / callbacks would need to provide the index of which set of criteria was just fulfilled.
-
-> [!Note]
-> To support the event handlers above, I believe it would require that CSP solutions factor in both the inner content of the script element as well as all the event handlers via the string concatenation operator.  I actually think such support is quite critical due to lack of support of import.meta.[some reference to the script element] not being available, as it was pre-ES Modules.
-
-## Specific solution for lazy loading custom element definitions
-
-Since the example we've been dwelling on so far (lazy custom element definition) seems like such a pressing, common requirement, and was in fact the originating impetus for this proposal, we can go a step further and make the example above 100% declarative, thus resulting in a less clunky interplay between JSON and custom script.  This is meant as a way of illustrating how the platform could continue to extend this proposal going forward.
-
-The syntax below is just one, "spit-balling" way this could be done, as an example, and would require absorbing final heuristics from other custom element initiatives (such as declarative custom elements) when they get added to the platform.
-
-```html
-<script type="mountobserver">
-{
-   "select":"my-element",
-   "import": [
-      ["./my-element-small.css", {type: "css"}],
-      "./my-element.js",
-   ],
-   "define": {
-      "targetRegistry": "CustomElements",
-      "targetScope": "global",
-      "styleModules": [0],
-      "classDefinition": {
-         "module": 1,
-         "exportSymbol": 'MyElement'
-      }
+// my-handlers.js - Contains functions and class references
+export const mountConfig = {
+   whereInstanceOf: HTMLButtonElement,  // Class constructor
+   do: (element, context) => {          // Function
+      element.addEventListener('click', () => console.log('clicked'));
    }
-}
-</script>
+};
 ```
 
+This separation is crucial for scenarios like Mount Observer Script Elements (MOSEs) where configuration needs to be embedded in HTML as JSON, but we still want to leverage imperative JavaScript code.
 
-## Shadow Root inheritance
+### Basic Usage
 
-Inside a shadow root, we can plop a script element, also with type "mountobserver", optionally giving it the same id as above:
+Create a configuration module that exports a `mountConfig` constant:
 
-```html
-#shadowRoot
-<script id=myMountObserver type=mountobserver>
-{
-   "select":"your-element"
-}
-</script>
+```JavaScript
+// my-config.js
+export const mountConfig = {
+   matching: '.my-element',
+   do: (element, context) => {
+      element.textContent = 'Configured!';
+   }
+};
 ```
 
-If no id is found in the parent ShadowRoot (or in the parent window if the shadow root is at the top level), then this becomes a new set of rules to observe.
-
-But if a matching id is found, then the values from the parent script element get merged in with the one in the child, with the child settings, including the event handling attributes. 
-
-> [!Note]
-> The onload event is critical for a number of reasons, among them:
-> 1. We need a way to inject non JSON serializable settings (described below) when necessary, and 
-> 2. We need a way to override settings in child Shadow DOM's programmatically in some cases.
-
-We will come back to some important [additional features](#creating-frameworks-that-revolve-around-moses) of using these script elements later, but first we want to cover the highlights of this proposal, in order to give more context as to what kinds of functionality these MOSEs can provide.
-
-
-## Binding from a distance
-
-It is important to note that "select" is a css query with no restrictions.  So something like:
+Then reference it in your observer:
 
 ```JavaScript
 const observer = new MountObserver({
-   select:'div > p + p ~ span[class$="name"]',
-   do:{
-      mount: (matchingElement) => {
-         //attach some behavior or set some property value or add an event listener, etc.
-         matchingElement.textContent = 'hello';
-      },
-      dismount: (matchingElement) => {
-         matchingElement.textContent = 'bye';
-      }
-   }
-})
+   configFrom: './my-config.js'
+});
+observer.observe(document);
 ```
 
-... would work.
+### Multiple Configuration Modules
 
-Note that in this example, "do" no longer points to a function.  When it did (above), we mentioned this would only be called once per element.  **Now it will be called every the conditions flip from not all satisfied to satisfied"**.
-
-This would allow developers to create "stylesheet" like capabilities.
-
-
-##  Extra lazy loading
-
-By default, the matches would be reported as soon as an element matching the criterion is found or added into the DOM, inside the node specified by rootNode.
-
-However, we could make the loading even more lazy by specifying intersection options:
+You can import multiple config modules. Later configs override earlier ones (left-to-right merge):
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'my-element',
-   whereElementIntersectsWith:{
-      rootMargin: "0px",
-      threshold: 1.0,
-   },
-   import: './my-element.js'
+   configFrom: ['./base-config.js', './override-config.js']
 });
 ```
 
-## Media / container queries / instanceOf / custom checks
+### Inline Config Takes Precedence
+
+Inline configuration always overrides imported configuration:
+
+```JavaScript
+const observer = new MountObserver({
+   configFrom: './base-config.js',
+   matching: '.custom-selector'  // Overrides matching from base-config.js
+});
+```
+
+### Merge Semantics
+
+- **Shallow merge**: Uses `Object.assign()` for merging
+- **Merge order**: First configFrom module → second configFrom module → ... → inline config
+- **Arrays are replaced**: If multiple configs define the same array property, the later array completely replaces the earlier one
+- **Inline wins**: Inline configuration always takes final precedence
+
+### Supported Properties
+
+Config modules can export any valid MountConfig property, including:
+- `matching`, `whereInstanceOf`, `withMediaMatching`
+- `whereObservedRootSizeMatches`, `whereElementIntersectsWith`
+- `whereConnectionHas`, `withScopePerimeter`
+- `import`, `do`, `loadingEagerness`
+- `assignOnMount`, `assignOnDismount`, `stageOnMount`
+- `mountedElemEmits`, `customData`, `getPlayByPlay`
+
+### Functions and Class References
+
+Config modules can include non-JSON-serializable values like functions and class constructors:
+
+```JavaScript
+// button-config.js
+export const mountConfig = {
+   matching: 'button',
+   whereInstanceOf: HTMLButtonElement,
+   do: (element, context) => {
+      element.addEventListener('click', () => {
+         console.log('Button clicked!');
+      });
+   }
+};
+```
+
+### Error Handling
+
+**Missing mountConfig export:**
+```JavaScript
+// This will throw an error
+const observer = new MountObserver({
+   configFrom: './module-without-mountConfig.js'
+});
+// Error: Module './module-without-mountConfig.js' does not export 'mountConfig'
+```
+
+**Duplicate modules:**
+```JavaScript
+// This will throw an error
+const observer = new MountObserver({
+   configFrom: ['./config.js', './config.js']
+});
+// Error: Duplicate configFrom module: './config.js'
+```
+
+### Circular Dependency Warning
+
+Be careful to avoid circular dependencies when using `configFrom`. Config modules should only export configuration and avoid importing modules that create MountObserver instances.
+
+**Safe pattern:**
+```JavaScript
+// config.js - Only exports configuration
+export const mountConfig = {
+   matching: '.element',
+   do: (el) => { /* ... */ }
+};
+```
+
+**Avoid:**
+```JavaScript
+// config.js - Creates circular dependency
+import { MountObserver } from 'mount-observer/MountObserver.js';
+// This could cause issues if the importing module also imports MountObserver
+```
+
+## Media / container queries / instanceOf
 
 Unlike traditional CSS @import, CSS Modules don't support specifying different imports based on media queries.  That can be another condition we can attach (and why not throw in container queries, based on the rootNode?):
 
 ```JavaScript
 const observer = new MountObserver({
-   select: 'div > p + p ~ span[class$="name"]',
-   whereMediaMatches: '(max-width: 1250px)',
-   whereSizeOfContainerMatches: '(min-width: 700px)',
-   whereContainerHas: '[itemprop=isActive][value="true"]',
-   whereInstanceOf: [HTMLMarqueeElement], //or ['HTMLMarqueeElement']
-   whereLangIn: ['en-GB'],
-   whereConnectiselect:{
+   // not supported by polyfill
+   select: 'div > p + p ~ span[class$="name"]', 
+   withMediaMatching: '(max-width: 1250px)',
+   whereObservedRootSizeMatches: '(min-width: 700px)',
+   whereElementIntersectsWith:{
+      rootMargin: "0px",
+      threshold: 1.0,
+   },
+   whereInstanceOf: [HTMLMarqueeElement], //or 'HTMLMarqueeElement'
+   whereLangIn: ['en-GB'], // Cannot be implemented - see https://github.com/whatwg/html/issues/7039
+   whereConnectionHas:{
       effectiveTypeIn: ["slow-2g"],
    },
    import: ['./my-element-small.css', {type: 'css'}],
-   do: {
-      confirm: (matchingElement, (e: MountObserverConfirmEvent) => {
-         e.isSatisfied = true;
-         e.preventDefault();
-      }),
-      mount: ({localName}, {modules}) => {
-        ...
-      },
-      dismount: ...,
-      disconnect: ...,
-      move: ...,
-      reconnect: ...,
-      confirm: ...,
-      reconfirm: ...,
-      exit: ...,
-      forget: ...,
+   do: function(mountedElement, ctx){
+      console.log({mountedElement, ctx});
    }
 });
 ```
 
+[whereInstanceOf implemented as [Requirement5](requirements/Done/Requirement5.md)]
+[whereObservedRootSizeMatches implemented]
+[whereElementIntersectsWith implemented]
+[whereConnectionHas implemented]
+[whereLocalNameMatches implemented as [RegularExpressionNameMatching](requirements/Done/RegularExpressionNameMatching.md)]
+
+[withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
+
+## LocalName Pattern Matching
+
+The `whereLocalNameMatches` property allows filtering elements by their `localName` using regular expressions. This is useful when you need to match elements based on naming patterns rather than CSS selectors.
+
+```javascript
+const observer = new MountObserver({
+    matching: '*',  // Match all elements
+    whereLocalNameMatches: /^my-/,  // Only mount elements starting with 'my-'
+    do: (element) => {
+        console.log('Mounted:', element.localName);
+    }
+});
+observer.observe(document);
+```
+
+**String patterns are automatically converted to RegExp:**
+
+```javascript
+// These are equivalent
+whereLocalNameMatches: 'button|input'
+whereLocalNameMatches: /button|input/
+```
+
+**Common use cases:**
+
+```javascript
+// Match custom elements with a specific prefix
+whereLocalNameMatches: /^app-/
+
+// Match elements ending with a suffix
+whereLocalNameMatches: /-widget$/
+
+// Match multiple element types
+whereLocalNameMatches: /^(button|input|select)$/
+
+// Match elements containing a pattern
+whereLocalNameMatches: /dialog/
+```
+
+**AND condition logic:**
+
+Like all `where*` properties, `whereLocalNameMatches` forms an AND condition with other filters:
+
+```javascript
+const observer = new MountObserver({
+    matching: '[data-enhanced]',           // Must have data-enhanced attribute
+    whereLocalNameMatches: /^custom-/,     // AND localName starts with 'custom-'
+    whereInstanceOf: HTMLElement,          // AND is an HTMLElement instance
+    do: (element) => { /* ... */ }
+});
+```
+
+This will only mount elements that satisfy ALL three conditions.
+
+## Custom JavaScript Checks with shouldMount
+
+The `shouldMount` property provides a final JavaScript-based check that runs after all declarative `where*` conditions have passed. This is useful for complex logic that can't be expressed declaratively.
+
+It's useful to be able to provide this check outside of the do method for separation of concerns reasons, and also because the do function only gets called once, and having this extra check allows us to combine all the checks together in a consistent way.
+
+```javascript
+const observer = new MountObserver({
+    matching: '.protected-feature',
+    shouldMount: (el, ctx) => {
+        // Check user permission
+        const requiredRole = el.dataset.requiredRole;
+        return currentUser.hasRole(requiredRole);
+    },
+    do: (el) => {
+        // Only called if shouldMount returned true
+        enhanceProtectedFeature(el);
+    }
+});
+```
+
+**Behavior:**
+- `shouldMount` is called after ALL `where*` conditions pass
+- If it returns `true`, the element mounts (do callback + mount event)
+- If it returns `false`, the element does NOT mount (no do callback, no mount event)
+- If it throws an error, it's treated as `false` and the error is logged
+- The element can be re-evaluated if removed and re-added to the DOM
+
+**Use Cases:**
+
+Authorization checks:
+```javascript
+shouldMount: (el) => currentUser.hasPermission(el.dataset.permission)
+```
+
+Feature flags:
+```javascript
+shouldMount: (el) => featureFlags.isEnabled(el.dataset.feature)
+```
+
+Data validation:
+```javascript
+shouldMount: (el) => {
+    return el.dataset.apiKey && 
+           el.dataset.apiEndpoint && 
+           el.dataset.apiKey.length > 0;
+}
+```
+
+Complex conditional logic:
+```javascript
+shouldMount: (el, ctx) => {
+    const parent = el.closest('[data-context]');
+    if (!parent) return false;
+    
+    const isActive = parent.dataset.context === 'active';
+    const widgetType = el.dataset.widgetType;
+    const enabledWidgets = parent.dataset.enabledWidgets?.split(',') || [];
+    
+    return isActive && enabledWidgets.includes(widgetType);
+}
+```
+
+**Note:** For event-driven mounting (waiting for user clicks, etc.), use the `do` callback with event listeners rather than `shouldMount`. The `shouldMount` callback is for checking conditions, not waiting for events.
+
+[Implemented as SupportForShouldMount requirement](requirements/Done/SupportForShouldMount.md)
+
 ## InstanceOf checks in detail
 
-Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "confirm" callback logic.  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
+Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "shouldMount" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
 
 The picture becomes murkier for custom elements.  The best solution in that case seems to be to utilize customElements.getName(...) as a basis for the match, but at first glance, that could  preclude being able to use base classes which a family of custom elements subclass, if that superclass isn't itself a custom element.  I suppose the solution to this conundrum, when warranted, is simply to burden the developer with defining a custom element for the superclass, and thus assigning it a name, applicable within ShadowDOM scopes as needed, even though it isn't actually necessarily used for any live custom elements. This would require already having imported the base class, only benefitting from lazy loading the code needed for each sub class, which might not always be all that high as a percentage, compared to the base class.
 
@@ -366,19 +1389,1255 @@ However, where this support for "whereInstanceOf" would be *most* helpful is whe
 
 [TODO] Maybe should also (optionally?) pass back which checks failed and which succeeded on dismount.  Not sure I really see a use case for it, but leaving the thought here for now 
 
---> 
+-->
+
+## Custom Element Registry Matching
+
+MountObserver automatically respects scoped custom element registry boundaries. When observing a root node, only elements that share the same `customElementRegistry` as the root node will be mounted by default. This is an implicit AND condition that applies to all observations.
+
+**How it works:**
+
+```javascript
+// Observe document - only mounts elements in the global registry
+const observer1 = new MountObserver({
+    matching: '.my-element',
+    do: (el) => { /* ... */ }
+});
+observer1.observe(document);
+
+// Observe shadow root - only mounts elements in that shadow root's registry
+const shadowRoot = host.attachShadow({ mode: 'open' });
+const observer2 = new MountObserver({
+    matching: '.my-element',
+    do: (el) => { /* ... */ }
+});
+observer2.observe(shadowRoot);
+```
+
+**Registry matching logic:**
+
+The implementation is straightforward - it compares the `customElementRegistry` property of the root node with the `customElementRegistry` property of each candidate element:
+
+```javascript
+const registriesMatch = rootNode.customElementRegistry === element.customElementRegistry;
+```
+
+**Default behavior** (same registry):
+- Elements with matching registries → mount ✓
+- Elements with different registries → don't mount ✓
+
+**Inverted behavior** with `whereDifferentCustomElementRegistry: true`:
+- Elements with matching registries → don't mount ✓
+- Elements with different registries → mount ✓
+
+**Use case for inverted matching:**
+```javascript
+// Mount elements from OTHER registries (cross-registry observation)
+const observer = new MountObserver({
+    matching: '.external-component',
+    whereDifferentCustomElementRegistry: true,
+    do: (el) => { /* Handle elements from different registries */ }
+});
+observer.observe(shadowRoot);
+```
+
+**Behavior across browser versions:**
+- **Pre-Chrome 146**: Both `customElementRegistry` properties are `undefined`, so `undefined === undefined` is `true` and elements match (backward compatible)
+- **Chrome 146+ with scoped registries**: Elements are filtered by registry reference equality
+
+This ensures that when we observe a shadow root with a scoped registry, we won't accidentally mount elements from the parent document or other shadow roots with different registries (unless explicitly requested with `whereDifferentCustomElementRegistry: true`). The registry check happens automatically before any other `where*` conditions are evaluated.
+
+[Implemented as [ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch](requirements/ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch.md)]
+
+## Element Mount Extension
+
+For even more convenience, we can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with scoped custom element registries (Chrome 146+, latest WebKit/Safari).
+
+```JavaScript
+import 'mount-observer/ElementMountExtension.js';
+
+// Mount with MountConfig
+await document.body.mount({
+    matching: 'button',
+    do: (element) => {
+        element.classList.add('enhanced');
+    }
+});
+```
+
+The `mount()` method:
+- Automatically finds the highest scoped container with the same `customElementRegistry` as the element (default behavior)
+- Creates a `MountObserver` with the provided config
+- Observes the determined scope
+- Returns the element for chaining (as a Promise)
+
+Scope options (via `options.scope`):
+- `'registry'` (default): Observes the root registry container (highest element with same customElementRegistry)
+- `'self'`: Observes only this element
+- `'root'`: Observes the root node (document or shadow root)
+- `'shadow'`: Observes the element's shadowRoot (throws error if none exists)
+- `Element`: Observes a custom element we specify
+
+This is especially useful for web components that want to observe their own shadow DOM or scoped registry:
+
+```JavaScript
+class MyComponent extends HTMLElement {
+    async connectedCallback() {
+        const shadow = this.attachShadow({ mode: 'open', registry: new CustomElementRegistry() });
+        shadow.innerHTML = `<button data-action="click">Click me</button>`;
+        
+        // Default: Observe within this component's scoped registry
+        await shadow.mount([{
+            spawn: ButtonHandler,
+            enhKey: 'handler',
+            withAttrs: { action: 'data-action' }
+        }]);
+        
+        // Or observe just the shadow root itself
+        await this.mount([{
+            spawn: ShadowHandler,
+            enhKey: 'shadow'
+        }], { scope: 'shadow' });
+        
+        // Or observe the entire document
+        await this.mount({
+            matching: '.global-button',
+            do: (el) => console.log('Global button found')
+        }, { scope: 'root' });
+    }
+}
+```
+
+Browser support: Works in all browsers, but scoped registry features require Chrome 146+ or latest WebKit/Safari.
+
+[Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
+
+### Global Propagation with `mountGlobally()`
+
+The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across custom element registry boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.
+
+```JavaScript
+import 'mount-observer/ElementMountExtension.js';
+
+// Mount globally - propagates to all child registries and shadow roots
+await document.mountGlobally({
+    matching: '.target',
+    do: (el) => {
+        el.setAttribute('data-mounted', 'true');
+    }
+});
+```
+
+The `mountGlobally()` method:
+- Mounts the config in the current registry first (using `mount()`)
+- Creates two propagators that automatically mount in:
+  - Elements with different custom element registries (`whereDifferentCustomElementRegistry: true`)
+  - Shadow roots within the same registry (custom elements with shadow DOM)
+- Waits for custom elements to be defined before mounting (ensures shadow roots exist)
+- Recursively propagates through nested shadow roots
+
+This enables "viral" propagation of mount observers, perfect for bootstrapping core handlers like `builtIns.mountObserverScript`:
+
+```JavaScript
+// Bootstrap mount observer script support globally
+await document.mountGlobally({
+    do: 'builtIns.mountObserverScript'
+});
+
+// Now MOSE scripts work everywhere, even in scoped registries
+```
+
+Both `Element.prototype.mountGlobally()` and `ShadowRoot.prototype.mountGlobally()` are available.
+
+[Implemented as goViral requirement](requirements/Done/goViral.md).
+
+## Hierarchical Observer Composition with the `with` Property
+
+The `with` property enables hierarchical composition of MountObservers, allowing a parent observer to declaratively create and manage multiple sub-observers that observe the same root node. This provides a clean way to organize complex observation scenarios and coordinate multiple observers.
+
+### Basic Usage
+
+```JavaScript
+const observer = new MountObserver({
+    matching: '.container',
+    with: {
+        // Sub-observer for custom elements
+        registry: {
+            matching: 'my-element',
+            import: './my-element.js',
+            do: 'builtIns.defineCustomElement'
+        },
+        // Sub-observer for styles
+        styles: {
+            matching: '.styled',
+            import: './styles.css'
+        }
+    }
+});
+
+await observer.observe(document);
+```
+
+### How It Works
+
+1. **Automatic Creation**: When the parent observer's `observe()` method is called, it automatically creates sub-observers for each entry in the `with` property.
+
+2. **Same Root Node**: All sub-observers observe the same root node as the parent.
+
+3. **Independent Configuration**: Each sub-observer operates independently with its own configuration. Sub-observers do NOT inherit properties from the parent.
+
+4. **Automatic Lifecycle**: Sub-observers are automatically disconnected when the parent disconnects.
+
+5. **Unlimited Nesting**: Sub-observers can have their own `with` property for unlimited nesting depth.
+
+### Accessing Sub-Observers in Handlers
+
+Sub-observers are accessible in mount handlers via the `context.withObservers` property:
+
+```JavaScript
+const observer = new MountObserver({
+    matching: '.parent',
+    with: {
+        registry: { matching: 'custom-element' },
+        styles: { matching: '.styled' }
+    },
+    do: (el, ctx) => {
+        // Access sub-observers with type safety
+        const registryObserver = ctx.withObservers?.registry;
+        const stylesObserver = ctx.withObservers?.styles;
+        
+        if (registryObserver) {
+            console.log('Registry observer:', registryObserver);
+            console.log('Mounted elements:', registryObserver.mountedElements);
+        }
+    }
+});
+```
+
+### Nested Sub-Observers
+
+Sub-observers can have their own sub-observers, creating a tree structure:
+
+```JavaScript
+const observer = new MountObserver({
+    matching: '.root',
+    with: {
+        level1: {
+            matching: '.level1',
+            with: {
+                level2: {
+                    matching: '.level2',
+                    do: (el) => console.log('Level 2 mounted:', el)
+                }
+            }
+        }
+    }
+});
+```
+
+### Use Case: Cross-Scope Registry Management
+
+A practical use case is managing custom elements across different scoped registries:
+
+```JavaScript
+const observer = new MountObserver({
+    matching: 'div[shadowroot]',
+    with: {
+        // Observe elements in the main registry
+        mainRegistry: {
+            matching: 'my-element',
+            whereDifferentCustomElementRegistry: false,
+            do: 'builtIns.defineCustomElement'
+        },
+        // Observe elements in shadow DOM registries
+        shadowRegistry: {
+            matching: 'shadow-element',
+            whereDifferentCustomElementRegistry: true,
+            do: 'builtIns.defineScopedCustomElement'
+        }
+    }
+});
+```
+
+### Type Safety
+
+When using TypeScript, the keys in the `with` property are inferred and provide autocomplete:
+
+```TypeScript
+const observer = new MountObserver({
+    matching: '.parent',
+    with: {
+        registry: { matching: 'my-element' },
+        styles: { import: './styles.css' }
+    },
+    do: (el, ctx) => {
+        ctx.withObservers?.registry  // ✓ TypeScript knows this exists
+        ctx.withObservers?.unknown   // ✗ TypeScript error
+    }
+});
+```
+
+### Key Benefits
+
+1. **Declarative Composition**: Define complex observer hierarchies in a single configuration
+2. **Automatic Lifecycle**: Sub-observers are created and cleaned up automatically
+3. **Independent Operation**: Each sub-observer has its own configuration and state
+4. **Type Safety**: Full TypeScript support with key inference
+5. **Unlimited Nesting**: Create arbitrarily deep observer hierarchies
+
+### Known Limitations
+
+- **Circular References**: The library does not detect or prevent circular references in `with` configurations. Avoid configurations where observer A's `with` references observer B, and B's `with` references A, as this will cause a stack overflow.
+
+### Breaking Change: MountConfig → mountConfig
+
+In v2.x, the `MountContext.MountConfig` property was renamed to `MountContext.mountConfig` for consistency with JavaScript naming conventions (properties use camelCase, types use PascalCase).
+
+**Migration:**
+```JavaScript
+// Before (v1.x)
+do: (el, ctx) => {
+    console.log(ctx.MountConfig.matching);  // Old name
+}
+
+// After (v2.x)
+do: (el, ctx) => {
+    console.log(ctx.mountConfig.matching);  // New name
+}
+```
+
+[Implemented as support-for-with spec](.kiro/specs/support-for-with/)
+
+## Mount Observer Script Elements (MOSEs)
+
+Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
+
+```JavaScript
+// myPackage/myDefiner.js
+// My all powerful custom element definer
+export const mountConfig = {
+   do: function({localName}, {modules, observer}) {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[1].MyElement);
+      }
+      observer.disconnectedSignal.abort();
+   }
+};
+```
+
+```html
+<script type="mountobserver" >
+{
+   "select":"my-element",
+   "import": [
+      ["./my-element-small.css", {"type": "css"}],
+      "./my-element.js"
+   ],
+   "configFrom": "myPackage/myDefiner.js"
+}
+</script>
+```
+
+To keep this proposal / polyfill of reasonable size, mount observer script elements has its own [repo / sub-proposal](https://github.com/bahrus/mount-observer-script-element).  There's much more to it, including support for inheritance across containing scoped custom element registries.
+
+But I think it's important to think about this way of making the mount observer declarative, as it provides one significant reason why we place so much emphasis on making sure that the mount observer settings (MountConfig) is as JSON serializable as possible.
+
+
+## Binding from a distance
+
+It is important to note that "matching" (and especially the non polyfillable "select") is a css query with no restrictions.  So something like:
+
+```JavaScript
+import {EvtRt} from 'mount-observer/EvtRt.js';
+
+class MyHandler extends EvtRt {
+   mount(mountedElement, MountConfig, context){
+      mountedElement.textContent = 'hello';
+   }
+   dismount(mountedElement, MountConfig){
+      mountedElement.textContent = 'goodbye';
+   }
+}
+
+const observer = new MountObserver({
+   // not supported by polyfill
+   //select: 'div > p + p ~ span[class$="name"]' 
+   // is supported by polyfill, and even after select is also supported:
+   matching: 'div > p + p ~ span[class$="name"]',
+   do: (mountedElement, ctx) => {
+      new MyHandler(mountedElement, ctx);
+   },
+});
+observer.observe(document);
+```
+
+
+... would work.
+
+EvtRt is a convenience class provided with the polyfill package, and is considered part of this proposal (see how it is used below  by built in handlers).
+
+This allows developers to create "stylesheet" like capabilities.
+
+## Registering reusable handlers with MountObserver.define
+
+To make MountConfig configurations more JSON-serializable and encourage code reuse, we can register handler classes with string names and reference them by name:
+
+```JavaScript
+import {EvtRt} from 'mount-observer/EvtRt.js';
+
+class MyHandler extends EvtRt {
+   mount(mountedElement, MountConfig, context){
+      mountedElement.textContent = 'hello';
+   }
+   dismount(mountedElement, MountConfig){
+      mountedElement.textContent = 'bye';
+   }
+}
+
+// Register the handler with a string name
+MountObserver.define('myHandler', MyHandler);
+
+// Reference it by name in the configuration
+const observer = new MountObserver({
+   matching: 'div > p + p ~ span[class$="name"]',
+   do: 'myHandler'  // String reference instead of inline function
+});
+observer.observe(document);
+```
+
+### Benefits of registered handlers
+
+1. **JSON serialization**: Configurations using string references can be serialized to JSON
+2. **Code reuse**: Define handlers once, use them in multiple observers
+3. **Separation of concerns**: Keep handler logic separate from configuration
+
+### Using arrays with mixed types
+
+The `do` property can be a string, a function, or an array mixing both:
+
+```JavaScript
+MountObserver.define('logger', LoggerHandler);
+MountObserver.define('validator', ValidatorHandler);
+
+const observer = new MountObserver({
+   matching: 'input',
+   do: [
+      'logger',                    // Registered handler
+      (element, ctx) => {          // Inline function
+         element.dataset.processed = 'true';
+      },
+      'validator'                  // Another registered handler
+   ]
+});
+```
+
+Handlers execute in the order specified. If a handler constructor throws an error, execution stops and subsequent handlers won't run.
+
+### Handler requirements
+
+Registered handlers must be classes (constructors) that accept `(mountedElement: Element, ctx: MountContext)` as constructor parameters. They can be:
+
+- ES6 classes extending `EvtRt` (recommended)
+- ES6 classes with custom logic
+- ES5-style constructor functions
+
+```JavaScript
+// ES5-style constructor function
+function SimpleHandler(element, ctx) {
+   element.textContent = 'Handled!';
+}
+
+MountObserver.define('simple', SimpleHandler);
+```
+
+### Error handling
+
+**Validation at construction time**: If you reference an unregistered handler name, an error is thrown when creating the MountObserver:
+
+```JavaScript
+const observer = new MountObserver({
+   do: 'nonexistent'  // Error: No handler defined for nonexistent
+});
+```
+
+**Duplicate registration**: Attempting to register the same name twice throws an error:
+
+```JavaScript
+MountObserver.define('myHandler', Handler1);
+MountObserver.define('myHandler', Handler2);  // Error: myHandler already in use
+```
+
+
+
+### Global registry
+
+The handler registry is global and shared across all MountObserver instances, similar to the custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
+
+[Implemented as [Requirement14](requirements/Done/Requirement14.md)]
+
+### Handler defaults with static properties
+
+Registered handler classes can specify default MountConfig properties using static class properties. When we reference a handler by name, its static properties are automatically merged with your inline configuration, with inline config always taking precedence:
+
+```JavaScript
+import {EvtRt} from 'mount-observer/EvtRt.js';
+
+class MyHandler extends EvtRt {
+   static matching = 'div > p + p ~ span[class$="name"]';
+   static whereInstanceOf = HTMLSpanElement;
+   
+   mount(mountedElement, MountConfig, context){
+      mountedElement.textContent = 'hello';
+   }
+   dismount(mountedElement, MountConfig){
+      mountedElement.textContent = 'bye';
+   }
+}
+
+// Register the handler
+MountObserver.define('myHandler', MyHandler);
+
+// Use with defaults - will use handler's matching and whereInstanceOf
+const observer1 = new MountObserver({
+   do: 'myHandler'
+});
+observer1.observe(document);
+
+// Override specific properties - inline config trumps handler defaults
+const observer2 = new MountObserver({
+   matching: 'span.special',  // This overrides the handler's matching
+   do: 'myHandler'            // Still uses handler's whereInstanceOf
+});
+observer2.observe(document);
+```
+
+**How it works:**
+1. When `do` is a string reference to a registered handler, the handler's static properties are extracted
+2. Static properties are merged with the inline config using object spread
+3. Inline config properties always override handler defaults (inline trumps)
+4. All MountConfig properties can be specified as static properties (matching, whereInstanceOf, withMediaMatching, etc.)
+
+**Benefits:**
+- **DRY principle**: Define common configuration once in the handler class
+- **Flexibility**: Override any property when needed for specific use cases
+- **Composability**: Handlers become self-contained with their own default behavior
+- **JSON serialization**: Configurations remain JSON-serializable since only the handler name is referenced
+
+**Example with multiple properties:**
+
+```JavaScript
+class InputHandler extends EvtRt {
+   static matching = 'input[type="text"]';
+   static whereInstanceOf = HTMLInputElement;
+   static withMediaMatching = '(min-width: 768px)';
+   
+   mount(mountedElement, MountConfig, context){
+      mountedElement.placeholder = 'Enter text...';
+   }
+}
+
+MountObserver.define('inputHandler', InputHandler);
+
+// Uses all handler defaults
+const observer = new MountObserver({
+   do: 'inputHandler'
+});
+
+// Partially override - keeps whereInstanceOf and withMediaMatching from handler
+const observer2 = new MountObserver({
+   matching: 'input[type="email"]',  // Override matching only
+   do: 'inputHandler'
+});
+```
+
+[Implemented as [SupportWhereCriteriaWithRegisteredActions](requirements/SupportWhereCriteriaWithRegisteredActions.md)]
+
+### Built in handlers
+
+This proposal advocates having the platform provide some built in handlers, that extend EvtRt, that is included with this Polyfill.
+
+#### Log to console handler
+
+```JavaScript
+const observer = new MountObserver({
+   // not supported by polyfill
+   //select: 'div > p + p ~ span[class$="name"]' 
+   // is supported:
+   matching: 'div > p + p ~ span[class$="name"]',
+   do: 'builtIns.logToConsole'
+});
+observer.observe(document);
+```
+
+This logs to console all the events (mount, dismount, disconnect)
+
+### Lazy custom element handler
+
+```JavaScript
+// MyElement.js
+export default class MyElement extends HTMLElement {
+    connectedCallback() {
+        this.textContent = 'Hello!';
+    }
+}
+
+// main.js
+import { MountObserver } from 'mount-observer/MountObserver.js';
+
+const observer = new MountObserver({
+    matching: 'my-element',
+    import: './MyElement.js',
+    do: 'builtIns.defineCustomElement'
+});
+observer.observe(document);
+
+// HTML - elements will be upgraded when discovered
+// by the mount observer
+<my-element></my-element>
+
+```
+
+## Applying properties on mount and dismount
+
+For the common use case of setting properties on matching elements, MountObserver provides built-in support for the [assignGingerly](https://github.com/bahrus/assign-gingerly) library. This allows us to declaratively specify properties to apply to elements during their lifecycle without writing custom mount callbacks:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'input',
+   assignOnMount: {
+      disabled: true,
+      value: 'Default value',
+      title: 'This is a tooltip'
+   }
+});
+observer.observe(document);
+```
+
+This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
+
+[Implemented as [Requirement2](requirements/Done/Requirement2.md) and [Requirement16](requirements/Done/Requirement16.md)]
+
+### Assigning properties on dismount
+
+You can also specify properties to apply when elements are removed from the DOM using `assignOnDismount`:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: '.status-indicator',
+   assignOnMount: {
+      '?.style?.color': 'green',
+      '?.dataset?.status': 'active'
+   },
+   assignOnDismount: {
+      '?.style?.color': 'red',
+      '?.dataset?.status': 'inactive'
+   }
+});
+observer.observe(document);
+```
+
+This is useful for cleanup operations, visual feedback, or maintaining state on elements that may be temporarily removed from the DOM but still referenced elsewhere in your code.
+
+**Note:** The `assignOnDismount` properties are applied before the element is removed from the mounted elements tracking, so the element still has access to its DOM context.
+
+#### Practical use case: Form validation feedback
+
+A common use case is providing visual feedback for form validation:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'input.validated',
+   assignOnMount: {
+      '?.style?.borderColor': 'green',
+      '?.style?.backgroundColor': '#f0fff0',
+      '?.setAttribute': ['aria-invalid', 'false']
+   },
+   assignOnDismount: {
+      '?.style?.borderColor': '',
+      '?.style?.backgroundColor': '',
+      '?.removeAttribute': 'aria-invalid'
+   }
+});
+observer.observe(document);
+```
+
+When an input gains the `validated` class, it gets green styling. When the class is removed (dismount), the styling is cleaned up.
+
+#### Remounting behavior
+
+If an element is removed and then re-added to the DOM, the `assignOnMount` properties will be reapplied:
+
+```JavaScript
+const input = document.querySelector('input');
+input.classList.add('validated');  // assignOnMount applied
+input.classList.remove('validated'); // assignOnDismount applied
+input.classList.add('validated');  // assignOnMount applied again
+```
+
+This ensures consistent behavior across the element's lifecycle.
+
+### Nested properties with dataset
+
+The `assignGingerly` library supports nested property assignment using the `?.` notation. This is particularly useful for setting data attributes and style:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button',
+   assignOnMount: {
+      disabled: false,
+      '?.dataset?.action': 'submit',
+      '?.dataset?.trackingId': '12345',
+      '?.style': {
+         color: 'white',
+         height: '25px',
+      }
+   }
+});
+observer.observe(document);
+```
+
+The `?.` prefix tells assignGingerly to create nested properties if they don't exist. In this example, `?.dataset?.action` will set the `data-action` attribute on the button elements.
+
+### Combining with imports
+
+You can combine `assignOn*` with lazy loading to both import resources and set properties:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'my-element',
+   import: './my-element.js',
+   assignOnMount: {
+      theme: 'dark',
+      '?.dataset?.initialized': 'true'
+   },
+   do: ({localName}, {modules}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyElement);
+      }
+   }
+});
+observer.observe(document);
+```
+
+The `assignGingerly` properties are applied after imports are loaded but before the `do` callback is invoked, ensuring that elements are properly configured before any custom initialization logic runs.
+
+### Performance benefits
+
+Using `assignOn*` provides several benefits:
+
+1. **Lazy loading**: The assign-gingerly library is only loaded when needed (when the `assignGingerly` property is specified)
+2. **Bulk operations**: Properties are applied efficiently to all matching elements
+3. **Declarative**: No need to write custom mount callbacks for simple property assignments
+4. **Consistent**: The same property values are applied uniformly across all matching elements
+
+### Dynamically updating assignGingerly configuration
+
+The `MountObserver` class provides a public `assignGingerly()` method that allows us to merge new updates into the  observer. This is useful for responding to user actions or application state changes:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'input',
+   assignOnMount: {
+      disabled: true,
+      value: 'Initial value'
+   }
+});
+observer.observe(document);
+
+// Later, update the configuration
+await observer.assignGingerly({
+   title: 'Updated tooltip',
+   placeholder: 'New placeholder'
+});
+```
+
+**Key behaviors:**
+
+1. **Merging**: New properties are merged with existing configuration. In the example above, future elements will receive all properties: `disabled`, `value`, `title`, and `placeholder`.
+
+2. **Applies to existing elements**: The new properties are immediately applied to all currently mounted elements.
+
+3. **Applies to future elements**: Future elements that mount will receive the merged configuration.
+
+4. **Starting without initial config**: We can call the method even if no `assignGingerly` was specified in the constructor:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'input'
+});
+observer.observe(document);
+
+// Set configuration later
+await observer.assignGingerly({
+   disabled: true,
+   value: 'Set via method'
+});
+```
+
+5. **Clearing configuration**: Pass `undefined` to clear the configuration for future elements (already-mounted elements keep their properties):
+
+```JavaScript
+await observer.assignGingerly(undefined);
+// Future elements will not have properties applied
+// Existing elements retain their current properties
+```
+
+**Method signature:**
+```TypeScript
+async assignGingerly(config: Record<string, any> | undefined): Promise<void>
+```
+
+The method is async because the assign-gingerly library is loaded dynamically when needed.
+
+[Implemented as [Requirement9](requirements/Done/Requirement9.md)]
+
+## Reversible property assignment with stageOnMount
+
+While `assignOnMount` and `assignOnDismount` provide permanent property assignments, sometimes we need temporary changes that automatically reverse when elements dismount. The `stageOnMount` property provides this capability using the `assignTentatively` function from assign-gingerly:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button.async-action',
+   stageOnMount: {
+      disabled: true,
+      title: 'Processing...',
+      '?.dataset?.loading': 'true'
+   }
+});
+observer.observe(document);
+```
+
+When a matching button mounts, these properties are applied. When it dismounts (e.g., loses the `async-action` class), the original values are automatically restored.
+
+### How it works
+
+`stageOnMount` uses `assignTentatively` under the hood, which:
+
+1. **Captures original values** before making changes
+2. **Applies the new properties** when elements mount
+3. **Automatically reverses** to original values when elements dismount
+
+This is different from `assignOnMount`/`assignOnDismount`, where we must explicitly specify both the mount and dismount values.
+
+### When to use stageOnMount vs assignOnMount
+
+**Use `stageOnMount` when:**
+- You want temporary state changes that should automatically reverse
+- The original values matter and should be restored
+- You're toggling states (disabled/enabled, hidden/visible)
+- Setting temporary ARIA states or loading indicators
+
+**Use `assignOnMount`/`assignOnDismount` when:**
+- You need different values on mount vs dismount (not just reversal)
+- You want permanent enhancements that shouldn't be reversed
+- You need explicit control over both mount and dismount behavior
+- The dismount value is not simply "restore original"
+
+### Comparison example
+
+```JavaScript
+// With assignOnMount/assignOnDismount - explicit control
+const observer1 = new MountObserver({
+   matching: 'input.validated',
+   assignOnMount: {
+      '?.style?.borderColor': 'green'
+   },
+   assignOnDismount: {
+      '?.style?.borderColor': 'red'  // Different value, not restoration
+   }
+});
+
+// With stageOnMount - automatic reversal
+const observer2 = new MountObserver({
+   matching: 'button.loading',
+   stageOnMount: {
+      disabled: true,  // Automatically restores original disabled state on dismount
+      '?.dataset?.loading': 'true'  // Automatically removes on dismount
+   }
+});
+```
+
+### Combining with assignOnMount
+
+You can use both `assignOnMount` and `stageOnMount` together. The order of operations is:
+
+1. **On mount**: `assignOnMount` applied first, then `stageOnMount`
+2. **On dismount**: `stageOnMount` reversed first, then `assignOnDismount` applied
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'form',
+   assignOnMount: {
+      noValidate: true  // Permanent enhancement
+   },
+   stageOnMount: {
+      '?.dataset?.submitting': 'true'  // Temporary state
+   }
+});
+```
+
+### Nested properties
+
+Like `assignOnMount`, `stageOnMount` supports nested property paths:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: '.modal',
+   stageOnMount: {
+      '?.style?.display': 'block',
+      '?.style?.opacity': '1',
+      '?.dataset?.visible': 'true',
+      '?.setAttribute': ['aria-hidden', 'false']
+   }
+});
+```
+
+### Re-mounting behavior
+
+If an element dismounts and then re-mounts, `stageOnMount` will:
+
+1. Capture the current values (which may have changed since last mount)
+2. Apply the staged properties again
+3. Store new reversal information for the next dismount
+
+```JavaScript
+const button = document.querySelector('button');
+button.disabled = false;  // Original state
+
+button.classList.add('loading');  // Mount: disabled becomes true
+button.classList.remove('loading');  // Dismount: disabled restored to false
+
+button.disabled = true;  // Manually changed
+button.classList.add('loading');  // Re-mount: disabled becomes true (staged value)
+button.classList.remove('loading');  // Dismount: disabled restored to true (the value before re-mount)
+```
+
+### Performance and memory
+
+- The assign-gingerly library is only loaded when `stageOnMount` is specified
+- Reversal objects are stored in a WeakMap, allowing garbage collection when elements are removed
+- Each element's reversal data is cleaned up when it dismounts
+
+[Implemented as [Requirement13](requirements/Done/Requirement13.md)]
+
+## Emitting events from mounted elements
+
+MountObserver can automatically dispatch custom events from elements when they mount. This is useful for:
+
+1. **Signaling readiness**: Notify parent components or listeners that an element is ready
+2. **Initialization events**: Trigger workflows when elements appear in the DOM
+3. **Decoupled communication**: Allow elements to announce their presence without tight coupling
+
+### Basic event emission
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button[data-action]',
+   mountedElemEmits: {
+      event: 'Event',
+      args: 'custom-ready'
+   }
+});
+observer.observe(document);
+```
+
+This dispatches a `custom-ready` event from each matching button element when it mounts. Events bubble by default, so we can listen at the document level:
+
+```JavaScript
+document.addEventListener('custom-ready', (e) => {
+   console.log('Button ready:', e.target);
+});
+```
+
+### Event constructors
+
+You can specify any event constructor available in `globalThis`:
+
+```JavaScript
+mountedElemEmits: {
+   event: 'CustomEvent',
+   args: ['element-ready', { detail: { timestamp: Date.now() } }]
+}
+```
+
+Or pass a constructor directly:
+
+```JavaScript
+mountedElemEmits: {
+   event: CustomEvent,
+   args: ['element-ready', { detail: { timestamp: Date.now() } }]
+}
+```
+
+### Magic string substitution
+
+Use magic strings to inject dynamic values into event data:
+
+- `{{mountedElement}}` - The element that just mounted
+- `{{MountConfig}}` - The MountConfig configuration object
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button[data-test]',
+   mountedElemEmits: {
+      event: 'CustomEvent',
+      args: ['element-mounted', { 
+         detail: { 
+            element: '{{mountedElement}}',
+            config: '{{MountConfig}}'
+         }
+      }]
+   }
+});
+```
+
+Magic strings work at any depth in nested objects and arrays:
+
+```JavaScript
+mountedElemEmits: {
+   event: 'CustomEvent',
+   args: ['data-ready', {
+      detail: {
+         nested: {
+            deep: {
+               element: '{{mountedElement}}'
+            }
+         }
+      }
+   }]
+}
+```
+
+### Multiple events
+
+Emit multiple events in sequence by providing an array:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'my-component',
+   mountedElemEmits: [
+      { event: 'Event', args: 'component-loading' },
+      { event: 'Event', args: 'component-ready' },
+      { event: 'CustomEvent', args: ['component-initialized', { detail: { version: '1.0' } }] }
+   ]
+});
+```
+
+Events are dispatched in the order specified.
+
+### Event properties with eventProps
+
+Apply additional properties to the event object using `eventProps`:
+
+```JavaScript
+mountedElemEmits: {
+   event: 'CustomEvent',
+   args: ['ready', { detail: {} }],
+   eventProps: {
+      timestamp: Date.now(),  //TODO:  magic string?
+      source: 'mount-observer',
+      element: '{{mountedElement}}'
+   }
+}
+```
+
+Properties are applied using the [assignGingerly](https://github.com/bahrus/assign-gingerly) library, which supports nested property assignment with the `?.` notation.
+
+### Fire once per element
+
+Use `oncePerMountedElement` to ensure an event only fires the first time an element mounts:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button[data-once]',
+   mountedElemEmits: {
+      event: 'Event',
+      args: 'initialized',
+      oncePerMountedElement: true
+   }
+});
+```
+
+If the element is removed and re-added to the DOM, the event will not fire again. This is useful for initialization events that should only happen once per element instance.
+
+### Performance considerations
+
+The event emission logic is code-split into a separate module (`emitEvents.js`) that is only loaded when `mountedElemEmits` is configured. This keeps the core MountObserver lean for users who don't need this feature.
+
+### Complete example
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'my-widget',
+   import: './my-widget.js',
+   mountedElemEmits: [
+      {
+         event: 'CustomEvent',
+         args: ['widget-loading', { 
+            detail: { 
+               element: '{{mountedElement}}',
+               timestamp: Date.now()
+            }
+         }],
+         oncePerMountedElement: true
+      },
+      {
+         event: 'Event',
+         args: 'widget-ready'
+      }
+   ],
+   do: ({localName}, {modules}) => {
+      if(!customElements.get(localName)) {
+         customElements.define(localName, modules[0].MyWidget);
+      }
+   }
+});
+
+// Listen for events
+document.addEventListener('widget-loading', (e) => {
+   console.log('Widget loading:', e.detail.element);
+});
+
+document.addEventListener('widget-ready', (e) => {
+   console.log('Widget ready:', e.target);
+});
+
+observer.observe(document);
+```
+
+[Implemented as [Requirement10](requirements/Done/Requirement10.md)]
+
+## Element-specific lifecycle notifications with getNotifier
+
+While the MountObserver dispatches lifecycle events (mount, dismount, disconnect) at the observer level, sometimes we need to listen for events specific to a single element. The `getNotifier()` method returns an EventTarget that dispatches filtered events for only that element.
+
+### Basic usage
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'button',
+   do: (mountedElement, {observer}) => {
+      const notifier = observer.getNotifier(mountedElement);
+      
+      notifier.addEventListener('mount', (e) => {
+         console.log('This specific button mounted', e.mountedElement);
+      });
+      
+      notifier.addEventListener('dismount', (e) => {
+         console.log('This specific button dismounted', e.mountedElement, e.reason);
+      });
+      
+      notifier.addEventListener('disconnect', (e) => {
+         console.log('This specific button disconnected', e.mountedElement);
+      });
+   }
+});
+observer.observe(document);
+```
+
+### When mount events fire on notifiers
+
+The notifier follows a specific rule for mount events:
+
+- **First mount**: If `getNotifier()` is called during the `do` callback (when the element is mounting), the mount event does NOT fire on the notifier
+- **Subsequent mounts**: After the element dismounts and mounts again, the mount event WILL fire on the notifier
+
+This prevents duplicate mount notifications when setting up listeners during the initial mount.
+
+```JavaScript
+const observer = new MountObserver({
+   matching: '#my-button',
+   do: (element, {observer}) => {
+      const notifier = observer.getNotifier(element);
+      
+      // This listener won't fire for the current mount
+      // (since we're inside the do callback)
+      notifier.addEventListener('mount', () => {
+         console.log('Element re-mounted after being removed');
+      });
+   }
+});
+```
+
+### Creating notifiers before mounting
+
+You can call `getNotifier()` at any time, even before an element mounts:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: '#future-button'
+});
+observer.observe(document);
+
+// Get notifier before element exists
+const button = document.createElement('button');
+button.id = 'future-button';
+
+const notifier = observer.getNotifier(button);
+notifier.addEventListener('mount', () => {
+   console.log('Button mounted!'); // This WILL fire
+});
+
+// Add to DOM later
+document.body.appendChild(button);
+```
+
+When the notifier is created before the element mounts, the mount event fires normally.
+
+### Use cases
+
+Element-specific notifiers are useful for:
+
+1. **Progressive enhancement**: Attach/detach behaviors when elements mount/dismount
+2. **Cleanup on disconnect**: Remove event listeners or cancel timers when elements are removed
+3. **Peer element coordination**: React to changes in related elements
+4. **Lifecycle-aware components**: Build components that respond to their own mounting state
+
+### Performance notes
+
+- Notifiers are cached in a WeakMap, so calling `getNotifier()` multiple times for the same element returns the same EventTarget
+- No explicit cleanup is needed - notifiers are garbage collected when their elements are
+- The notifier continues to exist even after the element disconnects, allowing it to receive mount events if the element is re-added
+
+**Method signature:**
+```TypeScript
+getNotifier(element: Element): EventTarget
+```
+
+[Implemented as [Requirement13](requirements/Done/Requirement13.md)]
+
+
+<!-- ##  Extra lazy loading
+
+By default, the matches would be reported as soon as an element matching the criterion is found or added into the DOM, inside the node specified by rootNode.
+
+However, we could make the loading even more lazy by specifying intersection options:
+
+```JavaScript
+const observer = new MountObserver({
+   select: 'my-element', //not supported by polyfill
+   whereElementIntersectsWith:{
+      rootMargin: "0px",
+      threshold: 1.0,
+   },
+   import: './my-element.js'
+});
+``` -->
+
+ 
 
 ## Subscribing
 
 Subscribing can be done via:
 
 ```JavaScript
-observer.addEventListener('confirm', e => {
+//[TODO] not implemented yet
+observer.addEventListener('shouldMount', e => {
   e.isSatisfied = true; //or false to prevent the mount event below
 });
 observer.addEventListener('mount', e => {
   console.log({
-      matchingElement: e.matchingElement, 
+      mountedElement: e.mountedElement, 
       module: e.module
    });
 });
@@ -388,22 +2647,29 @@ observer.addEventListener('dismount', e => {
 observer.addEventListener('disconnect', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('move', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('reconnect', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('reconfirm', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('exit', e => {
   ...
 });
+//[TODO]
 observer.addEventListener('forget', e => {
   ...
 });
 ```
+
+[mount, dismount, disconnect] events implemented
 
 ## Explanation of all states / events
 
@@ -438,6 +2704,8 @@ I'm on the fence on that one.   I think the benefits either way to DX are so sma
 
 ## Dismounting
 
+[TODO] This section is out of date
+
 In many cases, it will be critical to inform the developer **why** the element no longer satisfies all the criteria.  For example, we may be using an intersection observer, and when we've scrolled away from view, we can "shut down" until the element is (nearly) scrolled back into view.  We may also be displaying things differently depending on the network speed.  How we should respond when one of the original conditions, but not the other, no longer applies, is of paramount importance.
 
 So the dismount event should provide a "checklist" of all the conditions, and their current value:
@@ -446,7 +2714,7 @@ So the dismount event should provide a "checklist" of all the conditions, and th
 mediaMatches: true,
 containerMatches: true,
 satisfiesCustomConditiselect: true,
-whereLangIn: ['en-GB'],
+// whereLangIn: ['en-GB'], // Not implemented - requires platform support
 whereConnectiselect:{
    effectiveTypeMatches: true
 },
@@ -470,6 +2738,8 @@ So I believe the prudent thing to do is wait for all the conditions to be satisf
 
 The alternative to providing this feature, which I'm leaning towards, is to just ask the developer to create "specialized" mountObserver construction arguments, that turn on and off precisely when the developer needs to know.
 
+[Implemented with [Requirement6](requirements/Done/Requirement6.md)]
+
 
 ## Support for "donut hole scoping"
 
@@ -482,337 +2752,47 @@ For the polyfill, we need to support it as follows:
 ```html
 <div id=myTest itemscope>
    <span itemprop=name>
+    <div itemscope>
+        <data itemprop=ssn>
+    </div>
 </div>
 ```
 
+We want to find all elements with attribute itemprop outside any itemscope, so the span and not the data element.
+
 ```JavaScript
-const oElement = document.getElementById('myTest');
+const oContainerNode = document.getElementById('myTest');
 const observer = new MountObserver({
-   select:'[itemprop]',
-   outside: '[itemscope]'
-   do: {
-      mount: ({localName}, {modules, observer}) => {
-        ...
-      },
+   matching:'[itemprop]',
+   withScopePerimeter: '[itemscope]'
+   do: ({localName}, {modules, observer}) => {
+      ...
    },
    disconnectedSignal: new AbortController().signal
 });
-observer.observe(oElement);
+observer.observe(oContainerNode);
 ```
 
-The check for "outside" is done via script:
+The check for "withScopePerimeter" is done via script:
 
 ```JavaScript
-outsideCheck(oElement: Element, matchCandidate: Element, outside: string){
-   const elementsToExclude = Array.from(oElement.querySelectorAll(outside));
-   for(const elementToExclude of elementsToExclude){
-      if(elementToExclude === matchCandidate || elementToExclude.contains(matchCandidate)) return false;
-   }
-   return true;
+import {withScopePerimeter} from 'mount-observer/withScopePerimeter.js';
+withScopePerimeter(oContainerNode: Node, matchCandidate: Element, outside: string){
+    let current = matchCandidate.parentElement;
+    
+    while (current && current !== oContainerNode) {
+        if (current.matches(outside)) {
+            return false;  // Found an excluding ancestor
+        }
+        current = current.parentElement;
+    }
+    
+    return true;  // No excluding ancestors found
 }
+
 ```
 
-## A tribute to attributes
-
-Attributes of DOM elements are tricky.  They've been around since the get-go of the Web, and they've survived multiple eras of web development, where different philosophies have prevailed, so prepare yourself for some esoteric discussions in what follows.
-
-The MountObserver API provides explicit support for monitoring attributes.  There are two primary reasons for why it is important to provide this as part of the API:
-
-Being that for both custom elements, as well as (hopefully) [custom enhancements](https://github.com/WICG/webcomponents/issues/1000) we need to carefully work with sets of "owned" [observed](https://github.com/WICG/webcomponents/issues/1045) attributes, and in some cases we may need to manage combinations of prefixes and suffixes for better name-spacing management, creating the most effective css query becomes challenging.
-
-We want to be alerted by the discovery of elements adorned by these attributes, but then continue to be alerted to changes of their values, and we can't enumerate which values we are interested in, so we must subscribe to all values as they change.
-
-## Attributes of attributes
-
-I think it is useful to divide [attributes](https://jakearchibald.com/2024/attributes-vs-properties/) that we would want to observe into two categories:
-
-1.  Invariably named, prefix-less, "top-level" attributes that serve as the "source of truth" for key features of the DOM element itself.  We will refer to these attributes as "Source of Truth" attributes.  Please don't read too much into the name.  Whether the platform or custom element author developer chooses to make properties reflect to attributes, or attributes reflect to the properties, or some hybrid of some sort, is immaterial here.
-
-By invariably named, I mean the name will be the same in all Shadow DOM realms.
-
-Examples are many built-in global attributes, like lang, or contenteditable, or more specialized examples such as "content" for the meta tag.  It could also include attributes of third party custom elements we want to enhance in a cross-cutting way.
-
-I think in the vast majority of cases, setting the property values corresponding to these attributes results in directly reflecting those property values to the attributes (and vice versa).  There are exceptions, especially for non-string attributes like the checked property of the input element / type=checkbox, and JSON based attributes for custom elements.
-
-Usually, there are no events we can subscribe to in order to know when the property changes. Hijacking the property setter in order to observe changes may not always work or feel very resilient. So monitoring the attribute value associated with the property is often the most effective way of observing when the property/attribute state for these elements change.  And some attributes (like the microdata attributes such as itemprop) don't even have properties that they pair with! 
-  
-
-2.  In contrast, there are scenarios where we want to support somewhat fluid, renamable attributes within different Shadow DOM realms, which add behavior/enhancement capabilities on top of built-in or third party custom elements.  We'll refer to these attributes as "Enhancement Attributes."
-
-We want our api to be able to distinguish between these two, and to be able to combine both types in one mount observer instance's set of observed attributes.
-
-> [!NOTE]
-> The most important reason for pointing out this distinction is this:  "Source of Truth" attributes will only be *observed*, and will **not** trigger mount/unmount states unless they are part of the "on" selector string. And unlike all the other "where" conditions this proposal supports, the where clauses for the "Enhancement Attributes" are "one-way" -- they trigger a "mount" event / callback, followed by the ability to observe the stream of changes (including removal of those attributes), but they never trigger a "dismount". 
-
-### Counterpoint
-
-Does it make sense to even support "Source of Truth" attributes in a "MountObserver" api, if they have no impact on mounted state?  
-
-We think it does, because some Enhancement Attributes will need to work in conjunction with Source of Truth attributes, in order to provide the observer a coherent picture of the full state of the element.
-
-This realization (hopefully correct) struck me while trying to implement a [userland implementation](https://github.com/bahrus/be-intl) of [this proposal](https://github.com/whatwg/html/issues/9294). 
-
-
-### Source of Truth Attributes
-
-Let's focus on the first scenario.  It doesn't make sense to use the word "where" for these, because we don't want these attributes to affect our mount/dismount state
-
-```JavaScript
-import {MountObserver} from 'mount-observer/MountObserver.js';
-const mo = new MountObserver({
-   select: '*',
-   observedAttrsWhenMounted: ['lang', 'contenteditable']
-});
-
-mo.addEventListener('attrChange', e => {
-   console.log(e);
-   // {
-   //    matchingElement,
-   //    attrChangeInfo:[{
-   //       idx: 0,
-   //       name: 'lang'
-   //       isSOfTAttr: true,
-   //       oldValue: null,
-   //       newValue: 'en-GB',
-   //    }]
-   // }
-});
-```
-
-### Help with parsing?
-
-This proposal is likely to evolve going forward, attempting to synthesize [separate ideas](https://github.com/WICG/webcomponents/issues/1045) for declaratively specifying how to interpret the attributes, parsing them so that they may be merged into properties of a class instance. 
-
-But for now, such support is not part of this proposal (though we can see a glimpse of what that support might look like below).
-
-### Custom Enhancements in userland
-
-[This proposal, support for (progressive) enhancement of built-in or third-party custom elements, could take quite a while to see the light of day, if ever](https://github.com/WICG/webcomponents/issues/1000).
-
-In the meantime, we want to provide the most help for providing for custom enhancements in userland, and for any other kind of (progressive) enhancement based on (server-rendered) attributes going forward.
-
-Suppose we have a (progressive) enhancement that we want to apply based on the presence of 1 or more attributes.
-
-To make this discussion concrete, let's suppose the "canonical" names of those attributes are:
-
-```html
-<div id=div>
-   <section 
-      my-enhancement=greetings 
-      my-enhancement-first-aspect=hello 
-      my-enhancement-second-aspect=goodbye
-      my-enhancement-first-aspect-wow-this-is-deep
-      my-enhancement-first-aspect-have-you-considered-using-json-for-this=just-saying
-   ></section>
-</div>
-```
-
-Now suppose we are worried about namespace clashes, plus we want to serve environments where HTML5 compliance is a must.
-
-So we also want to recognize additional attributes that should map to these canonical attributes:
-
-We want to also support:
-
-```html
-<div id=div>
-   <section class=hello 
-      data-my-enhancement=greetings 
-      data-my-enhancement-first-aspect=hello 
-      data-my-enhancement-second-aspect=goodbye
-      data-my-enhancement-first-aspect-wow-this-is-deep
-      data-my-enhancement-first-aspect-have-you-considered-using-json-for-this=just-saying
-   ></section>
-</div>
-```
-
-Based on the current unspoken rules, no one will raise an eyebrow with these attributes, because the platform has indicated it will generally avoid dashes in attributes (with an exception or two that will only happen in a blue moon, like aria-*).
-
-But now when we consider applying this enhancement to third party custom elements, we have a new risk.  What's to prevent the custom element from having an attribute named my-enhancement?
-
-So let's say we want to insist that on custom elements, we must have the data- prefix?
-
-And we want to support an alternative, more semantic sounding prefix to data, say enh-*, endorsed by [this proposal](https://github.com/WICG/webcomponents/issues/1000).
-
-Here's what the api **doesn't** provide (as originally proposed):
-
-#### The carpal syndrome syntax
-
-Using the same expression structure as above, we would end up with this avalanche of settings:
-
-```JavaScript
-import {MountObserver} from '../MountObserver.js';
-const mo = new MountObserver({
-   select: '*',
-   whereAttr:{
-      isIn: [
-         'data-my-enhancement',
-         'data-my-enhancement-first-aspect', 
-         'data-my-enhancement-second-aspect',
-         'enh-my-enhancement',
-         'enh-my-enhancement-first-aspect', 
-         'enh-my-enhancement-second-aspect',
-         //...some ten more combinations not listed
-         {
-            name: 'my-enhancement',
-            builtIn: true
-         },
-         {
-            name: 'my-enhancement-first-aspect',
-            builtIn: true
-         },
-         {
-            name: 'my-enhancement-second-aspect',
-            builtIn: true
-         },
-         ...
-      ]
-      
-   }
-});
-```
-
-#### The DRY Way
-
-This seems like a much better approach, and is supported by this proposal:
-
-```JavaScript
-import {MountObserver} from '../MountObserver.js';
-const mo = new MountObserver({
-   select: '*',
-   whereAttr:{
-      hasRootIn: ['data', 'enh', 'data-enh'],
-      hasBase: 'my-enhancement',
-      hasBranchIn: ['first-aspect', 'second-aspect', ''],
-      hasLeafIn: {
-         'first-aspect': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
-      }
-   }
-});
-```
-
-MountObserver provides a breakdown of the matching attribute when encountered:
-
-```html
-<div id=div>
-   <section class=hello my-enhancement-first-aspect-wow-this-is-deep="hello"></section>
-</div>
-<script type=module>
-   import {MountObserver} from '../MountObserver.js';
-   const mo = new MountObserver({
-      select: '*',
-      whereAttr:{
-         hasRootIn: ['data', 'enh', 'data-enh'],
-         hasBase: 'my-enhancement',
-         hasBranchIn: ['first-aspect', 'second-aspect', ''],
-         hasLeafIn: {
-            'first-aspect': ['wow-this-is-deep', 'have-you-considered-using-json-for-this'],
-         }
-      }
-   });
-   mo.addEventListener('attrChange', e => {
-      console.log(e);
-      // {
-      //    matchingElement,
-      //    attrChangeInfo:[{
-      //       idx: 0,
-      //       oldValue: null,
-      //       newValue: 'good-bye',
-      //       parts:{
-      //          name: 'data-my-enhancement-first-aspect-wow-this-is-deep'
-      //          root: 'data',
-      //          base: 'my-enhancement',
-      //          branch: 'first-aspect',
-      //          leaf: 'wow-this-is-deep',
-      //       }
-      //    }]
-      // }
-   });
-   mo.observe(div);
-   setTimeout(() => {
-      const myCustomElement = document.querySelector('my-custom-element');
-      myCustomElement.setAttribute('data-my-enhancement-first-aspect-wow-this-is-deep', 'good-bye');
-   }, 1000);
-</script>
-```
-
-Some libraries prefer to use the colon (:) rather than a dash to separate these levels of settings:
-
-Possibly some libraries may prefer to mix it up a bit:
-
-
-```html
-<div id=div>
-   <section class=hello 
-      data-my-enhancement=greetings 
-      data-my-enhancement:first-aspect=hello 
-      data-my-enhancement:second-aspect=goodbye
-      data-my-enhancement:first-aspect--wow-this-is-deep
-      data-my-enhancement:first-aspect--have-you-considered-using-json-for-this=just-saying
-   ></section>
-</div>
-```
-
-An example of this in the real world can be found with [HTMX](https://htmx.org/docs/#hx-on):
-
-```html
-<button hx-post="/example"
-        hx-select:htmx:config-request="event.detail.parameters.example = 'Hello Scripting!'">
-    Post Me!
-</button>
-```
-
-To support such syntax, specify the delimiters thusly:
-
-```JavaScript
-const mo = new MountObserver({
-   select: '*',
-   whereAttr:{
-      hasRootIn: ['data', 'enh', 'data-enh'],
-      hasBase: ['-', 'my-enhancement'],
-      hasBranchIn: [':', ['first-aspect', 'second-aspect', '']],
-      hasLeafIn: {
-         'first-aspect': ['--', ['wow-this-is-deep', 'have-you-considered-using-json-for-this']],
-      }
-   }
-});
-```
-
-## Supporting userland security protections
-
-As we saw with the HTMX example above, element enhancement libraries that (progressively) enhance server rendered HTML are finding it necessary to support inline event handling.  Since the platform has provided no support for hashing built-in event handlers, there's no real advantage for these libraries to utilize the built-in event handlers, so might as well create bespoke event handlers, which unfortunately might not be detected by browser security mechanisms. Perhaps some of these libraries only enable that functionality after confirming no such CSP rules are in place, or provide console warnings, who knows?  This reminds me of the plausible (but probably not universally held) belief that illegalizing relatively safe recreational drugs like hashish or beer pushes the illegal market to gravitate towards drugs/beverages which have more "bang for the buck", which are considerably less safe, leading to the conclusion that the "health and safety" laws end up causing more harm than good.
-
-I am personally pursuing a [userland implementation of CSP tailored for attributes](https://github.com/bahrus/be-hashing-out).  What I'm finding necessary to support this is a way to quickly determine *the full list of* attributes a particular enhancement is monitoring for.
-
-Thus the mountObserver does provide that information to the consumer as well:
-
-```JavaScript
-const mo = new MountObserver({
-   select: '*',
-   whereAttr:{
-      hasRootIn: ['data', 'enh', 'data-enh'],
-      hasBase: ['-', 'my-enhancement'],
-      hasBranchIn: [':', ['first-aspect', 'second-aspect', '']],
-      hasLeafIn: {
-         'first-aspect': ['--', ['wow-this-is-deep', 'have-you-considered-using-json-for-this']],
-      }
-   }
-});
-const observedAttributes = await mo.observedAttrs();
-```
-
-## Resolving ambiguity
-
-Because we want the multiple root values (enh-*, data-enh-*, *) to be treated as equivalent, from a developer point of view, we have a possible ambiguity -- what if more than one root is present for the same base, branch and leaf?  Which value prevails over the others?
-
-Tentative rules:
-
-1.  Roots must differ in length.
-2.  If one value is null (attribute not present) and the other a string, the one with the string value prevails.
-3.  If two or more equivalent attributes have string values, the one with the longer root prevails.
-
-The thinking here is that longer roots indicate higher "specificity", so it is safer to use that one.
-
-
+[Implemented as [Requirement7](requirements/Done/Requirement7.md)]
 
 ## Intra document html imports
 
@@ -1046,8 +3026,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <template mount='{
       "select": ":not([defer-loading])",
       "loadingEagerness": "eager",
-      "whereMediaMatches": "(min-width: 700px)",
-      "whereLangIn": ["en-GB"],
+      "withMediaMatching": "(min-width: 700px)"
    }'>
       <div>I don't know why you say <slot name=slot2></slot> I say <slot name=slot1></slot></div>
    </template>
@@ -1055,8 +3034,7 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <template mount='{
       "select": ":not([defer-loading])",
       "loadingEagerness": "lazy",
-      "whereMediaMatches": "(max-width: 700px)",
-      "whereLangIn": ["fr"],
+      "withMediaMatching": "(max-width: 700px)"
    }'>
       <div>Je ne sais pas pourquoi tu dis  <slot name=slot2></slot> je dis  <slot name=slot1></slot></div>
    </template>
@@ -1075,78 +3053,6 @@ Just as it is useful to be able lazy load external imports when needed, it would
    <span slot=slot1>hello</span>
    <span slot=slot2>goodbye<span>
 </compose>
-```
-
-
-## Creating "frameworks" that revolve around MOSEs.
-
-Often, we will want to define a large number of "mount observer script elements (MOSEs)" programmatically, and we need it to be done in a generic way, that can be published and easily referenced.  
-
-This is a problem space that [be-hive](https://github.com/bahrus/be-hive) is grappling with, and is used as an example for this section, to simply make things more concrete.  But we can certainly envision other "frameworks" that could leverage this feature for a variety of purposes, including other families of behaviors/enhancements, or "binding from a distance" syntaxes.  
-
-In particular, *be-hive* supports publishing [enhancements](https://github.com/bahrus/be-enhanced) that take advantage of the DOM filtering ability that the MountObserver provides, that "ties the knot" based on CSS matches in the DOM to behaviors/enhancements that we want to attach directly onto the matching elements.  *be-hive* seeks to take advantage of the inheritable infrastructure that MOSEs provide, but we don't want to burden the developer with having to manually list all these configurations, we want it to happen automatically, only expecting manual intervention when we need some special customizations within a specific ShadowDOM realm.
-
-To support this, we propose these highlights:
-
-1.  Adding a static "synthesize" method to the MountObserver api.  This would provide a kind of passage-way from the imperative api to the declarative one.  
-2.  As the *synthesize* method is called repeatedly from different packages that work within that framework, it creates a cluster of MOSEs wrapped inside the "synthesizing" custom element ("be-hive") that the framework developer authors.  It appends script elements with type="mountobserver" to the custom element instance sitting in the DOM, that dispatches events from the synthesizing custom element it gets appended to, so subscribers in child Shadow DOM's don't need to add a general mutation observer in order to know when parent shadow roots had a MOSE inserted that it needs to act on.  This allows the child Shadow DOM's to inherit (in this case) behaviors/enhancements from the parent Shadow DOM.
-
-So framework developers can develop a bespoke custom element that inherits from the "abstract" class "*Synthesizer*" that is part of this package / proposal, that is used to group families of MountObserver's together. 
-
-Some attributes that the base "Synthesizer" supports are listed below.  They are all related to allowing individual ShadowDOM realms to be able to easily opt in or opt out, depending on the level of control/trust that is exerted by a web component / Shadow Root, as far as the HTML it imports in. 
-
-1.  passthrough.  Allows for the inheritance of behaviors to flow through from above (or from the root document), while not actually activating any of them within the Shadow DOM realm itself.
-2.  exclude.  List of specific MOSE id's to block.  Allows them to flow through to child Shadow Roots.
-3.  include.  List of specific MOSE id's to allow.
-
-What functionality do these "synthesizing" custom elements provide, what value-add proposition do they fulfill over what is built into the MountObserver polyfill / package?
-
-The sky is the limit, but focusing on the first example, be-hive, they are:
-
-1.  Managing, interpreting and parsing the attributes that add semantic enhancement vocabularies onto exiting elements.
-2.  Establishing the "handshake" that imports the enhancement package, instantiates the enhancement, and passes properties that were previously assigned to the pre-enhanced element to the attached enhancement/behavior.
-3.  Providing an inheritable "registry" of reusable scriptlets that can be leveraged in a declarative way.
-
-If one inspects the DOM, one will see grouped (already "parsed") MOSEs, like so:
-
-```html
-<be-hive>
-   <script type=mountobserver id=be-hive.be-searching></script>
-   <script type=mountobserver id=be-hive.be-counted></script>
-</be-hive>
-```
-
-Without the help of the synthesize method / Synthesizer base class, the developer would need to set these up manually, so this lifts a significant burden from the shoulders of people who want to leverage these behaviors/enhancements in a seamless way.  
-
-The developer of each package defines their MOSE "template", and then syndicates it via the synthesize method:
-
-```JavaScript
-MountObserver.synthesize(root: document | shadowRootNode, ctr:  ({new() => Synthesizer}), mose: MOSE)
-```
-
-What this method does is it:
-
-1.  Uses [customElements.getName](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/getName) to get the name of the custom element (say it is 'be-hive') from the provided constructor.
-2.  Searches for a be-hive tag inside the root node (with special logic for the "head" element).  If not found, creates it.
-3.  Places the MOSE inside.
-
-
-Then in our shadowroot, rather than adding a script type=mountobserver for every single mount observer we want to inherit, we could reference the group via simply:
-
-```html
-<be-hive></be-hive>
-```
-
-And we can give each inheriting ShadowRoot a personality of its own by customizing the settings within that shadow scope, by manually adding a MOSE with matching id that overrides the inheriting settings with custom settings:
-
-```html
-<be-hive>
-   <script type=mountobserver id=be-hive.be-searching>
-      {
-         ...my custom settings
-      }
-   </script>
-</be-hive>
 ```
 
 ## Creating an Element-To-RefID DOM traversal API
@@ -1266,6 +3172,3 @@ To keep the api uniform, we hide this discrepancy by pretending the form element
    
 </script>
 ```
-
-
-

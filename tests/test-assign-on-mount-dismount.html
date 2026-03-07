@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>assignOnMount and assignOnDismount Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>assignOnMount and assignOnDismount Tests</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        const results = {
+            test1: {
+                colorOnMount: '',
+                elementMounted: false
+            },
+            test2: {
+                colorOnMount: '',
+                colorOnDismount: '',
+                dismounted: false
+            },
+            test3: {
+                disabledOnMount: false,
+                valueOnMount: '',
+                datasetOnMount: ''
+            },
+            test4: {
+                colorOnMount: '',
+                colorOnDismount: '',
+                dismountedTwice: false
+            },
+            test5: {
+                nestedPropertySet: false,
+                safeNavigationWorked: true
+            }
+        };
+        
+        console.log('Starting assignOnMount and assignOnDismount Tests...');
+        
+        // Test 1: Basic assignOnMount
+        console.log('Test 1: Basic assignOnMount');
+        const observer1 = new MountObserver({
+            matching: '#test1',
+            assignOnMount: {
+                '?.style?.color': 'green'
+            }
+        });
+        
+        await observer1.observe(document.body);
+        
+        const elem1 = document.createElement('div');
+        elem1.id = 'test1';
+        elem1.textContent = 'Test 1';
+        document.body.appendChild(elem1);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.test1.elementMounted = true;
+        results.test1.colorOnMount = elem1.style.color;
+        
+        console.log('Test 1 complete:', results.test1);
+        
+        // Test 2: assignOnMount and assignOnDismount
+        console.log('Test 2: assignOnMount and assignOnDismount');
+        const observer2 = new MountObserver({
+            matching: '#test2',
+            assignOnMount: {
+                '?.style?.color': 'green'
+            },
+            assignOnDismount: {
+                '?.style?.color': 'red'
+            }
+        });
+        
+        await observer2.observe(document.body);
+        
+        const elem2 = document.createElement('div');
+        elem2.id = 'test2';
+        elem2.textContent = 'Test 2';
+        document.body.appendChild(elem2);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.test2.colorOnMount = elem2.style.color;
+        
+        // Now dismount
+        elem2.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.test2.colorOnDismount = elem2.style.color;
+        results.test2.dismounted = true;
+        
+        console.log('Test 2 complete:', results.test2);
+        
+        // Test 3: Multiple properties on mount
+        console.log('Test 3: Multiple properties on mount');
+        const observer3 = new MountObserver({
+            matching: '#test3',
+            assignOnMount: {
+                disabled: true,
+                value: 'Default value',
+                '?.dataset?.initialized': 'true'
+            }
+        });
+        
+        await observer3.observe(document.body);
+        
+        const elem3 = document.createElement('input');
+        elem3.id = 'test3';
+        document.body.appendChild(elem3);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.test3.disabledOnMount = elem3.disabled;
+        results.test3.valueOnMount = elem3.value;
+        results.test3.datasetOnMount = elem3.dataset.initialized || '';
+        
+        console.log('Test 3 complete:', results.test3);
+        
+        // Test 4: Remount after dismount
+        console.log('Test 4: Remount after dismount');
+        const observer4 = new MountObserver({
+            matching: '#test4',
+            assignOnMount: {
+                '?.style?.color': 'blue'
+            },
+            assignOnDismount: {
+                '?.style?.color': 'yellow'
+            }
+        });
+        
+        await observer4.observe(document.body);
+        
+        const elem4 = document.createElement('div');
+        elem4.id = 'test4';
+        elem4.textContent = 'Test 4';
+        document.body.appendChild(elem4);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.test4.colorOnMount = elem4.style.color;
+        
+        // Dismount
+        elem4.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        results.test4.colorOnDismount = elem4.style.color;
+        
+        // Remount
+        document.body.appendChild(elem4);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Color should be blue again (assignOnMount reapplied)
+        const colorAfterRemount = elem4.style.color;
+        
+        // Dismount again
+        elem4.remove();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Should be yellow again
+        results.test4.dismountedTwice = elem4.style.color === 'yellow' && colorAfterRemount === 'blue';
+        
+        console.log('Test 4 complete:', results.test4);
+        
+        // Test 5: Safe navigation with non-existent properties
+        console.log('Test 5: Safe navigation');
+        const observer5 = new MountObserver({
+            matching: '#test5',
+            assignOnMount: {
+                '?.nonExistent?.deeply?.nested': 'value',
+                '?.style?.backgroundColor': 'lightblue'
+            }
+        });
+        
+        await observer5.observe(document.body);
+        
+        const elem5 = document.createElement('div');
+        elem5.id = 'test5';
+        elem5.textContent = 'Test 5';
+        
+        try {
+            document.body.appendChild(elem5);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Should not throw error
+            results.test5.safeNavigationWorked = true;
+            results.test5.nestedPropertySet = elem5.style.backgroundColor === 'lightblue';
+        } catch (error) {
+            results.test5.safeNavigationWorked = false;
+            console.error('Test 5 error:', error);
+        }
+        
+        console.log('Test 5 complete:', results.test5);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (Basic assignOnMount):', results.test1);
+        console.log('Test 2 (assignOnMount and assignOnDismount):', results.test2);
+        console.log('Test 3 (Multiple properties):', results.test3);
+        console.log('Test 4 (Remount after dismount):', results.test4);
+        console.log('Test 5 (Safe navigation):', results.test5);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

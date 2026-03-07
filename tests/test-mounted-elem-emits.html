@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MountedElemEmits Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>MountedElemEmits Test</h1>
+    
+    <div id="container">
+        <button id="btn1" data-action="submit">Button 1</button>
+    </div>
+    
+    <button id="addBtn" type="button">Add Button</button>
+    
+    <div id="log"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const log = document.getElementById('log');
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            log.appendChild(p);
+        }
+        
+        // Track events received
+        window.eventsReceived = [];
+        
+        // Set up all event listeners FIRST before creating observers
+        document.addEventListener('custom-ready', (e) => {
+            addLog(`Received custom-ready from ${e.target.id}`);
+            window.eventsReceived.push({ type: 'custom-ready', target: e.target.id });
+        });
+        
+        document.addEventListener('element-mounted', (e) => {
+            addLog(`Received element-mounted with detail`);
+            window.eventsReceived.push({ 
+                type: 'element-mounted', 
+                hasElement: e.detail.element instanceof Element,
+                hasConfig: typeof e.detail.config === 'object'
+            });
+        });
+        
+        document.addEventListener('ready', (e) => {
+            addLog(`Received ready from ${e.target.id}`);
+            window.eventsReceived.push({ type: 'ready', target: e.target.id });
+        });
+        
+        document.addEventListener('initialized', (e) => {
+            addLog(`Received initialized from ${e.target.id}`);
+            window.eventsReceived.push({ type: 'initialized', target: e.target.id });
+        });
+        
+        document.addEventListener('once-event', (e) => {
+            addLog(`Received once-event from ${e.target.id}`);
+            window.eventsReceived.push({ type: 'once-event', target: e.target.id });
+        });
+        
+        // NOW create observers after all listeners are set up
+        // Test 1: Simple event emission
+        const observer1 = new MountObserver({
+            matching: 'button[data-action]',
+            mountedElemEmits: {
+                event: 'Event',
+                args: 'custom-ready'
+            }
+        });
+        
+        observer1.observe(document);
+        addLog('Observer 1 started');
+        
+        // Test 2: Event with magic strings
+        const observer2 = new MountObserver({
+            matching: 'button[data-test]',
+            mountedElemEmits: {
+                event: 'CustomEvent',
+                args: ['element-mounted', { 
+                    detail: { 
+                        element: '{{mountedElement}}',
+                        config: '{{MountConfig}}'
+                    }
+                }]
+            }
+        });
+        
+        observer2.observe(document);
+        addLog('Observer 2 started');
+        
+        // Test 3: Multiple events
+        const observer3 = new MountObserver({
+            matching: 'button[data-multi]',
+            mountedElemEmits: [
+                { event: 'Event', args: 'ready' },
+                { event: 'Event', args: 'initialized' }
+            ]
+        });
+        
+        observer3.observe(document);
+        addLog('Observer 3 started');
+        
+        // Test 4: oncePerMountedElement
+        const observer4 = new MountObserver({
+            matching: 'button[data-once]',
+            mountedElemEmits: {
+                event: 'Event',
+                args: 'once-event',
+                oncePerMountedElement: true
+            }
+        });
+        
+        observer4.observe(document);
+        addLog('Observer 4 started');
+        
+        // Add button to dynamically add test elements
+        let counter = 0;
+        document.getElementById('addBtn').addEventListener('click', () => {
+            counter++;
+            const container = document.getElementById('container');
+            
+            // Add button for test 1
+            const btn2 = document.createElement('button');
+            btn2.id = `btn-action-${counter}`;
+            btn2.setAttribute('data-action', 'submit');
+            btn2.textContent = `Action Button ${counter}`;
+            container.appendChild(btn2);
+            
+            // Add button for test 2
+            const btn3 = document.createElement('button');
+            btn3.id = `btn-test-${counter}`;
+            btn3.setAttribute('data-test', 'true');
+            btn3.textContent = `Test Button ${counter}`;
+            container.appendChild(btn3);
+            
+            // Add button for test 3
+            const btn4 = document.createElement('button');
+            btn4.id = `btn-multi-${counter}`;
+            btn4.setAttribute('data-multi', 'true');
+            btn4.textContent = `Multi Button ${counter}`;
+            container.appendChild(btn4);
+            
+            // Add button for test 4
+            const btn5 = document.createElement('button');
+            btn5.id = `btn-once-${counter}`;
+            btn5.setAttribute('data-once', 'true');
+            btn5.textContent = `Once Button ${counter}`;
+            container.appendChild(btn5);
+            
+            addLog(`Added buttons ${counter}`);
+        });
+        
+        // Expose for testing
+        window.testPassed = false;
+        
+        // Wait and verify
+        setTimeout(() => {
+            const hasCustomReady = window.eventsReceived.some(e => e.type === 'custom-ready' && e.target === 'btn1');
+            
+            if (hasCustomReady) {
+                addLog('✓ Test passed: Events emitted correctly');
+                window.testPassed = true;
+            } else {
+                addLog('✗ Test failed');
+            }
+        }, 100);
+    </script>
+</body>
+</html>

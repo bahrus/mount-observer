@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Mount Scope Tests</title>
+</head>
+<body>
+    <!-- #include virtual="/imports.html" -->
+    
+    <div id="container">
+        <div id="inner">
+            <button id="btn1">Button 1</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import '../ElementMountExtension.js';
+        import { MountObserver } from '../MountObserver.js';
+
+        const results = {
+            registryScope: false,
+            selfScope: false,
+            rootScope: false,
+            shadowScope: false,
+            customElementScope: false,
+            shadowThrowsError: false
+        };
+
+        console.log('Starting Mount Scope Tests...');
+
+        // Test 1: Default scope (registry)
+        console.log('Test 1: Default scope (registry)');
+        const container = document.getElementById('container');
+        let mountCount = 0;
+        
+        await container.mount({
+            matching: 'button',
+            do: (el) => {
+                mountCount++;
+                console.log('Registry scope mounted:', el.id);
+            }
+        });
+        
+        results.registryScope = mountCount === 1;
+        console.log('Test 1 complete:', { mountCount, passed: results.registryScope });
+
+        // Test 2: Self scope
+        console.log('Test 2: Self scope');
+        mountCount = 0;
+        const inner = document.getElementById('inner');
+        
+        await inner.mount({
+            matching: 'div',
+            do: (el) => {
+                mountCount++;
+                console.log('Self scope mounted:', el.id);
+            }
+        }, { scope: 'self' });
+        
+        results.selfScope = mountCount === 1;
+        console.log('Test 2 complete:', { mountCount, passed: results.selfScope });
+
+        // Test 3: Root scope
+        console.log('Test 3: Root scope');
+        mountCount = 0;
+        
+        await inner.mount({
+            matching: 'button',
+            do: (el) => {
+                mountCount++;
+                console.log('Root scope mounted:', el.id);
+            }
+        }, { scope: 'root' });
+        
+        results.rootScope = mountCount === 1;
+        console.log('Test 3 complete:', { mountCount, passed: results.rootScope });
+
+        // Test 4: Shadow scope with custom element
+        console.log('Test 4: Shadow scope');
+        class TestElement extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+                this.shadowRoot.innerHTML = '<button id="shadow-btn">Shadow Button</button>';
+            }
+        }
+        customElements.define('test-element', TestElement);
+        
+        const testEl = document.createElement('test-element');
+        document.body.appendChild(testEl);
+        
+        mountCount = 0;
+        await testEl.mount({
+            matching: 'button',
+            do: (el) => {
+                mountCount++;
+                console.log('Shadow scope mounted:', el.id);
+            }
+        }, { scope: 'shadow' });
+        
+        results.shadowScope = mountCount === 1;
+        console.log('Test 4 complete:', { mountCount, passed: results.shadowScope });
+
+        // Test 5: Custom element scope
+        console.log('Test 5: Custom element scope');
+        const customContainer = document.createElement('div');
+        customContainer.innerHTML = '<button id="custom-btn">Custom Button</button>';
+        document.body.appendChild(customContainer);
+        
+        // Wait a tick to ensure DOM is settled
+        await new Promise(resolve => setTimeout(resolve, 10));
+        
+        mountCount = 0;
+        await inner.mount({
+            matching: 'button',
+            do: (el) => {
+                mountCount++;
+                console.log('Custom element scope mounted:', el.id);
+            }
+        }, { scope: customContainer });
+        
+        // Wait a tick for observer to process
+        await new Promise(resolve => setTimeout(resolve, 10));
+        
+        results.customElementScope = mountCount === 1;
+        console.log('Test 5 complete:', { mountCount, passed: results.customElementScope });
+
+        // Test 6: Shadow scope throws error when no shadowRoot
+        console.log('Test 6: Shadow scope error handling');
+        try {
+            await inner.mount({
+                matching: 'button',
+                do: () => {}
+            }, { scope: 'shadow' });
+            results.shadowThrowsError = false;
+        } catch (e) {
+            results.shadowThrowsError = e.message.includes('shadowRoot');
+            console.log('Shadow scope correctly threw error:', e.message);
+        }
+        console.log('Test 6 complete:', { passed: results.shadowThrowsError });
+
+        console.log('--- Test Results ---');
+        console.log('Registry scope:', results.registryScope);
+        console.log('Self scope:', results.selfScope);
+        console.log('Root scope:', results.rootScope);
+        console.log('Shadow scope:', results.shadowScope);
+        console.log('Custom element scope:', results.customElementScope);
+        console.log('Shadow throws error:', results.shadowThrowsError);
+
+        // Expose results for Playwright
+        window.testResults = results;
+    </script>
+</body>
+</html>

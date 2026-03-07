@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SharedDefinitionRegistry</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Test SharedDefinitionRegistry</h1>
+    
+    <script type="module">
+        console.log('Test starting...');
+        
+        try {
+            const { SharedDefinitionRegistry } = await import('../SharedDefinitionRegistry.js');
+            
+            // Test 1: Singleton behavior
+            const instance1 = SharedDefinitionRegistry.getInstance();
+            const instance2 = SharedDefinitionRegistry.getInstance();
+            if (instance1 !== instance2) {
+                throw new Error('Singleton test failed: instances are different');
+            }
+            console.log('✓ Singleton test passed');
+            
+            // Test 2: publish() stores definition
+            class TestElement1 extends HTMLElement {}
+            instance1.publish('test-element-1', TestElement1);
+            console.log('✓ Publish test passed');
+            
+            // Test 3: get() retrieves definition
+            const retrieved = instance1.get('test-element-1');
+            if (retrieved !== TestElement1) {
+                throw new Error('Get test failed: retrieved constructor does not match');
+            }
+            console.log('✓ Get test passed');
+            
+            // Test 4: has() checks existence
+            if (!instance1.has('test-element-1')) {
+                throw new Error('Has test failed: should return true');
+            }
+            if (instance1.has('non-existent')) {
+                throw new Error('Has test failed: should return false for non-existent');
+            }
+            console.log('✓ Has test passed');
+            
+            // Test 5: getAll() returns copy
+            class TestElement2 extends HTMLElement {}
+            instance1.publish('test-element-2', TestElement2);
+            const allDefs = instance1.getAll();
+            if (allDefs.size !== 2) {
+                throw new Error('GetAll test failed: expected 2 definitions');
+            }
+            if (allDefs.get('test-element-1') !== TestElement1) {
+                throw new Error('GetAll test failed: test-element-1 not found');
+            }
+            if (allDefs.get('test-element-2') !== TestElement2) {
+                throw new Error('GetAll test failed: test-element-2 not found');
+            }
+            console.log('✓ GetAll test passed');
+            
+            // Test 6: 'definition-shared' event dispatch
+            let eventFired = false;
+            let eventDetail = null;
+            instance1.addEventListener('definition-shared', (e) => {
+                eventFired = true;
+                eventDetail = e.detail;
+            });
+            class TestElement3 extends HTMLElement {}
+            instance1.publish('test-element-3', TestElement3);
+            await new Promise(resolve => setTimeout(resolve, 10));
+            if (!eventFired) {
+                throw new Error('Event test failed: event not fired');
+            }
+            if (eventDetail.tagName !== 'test-element-3' || eventDetail.constructor !== TestElement3) {
+                throw new Error('Event test failed: event detail incorrect');
+            }
+            console.log('✓ Event dispatch test passed');
+            
+            // Test 7: Idempotent publishing
+            const sizeBefore = instance1.getAll().size;
+            instance1.publish('test-element-3', TestElement3); // Publish again
+            const sizeAfter = instance1.getAll().size;
+            if (sizeBefore !== sizeAfter) {
+                throw new Error('Idempotent test failed: duplicate was added');
+            }
+            console.log('✓ Idempotent publishing test passed');
+            
+            console.log('All tests passed!');
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testComplete = true;
+        }
+    </script>
+</body>
+</html>

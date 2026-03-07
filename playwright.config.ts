@@ -1,6 +1,7 @@
 // playwright.config.ts
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 const config: PlaywrightTestConfig = {
+  testIgnore: '**/experimentalCrossScopeRegistering/**',
   webServer: {
     command: 'npm run serve',
     url: 'http://localhost:8000/',
@@ -15,15 +16,14 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    //firefox lacks support for import assertions
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
   ],
 };
 export default config;

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ImportSharedDefinitions Handler</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Test ImportSharedDefinitions Handler</h1>
+    
+    <div id="host"></div>
+    
+    <script type="module">
+        console.log('Test starting...');
+        
+        try {
+            const { MountObserver } = await import('../index.js');
+            const { SharedDefinitionRegistry } = await import('../SharedDefinitionRegistry.js');
+            
+            // Check if browser supports scoped registries
+            const testHost = document.createElement('div');
+            const testShadow = testHost.attachShadow({ mode: 'open' });
+            
+            if (!testShadow.customElementRegistry) {
+                console.log('⚠ Browser does not support scoped registries, skipping tests');
+                window.testComplete = true;
+                return;
+            }
+            
+            console.log('✓ Browser supports scoped registries');
+            
+            // For now, just verify the handler can be created
+            // Full integration testing requires complex setup with actual custom elements
+            const observer = new MountObserver({
+                do: 'builtIns.importSharedDefinitions'
+            });
+            await observer.observe(document.body);
+            console.log('✓ Observer created successfully');
+            
+            // Verify SharedDefinitionRegistry works
+            class TestElement extends HTMLElement {}
+            const sharedRegistry = SharedDefinitionRegistry.getInstance();
+            sharedRegistry.publish('test-element', TestElement);
+            
+            if (!sharedRegistry.has('test-element')) {
+                throw new Error('SharedDefinitionRegistry not working');
+            }
+            console.log('✓ SharedDefinitionRegistry works');
+            
+            console.log('All tests passed!');
+            window.testComplete = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testComplete = true;
+        }
+    </script>
+</body>
+</html>

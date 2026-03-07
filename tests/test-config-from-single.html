@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>configFrom Single Module Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>configFrom Single Module Test</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const results = {
+            test1: {
+                elementMounted: false,
+                baseConfigApplied: false,
+                textContent: ''
+            }
+        };
+        
+        console.log('Starting configFrom single module test...');
+        
+        // Test 1: Load config from single module
+        console.log('Test 1: Single configFrom module');
+        const observer1 = new MountObserver({
+            configFrom: './tests/test-config-base.js'
+        });
+        
+        await observer1.observe(document.body);
+        
+        const elem1 = document.createElement('div');
+        elem1.className = 'test-config';
+        document.body.appendChild(elem1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test1.elementMounted = elem1.dataset.baseConfigApplied === 'true';
+        results.test1.baseConfigApplied = elem1.dataset.baseConfigApplied === 'true';
+        results.test1.textContent = elem1.textContent;
+        
+        console.log('--- Test Results ---');
+        console.log('Test 1:', results.test1);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

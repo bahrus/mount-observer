@@ -1,145 +1,67 @@
 {
   "name": "mount-observer",
-  "version": "0.0.112",
+  "version": "0.1.12",
   "description": "Observe and act on css matches.",
   "main": "MountObserver.js",
   "module": "MountObserver.js",
+  "dependencies": {
+    "assign-gingerly": "0.0.22",
+    "id-generation": "0.0.4"
+  },
   "devDependencies": {
-    "@playwright/test": "1.57.0",
-    "spa-ssi": "0.0.25"
+    "@playwright/test": "1.59.0-alpha-2026-02-28",
+    "spa-ssi": "0.0.27"
   },
   "exports": {
     ".": {
-      "default": "./MountObserver.js",
-      "types": "./MountObserver.ts"
+      "default": "./index.js",
+      "types": "./index.ts"
     },
     "./MountObserver.js": {
       "default": "./MountObserver.js",
       "types": "./MountObserver.ts"
     },
-    "./Newish.js": {
-      "default": "./Newish.js",
-      "types": "./Newish.ts"
+    "./withScopePerimeter.js": {
+      "default": "./withScopePerimeter.js",
+      "types": "./withScopePerimeter.ts"
     },
-    "./ObsAttr.js": {
-      "default": "./ObsAttr.js",
-      "types": "./ObsAttr.ts"
+    "./emitEvents.js": {
+      "default": "./emitEvents.js",
+      "types": "./emitEvents.ts"
     },
-    "./Synthesizer.js": {
-      "default": "./Synthesizer.js",
-      "types": "./Synthesizer.ts"
+    "./arr.js": {
+      "default": "./arr.js",
+      "types": "./arr.ts"
     },
-    "./bindish.js": {
-      "default": "./bindish.js",
-      "types": "./bindish.ts"
+    "./EvtRt.js": {
+      "default": "./EvtRt.js",
+      "types": "./EvtRt.ts"
     },
-    "./compose.js": {
-      "default": "./compose.js",
-      "types": "./compose.ts"
+    "./DefineCustomElementHandler.js": {
+      "default": "./DefineCustomElementHandler.js",
+      "types": "./DefineCustomElementHandler.ts"
     },
-    "./doCleanup.js": {
-      "default": "./doCleanup.js",
-      "types": "./doCleanup.ts"
+    "./EnhanceMountedElementHandler.js": {
+      "default": "./EnhanceMountedElementHandler.js",
+      "types": "./EnhanceMountedElementHandler.ts"
     },
     "./upShadowSearch.js": {
       "default": "./upShadowSearch.js",
       "types": "./upShadowSearch.ts"
-    },
-    "./waitForEvent.js": {
-      "default": "./waitForEvent.js",
-      "types": "./waitForEvent.ts"
-    },
-    "./waitForIsh.js": {
-      "default": "./waitForIsh.js",
-      "types": "./waitForIsh.ts"
-    },
-    "./refid/camelToKebab.js": {
-      "default": "./refid/camelToKebab.js",
-      "types": "./refid/camelToKebab.ts"
-    },
-    "./refid/refid/genIds.js": {
-      "default": "./refid/refid/genIds.js",
-      "types": "./refid/refid/genIds.ts"
-    },
-    "./refid/getAdjRefs.js": {
-      "default": "./refid/getAdjRefs.js",
-      "types": "./refid/getAdjRefs.ts"
-    },
-    "./refid/getContext.js": {
-      "default": "./refid/getContext.js",
-      "types": "./refid/getContext.ts"
-    },
-    "./refid/getCount.js": {
-      "default": "./refid/getCount.js",
-      "types": "./refid/getCount.ts"
-    },
-    "./refid/ism.js": {
-      "default": "./refid/ism.js",
-      "types": "./refid/ism.ts"
-    },
-    "./refid/itemprops.js": {
-      "default": "./refid/itemprops.js",
-      "types": "./refid/itemprops.ts"
-    },
-    "./refid/joinMatching.js": {
-      "default": "./refid/joinMatching.js",
-      "types": "./refid/joinMatching.ts"
-    },
-    "./refid/nudge.js": {
-      "default": "./refid/nudge.js",
-      "types": "./refid/nudge.ts"
-    },
-    "./refid/refs.js": {
-      "default": "./refid/refs.js",
-      "types": "./refid/refs.ts"
-    },
-    "./refid/regIsh.js": {
-      "default": "./refid/regIsh.js",
-      "types": "./refid/regIsh.ts"
-    },
-    "./refid/splitRefs.js": {
-      "default": "./refid/splitRefs.js",
-      "types": "./refid/splitRefs.ts"
-    },
-    "./refid/stdVal.js": {
-      "default": "./refid/stdVal.js",
-      "types": "./refid/stdVal.ts"
-    },
-    "./refid/via.js": {
-      "default": "./refid/via.js",
-      "types": "./refid/via.ts"
-    },
-    "./slotkin/beKindred.js": {
-      "default": "./slotkin/beKindred.js",
-      "types": "./slotkin/beKindred.ts"
-    },
-    "./slotkin/getBreadth.js": {
-      "default": "./slotkin/getBreadth.js",
-      "types": "./slotkin/getBreadth.ts"
-    },
-    "./slotkin/getFrag.js": {
-      "default": "./slotkin/getFrag.js",
-      "types": "./slotkin/getFrag.ts"
-    },
-    "./slotkin/wrap.js": {
-      "default": "./slotkin/wrap.js",
-      "types": "./slotkin/wrap.ts"
     }
   },
   "files": [
     "*.js",
-    "*.ts",
-    "./ts-refs/*",
-    "./refid/*",
-    "./slotkin/*"
+    "*.ts"
   ],
-  "types": "./ts-refs/mount-observer/types.d.ts",
+  "types": "./types/mount-observer/types.d.ts",
   "scripts": {
     "serve": "node ./node_modules/spa-ssi/serve.js",
     "test": "playwright test",
     "safari": "npx playwright wk http://localhost:8000",
+    "chrome": "npx playwright cr http://localhost:8000",
     "update": "ncu -u && npm install"
   },
-  "author": "",
+  "author": "Bruce B. Anderson <anderson.bruce.b@gmail.com>",
   "license": "MIT"
 }

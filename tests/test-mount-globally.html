@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mountGlobally Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <!-- Test 1: Basic mountGlobally with cross-registry propagation -->
+    <div id="test1">
+        <div id="test1-results"></div>
+    </div>
+
+    <!-- Test 2: mountGlobally with shadow roots in same registry -->
+    <div id="test2">
+        <div id="test2-results"></div>
+    </div>
+
+    <!-- Test 3: mountGlobally with nested shadow roots -->
+    <div id="test3">
+        <div id="test3-results"></div>
+    </div>
+
+    <script type="module">
+        import '../ElementMountExtension.js';
+        import { MountObserver } from '../index.js';
+
+        // Test 1: Cross-registry propagation
+        const test1 = (async () => {
+            const test1Container = document.getElementById('test1');
+            const results = document.getElementById('test1-results');
+            
+            const mountedElements = [];
+            
+            // Create a component with scoped registry
+            class Test1Component extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ 
+                        mode: 'open',
+                        registry: new CustomElementRegistry()
+                    });
+                    shadow.innerHTML = '<div class="target">In scoped registry</div>';
+                }
+            }
+            customElements.define('test1-component', Test1Component);
+            
+            // Mount globally - should propagate to scoped registry
+            await test1Container.mountGlobally({
+                matching: '.target',
+                do: (el) => {
+                    mountedElements.push(el);
+                    el.setAttribute('data-mounted', 'true');
+                }
+            });
+            
+            // Add component after mountGlobally
+            const component = document.createElement('test1-component');
+            test1Container.appendChild(component);
+            
+            // Wait longer for propagation (async operations take time)
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const targetInShadow = component.shadowRoot.querySelector('.target');
+            const wasMounted = targetInShadow?.getAttribute('data-mounted') === 'true';
+            
+            results.textContent = wasMounted ? 'PASS: Cross-registry propagation works' : 'FAIL: Element not mounted';
+            results.setAttribute('data-test1', wasMounted ? 'pass' : 'fail');
+        })();
+
+        // Test 2: Shadow roots in same registry
+        const test2 = (async () => {
+            const test2Container = document.getElementById('test2');
+            const results = document.getElementById('test2-results');
+            
+            const mountedElements = [];
+            
+            // Create a component without scoped registry
+            class Test2Component extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    shadow.innerHTML = '<span class="shadow-target">In shadow</span>';
+                }
+            }
+            customElements.define('test2-component', Test2Component);
+            
+            // Mount globally - should propagate to shadow roots
+            await test2Container.mountGlobally({
+                matching: '.shadow-target',
+                do: (el) => {
+                    mountedElements.push(el);
+                    el.setAttribute('data-mounted', 'true');
+                }
+            });
+            
+            // Add component after mountGlobally
+            const component = document.createElement('test2-component');
+            test2Container.appendChild(component);
+            
+            // Wait longer for propagation
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const targetInShadow = component.shadowRoot.querySelector('.shadow-target');
+            const wasMounted = targetInShadow?.getAttribute('data-mounted') === 'true';
+            
+            results.textContent = wasMounted ? 'PASS: Shadow root propagation works' : 'FAIL: Element not mounted';
+            results.setAttribute('data-test2', wasMounted ? 'pass' : 'fail');
+        })();
+
+        // Test 3: Nested shadow roots
+        const test3 = (async () => {
+            const test3Container = document.getElementById('test3');
+            const results = document.getElementById('test3-results');
+            
+            const mountedElements = [];
+            
+            // Create nested components
+            class Test3Inner extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    shadow.innerHTML = '<div class="nested-target">Nested</div>';
+                }
+            }
+            customElements.define('test3-inner', Test3Inner);
+            
+            class Test3Outer extends HTMLElement {
+                constructor() {
+                    super();
+                    const shadow = this.attachShadow({ mode: 'open' });
+                    shadow.innerHTML = '<test3-inner></test3-inner>';
+                }
+            }
+            customElements.define('test3-outer', Test3Outer);
+            
+            // Mount globally - should propagate to nested shadow roots
+            await test3Container.mountGlobally({
+                matching: '.nested-target',
+                do: (el) => {
+                    mountedElements.push(el);
+                    el.setAttribute('data-mounted', 'true');
+                }
+            });
+            
+            // Add component after mountGlobally
+            const component = document.createElement('test3-outer');
+            test3Container.appendChild(component);
+            
+            // Wait even longer for nested propagation (multiple levels of async operations)
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const inner = component.shadowRoot.querySelector('test3-inner');
+            const targetInNested = inner?.shadowRoot?.querySelector('.nested-target');
+            const wasMounted = targetInNested?.getAttribute('data-mounted') === 'true';
+            
+            results.textContent = wasMounted ? 'PASS: Nested shadow root propagation works' : 'FAIL: Element not mounted';
+            results.setAttribute('data-test3', wasMounted ? 'pass' : 'fail');
+        })();
+
+        // Wait for all tests to complete before setting testsReady
+        Promise.all([test1, test2, test3]).then(() => {
+            window.testsReady = true;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Emit Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Simple Emit Test</h1>
+    <button id="test-btn" data-action="submit">Test Button</button>
+    <div id="log"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const log = document.getElementById('log');
+        function addLog(msg) {
+            console.log(msg);
+            const p = document.createElement('p');
+            p.textContent = msg;
+            log.appendChild(p);
+        }
+        
+        addLog('Starting test...');
+        
+        // Listen for the event
+        document.addEventListener('custom-ready', (e) => {
+            addLog(`✓ Received custom-ready event from ${e.target.id}`);
+        });
+        
+        try {
+            const observer = new MountObserver({
+                matching: 'button[data-action]',
+                mountedElemEmits: {
+                    event: 'Event',
+                    args: 'custom-ready'
+                }
+            });
+            
+            addLog('Observer created');
+            
+            observer.addEventListener('mount', (e) => {
+                addLog(`Mount event for ${e.mountedElement.id}`);
+            });
+            
+            observer.observe(document);
+            addLog('Observer observing');
+            
+        } catch (error) {
+            addLog(`✗ Error: ${error.message}`);
+            console.error(error);
+        }
+    </script>
+</body>
+</html>

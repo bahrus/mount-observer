@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMLInclude Handler Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <!-- Test 1: Basic HTML include from div -->
+    <div id="test1">
+        <div id="reusable1">
+            <p>Reusable content 1</p>
+        </div>
+        <template src="#reusable1"></template>
+    </div>
+
+    <!-- Test 2: Include from template -->
+    <div id="test2">
+        <template id="reusable2">
+            <div class="template-content">
+                <span>Template content</span>
+            </div>
+        </template>
+        <template src="#reusable2"></template>
+    </div>
+
+    <!-- Test 3: Multiple includes of same content -->
+    <div id="test3">
+        <div id="shared">
+            <p>Shared content</p>
+        </div>
+        <template src="#shared"></template>
+        <template src="#shared"></template>
+        <template src="#shared"></template>
+    </div>
+
+    <!-- Test 4: Include not found -->
+    <div id="test4">
+        <template src="#nonexistent"></template>
+    </div>
+
+    <!-- Test 5: Circular reference detection -->
+    <div id="test5">
+        <template id="circular1" src="#circular2"></template>
+        <template id="circular2" src="#circular1"></template>
+    </div>
+
+    <!-- Test 6: Shadow DOM include -->
+    <div id="test6">
+        <div id="outsideShadow">
+            <p>Outside shadow content</p>
+        </div>
+        <div id="shadowHost"></div>
+    </div>
+
+    <!-- Test 7: Hoisted template include -->
+    <div id="test7">
+        <div id="shadowHost2"></div>
+    </div>
+
+    <!-- Test 8: Song lyrics example from requirements -->
+    <div id="test8">
+        <div class="stanza" id="Opening">
+            <div>I don't care if <span itemprop="day1">Monday</span>'s blue</div>
+            <div><span itemprop="day2">Tuesday</span>'s gray and <span itemprop="day3">Wednesday</span> too</div>
+            <div><span itemprop="day4">Thursday</span> I don't care about you</div>
+            <div id="Friday">
+                <div>It's <span itemprop="day5">Friday</span> I'm in love</div>
+            </div>
+        </div>
+
+        <div class="stanza" id="art">
+            <div><span itemprop="day1">Monday</span> you can fall apart</div>
+            <div><span itemprop="day2">Tuesday</span> <span itemprop="day3">Wednesday</span> break my heart</div>
+            <div>Oh, <span itemprop="day4">Thursday</span> doesn't even start</div>
+            <template src="#Friday"></template>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        // Test 1: Basic HTML include
+        const observer1 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer1.observe(document.getElementById('test1'));
+
+        // Test 2: Include from template
+        const observer2 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer2.observe(document.getElementById('test2'));
+
+        // Test 3: Multiple includes
+        const observer3 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer3.observe(document.getElementById('test3'));
+
+        // Test 4: Not found
+        const observer4 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer4.observe(document.getElementById('test4'));
+
+        // Test 5: Circular reference
+        const observer5 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer5.observe(document.getElementById('test5'));
+
+        // Test 6: Shadow DOM
+        const shadowHost = document.getElementById('shadowHost');
+        const shadow = shadowHost.attachShadow({ mode: 'open' });
+        shadow.innerHTML = '<template src="#outsideShadow"></template>';
+        
+        const observer6 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer6.observe(shadow);
+
+        // Test 7: Hoisted template
+        const shadowHost2 = document.getElementById('shadowHost2');
+        const shadow2 = shadowHost2.attachShadow({ mode: 'open' });
+        shadow2.innerHTML = '<template id="hoisted"><div class="hoisted-content">Hoisted content</div></template><template src="#hoisted"></template>';
+        
+        // First hoist the template
+        const hoistObserver = new MountObserver({
+            do: 'builtIns.hoistTemplate'
+        });
+        await hoistObserver.observe(shadow2);
+        
+        // Then include it
+        const observer7 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        await observer7.observe(shadow2);
+
+        // Test 8: Song lyrics
+        const observer8 = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        observer8.observe(document.getElementById('test8'));
+
+        // Signal tests are ready
+        window.testsReady = true;
+    </script>
+</body>
+</html>

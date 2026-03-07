@@ -1,0 +1,130 @@
+# Tasks: Cross-Scope Registry Sharing
+
+## Implementation Tasks
+
+- [x] 1. Create SharedDefinitionRegistry Service
+  - [x] 1.1 Create SharedDefinitionRegistry.ts file
+  - [x] 1.2 Implement singleton pattern with getInstance()
+  - [x] 1.3 Implement publish() method with Map storage
+  - [x] 1.4 Implement get() and getAll() methods
+  - [x] 1.5 Implement has() method
+  - [x] 1.6 Add EventTarget inheritance and 'definition-shared' event dispatch
+  - [x] 1.7 Add idempotent publishing (check before adding)
+  - [x] 1.8 Compile TypeScript
+
+- [x] 2. Create ShareDefinitionHandler (Publisher)
+  - [x] 2.1 Create handlers/ShareDefinition.ts file
+  - [x] 2.2 Extend EvtRt base class
+  - [x] 2.3 Add static matching = '[share-definition]'
+  - [x] 2.4 Add static whereLocalNameMatches = /-/
+  - [x] 2.5 Implement constructor that calls #publishDefinition
+  - [x] 2.6 Implement #publishDefinition method
+    - [x] 2.6.1 Get element.customElementRegistry
+    - [x] 2.6.2 Handle fallback to global customElements
+    - [x] 2.6.3 await registry.whenDefined(tagName)
+    - [x] 2.6.4 Get constructor via registry.get(tagName)
+    - [x] 2.6.5 Call SharedDefinitionRegistry.publish()
+    - [x] 2.6.6 Add error handling and logging
+  - [x] 2.7 Compile TypeScript
+
+- [x] 3. Create ImportSharedDefinitionsHandler (Consumer)
+  - [x] 3.1 Create handlers/ImportSharedDefinitions.ts file
+  - [x] 3.2 Extend EvtRt base class
+  - [x] 3.3 Add static matching = '*'
+  - [x] 3.4 Add static whereDifferentCustomElementRegistry = true
+  - [x] 3.5 Add static #processedRegistries WeakSet
+  - [x] 3.6 Add static #eventListenerAdded boolean flag
+  - [x] 3.7 Implement constructor
+    - [x] 3.7.1 Call #setupEventListener (once)
+    - [x] 3.7.2 Call #importDefinitions
+  - [x] 3.8 Implement #setupEventListener method
+    - [x] 3.8.1 Get SharedDefinitionRegistry instance
+    - [x] 3.8.2 Add 'definition-shared' event listener
+  - [x] 3.9 Implement #importDefinitions method
+    - [x] 3.9.1 Get element.customElementRegistry
+    - [x] 3.9.2 Handle missing registry (return early)
+    - [x] 3.9.3 Check if registry in processedRegistries
+    - [x] 3.9.4 Mark registry as processed
+    - [x] 3.9.5 Get all shared definitions
+    - [x] 3.9.6 Loop through definitions and call #registerDefinition
+  - [x] 3.10 Implement #registerDefinition method
+    - [x] 3.10.1 Check if definition already exists
+    - [x] 3.10.2 Call registry.define(tagName, constructor)
+    - [x] 3.10.3 Add try/catch for registration errors
+  - [x] 3.11 Compile TypeScript
+
+- [x] 4. Register Handlers
+  - [x] 4.1 Import handlers in index.ts
+  - [x] 4.2 Call MountObserver.define('builtIns.shareDefinition', ShareDefinitionHandler)
+  - [x] 4.3 Call MountObserver.define('builtIns.importSharedDefinitions', ImportSharedDefinitionsHandler)
+  - [x] 4.4 Export SharedDefinitionRegistry from index.ts
+  - [x] 4.5 Compile TypeScript
+
+- [x] 5. Create Unit Tests
+  - [x] 5.1 Create tests/test-shared-definition-registry.spec.mjs
+    - [x] 5.1.1 Test singleton behavior
+    - [x] 5.1.2 Test publish() stores definition
+    - [x] 5.1.3 Test get() retrieves definition
+    - [x] 5.1.4 Test getAll() returns copy
+    - [x] 5.1.5 Test has() checks existence
+    - [x] 5.1.6 Test 'definition-shared' event dispatch
+    - [x] 5.1.7 Test idempotent publishing
+  - [x] 5.2 Create tests/test-shared-definition-registry.html
+  - [x] 5.3 Create tests/test-share-definition-handler.spec.mjs
+    - [x] 5.3.1 Test matches [share-definition] elements
+    - [x] 5.3.2 Test matches elements with dash in localName
+    - [x] 5.3.3 Test waits for whenDefined()
+    - [x] 5.3.4 Test publishes to shared registry
+    - [x] 5.3.5 Test handles missing customElementRegistry
+    - [x] 5.3.6 Test handles missing definition
+  - [x] 5.4 Create tests/test-share-definition-handler.html
+  - [x] 5.5 Create tests/test-import-shared-definitions-handler.spec.mjs
+    - [x] 5.5.1 Test matches elements with different registries
+    - [x] 5.5.2 Test registers all shared definitions
+    - [x] 5.5.3 Test tracks processed registries
+    - [x] 5.5.4 Test handles registration failures
+    - [x] 5.5.5 Test handles missing customElementRegistry
+    - [x] 5.5.6 Test idempotent registration
+  - [x] 5.6 Create tests/test-import-shared-definitions-handler.html
+
+- [x] 6. Create Integration Tests
+  - [x] 6.1 Create tests/test-cross-scope-registry-sharing.spec.mjs
+    - [x] 6.1.1 Test publisher → consumer flow
+    - [x] 6.1.2 Test multiple registries receive definition
+    - [x] 6.1.3 Test multiple definitions shared
+    - [x] 6.1.4 Test definition already exists in target registry
+    - [x] 6.1.5 Test consumer before publisher (negative case)
+    - [x] 6.1.6 Test dynamic element creation
+    - [x] 6.1.7 Test browser without scoped registry support
+  - [x] 6.2 Create tests/test-cross-scope-registry-sharing.html
+    - [x] 6.2.1 Create test custom elements
+    - [x] 6.2.2 Create shadow roots with scoped registries
+    - [x] 6.2.3 Set up publisher and consumer observers
+    - [x] 6.2.4 Add elements with share-definition
+    - [x] 6.2.5 Add elements with different registries
+    - [x] 6.2.6 Verify definitions are registered
+
+- [x] 7. Update Documentation
+  - [x] 7.1 Update README.md
+    - [x] 7.1.1 Add to Implementation Status checklist
+    - [x] 7.1.2 Add section on Cross-Scope Registry Sharing
+    - [x] 7.1.3 Add usage examples
+    - [x] 7.1.4 Add API documentation
+  - [x] 7.2 Update .kiro/steering/api.md
+    - [x] 7.2.1 Add builtIns.shareDefinition to handler list
+    - [x] 7.2.2 Add builtIns.importSharedDefinitions to handler list
+    - [x] 7.2.3 Document SharedDefinitionRegistry API
+  - [x] 7.3 Create demo file
+    - [x] 7.3.1 Create demo/cross-scope-registry-sharing.html
+    - [x] 7.3.2 Demonstrate publisher setup
+    - [x] 7.3.3 Demonstrate consumer setup
+    - [x] 7.3.4 Show multiple shadow roots sharing definitions
+
+- [x] 8. Final Verification
+  - [x] 8.1 Run all tests (npm test)
+  - [x] 8.2 Verify no TypeScript errors (npx tsc)
+  - [x] 8.3 Test in Chrome 146+ with scoped registries
+  - [x] 8.4 Test in older browsers for graceful degradation
+  - [x] 8.5 Review code for memory leaks
+  - [x] 8.6 Review error handling coverage
+  - [x] 8.7 Verify documentation completeness

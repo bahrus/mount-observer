@@ -1,42 +1,69 @@
-//TODO:  make thes external
-// https://github.com/webcomponents-cg/community-protocols/issues/12#issuecomment-872415080
-/**
- * The `mutation-event` event represents something that happened.
- * We can document it here.
- */
+// Event name constants
+export const loadEventName = 'load';
+export const mountEventName = 'mount';
+export const dismountEventName = 'dismount';
+export const disconnectEventName = 'disconnect';
+export const mediamatchEventName = 'mediamatch';
+export const mediaunmatchEventName = 'mediaunmatch';
 export class MountEvent extends Event {
     mountedElement;
-    initializing;
-    static eventName = 'mount';
-    constructor(mountedElement, initializing) {
+    modules;
+    mountConfig;
+    mountContext;
+    static eventName = mountEventName;
+    constructor(mountedElement, modules, mountConfig, mountContext) {
         super(MountEvent.eventName);
         this.mountedElement = mountedElement;
-        this.initializing = initializing;
+        this.modules = modules;
+        this.mountConfig = mountConfig;
+        this.mountContext = mountContext;
     }
 }
 export class DismountEvent extends Event {
-    dismountedElement;
-    static eventName = 'dismount';
-    constructor(dismountedElement) {
+    mountedElement;
+    reason;
+    mountConfig;
+    static eventName = dismountEventName;
+    constructor(mountedElement, reason, mountConfig) {
         super(DismountEvent.eventName);
-        this.dismountedElement = dismountedElement;
+        this.mountedElement = mountedElement;
+        this.reason = reason;
+        this.mountConfig = mountConfig;
     }
 }
 export class DisconnectEvent extends Event {
-    disconnectedElement;
-    static eventName = 'disconnect';
-    constructor(disconnectedElement) {
+    mountedElement;
+    mountConfig;
+    static eventName = disconnectEventName;
+    constructor(mountedElement, mountConfig) {
         super(DisconnectEvent.eventName);
-        this.disconnectedElement = disconnectedElement;
+        this.mountedElement = mountedElement;
+        this.mountConfig = mountConfig;
     }
 }
-export class AttrChangeEvent extends Event {
-    mountedElement;
-    attrChangeInfos;
-    static eventName = 'attrChange';
-    constructor(mountedElement, attrChangeInfos) {
-        super(AttrChangeEvent.eventName);
-        this.mountedElement = mountedElement;
-        this.attrChangeInfos = attrChangeInfos;
+export class LoadEvent extends Event {
+    modules;
+    mountConfig;
+    static eventName = loadEventName;
+    constructor(modules, mountConfig) {
+        super(LoadEvent.eventName);
+        this.modules = modules;
+        this.mountConfig = mountConfig;
+    }
+}
+export class MediaMatchEvent extends Event {
+    mountConfig;
+    static eventName = mediamatchEventName;
+    constructor(mountConfig) {
+        super(MediaMatchEvent.eventName);
+        this.mountConfig = mountConfig;
+    }
+}
+export class MediaUnmatchEvent extends Event {
+    mountConfig;
+    static eventName = mediaunmatchEventName;
+    constructor(mountConfig) {
+        super(MediaUnmatchEvent.eventName);
+        this.mountConfig = mountConfig;
     }
 }

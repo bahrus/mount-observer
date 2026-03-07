@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mutually Assured Observing Tests</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <script type="module">
+        import '../ElementMountExtension.js';
+
+        window.testResult = undefined;
+
+        async function runTests() {
+            try {
+                // Check if CustomElementRegistry constructor is available (Chrome 146+)
+                if (typeof CustomElementRegistry === 'undefined' || !CustomElementRegistry.prototype) {
+                    window.testResult = true; // Pass test if feature not available
+                    return;
+                }
+                
+                let reg2;
+                try {
+                    // Create a shared registry
+                    reg2 = new CustomElementRegistry();
+                } catch (e) {
+                    window.testResult = true; // Pass test if feature not available
+                    return;
+                }
+                
+                // Create first scope with the registry
+                const div2 = document.createElement('div', {customElementRegistry: reg2});
+                div2.id = 'scope1';
+                document.body.append(div2);
+                
+                // Create second scope with the same registry
+                const div4 = document.createElement('div', {customElementRegistry: reg2});
+                div4.id = 'scope2';
+                document.body.append(div4);
+                
+                // Track mounted elements
+                const mountedElements = [];
+                
+                // Define shared config
+                const sharedConfig = {
+                    matching: '.test-element',
+                    do: (el) => {
+                        mountedElements.push(el.id);
+                    }
+                };
+                
+                // Mount on first scope with 'registry' scope
+                await div2.mount(sharedConfig, { scope: 'registry' });
+                
+                // Add element to first scope
+                // IMPORTANT: In Chrome 146, child elements must be created with the registry option
+                const el1 = document.createElement('div', {customElementRegistry: reg2});
+                el1.className = 'test-element';
+                el1.id = 'element-in-scope1';
+                div2.appendChild(el1);
+                
+                // Wait a bit for observer to process
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Mount second scope
+                await div4.mountScope();
+                
+                // Add element to second scope
+                const el2 = document.createElement('div', {customElementRegistry: reg2});
+                el2.className = 'test-element';
+                el2.id = 'element-in-scope2';
+                div4.appendChild(el2);
+                
+                // Wait for observer to process
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Check that both elements were mounted
+                const success = mountedElements.includes('element-in-scope1') && 
+                               mountedElements.includes('element-in-scope2');
+                
+                window.testResult = success;
+                
+            } catch (error) {
+                console.error('Test error:', error);
+                window.testResult = false;
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

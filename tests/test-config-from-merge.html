@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>configFrom Merge Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>configFrom Merge Test</h1>
+    
+    <div id="container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        
+        const results = {
+            test1: {
+                elementMounted: false,
+                inlineOverrideApplied: false,
+                textContent: ''
+            },
+            test2: {
+                buttonMounted: false,
+                instanceofWorked: false,
+                textContent: ''
+            }
+        };
+        
+        console.log('Starting configFrom merge test...');
+        
+        // Test 1: Inline config overrides imported config
+        console.log('Test 1: Inline config overrides imported');
+        const observer1 = new MountObserver({
+            configFrom: './tests/test-config-base.js',
+            do: (element, context) => {
+                element.dataset.inlineOverride = 'true';
+                element.textContent = 'Inline override applied';
+            }
+        });
+        
+        await observer1.observe(document.body);
+        
+        const elem1 = document.createElement('div');
+        elem1.className = 'test-config';
+        document.body.appendChild(elem1);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test1.elementMounted = elem1.dataset.inlineOverride === 'true';
+        results.test1.inlineOverrideApplied = elem1.dataset.inlineOverride === 'true';
+        results.test1.textContent = elem1.textContent;
+        
+        // Test 2: whereInstanceOf from imported config works
+        console.log('Test 2: whereInstanceOf from imported config');
+        const observer2 = new MountObserver({
+            configFrom: './tests/test-config-with-instanceof.js'
+        });
+        
+        await observer2.observe(document.body);
+        
+        const button = document.createElement('button');
+        button.id = 'test-button';
+        document.body.appendChild(button);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test2.buttonMounted = button.dataset.instanceofConfigApplied === 'true';
+        results.test2.instanceofWorked = button.dataset.instanceofConfigApplied === 'true';
+        results.test2.textContent = button.textContent;
+        
+        console.log('--- Test Results ---');
+        console.log('Test 1:', results.test1);
+        console.log('Test 2:', results.test2);
+        
+        window.testResults = results;
+        window.testComplete = true;
+    </script>
+</body>
+</html>

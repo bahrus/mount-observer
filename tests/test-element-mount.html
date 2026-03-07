@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Mount Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Element Mount Test</h1>
+    
+    <div id="container">
+        <div id="test-element"></div>
+    </div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import { EnhancementRegistry } from 'assign-gingerly/assignGingerly.js';
+        import { getRegistryRoot } from '../getRegistryRoot.js';
+        import '../ElementMountExtension.js';
+        
+        (async () => {
+        
+        // Polyfill for browsers without customElementRegistry
+        if (!Element.prototype.hasOwnProperty('customElementRegistry')) {
+            Object.defineProperty(Element.prototype, 'customElementRegistry', {
+                get() {
+                    if (!this._customElementRegistry) {
+                        this._customElementRegistry = {
+                            enhancementRegistry: new EnhancementRegistry()
+                        };
+                    }
+                    return this._customElementRegistry;
+                },
+                enumerable: true,
+                configurable: true
+            });
+        }
+        
+        const results = {
+            test1: {
+                mountMethodExists: false,
+                elementReturned: false,
+                observerCreated: false,
+                elementMounted: false
+            },
+            test2: {
+                rootContainerFound: false,
+                rootIsDocument: false,
+                rootIsCorrect: false
+            }
+        };
+        
+        console.log('Starting Element Mount Tests...');
+        
+        // Check if mount method exists
+        const testElem = document.getElementById('test-element');
+        results.test1.mountMethodExists = typeof testElem.mount === 'function';
+        
+        if (!results.test1.mountMethodExists) {
+            console.warn('Element.prototype.mount() not available - extension not loaded');
+            window.testResults = results;
+            window.testComplete = true;
+            return;
+        }
+        
+        // Test 1: Basic mount with MountConfig
+        console.log('Test 1: Basic mount with MountConfig');
+        
+        let mounted1 = false;
+        const returnedElement = await testElem.mount({
+            matching: '#mounted-elem',
+            do: (element) => {
+                mounted1 = true;
+            }
+        });
+        
+        results.test1.elementReturned = returnedElement === testElem;
+        results.test1.observerCreated = true; // If no error, observer was created
+        
+        const elem1 = document.createElement('div');
+        elem1.id = 'mounted-elem';
+        document.body.appendChild(elem1);
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        results.test1.elementMounted = mounted1;
+        
+        console.log('Test 1 complete:', results.test1);
+        
+        // Test 2: getRegistryRoot utility
+        console.log('Test 2: getRegistryRoot utility');
+        
+        const container = document.getElementById('container');
+        const root = getRegistryRoot(container);
+        
+        results.test2.rootContainerFound = root !== null && root !== undefined;
+        results.test2.rootIsDocument = root === document;
+        results.test2.rootIsCorrect = root === document || root === container;
+        
+        console.log('Test 2 complete:', results.test2);
+        
+        // Display results
+        console.log('--- Test Results ---');
+        console.log('Test 1 (Basic mount):', results.test1);
+        console.log('Test 2 (getRegistryRoot):', results.test2);
+        
+        window.testResults = results;
+        window.testComplete = true;
+        })();
+    </script>
+</body>
+</html>
