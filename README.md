@@ -193,6 +193,8 @@ export default {
     enhKey: 'buttonEnh'
 };
 
+// main.js
+
 document.mount({
     matching: '.enhance-me',
     import: './MyEnhancement.js',
@@ -210,11 +212,10 @@ console.log(button.enh.buttonEnh.clickCount); // 1
 ```
 
 The handler:
-1. Searches the imported module for an export with a `spawn` property (the enhancement class)
+1. Searches the imported module for an export with a `spawn` property (the enhancement class), starting with default.
 2. Calls `element.enh.get(registryItem, context)` to spawn the enhancement
 3. Stores the enhancement instance on `element.enh[enhKey]` if an `enhKey` is provided
 
-This works with browsers that don't support scoped custom element registries by polyfilling the `customElementRegistry` property on elements.
 
 ## Loading ES Modules from Script Elements
 
@@ -273,7 +274,7 @@ The `builtIns.mountObserverScript` handler enables fully declarative mount obser
 <!-- Inline JSON configuration -->
 <script type="mountobserver">
 {
-    "matching": "button.fancy",
+    "matching": "my-fancy-button",
     "import": "./fancy-button.js",
     "do": "builtIns.defineCustomElement"
 }
@@ -348,11 +349,11 @@ The `builtIns.mountObserverScript` handler enables fully declarative mount obser
 
 ## Hoisting Templates for Performance
 
-The `builtIns.hoistTemplate` handler optimizes template usage by moving template elements from shadow roots to `document.head`. This is particularly useful when templates with IDs are repeated across multiple custom elements.
+The `builtIns.hoistTemplate` handler optimizes template usage by moving a template element's content from shadow roots to `document.head`. This is particularly useful when templates with IDs are repeated across multiple custom elements.
 
 **Why hoist templates?**
 
-When custom elements repeat throughout a page, each instance typically contains its own copy of template content. Moving these templates to a centralized location:
+When HTML-first custom elements repeat throughout a page, each instance typically contains its own copy of template content. Moving these templates to a centralized location:
 - Reduces memory usage (one template instead of many copies)
 - Improves cloning performance (single source of truth)
 - Maintains the same API through the `remoteContent` getter
@@ -392,8 +393,8 @@ const template = shadowRoot.querySelector('#my-template');
 const content = template.remoteContent;  // Returns DocumentFragment
 const clone = content.cloneNode(true);   // Clone the content
 ```
-
-**Matching criteria:**
+<details>
+   <summary>Matching criteria
 
 The handler automatically hoists templates that:
 - Have an `id` attribute
@@ -420,6 +421,8 @@ The handler automatically hoists templates that:
 ```
 
 [Implemented as HoistingTemplates requirement](requirements/Done/HoistingTemplates.md)
+
+</details>
 
 ## Intra-Document HTML Includes with HTMLInclude
 
