@@ -60,7 +60,7 @@
             test1Container.appendChild(component);
             
             // Wait longer for propagation (async operations take time)
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 100));
             
             const targetInShadow = component.shadowRoot.querySelector('.target');
             const wasMounted = targetInShadow?.getAttribute('data-mounted') === 'true';
