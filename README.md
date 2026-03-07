@@ -229,7 +229,7 @@ The `builtIns.scriptNoModule` handler enables declarative module loading using `
 <script nomodule src="./data.json" with-type="json" id="myData"></script>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     // Handler provides matching and whereInstanceOf via static properties
     const observer = new MountObserver({
@@ -285,7 +285,7 @@ The `builtIns.mountObserverScript` handler enables fully declarative mount obser
 
 <!-- Bootstrap the handler -->
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     // Handler provides matching and whereInstanceOf via static properties
     const observer = new MountObserver({
@@ -339,7 +339,7 @@ The `builtIns.mountObserverScript` handler enables fully declarative mount obser
 
 <!-- Single bootstrap script activates all configurations -->
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     new MountObserver({
         do: 'builtIns.mountObserverScript'
@@ -369,7 +369,7 @@ When HTML-first custom elements repeat throughout a page, each instance typicall
 </my-web-component>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     const observer = new MountObserver({
         do: 'builtIns.hoistTemplate'
@@ -412,7 +412,7 @@ The handler automatically hoists templates that:
 </script>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     new MountObserver({
         do: 'builtIns.mountObserverScript'
@@ -457,7 +457,7 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
 </div>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     const observer = new MountObserver({
         do: 'builtIns.HTMLInclude'
@@ -492,7 +492,7 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
 <template src="#my-template"></template>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     // First hoist templates
     new MountObserver({
@@ -666,7 +666,7 @@ Matching insertions become particularly powerful when combined with Mount Observ
 </my-derived-component>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     // Bootstrap HTMLInclude handler
     new MountObserver({
@@ -741,7 +741,7 @@ This pattern enables:
 </script>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     new MountObserver({
         do: 'builtIns.mountObserverScript'
@@ -791,7 +791,7 @@ The `builtIns.generateIds` handler automatically generates unique IDs for elemen
 </fieldset>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     const observer = new MountObserver({
         do: 'builtIns.generateIds'
@@ -890,7 +890,7 @@ The handler automatically replaces `#{{name}}` references in these attributes:
 </script>
 
 <script type="module">
-    import { MountObserver } from 'mount-observer';
+    import { MountObserver } from 'mount-observer/MountObserver.js';
     
     new MountObserver({
         do: 'builtIns.mountObserverScript'
@@ -1217,7 +1217,7 @@ export const mountConfig = {
 **Avoid:**
 ```JavaScript
 // config.js - Creates circular dependency
-import { MountObserver } from 'mount-observer';
+import { MountObserver } from 'mount-observer/MountObserver.js';
 // This could cause issues if the importing module also imports MountObserver
 ```
 
@@ -1943,7 +1943,7 @@ export default class MyElement extends HTMLElement {
 }
 
 // main.js
-import { MountObserver } from 'mount-observer';
+import { MountObserver } from 'mount-observer/MountObserver.js';
 
 const observer = new MountObserver({
     matching: 'my-element',
@@ -2568,7 +2568,7 @@ getNotifier(element: Element): EventTarget
 [Implemented as [Requirement13](requirements/Done/Requirement13.md)]
 
 
-##  Extra lazy loading
+<!-- ##  Extra lazy loading
 
 By default, the matches would be reported as soon as an element matching the criterion is found or added into the DOM, inside the node specified by rootNode.
 
@@ -2583,7 +2583,7 @@ const observer = new MountObserver({
    },
    import: './my-element.js'
 });
-```
+``` -->
 
  
 

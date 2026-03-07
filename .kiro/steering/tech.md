@@ -249,3 +249,38 @@ import { assignGingerly } from 'assign-gingerly/assignGingerly.js';
 - All imports from node_modules dependencies
 - Demo and test HTML files need the SSI include directive
 - Import map must be updated when adding new dependencies
+
+## Documentation Import Examples
+
+**CRITICAL**: All code examples in documentation (README.md, requirements, etc.) that import from the mount-observer package MUST use correct import map-supported bare specifier paths with the `.js` file extension.
+
+**Correct patterns**:
+```typescript
+// Correct - includes .js extension
+import { MountObserver } from 'mount-observer/MountObserver.js';
+import 'mount-observer/ElementMountExtension.js';
+
+// Also correct - imports from index
+import { MountObserver } from 'mount-observer/index.js';
+```
+
+**Incorrect patterns**:
+```typescript
+// WRONG - missing .js extension
+import { MountObserver } from 'mount-observer';
+
+// WRONG - missing file path
+import { MountObserver } from 'mount-observer/MountObserver';
+```
+
+**Why this matters**:
+- Examples should demonstrate actual working code
+- Import maps require explicit file extensions for bare specifiers
+- Users copy-paste examples and expect them to work
+- Consistency with the rest of the codebase
+
+**When to apply**:
+- All code examples in README.md
+- All code examples in requirements documents
+- All code examples in inline documentation
+- Test files and demo files
