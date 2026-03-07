@@ -284,3 +284,52 @@ await document.mountGlobally({
 
 This solution feels more aligned with mount-observer's declarative, template-based philosophy while solving the cross-registry bootstrapping problem elegantly.
 
+---
+---
+
+I like your suggestions.  
+
+I would like to start with only implementing the second alternative (the mountGlobally) for now.  
+
+I think, though, we will need two propagators:
+
+
+```typescript
+// In ElementMountExtension.js
+Element.prototype.mountGlobally = async function(config: MountConfig) {
+    // Mount in current registry
+    await this.mount(config);
+    
+    // Also watch for child registries and mount there too
+    const crossCustomElementRegistryPropagator = new MountObserver({
+        matching: '*',
+        whereDifferentCustomElementRegistry: true,
+        //shouldMount: (el) => el.shadowRoot !== null,
+        do: async (el) => {
+            //wait for custom element to be defined so has the chance to 
+            //add shadowRoot
+            const {localName} = el;
+            if(localName.includes('-')){
+                await el.customElementRegistry.whenDefined(localName);
+            }
+            const target = el.shadowRoot || el;
+            await target.mount(config);
+        }
+    });
+    
+    await crossCustomElementRegistryPropagator.observe(this);
+
+    const crossShadowRootPropagator = new MountObserver({
+        whereLocalNameMatches: /-/,
+        do: async (el) => {
+            const {localName} = el;
+            await el.customElementRegistry.whenDefined(localName);
+            const {shadowRoot} = el;
+            if(shadowRoot === null) return;
+            await shadowRoot.mount(config);
+        }
+    })
+    
+    return this;
+};
+```
