@@ -522,7 +522,8 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
             const root = node as DocumentFragment;
             
             // Get all elements matching the CSS selector first
-            root.querySelectorAll(this.#init.matching).forEach(child => {
+            const matches = root.querySelectorAll(this.#init.matching);
+            matches.forEach(child => {
                 // If intersection observer is active, start observing the element
                 if (this.#intersectionObserver) {
                     this.#intersectionObserver.observe(child);

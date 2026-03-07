@@ -136,3 +136,125 @@ Object.defineProperty(Element.prototype, 'mountScope', {
     enumerable: false,
     configurable: true,
 });
+/**
+ * Adds a mountGlobally method to Element.prototype that:
+ * 1. Mounts the config in the current registry
+ * 2. Creates propagators to automatically mount in:
+ *    - Elements with different custom element registries
+ *    - Shadow roots within the same registry
+ *
+ * This enables "viral" propagation of mount observers across registry boundaries,
+ * useful for bootstrapping core handlers like builtIns.mountObserverScript.
+ */
+Object.defineProperty(Element.prototype, 'mountGlobally', {
+    value: async function (config, options = {}) {
+        // Mount in current registry first
+        await this.mount(config, options);
+        // Propagator 1: Watch for elements in different registries
+        const crossCustomElementRegistryPropagator = new MountObserver({
+            matching: '*',
+            whereDifferentCustomElementRegistry: true,
+            do: async (el) => {
+                // Wait for custom element to be defined so it has the chance to add shadowRoot
+                const { localName } = el;
+                if (localName.includes('-')) {
+                    const registry = el.customElementRegistry;
+                    if (registry && typeof registry.whenDefined === 'function') {
+                        await registry.whenDefined(localName);
+                    }
+                }
+                const target = el.shadowRoot || el;
+                await target.mount(config, options);
+            }
+        }, options);
+        await crossCustomElementRegistryPropagator.observe(this);
+        // Propagator 2: Watch for shadow roots within the same registry
+        const crossShadowRootPropagator = new MountObserver({
+            matching: '*', // Must specify matching selector
+            whereLocalNameMatches: /-/,
+            do: async (el) => {
+                const { localName } = el;
+                const registry = el.customElementRegistry;
+                if (registry && typeof registry.whenDefined === 'function') {
+                    await registry.whenDefined(localName);
+                }
+                const shadowRoot = el.shadowRoot;
+                if (shadowRoot === null)
+                    return;
+                await shadowRoot.mountGlobally(config, options);
+            }
+        }, options);
+        await crossShadowRootPropagator.observe(this);
+        return this;
+    },
+    writable: true,
+    enumerable: false,
+    configurable: true,
+});
+/**
+ * Adds mount method to ShadowRoot.prototype.
+ * ShadowRoots can be observed directly, so this provides a convenient way to mount observers.
+ */
+Object.defineProperty(ShadowRoot.prototype, 'mount', {
+    value: async function (config, options = {}) {
+        const mo = new MountObserver(config, options);
+        await mo.observe(this);
+        return this;
+    },
+    writable: true,
+    enumerable: false,
+    configurable: true,
+});
+/**
+ * Adds mountGlobally method to ShadowRoot.prototype.
+ * Propagates mount observers to child registries and shadow roots.
+ */
+Object.defineProperty(ShadowRoot.prototype, 'mountGlobally', {
+    value: async function (config, options = {}) {
+        // Mount in current shadow root first
+        await this.mount(config, options);
+        // Propagator 1: Watch for elements in different registries
+        const crossCustomElementRegistryPropagator = new MountObserver({
+            matching: '*',
+            whereDifferentCustomElementRegistry: true,
+            do: async (el) => {
+                // Wait for custom element to be defined so it has the chance to add shadowRoot
+                const { localName } = el;
+                if (localName.includes('-')) {
+                    const registry = el.customElementRegistry;
+                    if (registry && typeof registry.whenDefined === 'function') {
+                        await registry.whenDefined(localName);
+                    }
+                }
+                const shadowRoot = el.shadowRoot;
+                if (shadowRoot) {
+                    // Use mountGlobally to propagate recursively
+                    await shadowRoot.mountGlobally(config, options);
+                }
+            }
+        }, options);
+        await crossCustomElementRegistryPropagator.observe(this);
+        // Propagator 2: Watch for shadow roots within the same registry
+        const crossShadowRootPropagator = new MountObserver({
+            matching: '*',
+            whereLocalNameMatches: /-/,
+            do: async (el) => {
+                const { localName } = el;
+                const registry = el.customElementRegistry;
+                if (registry && typeof registry.whenDefined === 'function') {
+                    await registry.whenDefined(localName);
+                }
+                const shadowRoot = el.shadowRoot;
+                if (shadowRoot === null)
+                    return;
+                // Use mountGlobally to propagate recursively
+                await shadowRoot.mountGlobally(config, options);
+            }
+        }, options);
+        await crossShadowRootPropagator.observe(this);
+        return this;
+    },
+    writable: true,
+    enumerable: false,
+    configurable: true,
+});

@@ -391,7 +391,8 @@ export class MountObserver extends EventTarget {
         if ('querySelectorAll' in node && this.#init.matching) {
             const root = node;
             // Get all elements matching the CSS selector first
-            root.querySelectorAll(this.#init.matching).forEach(child => {
+            const matches = root.querySelectorAll(this.#init.matching);
+            matches.forEach(child => {
                 // If intersection observer is active, start observing the element
                 if (this.#intersectionObserver) {
                     this.#intersectionObserver.observe(child);

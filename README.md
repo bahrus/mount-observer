@@ -1512,6 +1512,45 @@ Browser support: Works in all browsers, but scoped registry features require Chr
 
 [Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
 
+### Global Propagation with `mountGlobally()`
+
+The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across custom element registry boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.
+
+```JavaScript
+import 'mount-observer/ElementMountExtension.js';
+
+// Mount globally - propagates to all child registries and shadow roots
+await document.mountGlobally({
+    matching: '.target',
+    do: (el) => {
+        el.setAttribute('data-mounted', 'true');
+    }
+});
+```
+
+The `mountGlobally()` method:
+- Mounts the config in the current registry first (using `mount()`)
+- Creates two propagators that automatically mount in:
+  - Elements with different custom element registries (`whereDifferentCustomElementRegistry: true`)
+  - Shadow roots within the same registry (custom elements with shadow DOM)
+- Waits for custom elements to be defined before mounting (ensures shadow roots exist)
+- Recursively propagates through nested shadow roots
+
+This enables "viral" propagation of mount observers, perfect for bootstrapping core handlers like `builtIns.mountObserverScript`:
+
+```JavaScript
+// Bootstrap mount observer script support globally
+await document.mountGlobally({
+    do: 'builtIns.mountObserverScript'
+});
+
+// Now MOSE scripts work everywhere, even in scoped registries
+```
+
+Both `Element.prototype.mountGlobally()` and `ShadowRoot.prototype.mountGlobally()` are available.
+
+[Implemented as goViral requirement](requirements/Done/goViral.md).
+
 ## Hierarchical Observer Composition with the `with` Property
 
 The `with` property enables hierarchical composition of MountObservers, allowing a parent observer to declaratively create and manage multiple sub-observers that observe the same root node. This provides a clean way to organize complex observation scenarios and coordinate multiple observers.

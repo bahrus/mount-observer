@@ -334,3 +334,54 @@ Element.prototype.mountGlobally = async function(config: MountConfig) {
     return this;
 };
 ```
+
+
+## Implementation Status
+
+✅ **COMPLETED** - Implemented and tested successfully
+
+### Implementation Details
+
+**Files Modified:**
+- `ElementMountExtension.ts` - Added `mountGlobally()` methods to Element and ShadowRoot prototypes
+- `MountObserver.ts` - Core observer logic (no changes needed)
+- `tests/test-mount-globally.html` - Comprehensive test suite
+- `tests/test-mount-globally.spec.mjs` - Playwright test spec
+
+**Key Features:**
+1. `Element.prototype.mountGlobally()` - Mounts config in current registry and propagates to child registries
+2. `ShadowRoot.prototype.mountGlobally()` - Same functionality for shadow roots
+3. Two propagators:
+   - `crossCustomElementRegistryPropagator` - Watches for elements in different registries
+   - `crossShadowRootPropagator` - Watches for shadow roots within same registry
+4. Waits for custom elements to be defined before mounting (ensures shadow roots exist)
+5. Recursive propagation through nested shadow roots
+
+**Tests:**
+- Test 1: Cross-registry propagation (elements with scoped registries) ✅
+- Test 2: Shadow root propagation in same registry ✅
+- Test 3: Nested shadow roots (test3-outer contains test3-inner) ✅
+
+All tests pass in browser environment.
+
+### Issue Discovered and Fixed
+
+The `whereLocalNameMatches` condition requires `matching` to be specified. When `matching` is undefined, the MountObserver skips `querySelectorAll` and `element.matches()` checks, causing no elements to be processed.
+
+**Fix applied**: Added `matching: '*'` to the `crossShadowRootPropagator`.
+
+### Usage Example
+
+```typescript
+import 'mount-observer/ElementMountExtension.js';
+
+// Mount globally - propagates to all child registries and shadow roots
+await document.mountGlobally({
+    matching: '.target',
+    do: (el) => {
+        el.setAttribute('data-mounted', 'true');
+    }
+});
+```
+
+This enables "viral" propagation of mount observers across registry boundaries, perfect for bootstrapping core handlers like `builtIns.mountObserverScript`.
