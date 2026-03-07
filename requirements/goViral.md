@@ -329,6 +329,7 @@ Element.prototype.mountGlobally = async function(config: MountConfig) {
             await shadowRoot.mount(config);
         }
     })
+    crossShadowRootPropagator.observe(this);
     
     return this;
 };
