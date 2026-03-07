@@ -421,6 +421,346 @@ The handler automatically hoists templates that:
 
 [Implemented as HoistingTemplates requirement](requirements/Done/HoistingTemplates.md)
 
+## Intra-Document HTML Includes with HTMLInclude
+
+The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse within a document using `<template src="#id">` syntax. Think of it as "constants for HTML" - define content once with an ID, then reference it multiple times throughout your document.
+
+**Why use HTML includes?**
+
+- Reduces duplication of repeated HTML structures
+- Enables template-based content generation
+- Supports partial updates via matching insertions
+- Works across shadow DOM boundaries
+- Caches lookups for performance
+- Detects circular references automatically
+
+**Basic usage - Simple cloning:**
+
+```html
+<!-- Define reusable content -->
+<div id="reusable">
+    <p>This content can be reused</p>
+    <button>Click me</button>
+</div>
+
+<!-- Reference it with a template -->
+<template src="#reusable"></template>
+
+<!-- Results in: -->
+<div>
+    <p>This content can be reused</p>
+    <button>Click me</button>
+</div>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    });
+    observer.observe(document);
+</script>
+```
+
+**What happens:**
+1. The handler finds templates with `src` attributes starting with `#`
+2. Searches for an element with that ID (across shadow boundaries)
+3. Clones the content from the source element
+4. Replaces the template with the cloned content
+5. Removes the `id` attribute from cloned elements to avoid duplicate IDs
+
+**Cloning priority:**
+1. `remoteContent` property (hoisted templates) - highest priority
+2. `content` property (regular templates)
+3. The element itself (any element with an ID)
+
+**Works with hoisted templates:**
+
+```html
+<my-web-component>
+    #shadow
+        <template id="my-template">
+            <div>Hoisted content</div>
+        </template>
+</my-web-component>
+
+<!-- After hoisting, this still works -->
+<template src="#my-template"></template>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    // First hoist templates
+    new MountObserver({
+        do: 'builtIns.hoistTemplate'
+    }).observe(document);
+    
+    // Then use them
+    new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    }).observe(document);
+</script>
+```
+
+### Matching Insertions - Partial Updates
+
+When a template has children, they are used to match elements in the cloned content and selectively update them. This enables partial modifications and "nulling out" content without duplicating the entire structure.
+
+**How it works:**
+1. Template children generate CSS selectors (tag, classes, attributes)
+2. Matching elements in the cloned content are found
+3. Matched elements have their children replaced and attributes updated
+4. The `-i` attribute specifies which attributes to update
+
+**Example - Updating attributes:**
+
+```html
+<!-- Source content -->
+<div itemscope id="love">
+    <data value="false" itemprop="todayIsFriday">It's Thursday</data>
+</div>
+
+<!-- Template with matching insertion -->
+<template src="#love">
+    <data value="true" itemprop="todayIsFriday" -i="value"></data>
+</template>
+
+<!-- Results in: -->
+<div itemscope>
+    <data value="true" itemprop="todayIsFriday">It's Thursday</data>
+</div>
+<!-- The value attribute is updated, but content stays "It's Thursday" -->
+```
+
+**The `-i` attribute:**
+
+The `-i` (insert) attribute is a space-separated list of attribute names to update on matched elements. Attributes listed in `-i` are:
+- Excluded from the CSS selector (allows matching elements with different values)
+- Updated on matched elements with values from the template child
+
+```html
+<template src="#form">
+    <!-- Update both value and placeholder -->
+    <input type="text" name="username" value="new" placeholder="Updated" -i="value placeholder">
+</template>
+```
+
+**Example - Replacing content:**
+
+```html
+<!-- Source -->
+<div id="greeting">
+    <p class="message">Hello</p>
+</div>
+
+<!-- Template replaces content -->
+<template src="#greeting">
+    <p class="message">Goodbye</p>
+</template>
+
+<!-- Results in: -->
+<div>
+    <p class="message">Goodbye</p>
+</div>
+```
+
+**Example - Multiple matching elements:**
+
+```html
+<!-- Source with multiple items -->
+<div id="list">
+    <span class="item">Item 1</span>
+    <span class="item">Item 2</span>
+    <span class="item">Item 3</span>
+</div>
+
+<!-- Update all matching items -->
+<template src="#list">
+    <span class="item">Updated</span>
+</template>
+
+<!-- Results in: -->
+<div>
+    <span class="item">Updated</span>
+    <span class="item">Updated</span>
+    <span class="item">Updated</span>
+</div>
+```
+
+**Example - Nulling out content:**
+
+```html
+<!-- Source -->
+<div id="status">
+    <span data-active="false" class="indicator">Inactive</span>
+</div>
+
+<!-- Update attribute, remove content -->
+<template src="#status">
+    <span data-active="true" class="indicator" -i="data-active"></span>
+</template>
+
+<!-- Results in: -->
+<div>
+    <span data-active="true" class="indicator"></span>
+</div>
+<!-- Content is removed, attribute is updated -->
+```
+
+### Use Case: Inheriting Groups of Mount-Observers
+
+Matching insertions become particularly powerful when combined with Mount Observer Script Elements (MOSEs) for inheriting and customizing groups of mount-observers across shadow DOM boundaries.
+
+**Scenario:** You have a base component with a set of mount-observers defined in its shadow root, and you want to reuse those observers in other components while making targeted modifications.
+
+```html
+<!-- Base component with mount-observers -->
+<template id="base-observers">
+    <script type="mountobserver">
+    {
+        "matching": "button.primary",
+        "import": "./primary-button.js",
+        "do": "builtIns.defineCustomElement"
+    }
+    </script>
+    
+    <script type="mountobserver">
+    {
+        "matching": ".interactive",
+        "import": "./interactive.js",
+        "do": "builtIns.enhanceMountedElement"
+    }
+    </script>
+    
+    <script type="mountobserver">
+    {
+        "matching": "form",
+        "import": "./form-validator.js",
+        "do": "builtIns.enhanceMountedElement"
+    }
+    </script>
+</template>
+
+<!-- Derived component - inherit and customize -->
+<my-derived-component>
+    #shadow
+        <!-- Include base observers -->
+        <template src="#base-observers">
+            <!-- Override the form validator with a different one -->
+            <script type="mountobserver">
+            {
+                "matching": "form",
+                "import": "./custom-form-validator.js",
+                "do": "builtIns.enhanceMountedElement"
+            }
+            </script>
+        </template>
+        
+        <!-- Component content -->
+        <form>...</form>
+        <button class="primary">Submit</button>
+</my-derived-component>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    // Bootstrap HTMLInclude handler
+    new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    }).observe(document);
+    
+    // Bootstrap MOSE handler to activate the observers
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+**What happens:**
+1. The `<template src="#base-observers">` clones all three MOSE scripts
+2. The matching insertion finds the form validator script (matching by `matching` attribute)
+3. Replaces its content with the custom validator configuration
+4. All three scripts are inserted into the shadow root
+5. The MOSE handler activates all observers in the shadow root's registry scope
+
+**Benefits:**
+- **Composition**: Build complex observer configurations from reusable pieces
+- **Inheritance**: Derive new components with modified observer behavior
+- **Scoped registries**: Each shadow root gets its own set of observers
+- **Declarative**: No JavaScript required for observer inheritance
+- **Maintainable**: Update base observers in one place, changes propagate
+
+**Advanced pattern - Multiple inheritance:**
+
+```html
+<!-- Base UI observers -->
+<template id="ui-observers">
+    <script type="mountobserver">{"matching": "button", ...}</script>
+    <script type="mountobserver">{"matching": "input", ...}</script>
+</template>
+
+<!-- Base data observers -->
+<template id="data-observers">
+    <script type="mountobserver">{"matching": "[itemscope]", ...}</script>
+</template>
+
+<!-- Component combines both -->
+<my-component>
+    #shadow
+        <template src="#ui-observers"></template>
+        <template src="#data-observers"></template>
+        
+        <!-- Add component-specific observers -->
+        <script type="mountobserver">
+        {
+            "matching": ".special",
+            "import": "./special.js",
+            "do": "builtIns.enhanceMountedElement"
+        }
+        </script>
+</my-component>
+```
+
+This pattern enables:
+- **Mixins**: Combine multiple observer groups
+- **Layering**: Stack observers from different concerns (UI, data, behavior)
+- **Customization**: Override specific observers while keeping others
+- **Reusability**: Share observer configurations across components
+
+**Declarative usage with MOSE:**
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.HTMLInclude"
+}
+</script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer';
+    
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document);
+</script>
+```
+
+**Error handling:**
+
+The handler provides helpful error messages:
+- Missing elements: `data-include-error="Element with id='foo' not found"`
+- Circular references: `data-include-error="Circular reference detected: #foo"`
+- Clone failures: `data-include-error="Unable to clone content from #foo"`
+
+**Performance:**
+
+- Uses WeakMap caching for repeated ID lookups
+- Efficient for scenarios like periodic tables with many repeated elements
+- Searches across shadow boundaries using `upShadowSearch`
+- Cleans up cache entries when elements are garbage collected
+
+[Implemented as MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes requirement](requirements/Done/MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes.md)
+
 ## Automatic ID Generation with genIds
 
 The `builtIns.generateIds` handler automatically generates unique IDs for elements within scoped containers using the [id-generation](https://www.npmjs.com/package/id-generation) package. This is particularly useful for forms, microdata structures, and any scenario where you need unique IDs for accessibility or linking purposes.
