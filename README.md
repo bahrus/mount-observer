@@ -436,6 +436,7 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
 - Works across shadow DOM boundaries
 - Caches lookups for performance
 - Detects circular references automatically
+- Can be used to inherit from MOSEs
 
 **Basic usage - Simple cloning:**
 
