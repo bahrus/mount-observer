@@ -149,7 +149,7 @@
             test3Container.appendChild(component);
             
             // Wait even longer for nested propagation (multiple levels of async operations)
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 100));
             
             const inner = component.shadowRoot.querySelector('test3-inner');
             const targetInNested = inner?.shadowRoot?.querySelector('.nested-target');
