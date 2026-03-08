@@ -1816,9 +1816,6 @@ export const mountConfig = {
 </script>
 ```
 
-To keep this proposal / polyfill of reasonable size, mount observer script elements has its own [repo / sub-proposal](https://github.com/bahrus/mount-observer-script-element).  There's much more to it, including support for inheritance across containing scoped custom element registries.
-
-But I think it's important to think about this way of making the mount observer declarative, as it provides one significant reason why we place so much emphasis on making sure that the mount observer settings (MountConfig) is as JSON serializable as possible.
 
 
 ## Binding from a distance
@@ -1949,7 +1946,7 @@ MountObserver.define('myHandler', Handler2);  // Error: myHandler already in use
 
 ### Global registry
 
-The handler registry is global and shared across all MountObserver instances, similar to the custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
+The handler registry is global and shared across all MountObserver instances, similar to the global custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
 
 [Implemented as [Requirement14](requirements/Done/Requirement14.md)]
 
