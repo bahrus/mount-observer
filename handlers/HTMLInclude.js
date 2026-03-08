@@ -183,9 +183,40 @@ export class HTMLIncludeHandler extends EvtRt {
                 if (clone instanceof Element && clone.hasAttribute('id')) {
                     clone.removeAttribute('id');
                 }
-                // Insert clone and remove template
-                template.parentNode?.insertBefore(clone, template);
-                template.remove();
+                // Check for shadowRootModeOnLoad attribute
+                const shadowRootMode = template.getAttribute('shadowrootmodeonload');
+                if (shadowRootMode) {
+                    // Shadow DOM mode - attach to parent's shadow root
+                    const parent = template.parentElement;
+                    if (!parent) {
+                        console.warn('HTMLInclude: Cannot attach shadow root - template has no parent element');
+                        return;
+                    }
+                    // Validate shadow root mode
+                    if (shadowRootMode !== 'open' && shadowRootMode !== 'closed') {
+                        console.warn(`HTMLInclude: Invalid shadowRootModeOnLoad value "${shadowRootMode}", must be "open" or "closed"`);
+                        return;
+                    }
+                    // Get or create shadow root
+                    let shadowRoot = parent.shadowRoot;
+                    if (!shadowRoot) {
+                        try {
+                            shadowRoot = parent.attachShadow({ mode: shadowRootMode });
+                        }
+                        catch (error) {
+                            console.error('HTMLInclude: Failed to attach shadow root:', error);
+                            return;
+                        }
+                    }
+                    // Append clone to shadow root
+                    shadowRoot.appendChild(clone);
+                    template.remove();
+                }
+                else {
+                    // Normal mode - insert before template
+                    template.parentNode?.insertBefore(clone, template);
+                    template.remove();
+                }
             }
             finally {
                 // Always remove from processing stack

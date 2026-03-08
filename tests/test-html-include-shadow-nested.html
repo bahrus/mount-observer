@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTMLInclude Shadow DOM Nested Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test">
+        <!-- Nested template structure similar to the requirements example -->
+        <template id="down">
+            <div>So don't you bring me down today</div>
+        </template>
+
+        <template id="beautiful">
+            <div>
+                <slot name="subjectIs"></slot> beautiful
+            </div>
+        </template>
+
+        <template id="chorus">
+            <template src="#beautiful">
+                <span slot="subjectIs">
+                    <slot name="subjectIs1"></slot>
+                </span>
+            </template>
+
+            <div>No matter what they say</div>
+            <div prop-pronoun>Words
+                <slot name="verb1"></slot> bring
+                <slot name="pronoun1"></slot> down</div>
+            <div>Oh no</div>
+            <template src="#beautiful">
+                <span slot="subjectIs">
+                    <slot name="subjectIs2"></slot>
+                </span>
+            </template>
+            <div>In every single way</div>
+            <div>Yes words
+                <slot name="verb2"></slot> bring
+                <slot name="pronoun2"></slot> down
+            </div>
+            <div>Oh no</div>
+
+            <template src="#down"></template>
+        </template>
+
+        <div class="chorus">
+            <template src="#chorus" shadowrootmodeonload="open"></template>
+            <span slot="verb1">can't</span>
+            <span slot="verb2">can't</span>
+            <span slot="pronoun1">me</span>
+            <span slot="pronoun2">me</span>
+            <span slot="subjectIs1">I am</span>
+            <span slot="subjectIs2">I am</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        console.log('Starting nested shadow DOM test');
+        
+        const observer = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        
+        observer.addEventListener('mount', (e) => {
+            console.log('Mount event fired!', e);
+        });
+        
+        await observer.observe(document.getElementById('test'));
+        
+        console.log('Observer observing');
+        
+        // Check if shadow root was created
+        const chorus = document.querySelector('.chorus');
+        
+        console.log('Chorus shadow root:', chorus?.shadowRoot);
+        
+        if (chorus?.shadowRoot) {
+            console.log('Chorus shadow content:', chorus.shadowRoot.innerHTML);
+            
+            // Check for nested templates
+            const nestedTemplates = chorus.shadowRoot.querySelectorAll('template');
+            console.log('Nested templates count:', nestedTemplates.length);
+        }
+        
+        // Check light DOM slots
+        const slots = chorus?.querySelectorAll('[slot]');
+        console.log('Light DOM slots:', slots?.length);
+        
+        window.testsReady = true;
+    </script>
+</body>
+</html>

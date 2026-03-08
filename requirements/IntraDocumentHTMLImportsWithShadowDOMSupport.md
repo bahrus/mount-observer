@@ -21,7 +21,7 @@ In particular, in this case it will:
 
 1.  Check if the parent element has a shadowRoot.  If not, it will create it.
 2.  It will append the clone to the shadowRoot.
-3.  As before, delete the template element.
+3.  As before, delete the template element.no
 
 Check if the parent element has shadow
 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTMLInclude Shadow DOM Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test">
+        <!-- Source template to be included -->
+        <template id="shadow-content">
+            <style>
+                :host {
+                    display: block;
+                    padding: 10px;
+                    border: 2px solid blue;
+                }
+                .shadow-text {
+                    color: blue;
+                    font-weight: bold;
+                }
+            </style>
+            <div class="shadow-text">
+                <slot name="greeting"></slot>
+                <slot></slot>
+            </div>
+        </template>
+
+        <!-- Host element with shadow root -->
+        <div class="host-element">
+            <template src="#shadow-content" shadowrootmodeonload="open"></template>
+            <span slot="greeting">Hello</span>
+            <span>World!</span>
+        </div>
+
+        <!-- Another host with same shadow content -->
+        <div class="host-element-2">
+            <template src="#shadow-content" shadowrootmodeonload="open"></template>
+            <span slot="greeting">Goodbye</span>
+            <span>Universe!</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        console.log('Starting shadow DOM test');
+        
+        const observer = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        
+        observer.addEventListener('mount', (e) => {
+            console.log('Mount event fired!', e);
+        });
+        
+        await observer.observe(document.getElementById('test'));
+        
+        console.log('Observer observing');
+        
+        // Check if shadow roots were created
+        const host1 = document.querySelector('.host-element');
+        const host2 = document.querySelector('.host-element-2');
+        
+        console.log('Host 1 shadow root:', host1?.shadowRoot);
+        console.log('Host 2 shadow root:', host2?.shadowRoot);
+        
+        if (host1?.shadowRoot) {
+            console.log('Host 1 shadow content:', host1.shadowRoot.innerHTML);
+        }
+        
+        if (host2?.shadowRoot) {
+            console.log('Host 2 shadow content:', host2.shadowRoot.innerHTML);
+        }
+        
+        window.testsReady = true;
+    </script>
+</body>
+</html>
