@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Script JSON Import Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Script JSON Import Test</h1>
+    
+    <!-- Test 1: JSON import with type="json" -->
+    <script src="./test-data.json" type="json" id="test1"></script>
+    
+    <!-- Test 2: JSON import with type="application/json" -->
+    <script src="./test-data.json" type="application/json" id="test2"></script>
+    
+    <!-- Test 3: JSON-LD import with type="application/ld+json" -->
+    <script src="./test-data.json" type="application/ld+json" id="test3"></script>
+    
+    <!-- Test 4: Backward compat - nomodule with with-type -->
+    <script nomodule src="./test-data.json" with-type="json" id="test4"></script>
+    
+    <!-- Test 5: Regular JS module (should be skipped) -->
+    <script src="./test-script-module1.js" type="module" id="test5"></script>
+    
+    <!-- Test 6: Regular nomodule JS import (backward compat) -->
+    <script nomodule src="./test-script-module1.js" id="test6"></script>
+    
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        
+        console.log('Starting Script JSON Import Tests...');
+        
+        // Create observer
+        const observer = new MountObserver({
+            do: 'builtIns.scriptNoModule'
+        });
+        
+        console.log('Observer created, starting observation...');
+        await observer.observe(document);
+        
+        console.log('Observation started, waiting for imports...');
+        
+        // Wait for imports to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Checking results...');
+        
+        // Test 1: type="json"
+        const script1 = document.getElementById('test1');
+        const test1Result = {
+            hasExport: script1?.export !== undefined,
+            hasDefault: script1?.export?.default !== undefined,
+            dataName: script1?.export?.default?.name,
+            itemsCount: script1?.export?.default?.items?.length
+        };
+        console.log('Test 1 (type="json"):', test1Result);
+        
+        // Test 2: type="application/json"
+        const script2 = document.getElementById('test2');
+        const test2Result = {
+            hasExport: script2?.export !== undefined,
+            hasDefault: script2?.export?.default !== undefined,
+            dataName: script2?.export?.default?.name
+        };
+        console.log('Test 2 (type="application/json"):', test2Result);
+        
+        // Test 3: type="application/ld+json"
+        const script3 = document.getElementById('test3');
+        const test3Result = {
+            hasExport: script3?.export !== undefined,
+            hasDefault: script3?.export?.default !== undefined,
+            dataName: script3?.export?.default?.name
+        };
+        console.log('Test 3 (type="application/ld+json"):', test3Result);
+        
+        // Test 4: Backward compat - nomodule with with-type
+        const script4 = document.getElementById('test4');
+        const test4Result = {
+            hasExport: script4?.export !== undefined,
+            hasDefault: script4?.export?.default !== undefined,
+            dataName: script4?.export?.default?.name
+        };
+        console.log('Test 4 (nomodule with-type):', test4Result);
+        
+        // Test 5: type="module" should be skipped
+        const script5 = document.getElementById('test5');
+        const test5Result = {
+            hasExport: script5?.export !== undefined
+        };
+        console.log('Test 5 (type="module" - should be skipped):', test5Result);
+        
+        // Test 6: Regular nomodule JS import
+        const script6 = document.getElementById('test6');
+        const test6Result = {
+            hasExport: script6?.export !== undefined,
+            hasMountConfig: script6?.export?.mountConfig !== undefined
+        };
+        console.log('Test 6 (nomodule JS):', test6Result);
+        
+        // Store results
+        window.testResults = {
+            test1: test1Result,
+            test2: test2Result,
+            test3: test3Result,
+            test4: test4Result,
+            test5: test5Result,
+            test6: test6Result
+        };
+        
+        console.log('All tests complete:', window.testResults);
+    </script>
+</body>
+</html>

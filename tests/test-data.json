@@ -2,7 +2,12 @@
     "name": "Test Data",
     "version": "1.0.0",
     "items": [
-        { "id": 1, "value": "first" },
-        { "id": 2, "value": "second" }
-    ]
+        { "id": 1, "label": "First" },
+        { "id": 2, "label": "Second" },
+        { "id": 3, "label": "Third" }
+    ],
+    "config": {
+        "enabled": true,
+        "timeout": 5000
+    }
 }
