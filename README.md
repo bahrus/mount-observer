@@ -219,7 +219,7 @@ The handler:
 
 ## Loading ES Modules from Script Elements
 
-The `builtIns.scriptNoModule` handler enables declarative module loading using `<script nomodule>` elements. This provides a way to import ES modules and JSON data directly from HTML without writing JavaScript.
+The `builtIns.scriptNoModule` handler enables declarative module loading using `<script nomodule>` elements. This provides a way to import ES modules and JSON data directly from HTML without writing JavaScript and access the module via the script element.
 
 ```html
 <!-- Load a JavaScript module -->
