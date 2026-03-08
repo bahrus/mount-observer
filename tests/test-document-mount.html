@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document.mount() Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="test">
+        <button class="test-button">Click me</button>
+        <input type="text" class="test-input" />
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        import '../ElementMountExtension.js';
+
+        console.log('Testing document.mount()');
+        
+        let buttonMounted = false;
+        let inputMounted = false;
+        
+        // Test 1: Mount on document
+        await document.mount({
+            matching: 'button.test-button',
+            do: (el) => {
+                console.log('Button mounted via document.mount():', el);
+                buttonMounted = true;
+            }
+        });
+        
+        // Test 2: Mount another observer on document
+        await document.mount({
+            matching: 'input.test-input',
+            do: (el) => {
+                console.log('Input mounted via document.mount():', el);
+                inputMounted = true;
+            }
+        });
+        
+        // Give observers time to process
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log('Button mounted:', buttonMounted);
+        console.log('Input mounted:', inputMounted);
+        
+        window.testResults = {
+            buttonMounted,
+            inputMounted
+        };
+        
+        window.testsReady = true;
+    </script>
+</body>
+</html>

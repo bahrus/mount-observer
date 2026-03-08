@@ -46,14 +46,31 @@ if (typeof CustomElementRegistry !== 'undefined') {
     });
 }
 /**
- * Adds a mount method to Element.prototype that:
+ * Adds a mount method to Node.prototype that works for Element, ShadowRoot, and Document.
+ * This provides a unified API for mounting observers on any node type.
+ *
+ * For Elements:
  * 1. Determines the observation scope based on options.scope
  * 2. Creates a MountObserver with the provided config
- * 3. Observes that scope
- * 4. Returns the element for chaining
+ * 3. Observes that scope with registry coordination
+ * 4. Returns the node for chaining
+ *
+ * For ShadowRoot and Document:
+ * 1. Observes the node directly (no registry coordination)
+ * 2. Returns the node for chaining
  */
-Object.defineProperty(Element.prototype, 'mount', {
+Object.defineProperty(Node.prototype, 'mount', {
     value: async function (config, options = {}) {
+        // For ShadowRoot and Document, observe directly
+        if (this instanceof ShadowRoot || this instanceof Document) {
+            const mo = new MountObserver(config, options);
+            await mo.observe(this);
+            return this;
+        }
+        // For Element, use the robust registry-aware logic
+        if (!(this instanceof Element)) {
+            throw new Error('mount() can only be called on Element, ShadowRoot, or Document');
+        }
         const scope = options.scope ?? 'registry'; // NEW DEFAULT
         let thingToObserve;
         if (scope === 'registry') {
@@ -137,81 +154,24 @@ Object.defineProperty(Element.prototype, 'mountScope', {
     configurable: true,
 });
 /**
- * Adds a mountGlobally method to Element.prototype that:
+ * Adds a mountGlobally method to Node.prototype that works for Element, ShadowRoot, and Document.
+ *
+ * For Elements:
  * 1. Mounts the config in the current registry
  * 2. Creates propagators to automatically mount in:
  *    - Elements with different custom element registries
  *    - Shadow roots within the same registry
  *
+ * For ShadowRoot and Document:
+ * 1. Mounts in the current node
+ * 2. Creates propagators for child registries and shadow roots
+ *
  * This enables "viral" propagation of mount observers across registry boundaries,
  * useful for bootstrapping core handlers like builtIns.mountObserverScript.
  */
-Object.defineProperty(Element.prototype, 'mountGlobally', {
+Object.defineProperty(Node.prototype, 'mountGlobally', {
     value: async function (config, options = {}) {
-        // Mount in current registry first
-        await this.mount(config, options);
-        // Propagator 1: Watch for elements in different registries
-        const crossCustomElementRegistryPropagator = new MountObserver({
-            matching: '*',
-            whereDifferentCustomElementRegistry: true,
-            do: async (el) => {
-                // Wait for custom element to be defined so it has the chance to add shadowRoot
-                const { localName } = el;
-                if (localName.includes('-')) {
-                    const registry = el.customElementRegistry;
-                    if (registry && typeof registry.whenDefined === 'function') {
-                        await registry.whenDefined(localName);
-                    }
-                }
-                const target = el.shadowRoot || el;
-                await target.mount(config, options);
-            }
-        }, options);
-        await crossCustomElementRegistryPropagator.observe(this);
-        // Propagator 2: Watch for shadow roots within the same registry
-        const crossShadowRootPropagator = new MountObserver({
-            matching: '*', // Must specify matching selector
-            whereLocalNameMatches: /-/,
-            do: async (el) => {
-                const { localName } = el;
-                const registry = el.customElementRegistry;
-                if (registry && typeof registry.whenDefined === 'function') {
-                    await registry.whenDefined(localName);
-                }
-                const shadowRoot = el.shadowRoot;
-                if (shadowRoot === null)
-                    return;
-                await shadowRoot.mountGlobally(config, options);
-            }
-        }, options);
-        await crossShadowRootPropagator.observe(this);
-        return this;
-    },
-    writable: true,
-    enumerable: false,
-    configurable: true,
-});
-/**
- * Adds mount method to ShadowRoot.prototype.
- * ShadowRoots can be observed directly, so this provides a convenient way to mount observers.
- */
-Object.defineProperty(ShadowRoot.prototype, 'mount', {
-    value: async function (config, options = {}) {
-        const mo = new MountObserver(config, options);
-        await mo.observe(this);
-        return this;
-    },
-    writable: true,
-    enumerable: false,
-    configurable: true,
-});
-/**
- * Adds mountGlobally method to ShadowRoot.prototype.
- * Propagates mount observers to child registries and shadow roots.
- */
-Object.defineProperty(ShadowRoot.prototype, 'mountGlobally', {
-    value: async function (config, options = {}) {
-        // Mount in current shadow root first
+        // Mount in current node first
         await this.mount(config, options);
         // Propagator 1: Watch for elements in different registries
         const crossCustomElementRegistryPropagator = new MountObserver({
@@ -230,6 +190,10 @@ Object.defineProperty(ShadowRoot.prototype, 'mountGlobally', {
                 if (shadowRoot) {
                     // Use mountGlobally to propagate recursively
                     await shadowRoot.mountGlobally(config, options);
+                }
+                else {
+                    // No shadow root, mount on element
+                    await el.mount(config, options);
                 }
             }
         }, options);

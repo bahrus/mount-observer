@@ -11,7 +11,7 @@
 
     <script type=module>
         import 'mount-observer/ElementMountExtension.js';
-        document.body.mount({
+        document.mount({
             matching: '[log-to-console]',
             do: (el) => {
                 el.addEventListener('click', e => {

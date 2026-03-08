@@ -112,7 +112,7 @@ Before getting into the weeds, let's demonstrate the two most prominent use case
     <div log-to-console="clicked on a div">hello</div>
 
     <script type=module>
-        document.body.mount({
+        document.mount({
             matching: '[log-to-console]',
             do: (el) => {
                 el.addEventListener('click', e => {
