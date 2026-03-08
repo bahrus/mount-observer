@@ -434,6 +434,7 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
 - Enables template-based content generation
 - Supports partial updates via matching insertions
 - Works across shadow DOM boundaries
+- Supports declarative shadow DOM attachment
 - Caches lookups for performance
 - Detects circular references automatically
 - Can be used to inherit from MOSEs
@@ -505,6 +506,102 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
     }).observe(document);
 </script>
 ```
+
+### Shadow DOM Support
+
+The HTMLInclude handler supports declarative shadow DOM attachment using the `shadowrootmodeonload` attribute. This allows you to attach cloned content directly to a parent element's shadow root, similar to the platform's [declarative shadow DOM](https://web.dev/articles/declarative-shadow-dom) feature.
+
+**Basic shadow DOM usage:**
+
+```html
+<!-- Define reusable shadow content -->
+<template id="shadow-content">
+    <style>
+        :host {
+            display: block;
+            padding: 10px;
+        }
+        .shadow-text {
+            color: blue;
+        }
+    </style>
+    <div class="shadow-text">
+        <slot name="greeting"></slot>
+        <slot></slot>
+    </div>
+</template>
+
+<!-- Attach to shadow root -->
+<div class="host-element">
+    <template src="#shadow-content" shadowrootmodeonload="open"></template>
+    <span slot="greeting">Hello</span>
+    <span>World!</span>
+</div>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    }).observe(document);
+</script>
+```
+
+**What happens:**
+1. The handler checks for the `shadowrootmodeonload` attribute (case-insensitive)
+2. If present, it attaches the cloned content to the parent element's shadow root
+3. If the parent doesn't have a shadow root, one is created with the specified mode
+4. If a shadow root already exists, the content is appended to it
+5. The template is removed as usual
+
+**Shadow root modes:**
+- `open` - Shadow root is accessible via `element.shadowRoot`
+- `closed` - Shadow root is not accessible from outside
+
+**Slots work automatically:**
+
+The native browser slot mechanism handles content distribution. Light DOM elements with `slot` attributes are automatically projected into the corresponding `<slot>` elements in the shadow DOM.
+
+**Example - Complex nested structure:**
+
+```html
+<template id="chorus">
+    <template src="#beautiful">
+        <span slot="subjectIs">
+            <slot name="subjectIs1"></slot>
+        </span>
+    </template>
+    <div>No matter what they say</div>
+    <div>Words <slot name="verb1"></slot> bring <slot name="pronoun1"></slot> down</div>
+</template>
+
+<div class="chorus">
+    <template src="#chorus" shadowrootmodeonload="open"></template>
+    <span slot="verb1">can't</span>
+    <span slot="pronoun1">me</span>
+    <span slot="subjectIs1">I am</span>
+</div>
+```
+
+**Nested templates in shadow DOM:**
+
+Templates inside shadow roots are not automatically processed by the parent observer. To process nested templates, you need to observe the shadow root separately:
+
+```javascript
+const host = document.querySelector('.host-element');
+if (host.shadowRoot) {
+    const shadowObserver = new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    });
+    await shadowObserver.observe(host.shadowRoot);
+}
+```
+
+**Error handling:**
+
+- Invalid mode values: Logs warning if mode is not `"open"` or `"closed"`
+- Missing parent: Logs warning if template has no parent element
+- Attachment failures: Logs error if shadow root cannot be attached
 
 ### Matching Insertions - Partial Updates
 
