@@ -217,89 +217,101 @@ The handler:
 3. Stores the enhancement instance on `element.enh[enhKey]` if an `enhKey` is provided
 
 
-## Loading ES Modules and JSON from Script Elements
+## Exposing Module Exports from Script Elements
 
-The `builtIns.scriptNoModule` handler enables declarative module and JSON loading using `<script>` elements. This provides a way to import ES modules and JSON data directly from HTML without writing JavaScript.
+The `builtIns.scriptExport` handler solves a long-standing limitation: accessing ES module exports from script elements. It also provides a clean way to import JSON and other data formats declaratively.
 
-**New simplified syntax for JSON:**
+### Problem 1: ES Module Export Access
+
+The browser doesn't expose module exports from `<script type="module">` elements. There's been a [decade-old proposal](https://github.com/whatwg/html/issues/1013) to add this, but it remains unimplemented.
+
+**The Solution:**
 
 ```html
-<!-- Load JSON data with type attribute -->
+<!-- Use nomodule to prevent browser from loading it separately -->
+<script nomodule src="./config.js" id="myConfig"></script>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    const observer = new MountObserver({
+        do: 'builtIns.scriptExport'
+    });
+    observer.observe(document);
+    
+    // Access the module's exports via element.export
+    const config = document.getElementById('myConfig').export;
+    console.log(config.apiKey);
+    console.log(config.endpoints);
+</script>
+```
+
+**Why `nomodule`?**
+- Prevents the browser from loading the module separately
+- Avoids having the module loaded twice in memory
+- The handler imports it once and exposes exports via `element.export`
+
+### Problem 2: Declarative JSON Import
+
+Importing JSON typically requires `fetch()` or dynamic `import()` with assertions. This handler provides a declarative alternative.
+
+**The Solution:**
+
+```html
+<!-- Load JSON data -->
 <script src="./data.json" type="json" id="myData"></script>
 
 <!-- Also supports full MIME types -->
-<script src="./data.json" type="application/json" id="myData2"></script>
-<script src="./linked-data.json" type="application/ld+json" id="myLinkedData"></script>
+<script src="./config.json" type="application/json" id="config"></script>
+<script src="./linked-data.json" type="application/ld+json" id="linkedData"></script>
 
 <script type="module">
     import { MountObserver } from 'mount-observer/MountObserver.js';
     
     const observer = new MountObserver({
-        do: 'builtIns.scriptNoModule'
+        do: 'builtIns.scriptExport'
     });
     observer.observe(document);
     
-    // Access the imported JSON data
+    // Access the JSON data via element.export.default
     const data = document.getElementById('myData').export.default;
-    console.log(data); // Your JSON object
+    console.log(data.items);
+    console.log(data.config);
 </script>
 ```
 
-**Backward compatible syntax:**
+**Why no `nomodule` for JSON?**
+- The browser ignores script elements with non-standard type attributes
+- No risk of double-loading since the browser won't load it at all
+- The handler imports it with the appropriate JSON assertion
 
-```html
-<!-- Load a JavaScript module (nomodule attribute) -->
-<script nomodule src="./config.js" id="myConfig"></script>
-
-<!-- Load JSON data (deprecated with-type attribute) -->
-<script nomodule src="./data.json" with-type="json" id="myData"></script>
-
-<script type="module">
-    import { MountObserver } from 'mount-observer/MountObserver.js';
-    
-    const observer = new MountObserver({
-        do: 'builtIns.scriptNoModule'
-    });
-    observer.observe(document);
-    
-    // Access the imported modules
-    const config = document.getElementById('myConfig').export;
-    const data = document.getElementById('myData').export.default;
-    
-    console.log(config.mountConfig); // Access exported values
-    console.log(data); // Access JSON data
-</script>
-```
-
-**How it works:**
-1. The handler matches `script[src]` elements with either:
-   - `nomodule` attribute (backward compatibility)
-   - `type` attribute containing "json" (new syntax)
-2. Skips `type="module"` scripts (handled by browser)
-3. Reads the `src` attribute and resolves it relative to the document
-4. For JSON types, uses import assertion: `import(src, { with: { type: 'json' } })`
-5. Stores the imported module on `element.export`
-
-**Supported type values for JSON:**
+**Supported JSON types:**
 - `type="json"` - Simple and clean
 - `type="application/json"` - Standard MIME type
 - `type="application/ld+json"` - JSON-LD linked data
-- Any type containing "json" will trigger JSON import assertion
+- Any type containing "json" triggers JSON import assertion
+
+**How it works:**
+1. Matches `script[src]` elements (via static properties)
+2. Skips `type="module"` scripts (browser-handled)
+3. Processes scripts with `nomodule` attribute OR type containing "json"
+4. Resolves the `src` relative to the document
+5. Imports with appropriate assertion (JSON if type contains "json")
+6. Stores the imported module on `element.export`
 
 **Benefits:**
-- Declarative module and JSON loading directly in HTML
-- Cleaner syntax for JSON imports (no `nomodule` or `with-type` needed)
-- Supports all JSON MIME types automatically
-- No need to specify `matching` or `whereInstanceOf` (handler provides defaults)
-- Modules are accessible via `scriptElement.export`
+- Access ES module exports from script elements (finally!)
+- Declarative JSON loading without fetch
+- Prevents double-loading of modules
+- Clean, intuitive syntax
 - Works with relative and absolute URLs
-- Backward compatible with existing `nomodule` syntax
+- No need to specify `matching` or `whereInstanceOf` (handler provides defaults)
 
 **Use cases:**
-- Loading configuration files declaratively
-- Importing JSON data without fetch
+- Accessing configuration module exports in HTML
+- Loading JSON data declaratively
 - Progressive enhancement with module loading
-- Declarative dependency management in HTML
+- Declarative dependency management
 - Loading JSON-LD structured data
 
 ## Mount Observer Script Elements (MOSEs)

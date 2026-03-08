@@ -27,16 +27,11 @@ test.describe('Script JSON Import Tests', () => {
         expect(results.test3.hasDefault).toBe(true);
         expect(results.test3.dataName).toBe('Test Data');
         
-        // Test 4: Backward compat - nomodule with with-type
-        expect(results.test4.hasExport).toBe(true);
-        expect(results.test4.hasDefault).toBe(true);
-        expect(results.test4.dataName).toBe('Test Data');
+        // Test 4: type="module" should be skipped
+        expect(results.test4.hasExport).toBe(false);
         
-        // Test 5: type="module" should be skipped
-        expect(results.test5.hasExport).toBe(false);
-        
-        // Test 6: Regular nomodule JS import
-        expect(results.test6.hasExport).toBe(true);
-        expect(results.test6.hasMountConfig).toBe(true);
+        // Test 5: Regular nomodule JS import
+        expect(results.test5.hasExport).toBe(true);
+        expect(results.test5.hasMountConfig).toBe(true);
     });
 });

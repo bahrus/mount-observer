@@ -1,35 +1,44 @@
 import { EvtRt } from '../EvtRt.js';
 /**
- * Handler for loading ES modules from script elements with src attribute.
- * Automatically imports the module and stores it on element.export.
+ * Handler for exposing module exports from script elements via element.export.
  *
- * Supports import assertions via the type attribute:
- * - type="json" or type="application/json" for JSON imports
- * - type="application/ld+json" for JSON-LD imports
- * - Any type containing "json" will use JSON import assertion
+ * Solves two key problems:
  *
- * For backward compatibility, also supports:
- * - script[nomodule][src] elements
- * - with-type attribute (deprecated, use type instead)
+ * 1. ES Module Export Access:
+ *    - Use nomodule attribute to prevent browser from loading the module separately
+ *    - Handler imports it and exposes exports via element.export
+ *    - Avoids double-loading the module in memory
+ *    - Example: <script nomodule src="./config.js" id="cfg"></script>
+ *    - Access: document.getElementById('cfg').export.myValue
+ *
+ * 2. JSON/Data Import:
+ *    - Use type attribute for JSON and other data formats
+ *    - Browser ignores non-standard script types, so no double-loading issue
+ *    - Handler imports with appropriate assertion and exposes via element.export
+ *    - Example: <script src="./data.json" type="json" id="data"></script>
+ *    - Access: document.getElementById('data').export.default
+ *
+ * Supported type values:
+ * - type="json" - JSON data
+ * - type="application/json" - JSON with full MIME type
+ * - type="application/ld+json" - JSON-LD linked data
+ * - Any type containing "json" triggers JSON import assertion
  */
-export class ScriptNoModuleHandler extends EvtRt {
-    // Static properties define default MountConfig constraints
-    // Match script elements with src that are either:
-    // 1. nomodule (backward compat)
-    // 2. Have a type attribute containing "json"
+export class ScriptExportHandler extends EvtRt {
+    // Match script elements with src attribute
     static matching = 'script[src]';
     static whereInstanceOf = HTMLScriptElement;
     async mount(mountedElement, MountConfig, context) {
         this.abort(); // Clean up event listeners (one-time operation)
         const scriptElement = mountedElement;
-        // Skip if this is a module script (type="module")
+        // Skip if this is a module script (browser handles these)
         const typeAttr = scriptElement.getAttribute('type');
         if (typeAttr === 'module') {
             return;
         }
         // Only process if:
-        // 1. Has nomodule attribute (backward compat), OR
-        // 2. Has type attribute containing "json"
+        // 1. Has nomodule attribute (for ES modules), OR
+        // 2. Has type attribute containing "json" (for JSON data)
         const hasNoModule = scriptElement.hasAttribute('nomodule');
         const isJsonType = typeAttr && typeAttr.toLowerCase().includes('json');
         if (!hasNoModule && !isJsonType) {
@@ -41,21 +50,9 @@ export class ScriptNoModuleHandler extends EvtRt {
             throw new Error('Script element must have a src attribute');
         }
         // Resolve the src relative to the document's base URL
-        // This ensures the import path is correct regardless of where the handler code is located
         const resolvedUrl = new URL(srcAttr, document.baseURI).href;
         // Determine import assertion type
-        // Priority: type attribute > with-type attribute (deprecated)
-        let importType = null;
-        if (isJsonType) {
-            importType = 'json';
-        }
-        else {
-            // Check deprecated with-type attribute for backward compatibility
-            const withTypeAttr = scriptElement.getAttribute('with-type');
-            if (withTypeAttr) {
-                importType = withTypeAttr;
-            }
-        }
+        const importType = isJsonType ? 'json' : null;
         // Perform import
         let module;
         try {
@@ -75,4 +72,4 @@ export class ScriptNoModuleHandler extends EvtRt {
 }
 // Register built-in handler
 import { MountObserver } from '../MountObserver.js';
-MountObserver.define('builtIns.scriptNoModule', ScriptNoModuleHandler);
+MountObserver.define('builtIns.scriptExport', ScriptExportHandler);
