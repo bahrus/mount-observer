@@ -1786,25 +1786,6 @@ const observer = new MountObserver({
 
 - **Circular References**: The library does not detect or prevent circular references in `with` configurations. Avoid configurations where observer A's `with` references observer B, and B's `with` references A, as this will cause a stack overflow.
 
-### Breaking Change: MountConfig → mountConfig
-
-In v2.x, the `MountContext.MountConfig` property was renamed to `MountContext.mountConfig` for consistency with JavaScript naming conventions (properties use camelCase, types use PascalCase).
-
-**Migration:**
-```JavaScript
-// Before (v1.x)
-do: (el, ctx) => {
-    console.log(ctx.MountConfig.matching);  // Old name
-}
-
-// After (v2.x)
-do: (el, ctx) => {
-    console.log(ctx.mountConfig.matching);  // New name
-}
-```
-
-[Implemented as support-for-with spec](.kiro/specs/support-for-with/)
-
 ## Mount Observer Script Elements (MOSEs)
 
 Following an approach similar to the [speculation api](https://developer.chrome.com/blog/speculation-rules-improvements), we can add a script element anywhere in the DOM:
