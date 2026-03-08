@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div log-to-console="clicked on a div">hello</div>
+
+    <script type=module>
+        import 'mount-observer/ElementMountExtension.js';
+        document.body.mount({
+            matching: '[log-to-console]',
+            do: (el) => {
+                el.addEventListener('click', e => {
+                  console.log(e.target.getAttribute('log-to-console'));
+                });
+            }
+        })
+    </script>
+</body>
+</html>
