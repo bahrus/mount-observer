@@ -1514,7 +1514,7 @@ Browser support: Works in all browsers, but scoped registry features require Chr
 
 ### Global Propagation with `mountGlobally()`
 
-The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across custom element registry boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.
+The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across custom element registry boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.  It should be used sparingly, as a last resort, probably limited to things that should arguably be built into the platform.
 
 ```JavaScript
 import 'mount-observer/ElementMountExtension.js';
