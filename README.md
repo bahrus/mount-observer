@@ -103,7 +103,7 @@ The extra flexibility this new primitive would provide could be quite useful to 
 
 ## Quick Examples of the Most Common Use Cases
 
-Before getting into the weeds, let's demonstrate the two most prominent use cases:
+Before getting into the weeds, let's demonstrate a few of the most prominent use cases:
 
 ### Use Case 1:  Custom Attribute Enhancement
 
@@ -280,6 +280,9 @@ Importing JSON typically requires `fetch()` or dynamic `import()` with assertion
 </script>
 ```
 
+<details>
+   <summary>Talking points</summary>
+
 **Why no `nomodule` for JSON?**
 - The browser ignores script elements with non-standard type attributes
 - No risk of double-loading since the browser won't load it at all
@@ -314,9 +317,11 @@ Importing JSON typically requires `fetch()` or dynamic `import()` with assertion
 - Declarative dependency management
 - Loading JSON-LD structured data
 
+</details>
+
 ## Mount Observer Script Elements (MOSEs)
 
-The `builtIns.mountObserverScript` handler enables fully declarative mount observer configuration using `<script type="mountobserver">` elements. This provides the ultimate in HTML-first progressive enhancement.
+Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API) `builtIns.mountObserverScript` handler enables fully declarative mount observer configuration using `<script type="mountobserver">` elements. This provides the ultimate in HTML-first progressive enhancement.
 
 ```html
 <!-- Inline JSON configuration -->
