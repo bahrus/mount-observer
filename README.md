@@ -348,6 +348,9 @@ Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs
 </script>
 ```
 
+<details>
+<summary>Talking points</summary>
+
 **How it works:**
 1. The handler matches `script[type="mountobserver"]` elements (via static properties)
 2. If the script has a `src` attribute, imports JSON from that URL
@@ -400,9 +403,11 @@ Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs
 </script>
 ```
 
+</details>
+
 ## Hoisting Templates for Performance
 
-The `builtIns.hoistTemplate` handler optimizes template usage by moving a template element's content from shadow roots to `document.head`. This is particularly useful when templates with IDs are repeated across multiple custom elements.
+The `builtIns.hoistTemplate` handler optimizes template usage by moving a template element's content from shadow roots to `document.head`. This is particularly useful when conditional or repeated templates  repeated across multiple custom element.
 
 **Why hoist templates?**
 
