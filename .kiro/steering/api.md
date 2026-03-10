@@ -28,7 +28,7 @@ This will only match elements that are BOTH (`input` or `button`) AND instances 
 The library provides several built-in handlers registered with `MountObserver.define()`:
 - `builtIns.logToConsole` - Logs mount/dismount events to console
 - `builtIns.defineCustomElement` - Auto-defines custom elements from imported modules
-- `buildIns.defineScopedCustomElement` - Defines custom elements in scoped registries
+- `buildIns.defineScopedCustomElement` - Defines custom elements in [scoped registries](https://developer.chrome.com/blog/scoped-registries)
 - `builtIns.enhanceMountedElement` - Enhances elements using assign-gingerly
 - `builtIns.scriptExport` - Exposes ES module exports and imports JSON from script elements via element.export
 - `builtIns.mountObserverScript` - Processes script[type="mountobserver"] elements to declaratively configure mount observers
@@ -157,6 +157,7 @@ All `where*` properties form AND conditions - elements must satisfy ALL specifie
 - Default (false): Only mount elements with SAME registry as root node
 - When true: Only mount elements with DIFFERENT registry than root node
 - Useful for cross-registry observation scenarios
+- Learn more about [scoped custom element registries](https://developer.chrome.com/blog/scoped-registries)
 
 ### Handler Static Properties (Default Configuration)
 

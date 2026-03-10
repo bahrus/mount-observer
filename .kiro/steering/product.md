@@ -8,7 +8,7 @@ mount-observer is a JavaScript/TypeScript library that provides a MountObserver 
 - **CSS-Based Observation**: Monitor elements matching complex CSS selectors with lifecycle callbacks
 - **Progressive Enhancement**: Attach behaviors and set properties on elements as they mount/dismount
 - **Intersection & Media Queries**: Conditionally load resources based on viewport visibility and media conditions
-- **Shadow DOM Support**: Works across shadow boundaries with inheritance patterns
+- **Shadow DOM Support**: Works across shadow boundaries with inheritance patterns and [scoped custom element registries](https://developer.chrome.com/blog/scoped-registries)
 
 ## Key Use Cases
 

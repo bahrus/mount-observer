@@ -85,7 +85,7 @@ There is quite a bit of functionality this proposal would open up that is exceed
 
 4. Some CSS selectors, such as the [donut hole scope range](https://css-tricks.com/solved-by-css-donuts-scopes/#aa-donut-scoping-with-scope), aren't supported by oEl.querySelectorAll(...) or oEl.matches(...).
 
-5. Scoped custom element registries form natural "islands" of DOM that have many commonalities with css "donut hole scoping", and which mutation observers aren't really designed around.  The mount-observer is designed to work with scoped custom element registries as first-class citizens. 
+5. Scoped custom element registries form natural "islands" of DOM that have many commonalities with css "donut hole scoping", and which mutation observers aren't really designed around.  The mount-observer is designed to work with scoped custom element registries as first-class citizens. Learn more about [scoped custom element registries](https://developer.chrome.com/blog/scoped-registries). 
 
 
 ###  Most significant use cases
@@ -1628,6 +1628,8 @@ However, where this support for "whereInstanceOf" would be *most* helpful is whe
 
 MountObserver automatically respects scoped custom element registry boundaries. When observing a root node, only elements that share the same `customElementRegistry` as the root node will be mounted by default. This is an implicit AND condition that applies to all observations.
 
+Learn more about [scoped custom element registries in Chrome's blog post](https://developer.chrome.com/blog/scoped-registries).
+
 **How it works:**
 
 ```javascript
@@ -1684,7 +1686,7 @@ This ensures that when we observe a shadow root with a scoped registry, we won't
 
 ## Element Mount Extension
 
-For even more convenience, we can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with scoped custom element registries (Chrome 146+, latest WebKit/Safari).
+For even more convenience, we can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with [scoped custom element registries](https://developer.chrome.com/blog/scoped-registries) (Chrome 146+, latest WebKit/Safari).
 
 ```JavaScript
 import 'mount-observer/ElementMountExtension.js';
@@ -1741,13 +1743,13 @@ class MyComponent extends HTMLElement {
 }
 ```
 
-Browser support: Works in all browsers, but scoped registry features require Chrome 146+ or latest WebKit/Safari.
+Browser support: Works in all browsers, but [scoped registry features](https://developer.chrome.com/blog/scoped-registries) require Chrome 146+ or latest WebKit/Safari.
 
 [Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
 
 ### Global Propagation with `mountGlobally()`
 
-The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across custom element registry boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.  It should be used sparingly, as a last resort, probably limited to things that should arguably be built into the platform.
+The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across [custom element registry](https://developer.chrome.com/blog/scoped-registries) boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.  It should be used sparingly, as a last resort, probably limited to things that should arguably be built into the platform.
 
 ```JavaScript
 import 'mount-observer/ElementMountExtension.js';
