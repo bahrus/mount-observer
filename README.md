@@ -552,6 +552,9 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
 </script>
 ```
 
+<details>
+   <summary>More discussion
+
 **What happens:**
 1. The handler finds templates with `src` attributes starting with `#`
 2. Searches for an element with that ID (across shadow boundaries)
@@ -591,6 +594,8 @@ The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse withi
     }).observe(document);
 </script>
 ```
+
+</details>
 
 ### Shadow DOM Support
 
@@ -958,18 +963,23 @@ The `builtIns.generateIds` handler automatically generates unique IDs for elemen
 - Automatically updates ID references in attributes (aria-labelledby, for, etc.)
 - Provides shorthand syntax for common patterns
 - Handles deferred attribute activation
+- Removes `disabled` from fieldsets after processing
 
 **Basic usage:**
 
 ```html
 <fieldset disabled>
-    <label defer-for="for: #{{username}}">Username:</label>
-    <input data-id="username" type="text">
+    <label>
+        LHS: <input data-id={{lhs}}>
+    </label>
     
-    <label defer-for="for: #{{password}}">Password:</label>
-    <input data-id="password" type="password">
+    <label for=rhs>
+        RHS: <input data-id={{rhs}}>
+    </label>
     
-    <button -id>Generate IDs</button>
+    <template -id defer-🎚️ 🎚️='on if isEqual, based on #{{lhs}} and #{{rhs}}.'>
+        <div>LHS === RHS</div>
+    </template>
 </fieldset>
 
 <script type="module">
@@ -986,23 +996,41 @@ The `builtIns.generateIds` handler automatically generates unique IDs for elemen
 
 1. The handler watches for elements with the `-id` attribute (the trigger)
 2. Finds the nearest scope container (fieldset, [itemscope], or root)
-3. Generates unique IDs for elements with `data-id`, `#`, `@`, or `|` attributes
+3. Generates unique IDs for elements with `data-id={{name}}`, `#`, `@`, or `|` attributes
 4. Replaces `#{{name}}` references with generated IDs in attributes
 5. Removes `-id` and `defer-*` attributes after processing
 6. Removes `disabled` from fieldset containers
 
-**Shorthand attributes:**
+**Result:**
 
 ```html
 <fieldset>
+    <label>
+        LHS: <input id=gid-0 data-id=lhs>
+    </label>
+    
+    <label for=rhs>
+        RHS: <input id=gid-1 data-id=rhs>
+    </label>
+    
+    <template 🎚️='on if isEqual, based on #gid-0 and #gid-1.'>
+        <div>LHS === RHS</div>
+    </template>
+</fieldset>
+```
+
+**Shorthand attributes:**
+
+```html
+<fieldset disabled>
     <!-- # uses element's tag name -->
-    <input # type="text">  <!-- becomes data-id="input" -->
+    <my-element #></my-element>  <!-- becomes id=gid-0 data-id=my-element -->
     
     <!-- @ uses element's name attribute -->
-    <input @ name="email" type="email">  <!-- becomes data-id="email" -->
+    <input @ name="email" type="email">  <!-- becomes id=gid-1 data-id=email -->
     
     <!-- | uses element's itemprop attribute -->
-    <span | itemprop="price">$99</span>  <!-- becomes data-id="price" -->
+    <span | itemprop="price">$99</span>  <!-- becomes id=gid-2 data-id=price -->
     
     <button -id>Generate IDs</button>
 </fieldset>
@@ -1013,30 +1041,54 @@ The `builtIns.generateIds` handler automatically generates unique IDs for elemen
 The `data-id` attribute supports special symbols that trigger side effects:
 
 ```html
-<fieldset>
-    <!-- @ sets name attribute -->
-    <input data-id="@ username" type="text">
-    <!-- Result: id="gid-0" name="username" data-id="username" -->
-    
-    <!-- | sets itemprop attribute -->
-    <span data-id="| price">$99</span>
-    <!-- Result: id="gid-1" itemprop="price" data-id="price" -->
-    
-    <!-- $ sets itemscope and itemprop -->
-    <div data-id="$ product">...</div>
-    <!-- Result: id="gid-2" itemscope itemprop="product" data-id="product" -->
-    
-    <!-- . adds to class attribute -->
-    <div data-id=". highlight">Content</div>
-    <!-- Result: id="gid-3" class="highlight" data-id="highlight" -->
-    
-    <!-- % adds to part attribute -->
-    <div data-id="% header">Header</div>
-    <!-- Result: id="gid-4" part="header" data-id="header" -->
-    
-    <button -id>Generate IDs</button>
-</fieldset>
+<form>
+    <fieldset disabled>
+        <label>
+            LHS: <input data-id="{{@. lhs}}">
+        </label>
+        
+        <label for=rhs>
+            RHS: <span contenteditable data-id="{{|.% rhs}}">
+        </label>
+        
+        <template -id defer-🎚️ 🎚️='on if isEqual, based on #{{lhs}} and #{{rhs}}.'>
+            <div>LHS === RHS</div>
+        </template>
+    </fieldset>
+</form>
 ```
+
+**Result:**
+
+```html
+<form>
+    <fieldset>
+        <label>
+            LHS: <input name=lhs class=lhs id=gid-0 data-id=lhs>
+        </label>
+        
+        <label for=rhs>
+            RHS: <span contenteditable itemprop=rhs class=rhs part=rhs id=gid-1 data-id=rhs>
+        </label>
+        
+        <template 🎚️='on if isEqual, based on #gid-0 and #gid-1.'>
+            <div>LHS === RHS</div>
+        </template>
+    </fieldset>
+</form>
+```
+
+**Symbol meanings:**
+
+| Symbol | Attribute         | Meaning                                                                      |
+|--------|-------------------|------------------------------------------------------------------------------|
+| @      | name              | Second letter of name, common in social media for selecting names            |
+| \|     | itemprop          | "Pipe" resembles itemprop, half of dollar sign, looks like an I              |
+| $      | itemscope+itemprop| Combination of S for Scope and Pipe                                          |
+| %      | part              | Starts with p, percent indicates proportion                                  |
+| .      | class             | CSS selector                                                                 |
+
+Multiple symbols can be combined: `data-id="{{@.% myName}}"` adds name, class, and part attributes.
 
 **Deferred attributes:**
 
@@ -1046,8 +1098,7 @@ Use `defer-*` prefix to prevent attributes from being applied until IDs are gene
 <fieldset disabled>
     <!-- These attributes won't work until IDs are generated -->
     <label defer-for="for: #{{email}}">Email:</label>
-    <input data-id="email" type="email" defer-aria-describedby="aria-describedby: #{{emailHelp}}">
-    <span data-id="emailHelp">Enter your email address</span>
+    <input data-id={{email}} type="email">
     
     <button -id>Activate Form</button>
 </fieldset>
