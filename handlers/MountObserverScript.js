@@ -7,6 +7,10 @@ import '../ElementMountExtension.js';
  * Supports two modes:
  * 1. External JSON: <script type="mountobserver" src="./config.json"></script>
  * 2. Inline JSON: <script type="mountobserver">{ "matching": "div" }</script>
+ *
+ * Supports multiple configs in one script element:
+ * - Single config: { "do": "builtIns.hoistTemplate" }
+ * - Multiple configs: [{ "do": "builtIns.hoistTemplate" }, { "do": "builtIns.HTMLInclude" }]
  */
 export class MountObserverScriptHandler extends EvtRt {
     // Static properties define default MountConfig constraints
@@ -42,12 +46,24 @@ export class MountObserverScriptHandler extends EvtRt {
                 throw new Error(`Failed to parse JSON content: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
-        // Validate that config is an object
+        // Validate that config is an object or array
         if (typeof config !== 'object' || config === null) {
-            throw new Error('Mount observer config must be an object');
+            throw new Error('Mount observer config must be an object or array');
         }
-        // Call element.mount() with the parsed config
-        await scriptElement.mount(config);
+        // Handle array of configs
+        if (Array.isArray(config)) {
+            // Mount each config in the array
+            for (const singleConfig of config) {
+                if (typeof singleConfig !== 'object' || singleConfig === null) {
+                    throw new Error('Each config in array must be an object');
+                }
+                await scriptElement.mount(singleConfig);
+            }
+        }
+        else {
+            // Single config object - mount it
+            await scriptElement.mount(config);
+        }
     }
 }
 // Register built-in handler

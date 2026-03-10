@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MOSE Multiple Configs Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>MOSE Multiple Configs Test</h1>
+    
+    <!-- Test 1: Single config (existing behavior) -->
+    <div id="test1">
+        <script type="mountobserver">
+        {
+            "do": "builtIns.HTMLInclude"
+        }
+        </script>
+        
+        <template id="test1-source">
+            <p class="test1-content">Test 1 Content</p>
+        </template>
+        <template src="#test1-source"></template>
+    </div>
+    
+    <!-- Test 2: Multiple configs in array -->
+    <div id="test2">
+        <template id="test2-source1">
+            <p class="test2-content1">Test 2 Content 1</p>
+        </template>
+        <template id="test2-source2">
+            <p class="test2-content2">Test 2 Content 2</p>
+        </template>
+        
+        <script type="mountobserver">
+        [
+            {
+                "do": "builtIns.HTMLInclude"
+            }
+        ]
+        </script>
+        
+        <template src="#test2-source1"></template>
+        <template src="#test2-source2"></template>
+    </div>
+    
+    <!-- Test 3: Multiple different handlers in array -->
+    <div id="test3">
+        <template id="test3-source">
+            <p class="test3-content">Test 3 Content</p>
+        </template>
+        
+        <script type="mountobserver">
+        [
+            {
+                "do": "builtIns.HTMLInclude"
+            },
+            {
+                "matching": "p.test3-content",
+                "do": "builtIns.logToConsole"
+            }
+        ]
+        </script>
+        
+        <template src="#test3-source"></template>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+        import '../ElementMountExtension.js';
+        
+        console.log('Starting MOSE Multiple Configs Tests...');
+        
+        // Create observer for MOSE handler
+        const observer = new MountObserver({
+            do: 'builtIns.mountObserverScript'
+        });
+        
+        await observer.observe(document);
+        
+        console.log('Observer observing, waiting for mounts...');
+        
+        // Wait for all mounts to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Checking results...');
+        
+        // Test 1: Single config should process template
+        const test1Result = {
+            templateProcessed: document.querySelector('#test1 template[src]') === null,
+            hasClonedContent: document.querySelector('#test1 .test1-content') !== null
+        };
+        console.log('Test 1 (single config):', test1Result);
+        
+        // Test 2: Array with one config should process both templates
+        const test2Result = {
+            template1Processed: document.querySelectorAll('#test2 template[src="#test2-source1"]').length === 0,
+            template2Processed: document.querySelectorAll('#test2 template[src="#test2-source2"]').length === 0,
+            hasContent1: document.querySelector('#test2 .test2-content1') !== null,
+            hasContent2: document.querySelector('#test2 .test2-content2') !== null
+        };
+        console.log('Test 2 (array with one config):', test2Result);
+        
+        // Test 3: Array with multiple configs
+        const test3Result = {
+            templateProcessed: document.querySelector('#test3 template[src]') === null,
+            hasClonedContent: document.querySelector('#test3 .test3-content') !== null
+        };
+        console.log('Test 3 (array with multiple configs):', test3Result);
+        
+        // Store results
+        window.testResults = {
+            test1: test1Result,
+            test2: test2Result,
+            test3: test3Result
+        };
+        
+        console.log('All tests complete:', window.testResults);
+        window.testsReady = true;
+    </script>
+</body>
+</html>

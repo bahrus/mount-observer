@@ -355,8 +355,33 @@ Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs
 1. The handler matches `script[type="mountobserver"]` elements (via static properties)
 2. If the script has a `src` attribute, imports JSON from that URL
 3. Otherwise, parses the script's textContent as JSON
-4. Calls `scriptElement.mount(config)` with the parsed configuration
-5. The `mount()` method creates a MountObserver for that configuration
+4. Supports both single config objects and arrays of configs
+5. Calls `scriptElement.mount(config)` for each configuration
+6. The `mount()` method creates a MountObserver for that configuration
+
+**Multiple configs in one script:**
+
+You can define multiple mount observer configurations in a single script element using a JSON array:
+
+```html
+<script type="mountobserver">
+[
+    {
+        "do": "builtIns.hoistTemplate"
+    },
+    {
+        "do": "builtIns.HTMLInclude"
+    },
+    {
+        "matching": "my-button",
+        "import": "./my-button.js",
+        "do": "builtIns.defineCustomElement"
+    }
+]
+</script>
+```
+
+This is equivalent to having three separate `<script type="mountobserver">` elements, but more concise. Each config in the array is processed independently and creates its own MountObserver.
 
 **Benefits:**
 - Zero JavaScript required for observer configuration
@@ -407,9 +432,11 @@ Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs
 
 ## Hoisting Templates for Performance
 
-The `builtIns.hoistTemplate` handler optimizes template usage by moving a template element's content from shadow roots to `document.head`. This is particularly useful when conditional or repeated templates  repeated across multiple custom element.
+The `builtIns.hoistTemplate` handler optimizes template usage by moving a template element's content from shadow roots to `document.head`. 
 
 **Why hoist templates?**
+
+Template hoisting is particularly useful when conditional or repeated templates  repeated across multiple custom element instances is needed.
 
 When HTML-first custom elements repeat throughout a page, each instance typically contains its own copy of template content. Moving these templates to a centralized location:
 - Reduces memory usage (one template instead of many copies)
