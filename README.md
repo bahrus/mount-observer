@@ -10,6 +10,7 @@ The following features have been implemented and tested:
 
 ### Core Functionality
 - ✅ **matching**: CSS selector-based element matching
+- ✅ **whenDefined**: Wait for custom elements to be defined before mounting
 - ✅ **whereInstanceOf**: Constructor-based element filtering (single or array)
 - ✅ **whereLocalNameMatches**: Regular expression-based localName filtering
 - ✅ **shouldMount**: Custom JavaScript check for complex mounting conditions
@@ -1487,6 +1488,87 @@ const observer = new MountObserver({
 [whereLocalNameMatches implemented as [RegularExpressionNameMatching](requirements/Done/RegularExpressionNameMatching.md)]
 
 [withMediaMatching implemented as [Requirement6](requirements/Done/Requirement6.md)]
+
+## Waiting for Custom Element Definitions
+
+The `whenDefined` property allows you to wait for custom elements to be defined before mounting elements. This ensures that elements are only processed after their custom element definitions are available, preventing issues with undefined custom elements.
+
+```javascript
+const observer = new MountObserver({
+    matching: 'my-element',
+    whenDefined: 'my-element',  // Wait for my-element to be defined
+    do: (element) => {
+        console.log('my-element is now defined and mounted');
+    }
+});
+observer.observe(document);
+
+// Later, when the custom element is defined
+customElements.define('my-element', class extends HTMLElement {
+    // ...
+});
+```
+
+**Waiting for multiple custom elements:**
+
+You can specify an array of tag names to wait for all of them to be defined:
+
+```javascript
+const observer = new MountObserver({
+    matching: 'my-element, another-element',
+    whenDefined: ['my-element', 'another-element'],  // Wait for both
+    do: (element) => {
+        console.log('Both elements are defined, mounting:', element.localName);
+    }
+});
+```
+
+**How it works:**
+
+1. The check happens first, before any other `where*` conditions
+2. Uses `customElements.whenDefined()` for each specified tag name
+3. Uses the `customElementRegistry` of the observed root node
+4. Only checks once per observer instance (doesn't re-check on subsequent mounts)
+5. The `observe()` method waits for all definitions before processing elements
+
+**Common use cases:**
+
+```javascript
+// Lazy load and wait for custom element definition
+const observer = new MountObserver({
+    matching: 'my-button',
+    whenDefined: 'my-button',
+    import: './my-button.js',
+    do: 'builtIns.defineCustomElement'
+});
+
+// Wait for dependencies before enhancing
+const observer = new MountObserver({
+    matching: '.needs-custom-elements',
+    whenDefined: ['base-element', 'helper-element'],
+    do: (element) => {
+        // Safe to interact with custom elements now
+        const base = element.querySelector('base-element');
+        const helper = element.querySelector('helper-element');
+    }
+});
+```
+
+**AND condition logic:**
+
+Like all `where*` properties, `whenDefined` forms an AND condition with other filters. However, it's checked first as a prerequisite before evaluating other conditions:
+
+```javascript
+const observer = new MountObserver({
+    matching: 'my-element',
+    whenDefined: 'my-element',           // Checked FIRST
+    whereInstanceOf: HTMLElement,        // Then checked
+    whereLocalNameMatches: /^my-/,       // Then checked
+    do: (element) => { /* ... */ }
+});
+```
+
+[whenDefined implemented as [SupportForWhenDefined](requirements/SupportForWhenDefined.md)]
 
 ## LocalName Pattern Matching
 

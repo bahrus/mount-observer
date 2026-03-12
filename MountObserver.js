@@ -41,6 +41,7 @@ export class MountObserver extends EventTarget {
     #elementNotifiers = new WeakMap();
     #notifierMountedElements = new WeakSet();
     #subObservers;
+    #whenDefinedResolved = false;
     #mergeHandlerDefaults(config) {
         const doValue = config.do;
         // Only process if do is a string (single handler reference)
@@ -168,6 +169,24 @@ export class MountObserver extends EventTarget {
         this.#init = mergedConfig;
     }
     /**
+     * Waits for custom elements to be defined before mounting.
+     * Only runs once per observer instance.
+     */
+    async #waitForWhenDefined(rootNode) {
+        // Skip if already resolved or not configured
+        if (this.#whenDefinedResolved || !this.#init.whenDefined) {
+            return;
+        }
+        // Get the custom element registry from the root node
+        const registry = rootNode.customElementRegistry || customElements;
+        // Normalize to array
+        const tagNames = arr(this.#init.whenDefined);
+        // Wait for all tags to be defined
+        await Promise.all(tagNames.map(tag => registry.whenDefined(tag)));
+        // Mark as resolved so we don't check again
+        this.#whenDefinedResolved = true;
+    }
+    /**
      * Creates and initializes sub-observers from the `with` property.
      * Each sub-observer observes the same root node as the parent.
      * Sub-observers are stored in #subObservers Map for lifecycle management.
@@ -272,6 +291,8 @@ export class MountObserver extends EventTarget {
             this.#assignTentatively = assignTentatively;
         }
         this.#rootNode = new WeakRef(observedNode);
+        // Wait for whenDefined if specified (must be first check)
+        await this.#waitForWhenDefined(observedNode);
         // Create sub-observers from `with` property
         await this.#createSubObservers(observedNode);
         // Set up media query if specified (needs rootNode to be set first)

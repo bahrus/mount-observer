@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>whenDefined Support Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>whenDefined Support Test</h1>
+    
+    <div id="test-container">
+        <my-element id="element1"></my-element>
+        <another-element id="element2"></another-element>
+        <my-element id="element3"></my-element>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        window.testResults = {
+            singleTagMounted: false,
+            multipleTagsMounted: false,
+            element1Mounted: false,
+            element2Mounted: false,
+            element3Mounted: false,
+            mountedBeforeDefine: false
+        };
+
+        // Define custom elements after a delay to test whenDefined waiting
+        setTimeout(() => {
+            class MyElement extends HTMLElement {
+                connectedCallback() {
+                    console.log('MyElement connected');
+                }
+            }
+            customElements.define('my-element', MyElement);
+            console.log('my-element defined');
+        }, 100);
+
+        setTimeout(() => {
+            class AnotherElement extends HTMLElement {
+                connectedCallback() {
+                    console.log('AnotherElement connected');
+                }
+            }
+            customElements.define('another-element', AnotherElement);
+            console.log('another-element defined');
+        }, 200);
+
+        // Test 1: Single tag in whenDefined
+        (async () => {
+            const observer1 = new MountObserver({
+                matching: 'my-element',
+                whenDefined: 'my-element',
+                do: (el) => {
+                    console.log('Single tag test: mounted', el.id);
+                    window.testResults.singleTagMounted = true;
+                    if (el.id === 'element1') {
+                        window.testResults.element1Mounted = true;
+                    }
+                }
+            });
+
+            await observer1.observe(document.body);
+            console.log('Observer 1 started observing');
+        })();
+
+        // Test 2: Multiple tags in whenDefined (array)
+        (async () => {
+            const observer2 = new MountObserver({
+                matching: 'my-element, another-element',
+                whenDefined: ['my-element', 'another-element'],
+                do: (el) => {
+                    console.log('Multiple tags test: mounted', el.id);
+                    window.testResults.multipleTagsMounted = true;
+                    if (el.id === 'element2') {
+                        window.testResults.element2Mounted = true;
+                    }
+                    if (el.id === 'element3') {
+                        window.testResults.element3Mounted = true;
+                    }
+                }
+            });
+
+            await observer2.observe(document.body);
+            console.log('Observer 2 started observing');
+        })();
+
+        // Test 3: Verify elements don't mount before custom elements are defined
+        (async () => {
+            let mountedEarly = false;
+            
+            const observer3 = new MountObserver({
+                matching: 'my-element',
+                whenDefined: 'my-element',
+                do: (el) => {
+                    // Check if my-element is actually defined
+                    const isDefined = customElements.get('my-element') !== undefined;
+                    if (!isDefined) {
+                        mountedEarly = true;
+                        console.error('ERROR: Element mounted before custom element was defined!');
+                    }
+                }
+            });
+
+            await observer3.observe(document.body);
+            
+            // After observe completes, check that we didn't mount early
+            window.testResults.mountedBeforeDefine = mountedEarly;
+        })();
+
+        // Mark tests as ready after enough time for all elements to be defined and mounted
+        setTimeout(() => {
+            console.log('Test results:', window.testResults);
+            window.testsReady = true;
+        }, 500);
+    </script>
+</body>
+</html>
