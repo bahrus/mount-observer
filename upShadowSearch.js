@@ -5,8 +5,11 @@
  * element's root node and continuing up through shadow DOM boundaries until the element
  * is found or the document root is reached.
  *
+ * Registry-aware: Only searches in root nodes that share the same customElementRegistry
+ * as the reference element. This respects scoped custom element registry boundaries.
+ *
  * Search order:
- * 1. Check current root node using getElementById
+ * 1. Check current root node using getElementById (if same registry)
  * 2. If in shadow root, check host element's properties for the ID
  * 3. Continue up to parent shadow root or document
  * 4. Handle disconnected fragments via targetFragment property
@@ -27,8 +30,8 @@
 export function upShadowSearch(ref, id) {
     let rn = ref.getRootNode();
     while (rn) {
-        // Try getElementById on current root
-        if ('getElementById' in rn) {
+        // Try getElementById on current root, but only if it shares the same registry
+        if ('getElementById' in rn && rn.customElementRegistry === ref.customElementRegistry) {
             const test = rn.getElementById(id);
             if (test)
                 return test;

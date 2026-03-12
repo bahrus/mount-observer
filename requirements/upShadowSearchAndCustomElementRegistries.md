@@ -2,7 +2,10 @@
 
 Something like this is needed:
 
+```JavaScript
+
         if ('getElementById' in rn && rn.customElementRegistry === ref.customElementRegistry) {
             const test = rn.getElementById(id);
             if (test) return test;
         }
+```
