@@ -948,7 +948,8 @@ The handler provides helpful error messages:
 
 - Uses WeakMap caching for repeated ID lookups
 - Efficient for scenarios like periodic tables with many repeated elements
-- Searches across shadow boundaries using `upShadowSearch`
+- Searches across shadow boundaries using `upShadowSearch` (registry-aware)
+- Respects scoped custom element registry boundaries
 - Cleans up cache entries when elements are garbage collected
 
 [Implemented as MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes requirement](requirements/Done/MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes.md)

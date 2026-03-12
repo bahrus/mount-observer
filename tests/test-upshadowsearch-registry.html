@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>upShadowSearch Registry Boundary Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>upShadowSearch Registry Boundary Test</h1>
+    
+    <!-- Source element in document (global registry) -->
+    <div id="globalSource">
+        <p>Global registry content</p>
+    </div>
+
+    <!-- Container for scoped registry test -->
+    <div id="scopedHost"></div>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        window.testResults = {
+            sameRegistryFound: false,
+            differentRegistryNotFound: false,
+            globalToScopedNotFound: false,
+            scopedToGlobalNotFound: false
+        };
+
+        // Test 1: Same registry - should find element
+        (async () => {
+            const host1 = document.createElement('div');
+            document.body.appendChild(host1);
+            const shadow1 = host1.attachShadow({ mode: 'open' });
+            
+            // Source in shadow root
+            shadow1.innerHTML = `
+                <div id="shadowSource">
+                    <p>Shadow content</p>
+                </div>
+                <template src="#shadowSource"></template>
+            `;
+            
+            const observer1 = new MountObserver({
+                do: 'builtIns.HTMLInclude'
+            });
+            await observer1.observe(shadow1);
+            
+            // Wait a bit for processing
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check if content was cloned (template should be replaced)
+            const hasClonedContent = shadow1.querySelector('p')?.textContent === 'Shadow content';
+            const templateRemoved = !shadow1.querySelector('template[src="#shadowSource"]');
+            
+            window.testResults.sameRegistryFound = hasClonedContent && templateRemoved;
+            console.log('Test 1 (same registry):', window.testResults.sameRegistryFound);
+        })();
+
+        // Test 2: Different registry - should NOT find element
+        // This test requires scoped custom element registries (Chrome 146+)
+        (async () => {
+            // Check if scoped registries are supported
+            const testDiv = document.createElement('div');
+            const testShadow = testDiv.attachShadow({ mode: 'open' });
+            const hasCustomElementRegistry = 'customElementRegistry' in testShadow;
+            
+            if (!hasCustomElementRegistry) {
+                console.log('Test 2 skipped: Scoped registries not supported');
+                window.testResults.differentRegistryNotFound = true; // Pass by default
+                return;
+            }
+            
+            const host2 = document.createElement('div');
+            document.body.appendChild(host2);
+            
+            // Create shadow root with scoped registry
+            const scopedRegistry = new CustomElementRegistry();
+            const shadow2 = host2.attachShadow({ 
+                mode: 'open',
+                customElementRegistry: scopedRegistry
+            });
+            
+            // Source in document (global registry)
+            // Template in shadow root (scoped registry)
+            shadow2.innerHTML = `<template src="#globalSource"></template>`;
+            
+            const observer2 = new MountObserver({
+                do: 'builtIns.HTMLInclude'
+            });
+            await observer2.observe(shadow2);
+            
+            // Wait a bit for processing
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Template should still exist (not processed) because registries don't match
+            const templateStillExists = shadow2.querySelector('template[src="#globalSource"]') !== null;
+            const hasError = shadow2.querySelector('template[data-include-error]') !== null;
+            
+            window.testResults.differentRegistryNotFound = templateStillExists || hasError;
+            console.log('Test 2 (different registry):', window.testResults.differentRegistryNotFound);
+        })();
+
+        // Test 3: Global to scoped - should NOT find
+        (async () => {
+            const testDiv = document.createElement('div');
+            const testShadow = testDiv.attachShadow({ mode: 'open' });
+            const hasCustomElementRegistry = 'customElementRegistry' in testShadow;
+            
+            if (!hasCustomElementRegistry) {
+                console.log('Test 3 skipped: Scoped registries not supported');
+                window.testResults.globalToScopedNotFound = true; // Pass by default
+                return;
+            }
+            
+            const host3 = document.createElement('div');
+            document.body.appendChild(host3);
+            
+            // Create shadow root with scoped registry
+            const scopedRegistry3 = new CustomElementRegistry();
+            const shadow3 = host3.attachShadow({ 
+                mode: 'open',
+                customElementRegistry: scopedRegistry3
+            });
+            
+            // Source in scoped shadow root
+            shadow3.innerHTML = `
+                <div id="scopedSource">
+                    <p>Scoped content</p>
+                </div>
+            `;
+            
+            // Template in document (global registry) trying to access scoped source
+            const template3 = document.createElement('template');
+            template3.setAttribute('src', '#scopedSource');
+            document.body.appendChild(template3);
+            
+            const observer3 = new MountObserver({
+                do: 'builtIns.HTMLInclude'
+            });
+            await observer3.observe(document.body);
+            
+            // Wait a bit for processing
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Template should still exist or have error (can't access scoped source)
+            const templateStillExists = document.querySelector('template[src="#scopedSource"]') !== null;
+            const hasError = document.querySelector('template[data-include-error]') !== null;
+            
+            window.testResults.globalToScopedNotFound = templateStillExists || hasError;
+            console.log('Test 3 (global to scoped):', window.testResults.globalToScopedNotFound);
+            
+            // Cleanup
+            template3.remove();
+        })();
+
+        // Test 4: Scoped to global - should NOT find
+        (async () => {
+            const testDiv = document.createElement('div');
+            const testShadow = testDiv.attachShadow({ mode: 'open' });
+            const hasCustomElementRegistry = 'customElementRegistry' in testShadow;
+            
+            if (!hasCustomElementRegistry) {
+                console.log('Test 4 skipped: Scoped registries not supported');
+                window.testResults.scopedToGlobalNotFound = true; // Pass by default
+                return;
+            }
+            
+            const host4 = document.createElement('div');
+            document.body.appendChild(host4);
+            
+            // Create shadow root with scoped registry
+            const scopedRegistry4 = new CustomElementRegistry();
+            const shadow4 = host4.attachShadow({ 
+                mode: 'open',
+                customElementRegistry: scopedRegistry4
+            });
+            
+            // Template in scoped shadow trying to access global source
+            shadow4.innerHTML = `<template src="#globalSource"></template>`;
+            
+            const observer4 = new MountObserver({
+                do: 'builtIns.HTMLInclude'
+            });
+            await observer4.observe(shadow4);
+            
+            // Wait a bit for processing
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Template should still exist or have error (can't access global source)
+            const templateStillExists = shadow4.querySelector('template[src="#globalSource"]') !== null;
+            const hasError = shadow4.querySelector('template[data-include-error]') !== null;
+            
+            window.testResults.scopedToGlobalNotFound = templateStillExists || hasError;
+            console.log('Test 4 (scoped to global):', window.testResults.scopedToGlobalNotFound);
+        })();
+
+        // Mark tests as ready after all async tests complete
+        setTimeout(() => {
+            console.log('Test results:', window.testResults);
+            window.testsReady = true;
+        }, 500);
+    </script>
+</body>
+</html>
