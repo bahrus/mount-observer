@@ -437,7 +437,7 @@ The `builtIns.hoistTemplate` handler optimizes template usage by moving a templa
 
 **Why hoist templates?**
 
-Template hoisting is particularly useful when conditional or repeated templates  repeated across multiple custom element instances is needed.
+Template hoisting is particularly useful when you need to share conditional or repeated templates across multiple custom element instances.
 
 When HTML-first custom elements repeat throughout a page, each instance typically contains its own copy of template content. Moving these templates to a centralized location:
 - Reduces memory usage (one template instead of many copies)
