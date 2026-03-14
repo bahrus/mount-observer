@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolved Event Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Resolved Event Test</h1>
+    
+    <!-- Test 1: MOSE with inline JSON -->
+    <script type="mountobserver" id="mose1">
+    {
+        "matching": ".test1",
+        "do": "builtIns.logToConsole"
+    }
+    </script>
+    
+    <!-- Test 2: MOSE with array of configs -->
+    <script type="mountobserver" id="mose2">
+    [
+        {
+            "matching": ".test2a",
+            "do": "builtIns.logToConsole"
+        },
+        {
+            "matching": ".test2b",
+            "do": "builtIns.logToConsole"
+        }
+    ]
+    </script>
+    
+    <!-- Test 3: ScriptExport with JSON -->
+    <script src="./test-data.json" type="json" id="jsonScript"></script>
+    
+    <!-- Test 4: ScriptExport with nomodule JS -->
+    <script nomodule src="./test-module.js" id="jsScript"></script>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        window.testResults = {
+            mose1HasExport: false,
+            mose1ExportIsObject: false,
+            mose1ResolvedEventFired: false,
+            mose1ResolvedEventHasExport: false,
+            
+            mose2HasExport: false,
+            mose2ExportIsArray: false,
+            mose2ResolvedEventFired: false,
+            mose2ResolvedEventHasExport: false,
+            
+            jsonScriptHasExport: false,
+            jsonScriptResolvedEventFired: false,
+            jsonScriptResolvedEventHasExport: false,
+            
+            jsScriptHasExport: false,
+            jsScriptResolvedEventFired: false,
+            jsScriptResolvedEventHasExport: false
+        };
+
+        console.log('Starting resolved event tests...');
+
+        // Test 1: MOSE with inline JSON
+        const mose1 = document.getElementById('mose1');
+        mose1.addEventListener('resolved', (e) => {
+            console.log('MOSE1 resolved event fired', e);
+            window.testResults.mose1ResolvedEventFired = true;
+            window.testResults.mose1ResolvedEventHasExport = e.export !== undefined;
+        });
+
+        // Test 2: MOSE with array
+        const mose2 = document.getElementById('mose2');
+        mose2.addEventListener('resolved', (e) => {
+            console.log('MOSE2 resolved event fired', e);
+            window.testResults.mose2ResolvedEventFired = true;
+            window.testResults.mose2ResolvedEventHasExport = e.export !== undefined;
+        });
+
+        // Test 3: JSON script
+        const jsonScript = document.getElementById('jsonScript');
+        jsonScript.addEventListener('resolved', (e) => {
+            console.log('JSON script resolved event fired', e);
+            window.testResults.jsonScriptResolvedEventFired = true;
+            window.testResults.jsonScriptResolvedEventHasExport = e.export !== undefined;
+        });
+
+        // Test 4: JS script
+        const jsScript = document.getElementById('jsScript');
+        jsScript.addEventListener('resolved', (e) => {
+            console.log('JS script resolved event fired', e);
+            window.testResults.jsScriptResolvedEventFired = true;
+            window.testResults.jsScriptResolvedEventHasExport = e.export !== undefined;
+        });
+
+        try {
+            console.log('Starting MOSE observer...');
+            // Start observers
+            const moseObserver = new MountObserver({
+                do: 'builtIns.mountObserverScript'
+            });
+            await moseObserver.observe(document);
+            console.log('MOSE observer started');
+
+            console.log('Starting ScriptExport observer...');
+            const scriptExportObserver = new MountObserver({
+                do: 'builtIns.scriptExport'
+            });
+            await scriptExportObserver.observe(document);
+            console.log('ScriptExport observer started');
+
+            // Wait for processing
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Check export properties
+            console.log('Checking exports...');
+            window.testResults.mose1HasExport = mose1.export !== undefined;
+            window.testResults.mose1ExportIsObject = typeof mose1.export === 'object' && !Array.isArray(mose1.export);
+            
+            window.testResults.mose2HasExport = mose2.export !== undefined;
+            window.testResults.mose2ExportIsArray = Array.isArray(mose2.export);
+            
+            window.testResults.jsonScriptHasExport = jsonScript.export !== undefined;
+            window.testResults.jsScriptHasExport = jsScript.export !== undefined;
+
+            console.log('Test results:', window.testResults);
+            window.testsReady = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testsReady = true; // Mark as ready even on error so test doesn't hang
+        }
+    </script>
+</body>
+</html>

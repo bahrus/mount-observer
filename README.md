@@ -302,6 +302,31 @@ Importing JSON typically requires `fetch()` or dynamic `import()` with assertion
 4. Resolves the `src` relative to the document
 5. Imports with appropriate assertion (JSON if type contains "json")
 6. Stores the imported module on `element.export`
+7. Dispatches a `resolved` event with the imported module
+
+**Reusing imported modules:**
+
+The handler stores the imported module on the script element's `export` property and dispatches a `resolved` event. This allows other code to access the module without re-importing:
+
+```html
+<script src="./data.json" type="json" id="myData"></script>
+
+<script type="module">
+    const dataScript = document.getElementById('myData');
+    
+    // Listen for the resolved event
+    dataScript.addEventListener('resolved', (e) => {
+        console.log('Data loaded:', e.export);
+        // e.export contains the imported module
+        // For JSON: e.export.default contains the data
+    });
+    
+    // Or access directly after processing
+    // dataScript.export will contain the imported module
+</script>
+```
+
+This is particularly useful when multiple components need to access the same data or configuration without triggering multiple imports.
 
 **Benefits:**
 - Access ES module exports from script elements (finally!)
@@ -357,8 +382,38 @@ Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs
 2. If the script has a `src` attribute, imports JSON from that URL
 3. Otherwise, parses the script's textContent as JSON
 4. Supports both single config objects and arrays of configs
-5. Calls `scriptElement.mount(config)` for each configuration
-6. The `mount()` method creates a MountObserver for that configuration
+5. Stores the parsed config on `scriptElement.export` for reuse
+6. Dispatches a `resolved` event with the parsed config
+7. Calls `scriptElement.mount(config)` for each configuration
+8. The `mount()` method creates a MountObserver for that configuration
+
+**Reusing parsed configurations:**
+
+The handler optimizes performance by storing the parsed configuration on the script element's `export` property and dispatching a `resolved` event. This allows other code to access the parsed config without re-parsing:
+
+```html
+<script type="mountobserver" id="myConfig">
+{
+    "matching": ".my-element",
+    "do": "builtIns.logToConsole"
+}
+</script>
+
+<script type="module">
+    const configScript = document.getElementById('myConfig');
+    
+    // Listen for the resolved event
+    configScript.addEventListener('resolved', (e) => {
+        console.log('Config loaded:', e.export);
+        // e.export contains the parsed configuration
+    });
+    
+    // Or access directly after processing
+    // configScript.export will contain the parsed config
+</script>
+```
+
+This is particularly useful when inheriting mount observer configurations across shadow DOM boundaries, as the parsed config can be reused without re-parsing JSON.
 
 **Multiple configs in one script:**
 

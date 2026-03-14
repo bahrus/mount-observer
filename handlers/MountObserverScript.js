@@ -50,6 +50,11 @@ export class MountObserverScriptHandler extends EvtRt {
         if (typeof config !== 'object' || config === null) {
             throw new Error('Mount observer config must be an object or array');
         }
+        // Store the parsed config on the script element's export property
+        scriptElement.export = config;
+        // Dispatch resolved event
+        const { ResolvedEvent } = await import('../Events.js');
+        scriptElement.dispatchEvent(new ResolvedEvent(config));
         // Handle array of configs
         if (Array.isArray(config)) {
             // Mount each config in the array

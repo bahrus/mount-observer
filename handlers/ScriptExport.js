@@ -68,6 +68,9 @@ export class ScriptExportHandler extends EvtRt {
         }
         // Store result on element
         scriptElement.export = module;
+        // Dispatch resolved event
+        const { ResolvedEvent } = await import('../Events.js');
+        scriptElement.dispatchEvent(new ResolvedEvent(module));
     }
 }
 // Register built-in handler

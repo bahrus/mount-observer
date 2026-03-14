@@ -8,6 +8,7 @@ export const dismountEventName = 'dismount';
 export const disconnectEventName = 'disconnect';
 export const mediamatchEventName = 'mediamatch';
 export const mediaunmatchEventName = 'mediaunmatch';
+export const resolvedEventName = 'resolved';
 
 export class MountEvent extends Event implements IMountEvent {
     static eventName: typeof mountEventName = mountEventName;
@@ -59,5 +60,16 @@ export class MediaUnmatchEvent extends Event {
     
     constructor(public mountConfig: MountConfig) {
         super(MediaUnmatchEvent.eventName);
+    }
+}
+
+export class ResolvedEvent extends Event {
+    static eventName: typeof resolvedEventName = resolvedEventName;
+    
+    export: any;
+    
+    constructor(exportValue: any) {
+        super(ResolvedEvent.eventName);
+        this.export = exportValue;
     }
 }
