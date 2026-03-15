@@ -1010,6 +1010,64 @@ The handler provides helpful error messages:
 - Respects scoped custom element registry boundaries
 - Cleans up cache entries when elements are garbage collected
 
+**MOSE Export Optimization:**
+
+When cloning live DOM elements (not templates) that contain Mount Observer Script Elements (MOSEs) across shadow DOM boundaries, the HTMLInclude handler automatically copies the parsed `export` property from source scripts to cloned scripts. This optimization avoids re-parsing JSON when the same MOSE configuration is reused in multiple shadow roots.
+
+**How it works:**
+1. Detects when cloning a live element (not a template) from a different root node
+2. Finds all `script[type="mountobserver"]` elements in both source and clone
+3. Matches scripts by their `id` attribute
+4. Copies the `export` property from source to clone (by reference)
+5. If source script hasn't been processed yet, waits for the `resolved` event
+
+**Example:**
+
+```html
+<!-- Source element with MOSE in light DOM -->
+<div id="observer-config">
+    <script type="mountobserver" id="my-config">
+    {
+        "matching": ".interactive",
+        "import": "./interactive.js",
+        "do": "builtIns.enhanceMountedElement"
+    }
+    </script>
+    <div class="interactive">Content</div>
+</div>
+
+<!-- Clone into shadow DOM -->
+<my-component>
+    #shadow
+        <template src="#observer-config"></template>
+</my-component>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    // Process MOSEs in light DOM
+    new MountObserver({
+        do: 'builtIns.mountObserverScript'
+    }).observe(document.body);
+    
+    // Clone into shadow roots
+    new MountObserver({
+        do: 'builtIns.HTMLInclude'
+    }).observe(document);
+</script>
+```
+
+**Benefits:**
+- **Performance**: JSON is parsed only once, not for each clone
+- **Memory efficiency**: Cloned scripts share the same export object
+- **Consistency**: All clones use identical configuration
+- **Automatic**: No manual intervention required
+
+**Requirements:**
+- Source and clone must be in different root nodes (document vs shadow root)
+- MOSE scripts must have `id` attributes for matching
+- Source script must be processed by `builtIns.mountObserverScript` or `builtIns.scriptExport` before cloning
+
 [Implemented as MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes requirement](requirements/Done/MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes.md)
 
 ## Automatic ID Generation with genIds

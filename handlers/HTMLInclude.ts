@@ -152,7 +152,7 @@ export class HTMLIncludeHandler extends EvtRt {
     static matching = 'template[src^="#"]';
     static whereInstanceOf = HTMLTemplateElement;
     
-    mount(mountedElement: Element, mountConfig: MountConfig, context: MountContext): void {
+    async mount(mountedElement: Element): Promise<void> {
             try {
                 const template = mountedElement as HTMLTemplateElement;
                 const src = template.getAttribute('src');
@@ -196,13 +196,18 @@ export class HTMLIncludeHandler extends EvtRt {
                     }
 
                     // Clone the content
-                    const clone = this.cloneContent(sourceElement);
+                    const { clone, isLiveElement } = this.cloneContent(sourceElement);
 
                     if (!clone) {
                         const error = `Unable to clone content from #${id}`;
                         template.setAttribute('data-include-error', error);
                         console.warn(`HTMLInclude: ${error}`);
                         return;
+                    }
+                    
+                    // Optimization 4: Copy MOSE exports if cloning live element from different root
+                    if (isLiveElement) {
+                        await this.copyMoseExports(sourceElement, clone, rootNode);
                     }
 
                     // Check if the template has children - if so, process matching insertions
@@ -337,13 +342,14 @@ export class HTMLIncludeHandler extends EvtRt {
     /**
      * Clones content from the source element.
      * Priority: remoteContent (hoisted templates) > content (templates) > element itself
+     * Returns an object with the cloned node and whether it was cloned from a live element
      */
-    cloneContent(sourceElement: Element): Node | null {
+    cloneContent(sourceElement: Element): { clone: Node | null, isLiveElement: boolean } {
         // Check for remoteContent property (hoisted templates)
         if ('remoteContent' in sourceElement) {
             try {
                 const remoteContent = (sourceElement as any).remoteContent as DocumentFragment;
-                return remoteContent.cloneNode(true);
+                return { clone: remoteContent.cloneNode(true), isLiveElement: false };
             } catch (e) {
                 console.warn('HTMLInclude: Failed to access remoteContent', e);
             }
@@ -351,11 +357,85 @@ export class HTMLIncludeHandler extends EvtRt {
         
         // Check for content property (regular templates)
         if (sourceElement instanceof HTMLTemplateElement && sourceElement.content) {
-            return sourceElement.content.cloneNode(true);
+            return { clone: sourceElement.content.cloneNode(true), isLiveElement: false };
         }
         
-        // Clone the element itself
-        return sourceElement.cloneNode(true);
+        // Clone the element itself (live DOM element)
+        return { clone: sourceElement.cloneNode(true), isLiveElement: true };
+    }
+    
+    /**
+     * Copies MOSE script exports from source to cloned scripts.
+     * This optimization avoids re-parsing JSON when cloning MOSE scripts across shadow boundaries.
+     */
+    async copyMoseExports(sourceElement: Element, clone: Node, templateRootNode: Node): Promise<void> {
+        const sourceRootNode = sourceElement.getRootNode();
+        
+        // Only process if source and template are in different root nodes
+        if (sourceRootNode === templateRootNode) {
+            return;
+        }
+        
+        // Find all MOSE scripts in the source element
+        const sourceScripts = sourceElement.querySelectorAll('script[type="mountobserver"]');
+        
+        if (sourceScripts.length === 0) {
+            return;
+        }
+        
+        // Find all MOSE scripts in the clone
+        let cloneScripts: NodeListOf<Element>;
+        if (clone instanceof Element) {
+            cloneScripts = clone.querySelectorAll('script[type="mountobserver"]');
+        } else if (clone instanceof DocumentFragment) {
+            cloneScripts = clone.querySelectorAll('script[type="mountobserver"]');
+        } else {
+            return;
+        }
+        
+        // Copy exports from source scripts to cloned scripts (matching by ID)
+        for (let i = 0; i < sourceScripts.length; i++) {
+            const sourceScript = sourceScripts[i] as HTMLScriptElement;
+            const sourceId = sourceScript.getAttribute('id');
+            
+            if (!sourceId) continue;
+            
+            // Find matching clone script by ID
+            const cloneScript = Array.from(cloneScripts).find(
+                s => s.getAttribute('id') === sourceId
+            ) as HTMLScriptElement | undefined;
+            
+            if (!cloneScript) continue;
+            
+            // Check if source script has export
+            let sourceExport = (sourceScript as any).export;
+            
+            if (!sourceExport) {
+                // Wait for the source script to resolve
+                try {
+                    // Create a promise that waits for the resolved event
+                    const event = await new Promise<Event>((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            reject(new Error('Timeout'));
+                        }, 5000);
+                        
+                        sourceScript.addEventListener('resolved', (e) => {
+                            clearTimeout(timeout);
+                            resolve(e);
+                        }, { once: true });
+                    });
+                    sourceExport = (event as any).export;
+                } catch (error) {
+                    console.warn(`HTMLInclude: Timeout waiting for MOSE script #${sourceId} to resolve`);
+                    continue;
+                }
+            }
+            
+            // Copy export to cloned script
+            if (sourceExport) {
+                (cloneScript as any).export = sourceExport;
+            }
+        }
     }
 }
 

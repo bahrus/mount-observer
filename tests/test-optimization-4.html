@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimization 4 Test - MOSE Export Copying</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Optimization 4: MOSE Export Copying Across Shadow Boundaries</h1>
+    
+    <!-- Source element with MOSE script in light DOM -->
+    <div id="source-with-mose">
+        <script type="mountobserver" id="mose-config">
+        {
+            "matching": ".test-element",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+        <div class="test-element">Test content</div>
+    </div>
+    
+    <!-- Container that will have shadow root with template -->
+    <div id="shadow-container"></div>
+    
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import '../handlers/HTMLInclude.js';
+        import '../handlers/MountObserverScript.js';
+        
+        // Set up MountObserverScript observer to process MOSE scripts in light DOM
+        const moseObserver = new MountObserver({
+            matching: 'script[type="mountobserver"]',
+            do: 'builtIns.mountObserverScript'
+        });
+        moseObserver.observe(document.body);
+        
+        // Wait for the source script to be processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const sourceScript = document.getElementById('mose-config');
+        console.log('Source script export after processing:', sourceScript.export);
+        
+        // Create shadow root with template
+        const container = document.getElementById('shadow-container');
+        const shadowRoot = container.attachShadow({ mode: 'open' });
+        shadowRoot.innerHTML = '<template src="#source-with-mose"></template>';
+        
+        console.log('Shadow root created with template');
+        
+        // Observe the shadow root with HTMLInclude handler
+        const htmlIncludeObserver = new MountObserver({
+            do: 'builtIns.HTMLInclude'
+        });
+        await htmlIncludeObserver.observe(shadowRoot);
+        
+        console.log('HTMLInclude observer started');
+        
+        // Wait for processing
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        console.log('Shadow root innerHTML:', shadowRoot.innerHTML);
+        
+        const clonedScript = shadowRoot.querySelector('script[type="mountobserver"]');
+        console.log('Cloned script:', clonedScript);
+        console.log('Cloned script export:', clonedScript?.export);
+        
+        // Expose for testing
+        window.testData = {
+            sourceScript,
+            shadowRoot,
+            clonedScript
+        };
+        
+        window.testsReady = true;
+    </script>
+</body>
+</html>
