@@ -153,122 +153,130 @@ export class HTMLIncludeHandler extends EvtRt {
     static whereInstanceOf = HTMLTemplateElement;
     
     async mount(mountedElement: Element): Promise<void> {
-            try {
-                const template = mountedElement as HTMLTemplateElement;
-                const src = template.getAttribute('src');
+        try {
+            const template = mountedElement as HTMLTemplateElement;
+            const src = template.getAttribute('src');
 
-                if (!src || !src.startsWith('#')) {
-                    console.warn('HTMLInclude: Invalid src attribute, must start with #');
+            if (!src || !src.startsWith('#')) {
+                console.warn('HTMLInclude: Invalid src attribute, must start with #');
+                return;
+            }
+
+            const id = src.substring(1);
+
+            // Try cache first
+            const rootNode = template.getRootNode() as Node;
+            let sourceElement = this.getCachedElement(rootNode, id);
+
+            if (!sourceElement) {
+                // Search up through shadow roots
+                sourceElement = upShadowSearch(template, id);
+
+                if (!sourceElement) {
+                    const error = `Element with id="${id}" not found`;
+                    template.setAttribute('data-include-error', error);
+                    console.warn(`HTMLInclude: ${error}`);
                     return;
                 }
 
-                const id = src.substring(1);
+                // Cache the result
+                this.cacheElement(rootNode, id, sourceElement);
+            }
 
-                // Check for circular references
-                if (processingStack.has(id)) {
+            // Check for circular references only if source is also a template with src
+            if (sourceElement instanceof HTMLTemplateElement && sourceElement.hasAttribute('src')) {
+                const sourceId = sourceElement.getAttribute('id');
+                if (sourceId && processingStack.has(sourceId)) {
                     const error = `Circular reference detected: #${id}`;
                     template.setAttribute('data-include-error', error);
                     console.error(`HTMLInclude: ${error}`);
                     return;
                 }
+            }
 
-                // Mark as processing
-                processingStack.add(id);
+            // Mark this template as processing (for circular reference detection)
+            const templateId = template.getAttribute('id');
+            if (templateId) {
+                processingStack.add(templateId);
+            }
 
-                try {
-                    // Try cache first
-                    const rootNode = template.getRootNode() as Node;
-                    let sourceElement = this.getCachedElement(rootNode, id);
+            try {
+                // Clone the content
+                const { clone, isLiveElement } = this.cloneContent(sourceElement);
 
-                    if (!sourceElement) {
-                        // Search up through shadow roots
-                        sourceElement = upShadowSearch(template, id);
+                if (!clone) {
+                    const error = `Unable to clone content from #${id}`;
+                    template.setAttribute('data-include-error', error);
+                    console.warn(`HTMLInclude: ${error}`);
+                    return;
+                }
+                
+                // Optimization 4: Copy MOSE exports if cloning live element from different root
+                if (isLiveElement) {
+                    await this.copyMoseExports(sourceElement, clone, rootNode);
+                }
 
-                        if (!sourceElement) {
-                            const error = `Element with id="${id}" not found`;
-                            template.setAttribute('data-include-error', error);
-                            console.warn(`HTMLInclude: ${error}`);
-                            return;
-                        }
+                // Check if the template has children - if so, process matching insertions
+                const templateChildren = Array.from(template.content.children);
 
-                        // Cache the result
-                        this.cacheElement(rootNode, id, sourceElement);
-                    }
+                if (templateChildren.length > 0) {
+                    // Process matching insertions for each child in the template
+                    this.processMatchingInsertions(clone, templateChildren);
+                }
 
-                    // Clone the content
-                    const { clone, isLiveElement } = this.cloneContent(sourceElement);
+                // Remove ID from cloned element to avoid duplicate IDs in the DOM
+                if (clone instanceof Element && clone.hasAttribute('id')) {
+                    clone.removeAttribute('id');
+                }
 
-                    if (!clone) {
-                        const error = `Unable to clone content from #${id}`;
-                        template.setAttribute('data-include-error', error);
-                        console.warn(`HTMLInclude: ${error}`);
+                // Check for shadowRootModeOnLoad attribute
+                const shadowRootMode = template.getAttribute('shadowrootmodeonload');
+
+                if (shadowRootMode) {
+                    // Shadow DOM mode - attach to parent's shadow root
+                    const parent = template.parentElement;
+
+                    if (!parent) {
+                        console.warn('HTMLInclude: Cannot attach shadow root - template has no parent element');
                         return;
                     }
-                    
-                    // Optimization 4: Copy MOSE exports if cloning live element from different root
-                    if (isLiveElement) {
-                        await this.copyMoseExports(sourceElement, clone, rootNode);
+
+                    // Validate shadow root mode
+                    if (shadowRootMode !== 'open' && shadowRootMode !== 'closed') {
+                        console.warn(`HTMLInclude: Invalid shadowRootModeOnLoad value "${shadowRootMode}", must be "open" or "closed"`);
+                        return;
                     }
 
-                    // Check if the template has children - if so, process matching insertions
-                    const templateChildren = Array.from(template.content.children);
-
-                    if (templateChildren.length > 0) {
-                        // Process matching insertions for each child in the template
-                        this.processMatchingInsertions(clone, templateChildren);
-                    }
-
-                    // Remove ID from cloned element to avoid duplicate IDs in the DOM
-                    if (clone instanceof Element && clone.hasAttribute('id')) {
-                        clone.removeAttribute('id');
-                    }
-
-                    // Check for shadowRootModeOnLoad attribute
-                    const shadowRootMode = template.getAttribute('shadowrootmodeonload');
-
-                    if (shadowRootMode) {
-                        // Shadow DOM mode - attach to parent's shadow root
-                        const parent = template.parentElement;
-
-                        if (!parent) {
-                            console.warn('HTMLInclude: Cannot attach shadow root - template has no parent element');
+                    // Get or create shadow root
+                    let shadowRoot = parent.shadowRoot;
+                    if (!shadowRoot) {
+                        try {
+                            shadowRoot = parent.attachShadow({ mode: shadowRootMode as ShadowRootMode });
+                        } catch (error) {
+                            console.error('HTMLInclude: Failed to attach shadow root:', error);
                             return;
                         }
-
-                        // Validate shadow root mode
-                        if (shadowRootMode !== 'open' && shadowRootMode !== 'closed') {
-                            console.warn(`HTMLInclude: Invalid shadowRootModeOnLoad value "${shadowRootMode}", must be "open" or "closed"`);
-                            return;
-                        }
-
-                        // Get or create shadow root
-                        let shadowRoot = parent.shadowRoot;
-                        if (!shadowRoot) {
-                            try {
-                                shadowRoot = parent.attachShadow({ mode: shadowRootMode as ShadowRootMode });
-                            } catch (error) {
-                                console.error('HTMLInclude: Failed to attach shadow root:', error);
-                                return;
-                            }
-                        }
-
-                        // Append clone to shadow root
-                        shadowRoot.appendChild(clone);
-                        template.remove();
-                    } else {
-                        // Normal mode - insert before template
-                        template.parentNode?.insertBefore(clone, template);
-                        template.remove();
                     }
+
+                    // Append clone to shadow root
+                    shadowRoot.appendChild(clone);
+                    template.remove();
+                } else {
+                    // Normal mode - insert before template
+                    template.parentNode?.insertBefore(clone, template);
+                    template.remove();
                 }
-                finally {
-                    // Always remove from processing stack
-                    processingStack.delete(id);
-                }
-            } catch (error) {
-                console.error('HTMLInclude: Unexpected error:', error);
             }
+            finally {
+                // Always remove from processing stack
+                if (templateId) {
+                    processingStack.delete(templateId);
+                }
+            }
+        } catch (error) {
+            console.error('HTMLInclude: Unexpected error:', error);
         }
+    }
 
     
     /**

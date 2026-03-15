@@ -140,31 +140,37 @@ export class HTMLIncludeHandler extends EvtRt {
                 return;
             }
             const id = src.substring(1);
-            // Check for circular references
-            if (processingStack.has(id)) {
-                const error = `Circular reference detected: #${id}`;
-                template.setAttribute('data-include-error', error);
-                console.error(`HTMLInclude: ${error}`);
-                return;
-            }
-            // Mark as processing
-            processingStack.add(id);
-            try {
-                // Try cache first
-                const rootNode = template.getRootNode();
-                let sourceElement = this.getCachedElement(rootNode, id);
+            // Try cache first
+            const rootNode = template.getRootNode();
+            let sourceElement = this.getCachedElement(rootNode, id);
+            if (!sourceElement) {
+                // Search up through shadow roots
+                sourceElement = upShadowSearch(template, id);
                 if (!sourceElement) {
-                    // Search up through shadow roots
-                    sourceElement = upShadowSearch(template, id);
-                    if (!sourceElement) {
-                        const error = `Element with id="${id}" not found`;
-                        template.setAttribute('data-include-error', error);
-                        console.warn(`HTMLInclude: ${error}`);
-                        return;
-                    }
-                    // Cache the result
-                    this.cacheElement(rootNode, id, sourceElement);
+                    const error = `Element with id="${id}" not found`;
+                    template.setAttribute('data-include-error', error);
+                    console.warn(`HTMLInclude: ${error}`);
+                    return;
                 }
+                // Cache the result
+                this.cacheElement(rootNode, id, sourceElement);
+            }
+            // Check for circular references only if source is also a template with src
+            if (sourceElement instanceof HTMLTemplateElement && sourceElement.hasAttribute('src')) {
+                const sourceId = sourceElement.getAttribute('id');
+                if (sourceId && processingStack.has(sourceId)) {
+                    const error = `Circular reference detected: #${id}`;
+                    template.setAttribute('data-include-error', error);
+                    console.error(`HTMLInclude: ${error}`);
+                    return;
+                }
+            }
+            // Mark this template as processing (for circular reference detection)
+            const templateId = template.getAttribute('id');
+            if (templateId) {
+                processingStack.add(templateId);
+            }
+            try {
                 // Clone the content
                 const { clone, isLiveElement } = this.cloneContent(sourceElement);
                 if (!clone) {
@@ -224,7 +230,9 @@ export class HTMLIncludeHandler extends EvtRt {
             }
             finally {
                 // Always remove from processing stack
-                processingStack.delete(id);
+                if (templateId) {
+                    processingStack.delete(templateId);
+                }
             }
         }
         catch (error) {
