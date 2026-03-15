@@ -37,6 +37,9 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
     
     #init: MountConfig;
     #options: MountObserverOptions;
+    get options(): MountObserverOptions {
+        return { ...this.#options };
+    }
     #abortController: AbortController;
     #modules: any[] = [];
     #configFromPromise: Promise<void> | undefined;

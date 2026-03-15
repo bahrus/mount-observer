@@ -13,6 +13,9 @@ export class MountObserver extends EventTarget {
     }
     #init;
     #options;
+    get options() {
+        return { ...this.#options };
+    }
     #abortController;
     #modules = [];
     #configFromPromise;

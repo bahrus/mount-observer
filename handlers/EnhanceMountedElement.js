@@ -23,6 +23,16 @@ export class EnhanceMountedElementHandler extends EvtRt {
         if (typeof registryItem.spawn !== 'function') {
             throw new Error('Registry item "spawn" property must be a constructor function');
         }
+        const tbd = context?.observer?.options?.mose;
+        if (tbd) {
+            const se = tbd.deref();
+            const { parentElement } = se;
+            const { enhKey } = registryItem;
+            if (!se.id && enhKey) {
+                se.id = `${parentElement?.localName}.${enhKey}`;
+            }
+        }
+        console.log({ tbd });
         // Spawn the enhancement
         this.#spawnEnhancement(mountedElement, registryItem, context);
     }
