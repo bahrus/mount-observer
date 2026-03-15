@@ -25,9 +25,9 @@ export class MountObserverScriptHandler extends EvtRt {
             const srcAttr = scriptElement.getAttribute('src');
             if (srcAttr) {
                 // External JSON mode: import from src
-                const resolvedUrl = new URL(srcAttr, document.baseURI).href;
+                //const resolvedUrl = new URL(srcAttr, document.baseURI).href;
                 try {
-                    const module = await import(resolvedUrl, { with: { type: 'json' } });
+                    const module = await import(srcAttr, { with: { type: 'json' } });
                     config = module.default;
                 }
                 catch (error) {

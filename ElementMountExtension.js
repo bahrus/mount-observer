@@ -71,6 +71,9 @@ Object.defineProperty(Node.prototype, 'mount', {
         if (!(this instanceof Element)) {
             throw new Error('mount() can only be called on Element, ShadowRoot, or Document');
         }
+        if (this instanceof HTMLScriptElement) {
+            options.mose = new WeakRef(this);
+        }
         const scope = options.scope ?? 'registry'; // NEW DEFAULT
         let thingToObserve;
         if (scope === 'registry') {

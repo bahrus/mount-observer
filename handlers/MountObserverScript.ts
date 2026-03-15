@@ -31,10 +31,10 @@ export class MountObserverScriptHandler extends EvtRt {
             
             if (srcAttr) {
                 // External JSON mode: import from src
-                const resolvedUrl = new URL(srcAttr, document.baseURI).href;
+                //const resolvedUrl = new URL(srcAttr, document.baseURI).href;
                 
                 try {
-                    const module = await import(resolvedUrl, { with: { type: 'json' } } as any);
+                    const module = await import(srcAttr, { with: { type: 'json' } } as any);
                     config = module.default;
                 } catch (error) {
                     throw new Error(`Failed to import JSON from '${srcAttr}': ${error instanceof Error ? error.message : String(error)}`);

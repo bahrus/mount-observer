@@ -95,6 +95,7 @@ Object.defineProperty(Node.prototype, 'mount', {
         config: MountConfig, 
         options: MountObserverOptions = {}
     ): Promise<T> {
+
         // For ShadowRoot and Document, observe directly
         if (this instanceof ShadowRoot || this instanceof Document) {
             const mo = new MountObserver(config, options);
@@ -105,6 +106,10 @@ Object.defineProperty(Node.prototype, 'mount', {
         // For Element, use the robust registry-aware logic
         if (!(this instanceof Element)) {
             throw new Error('mount() can only be called on Element, ShadowRoot, or Document');
+        }
+
+        if(this instanceof HTMLScriptElement) {
+            options.mose = new WeakRef(this);
         }
         
         const scope = options.scope ?? 'registry';  // NEW DEFAULT
