@@ -48,11 +48,21 @@
     "./upShadowSearch.js": {
       "default": "./upShadowSearch.js",
       "types": "./upShadowSearch.ts"
+    },
+    "./handlers/*": {
+      "default": "./handlers/*"
     }
   },
   "files": [
     "*.js",
-    "*.ts"
+    "*.ts",
+    "handlers/**/*.js",
+    "handlers/**/*.ts",
+    "types/**/*.d.ts",
+    "refid/**/*.js",
+    "refid/**/*.ts",
+    "slotkin/**/*.js",
+    "slotkin/**/*.ts"
   ],
   "types": "./types/mount-observer/types.d.ts",
   "scripts": {
