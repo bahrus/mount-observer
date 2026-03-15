@@ -1,4 +1,9 @@
 {
     "name": "Test Data",
-    "value": 42
+    "value": 42,
+    "items": [
+        "item1",
+        "item2",
+        "item3"
+    ]
 }
