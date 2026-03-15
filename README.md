@@ -389,7 +389,7 @@ Inspired by the [speculation rules api](https://developer.mozilla.org/en-US/docs
 
 **Reusing parsed configurations:**
 
-The handler optimizes performance by storing the parsed configuration on the script element's `export` property and dispatching a `resolved` event. This allows other code to access the parsed config without re-parsing:
+The handler optimizes performance by storing the parsed configuration on the script element's `export` property and dispatching a `resolved` event. When the same script element is observed again (e.g., after being cloned or moved), the handler reuses the existing `export` instead of re-parsing:
 
 ```html
 <script type="mountobserver" id="myConfig">
@@ -402,7 +402,7 @@ The handler optimizes performance by storing the parsed configuration on the scr
 <script type="module">
     const configScript = document.getElementById('myConfig');
     
-    // Listen for the resolved event
+    // Listen for the resolved event (fires only once on first parse)
     configScript.addEventListener('resolved', (e) => {
         console.log('Config loaded:', e.export);
         // e.export contains the parsed configuration
@@ -410,10 +410,13 @@ The handler optimizes performance by storing the parsed configuration on the scr
     
     // Or access directly after processing
     // configScript.export will contain the parsed config
+    
+    // If observed again, the handler will reuse configScript.export
+    // without re-parsing or firing the resolved event
 </script>
 ```
 
-This is particularly useful when inheriting mount observer configurations across shadow DOM boundaries, as the parsed config can be reused without re-parsing JSON.
+This is particularly useful when inheriting mount observer configurations across shadow DOM boundaries, as the parsed config can be reused without re-parsing JSON. The `resolved` event fires only once (on first parse), but the handler will still process the configuration on subsequent observations.
 
 **Multiple configs in one script:**
 

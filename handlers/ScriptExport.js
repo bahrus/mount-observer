@@ -31,6 +31,11 @@ export class ScriptExportHandler extends EvtRt {
     async mount(mountedElement, MountConfig, context) {
         this.abort(); // Clean up event listeners (one-time operation)
         const scriptElement = mountedElement;
+        // Optimization 3: Skip if already processed (export property exists)
+        if (scriptElement.export !== undefined) {
+            console.log('ScriptExport: Skipping already processed script element');
+            return;
+        }
         // Skip if this is a module script (browser handles these)
         const typeAttr = scriptElement.getAttribute('type');
         if (typeAttr === 'module') {

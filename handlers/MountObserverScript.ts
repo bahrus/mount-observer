@@ -24,47 +24,48 @@ export class MountObserverScriptHandler extends EvtRt {
         
         const scriptElement = mountedElement as HTMLScriptElement;
         
-        let config: any;
-        
-        // Check if script has src attribute
-        const srcAttr = scriptElement.getAttribute('src');
-        
-        if (srcAttr) {
-            // External JSON mode: import from src
-            const resolvedUrl = new URL(srcAttr, document.baseURI).href;
+        let config = (scriptElement as any).export;
+        if (!config) {
+            // Check if script has src attribute
+            const srcAttr = scriptElement.getAttribute('src');
             
-            try {
-                const module = await import(resolvedUrl, { with: { type: 'json' } } as any);
-                config = module.default;
-            } catch (error) {
-                throw new Error(`Failed to import JSON from '${srcAttr}': ${error instanceof Error ? error.message : String(error)}`);
+            if (srcAttr) {
+                // External JSON mode: import from src
+                const resolvedUrl = new URL(srcAttr, document.baseURI).href;
+                
+                try {
+                    const module = await import(resolvedUrl, { with: { type: 'json' } } as any);
+                    config = module.default;
+                } catch (error) {
+                    throw new Error(`Failed to import JSON from '${srcAttr}': ${error instanceof Error ? error.message : String(error)}`);
+                }
+            } else {
+                // Inline JSON mode: parse textContent
+                const jsonText = scriptElement.textContent?.trim();
+                
+                if (!jsonText) {
+                    throw new Error('Script element must have either src attribute or JSON content');
+                }
+                
+                try {
+                    config = JSON.parse(jsonText);
+                } catch (error) {
+                    throw new Error(`Failed to parse JSON content: ${error instanceof Error ? error.message : String(error)}`);
+                }
             }
-        } else {
-            // Inline JSON mode: parse textContent
-            const jsonText = scriptElement.textContent?.trim();
             
-            if (!jsonText) {
-                throw new Error('Script element must have either src attribute or JSON content');
+            // Validate that config is an object or array
+            if (typeof config !== 'object' || config === null) {
+                throw new Error('Mount observer config must be an object or array');
             }
             
-            try {
-                config = JSON.parse(jsonText);
-            } catch (error) {
-                throw new Error(`Failed to parse JSON content: ${error instanceof Error ? error.message : String(error)}`);
-            }
+            // Store the parsed config on the script element's export property
+            (scriptElement as any).export = config;
+            
+            // Dispatch resolved event
+            const { ResolvedEvent } = await import('../Events.js');
+            scriptElement.dispatchEvent(new ResolvedEvent(config));
         }
-        
-        // Validate that config is an object or array
-        if (typeof config !== 'object' || config === null) {
-            throw new Error('Mount observer config must be an object or array');
-        }
-        
-        // Store the parsed config on the script element's export property
-        (scriptElement as any).export = config;
-        
-        // Dispatch resolved event
-        const { ResolvedEvent } = await import('../Events.js');
-        scriptElement.dispatchEvent(new ResolvedEvent(config));
         
         // Handle array of configs
         if (Array.isArray(config)) {

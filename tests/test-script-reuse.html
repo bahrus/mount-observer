@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Element Reuse Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Script Element Reuse Test</h1>
+    
+    <!-- Test 1: MOSE reuse - should reuse export but still mount -->
+    <script type="mountobserver" id="mose1">
+    {
+        "matching": ".test1",
+        "do": "builtIns.logToConsole"
+    }
+    </script>
+    
+    <!-- Test 2: ScriptExport reuse - should skip entirely -->
+    <script src="./test-data.json" type="json" id="jsonScript"></script>
+
+    <script type="module">
+        import { MountObserver } from '../index.js';
+
+        window.testResults = {
+            // MOSE tests - should reuse export but still process
+            mose1ResolvedEventCount: 0,
+            mose1HasExport: false,
+            mose1ExportReused: false,
+            
+            // ScriptExport tests - should skip entirely on second pass
+            jsonScriptResolvedEventCount: 0,
+            jsonScriptHasExport: false,
+            jsonScriptSkippedSecondTime: false
+        };
+
+        console.log('Starting script reuse tests...');
+
+        // Test 1: MOSE should reuse export but still call mount()
+        const mose1 = document.getElementById('mose1');
+        mose1.addEventListener('resolved', (e) => {
+            console.log('MOSE1 resolved event fired');
+            window.testResults.mose1ResolvedEventCount++;
+        });
+
+        // Test 2: JSON script should skip entirely on second observation
+        const jsonScript = document.getElementById('jsonScript');
+        jsonScript.addEventListener('resolved', (e) => {
+            console.log('JSON script resolved event fired');
+            window.testResults.jsonScriptResolvedEventCount++;
+        });
+
+        try {
+            // First observer processes the scripts
+            console.log('Creating first MOSE observer...');
+            const moseObserver1 = new MountObserver({
+                do: 'builtIns.mountObserverScript'
+            });
+            await moseObserver1.observe(document);
+            console.log('First MOSE observer complete');
+
+            console.log('Creating first ScriptExport observer...');
+            const scriptExportObserver1 = new MountObserver({
+                do: 'builtIns.scriptExport'
+            });
+            await scriptExportObserver1.observe(document);
+            console.log('First ScriptExport observer complete');
+
+            // Wait for processing
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Check that exports exist after first pass
+            window.testResults.mose1HasExport = mose1.export !== undefined;
+            window.testResults.jsonScriptHasExport = jsonScript.export !== undefined;
+
+            console.log('MOSE1 export:', mose1.export);
+            console.log('JSON script export:', jsonScript.export);
+            console.log('Resolved event counts after first pass:', {
+                mose1: window.testResults.mose1ResolvedEventCount,
+                jsonScript: window.testResults.jsonScriptResolvedEventCount
+            });
+
+            // Second observer should:
+            // - MOSE: reuse export (no resolved event) but still process mount()
+            // - ScriptExport: skip entirely (no resolved event, no processing)
+            console.log('Creating second MOSE observer (should reuse export)...');
+            const moseObserver2 = new MountObserver({
+                do: 'builtIns.mountObserverScript'
+            });
+            await moseObserver2.observe(document);
+            console.log('Second MOSE observer complete');
+
+            console.log('Creating second ScriptExport observer (should skip entirely)...');
+            const scriptExportObserver2 = new MountObserver({
+                do: 'builtIns.scriptExport'
+            });
+            await scriptExportObserver2.observe(document);
+            console.log('Second ScriptExport observer complete');
+
+            // Wait for processing
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            console.log('Resolved event counts after second pass:', {
+                mose1: window.testResults.mose1ResolvedEventCount,
+                jsonScript: window.testResults.jsonScriptResolvedEventCount
+            });
+
+            // MOSE should have resolved event only once (export reused)
+            window.testResults.mose1ExportReused = window.testResults.mose1ResolvedEventCount === 1;
+            
+            // ScriptExport should have resolved event only once (skipped second time)
+            window.testResults.jsonScriptSkippedSecondTime = window.testResults.jsonScriptResolvedEventCount === 1;
+
+            console.log('Test results:', window.testResults);
+            window.testsReady = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testsReady = true;
+        }
+    </script>
+</body>
+</html>
