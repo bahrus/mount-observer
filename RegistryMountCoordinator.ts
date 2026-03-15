@@ -4,7 +4,7 @@
  * where all scopes with the same registry share mount observers.
  */
 
-import type { MountConfig, WeakDual } from './types/mount-observer/types.js';
+import type { MountConfig, MountObserverOptions, WeakDual } from './types/mount-observer/types.js';
 import type { MountObserver } from './MountObserver.js';
 
 /**
@@ -98,11 +98,12 @@ if (typeof WeakMap.prototype.getOrInsertComputed !== 'function') {
  */
 async function createObserverEntry(
     config: MountConfig,
-    registryRoot: Node
+    registryRoot: Node,
+    options: MountObserverOptions
 ): Promise<ObserverEntry> {
     // Dynamically import to avoid circular dependency
     const { MountObserver: MountObserverClass } = await import('./MountObserver.js');
-    const observer = new MountObserverClass(config);
+    const observer = new MountObserverClass(config, options);
     await observer.observe(registryRoot);
     return {
         config,
@@ -124,7 +125,8 @@ async function createObserverEntry(
 export async function getOrInsertObserverEntry(
     registry: CustomElementRegistry, 
     config: MountConfig,
-    registryRoot: Node
+    registryRoot: Node,
+    options: MountObserverOptions
 ): Promise<ObserverEntry> {
     // Add config to the registry's config list (if not already there)
     (registry as any).mountConfigRegistry.push(config);
@@ -136,7 +138,7 @@ export async function getOrInsertObserverEntry(
     // Get or create the observer for this specific registry root
     let observerEntry = nodeToObserverMap.get(registryRoot);
     if (!observerEntry) {
-        observerEntry = await createObserverEntry(config, registryRoot);
+        observerEntry = await createObserverEntry(config, registryRoot, options);
         nodeToObserverMap.set(registryRoot, observerEntry);
     }
     
@@ -171,7 +173,7 @@ export async function getOrInsertObserverEntry(
             const confObserverMap = mountConfigMap.getOrInsertComputed(conf, () => new WeakMap());
             let existingEntry = confObserverMap.get(regRoot);
             if (!existingEntry) {
-                existingEntry = await createObserverEntry(conf, regRoot);
+                existingEntry = await createObserverEntry(conf, regRoot, options);
                 confObserverMap.set(regRoot, existingEntry);
             }
         }

@@ -87,7 +87,7 @@ Object.defineProperty(Node.prototype, 'mount', {
             const registry = this.customElementRegistry;
             // Register with coordinator if registry exists
             if (registry) {
-                await getOrInsertObserverEntry(registry, config, thingToObserve);
+                await getOrInsertObserverEntry(registry, config, thingToObserve, options);
             }
             else {
                 // No registry, just create a standalone observer
@@ -149,7 +149,7 @@ Object.defineProperty(Element.prototype, 'mountScope', {
         const configs = registry.mountConfigRegistry.items;
         // For each config, ensure an observer exists for this registry root
         for (const config of configs) {
-            await getOrInsertObserverEntry(registry, config, registryRoot);
+            await getOrInsertObserverEntry(registry, config, registryRoot, {});
         }
     },
     writable: true,
