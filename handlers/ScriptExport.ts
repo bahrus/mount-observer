@@ -94,4 +94,6 @@ export class ScriptExportHandler extends EvtRt {
 // Register built-in handler
 import { MountObserver } from '../MountObserver.js';
 
-MountObserver.define('builtIns.scriptExport', ScriptExportHandler);
+export const scriptExport = 'builtIns.scriptExport';
+
+MountObserver.define(scriptExport, ScriptExportHandler);

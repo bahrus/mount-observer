@@ -390,4 +390,5 @@ export class HTMLIncludeHandler extends EvtRt {
 }
 // Register the handler
 import { MountObserver } from '../MountObserver.js';
-MountObserver.define('builtIns.HTMLInclude', HTMLIncludeHandler);
+export const include = 'builtIns.HTMLInclude';
+MountObserver.define(include, HTMLIncludeHandler);

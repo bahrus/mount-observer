@@ -34,4 +34,5 @@ export class GenerateIdsHandler extends EvtRt {
 }
 // Register built-in handler
 import { MountObserver } from '../MountObserver.js';
-MountObserver.define('builtIns.generateIds', GenerateIdsHandler);
+export const genIds = 'builtIns.generateIds';
+MountObserver.define(genIds, GenerateIdsHandler);

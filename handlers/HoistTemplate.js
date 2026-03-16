@@ -74,4 +74,5 @@ function hoistTemplate(templ) {
 }
 // Register the handler
 import { MountObserver } from '../MountObserver.js';
-MountObserver.define('builtIns.hoistTemplate', HoistTemplateHandler);
+export const hoist = 'builtIns.hoistTemplate';
+MountObserver.define(hoist, HoistTemplateHandler);
