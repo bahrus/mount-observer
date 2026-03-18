@@ -333,57 +333,58 @@ export class HTMLIncludeHandler extends EvtRt {
         if (sourceRootNode === templateRootNode) {
             return;
         }
-        // Find all MOSE scripts in the source element
-        const sourceScripts = sourceElement.querySelectorAll('script[type="mountobserver"]');
-        if (sourceScripts.length === 0) {
-            return;
-        }
-        // Find all MOSE scripts in the clone
-        let cloneScripts;
-        if (clone instanceof Element) {
-            cloneScripts = clone.querySelectorAll('script[type="mountobserver"]');
-        }
-        else if (clone instanceof DocumentFragment) {
-            cloneScripts = clone.querySelectorAll('script[type="mountobserver"]');
-        }
-        else {
-            return;
-        }
-        // Copy exports from source scripts to cloned scripts (matching by ID)
-        for (let i = 0; i < sourceScripts.length; i++) {
-            const sourceScript = sourceScripts[i];
-            const sourceId = sourceScript.getAttribute('id');
-            if (!sourceId)
+        const types = ['mountobserver', 'emc'];
+        for (const t of types) {
+            const qry = `script[type="${t}"]`;
+            // Find all MOSE scripts in the source element
+            const sourceScripts = sourceElement.querySelectorAll(qry);
+            if (sourceScripts.length === 0) {
                 continue;
-            // Find matching clone script by ID
-            const cloneScript = Array.from(cloneScripts).find(s => s.getAttribute('id') === sourceId);
-            if (!cloneScript)
-                continue;
-            // Check if source script has export
-            let sourceExport = sourceScript.export;
-            if (!sourceExport) {
-                // Wait for the source script to resolve
-                try {
-                    // Create a promise that waits for the resolved event
-                    const event = await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => {
-                            reject(new Error('Timeout'));
-                        }, 5000);
-                        sourceScript.addEventListener('resolved', (e) => {
-                            clearTimeout(timeout);
-                            resolve(e);
-                        }, { once: true });
-                    });
-                    sourceExport = event.export;
-                }
-                catch (error) {
-                    console.warn(`HTMLInclude: Timeout waiting for MOSE script #${sourceId} to resolve`);
-                    continue;
-                }
             }
-            // Copy export to cloned script
-            if (sourceExport) {
-                cloneScript.export = sourceExport;
+            // Find all MOSE scripts in the clone
+            let cloneScripts;
+            if (clone instanceof Element || clone instanceof DocumentFragment) {
+                cloneScripts = clone.querySelectorAll('script[type="mountobserver"]');
+            }
+            else {
+                continue;
+            }
+            // Copy exports from source scripts to cloned scripts (matching by ID)
+            for (let i = 0; i < sourceScripts.length; i++) {
+                const sourceScript = sourceScripts[i];
+                const sourceId = sourceScript.getAttribute('id');
+                if (!sourceId)
+                    continue;
+                // Find matching clone script by ID
+                const cloneScript = Array.from(cloneScripts).find(s => s.getAttribute('id') === sourceId);
+                if (!cloneScript)
+                    continue;
+                // Check if source script has export
+                let sourceExport = sourceScript.export;
+                if (!sourceExport) {
+                    // Wait for the source script to resolve
+                    try {
+                        // Create a promise that waits for the resolved event
+                        const event = await new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => {
+                                reject(new Error('Timeout'));
+                            }, 5000);
+                            sourceScript.addEventListener('resolved', (e) => {
+                                clearTimeout(timeout);
+                                resolve(e);
+                            }, { once: true });
+                        });
+                        sourceExport = event.export;
+                    }
+                    catch (error) {
+                        console.warn(`HTMLInclude: Timeout waiting for MOSE script #${sourceId} to resolve`);
+                        continue;
+                    }
+                }
+                // Copy export to cloned script
+                if (sourceExport) {
+                    cloneScript.export = sourceExport;
+                }
             }
         }
     }
