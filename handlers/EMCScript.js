@@ -1,5 +1,4 @@
 import { EvtRt } from '../EvtRt.js';
-import { MountObserver } from '../MountObserver.js';
 import '../ElementMountExtension.js';
 import 'assign-gingerly/object-extension.js';
 /**
@@ -68,15 +67,9 @@ export class EMCScriptHandler extends EvtRt {
         if (!scriptElement.id && scriptElement.parentElement) {
             scriptElement.id = `${scriptElement.parentElement.localName}.${enhKey}`;
         }
-        // Construct MountConfig from EMC config
+        // Construct MountConfig from EMC config and mount it
         const mountConfig = await this.buildMountConfig(emcConfig);
-        // Create a MountObserver to watch for elements matching the config
-        const observer = new MountObserver(mountConfig);
-        // Store observer reference for cleanup
-        scriptElement.emcObserver = observer;
-        // Observe from the script element's parent or root node
-        const observeTarget = scriptElement.parentElement || scriptElement.getRootNode();
-        await observer.observe(observeTarget);
+        await scriptElement.mount(mountConfig);
     }
     /**
      * Build a MountConfig from an EMC config.
@@ -174,5 +167,6 @@ export class EMCScriptHandler extends EvtRt {
     }
 }
 // Register built-in handler
+import { MountObserver } from '../MountObserver.js';
 export const emc = 'builtIns.emcScript';
 MountObserver.define(emc, EMCScriptHandler);
