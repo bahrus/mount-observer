@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMCScript Handler Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>EMCScript Handler Test</h1>
+    
+    <div id="test-container">
+        <!-- EMC script with inline config -->
+        <script type="emc">
+        {
+            "matching": ".test-element",
+            "enhConfig": {
+                "spawn": "./test-enh-class.js",
+                "enhKey": "testEnh"
+            }
+        }
+        </script>
+        
+        <!-- Test elements -->
+        <div class="test-element" id="elem1">Element 1</div>
+        <div class="test-element" id="elem2">Element 2</div>
+        <div class="not-test-element" id="elem3">Element 3</div>
+    </div>
+
+    <script type="module">
+        import { MountObserver } from '../MountObserver.js';
+        import '../handlers/EMCScript.js';
+        import '../ElementMountExtension.js';
+        import 'assign-gingerly/object-extension.js';
+        
+        console.log('Starting EMCScript test...');
+        
+        // Create observer for EMC scripts
+        const emcObserver = new MountObserver({
+            do: 'builtIns.emcScript'
+        });
+        
+        await emcObserver.observe(document.body);
+        
+        console.log('EMC observer started');
+        
+        // Wait for enhancements to be applied
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Check results
+        const elem1 = document.getElementById('elem1');
+        const elem2 = document.getElementById('elem2');
+        const elem3 = document.getElementById('elem3');
+        
+        console.log('elem1.enh:', elem1.enh);
+        console.log('elem1 classes:', elem1.className);
+        
+        const results = {
+            elem1Enhanced: elem1.classList.contains('enhanced'),
+            elem2Enhanced: elem2.classList.contains('enhanced'),
+            elem3NotEnhanced: !elem3.classList.contains('enhanced'),
+            elem1HasAttr: elem1.hasAttribute('data-enhanced'),
+            elem2HasAttr: elem2.hasAttribute('data-enhanced'),
+            scriptHasId: !!document.querySelector('script[type="emc"]').id,
+            elem1HasEnh: !!elem1.enh
+        };
+        
+        console.log('Test results:', results);
+        
+        window.testResults = results;
+        window.testsReady = true;
+    </script>
+</body>
+</html>

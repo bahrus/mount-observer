@@ -8,9 +8,11 @@ export { DefineCustomElementHandler, DefineScopedCustomElementHandler } from './
 export { EnhanceMountedElementHandler } from './handlers/EnhanceMountedElement.js';
 export { ScriptExportHandler } from './handlers/ScriptExport.js';
 export { MountObserverScriptHandler } from './handlers/MountObserverScript.js';
+export { EMCScriptHandler } from './handlers/EMCScript.js';
 export { HoistTemplateHandler } from './handlers/HoistTemplate.js';
 export { HTMLIncludeHandler } from './handlers/HTMLInclude.js';
 export { upShadowSearch } from './upShadowSearch.js';
+export { findSuitableClass } from './findSuitableClass.js';
 export type {
     MountConfig,
     MountObserverOptions,
@@ -19,7 +21,8 @@ export type {
     DoCallback,
     ImportSpec,
     IMountEvent,
-    IDismountEvent
+    IDismountEvent,
+    EMC
 } from './types/mount-observer/types.js';
 export {
     mountEventName,
@@ -37,6 +40,6 @@ import './handlers/EnhanceMountedElement.js';
 import './handlers/GenIds.js'; // Temporarily disabled due to missing dependency
 import './handlers/ScriptExport.js';
 import './handlers/MountObserverScript.js';
+import './handlers/EMCScript.js';
 import './handlers/HoistTemplate.js';
 import './handlers/HTMLInclude.js';
-

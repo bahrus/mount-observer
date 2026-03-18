@@ -1,5 +1,6 @@
 import { EvtRt } from '../EvtRt.js';
 import { MountConfig, MountContext } from '../types/mount-observer/types.js';
+import { findSuitableClass } from '../findSuitableClass.js';
 
 export class DefineCustomElementHandler extends EvtRt {
     mount(mountedElement: Element, MountConfig: MountConfig, context: MountContext): void {
@@ -17,8 +18,8 @@ export class DefineCustomElementHandler extends EvtRt {
             return;
         }
         
-        // Find suitable class
-        const ElementClass = this.findSuitableClass(module);
+        // Find suitable class using shared utility
+        const ElementClass = findSuitableClass(module);
         
         // Validate that ElementClass is a constructor
         if (typeof ElementClass !== 'function') {
@@ -42,49 +43,6 @@ export class DefineCustomElementHandler extends EvtRt {
      */
     protected define(tagName: string, ElementClass: CustomElementConstructor, mountedElement: Element): void {
         customElements.define(tagName, ElementClass);
-    }
-    
-    private findSuitableClass(module: any): typeof HTMLElement {
-        // Check default export first
-        const defaultExport = module.default;
-        
-        if (defaultExport && this.extendsHTMLElement(defaultExport)) {
-            return defaultExport;
-        }
-        
-        // Find all exports that extend HTMLElement
-        const htmlElementClasses = Object.values(module)
-            .filter(exp => typeof exp === 'function' && this.extendsHTMLElement(exp));
-        
-        if (htmlElementClasses.length === 0) {
-            throw new Error('No suitable class found in module');
-        }
-        
-        if (htmlElementClasses.length > 1) {
-            throw new Error('More than one class found in module');
-        }
-        
-        return htmlElementClasses[0] as typeof HTMLElement;
-    }
-    
-    private extendsHTMLElement(cls: any): boolean {
-        try {
-            // Must be a function
-            if (typeof cls !== 'function') {
-                return false;
-            }
-            // Handle direct HTMLElement export
-            if (cls === HTMLElement) {
-                return true;
-            }
-            // Check if it has a prototype and extends HTMLElement
-            if (cls.prototype && cls.prototype instanceof HTMLElement) {
-                return true;
-            }
-            return false;
-        } catch {
-            return false;
-        }
     }
 }
 
