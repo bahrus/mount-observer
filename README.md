@@ -568,6 +568,104 @@ The handler automatically hoists templates that:
 
 </details>
 
+## Element Mount Configuration (EMC) Scripts
+
+The `builtIns.emcScript` handler provides declarative element enhancement using `<script type="emc">` elements. EMC scripts combine mount observation with the [assign-gingerly](https://github.com/bahrus/assign-gingerly) enhancement system to apply behaviors, properties, and classes to elements as they mount.
+
+**Why use EMC scripts?**
+
+- Declaratively enhance elements without writing JavaScript
+- Lazy load enhancement classes only when needed
+- Automatically register and spawn enhancements
+- Works with scoped custom element registries
+- Supports attribute-based element matching
+- Reuses enhancement definitions across multiple elements
+
+**Basic usage:**
+
+```html
+<!-- Define enhancement configuration -->
+<script type="emc">
+{
+    "matching": ".interactive",
+    "enhConfig": {
+        "spawn": "./my-enhancement.js",
+        "enhKey": "myEnhancement"
+    }
+}
+</script>
+
+<!-- Elements matching the selector get enhanced -->
+<div class="interactive">This will be enhanced</div>
+<div class="interactive">This too</div>
+```
+
+**External JSON configuration:**
+
+```html
+<!-- Load configuration from external file -->
+<script type="emc" src="./enh-config.json"></script>
+```
+
+**With attribute matching:**
+
+```html
+<script type="emc">
+{
+    "matching": "button",
+    "enhConfig": {
+        "spawn": "./button-enhancement.js",
+        "enhKey": "fancyButton",
+        "withAttrs": {
+            "variant": "primary"
+        }
+    }
+}
+</script>
+
+<!-- Only buttons with variant="primary" get enhanced -->
+<button variant="primary">Enhanced</button>
+<button>Not enhanced</button>
+```
+
+**How it works:**
+
+1. EMC script is parsed (inline JSON or external via `src`)
+2. Configuration is stored on `scriptElement.export`
+3. `resolved` event is dispatched
+4. Script ID is auto-generated as `${parentElement.localName}.${enhKey}` if not specified
+5. MountObserver watches for elements matching the configuration
+6. When element mounts:
+   - Checks if already enhanced (via `element.enh[enhKey]`)
+   - Registers enhancement class if not already registered
+   - Spawns enhancement instance via `element.enh.get(enhancementConfig)`
+
+**Enhancement class example:**
+
+```javascript
+// my-enhancement.js
+export default class MyEnhancement {
+    constructor(element, ctx, initVals) {
+        this.element = element;
+        // Apply enhancement
+        this.element.classList.add('enhanced');
+    }
+    
+    dispose() {
+        // Cleanup
+        this.element.classList.remove('enhanced');
+    }
+}
+```
+
+**Requirements:**
+
+- Must import `ElementMountExtension.js` to enable `element.enh` property
+- Must import `assign-gingerly/object-extension.js` for enhancement registry
+- Enhancement classes should be constructors that accept `(element, ctx, initVals)`
+
+[Implemented as EMCScript requirement](requirements/Done/EMCScript.md)
+
 ## Intra-Document HTML Includes with HTMLInclude
 
 The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse within a document using `<template src="#id">` syntax. Think of it as "constants for HTML" - define content once with an ID, then reference it multiple times throughout your document.

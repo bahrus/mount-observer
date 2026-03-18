@@ -75,10 +75,7 @@ export class EMCScriptHandler extends EvtRt {
         // Store observer reference for cleanup
         scriptElement.emcObserver = observer;
         // Observe from the script element's parent or root node
-        // Use parent element if available, otherwise use root node
         const observeTarget = scriptElement.parentElement || scriptElement.getRootNode();
-        console.log('EMCScript: Observing target:', observeTarget);
-        console.log('EMCScript: MountConfig:', mountConfig);
         await observer.observe(observeTarget);
     }
     /**
@@ -115,48 +112,30 @@ export class EMCScriptHandler extends EvtRt {
      * Handle when an element mounts that matches the EMC config.
      */
     async handleMount(mountedElement, emcConfig) {
-        try {
-            console.log('EMCScript: handleMount called for:', mountedElement);
-            const enhKey = emcConfig.enhConfig.enhKey;
-            // Step 1: Check if element already has this enhancement
-            const enh = mountedElement.enh;
-            if (enh && enh[enhKey]) {
-                // Already enhanced, do nothing
-                console.log('EMCScript: Element already enhanced with', enhKey);
-                return;
-            }
-            console.log('EMCScript: Enhancing element with', enhKey);
-            // Step 2: Get enhancement registry from the element's custom element registry
-            const customElementRegistry = mountedElement.customElementRegistry || customElements;
-            const enhancementRegistry = customElementRegistry.enhancementRegistry;
-            if (!enhancementRegistry) {
-                console.error('EMCScript: Enhancement registry not found');
-                throw new Error('Enhancement registry not found on custom element registry');
-            }
-            console.log('EMCScript: Enhancement registry:', enhancementRegistry);
-            // Check if enhancement is already registered using findByEnhKey method
-            let enhancementConfig = enhancementRegistry.findByEnhKey(enhKey);
-            // Step 3: If not registered, register it
-            if (!enhancementConfig) {
-                console.log('EMCScript: Registering enhancement');
-                enhancementConfig = await this.registerEnhancement(emcConfig, enhancementRegistry);
-                console.log('EMCScript: Enhancement registered:', enhancementConfig);
-            }
-            else {
-                console.log('EMCScript: Enhancement already registered');
-            }
-            // Step 4: Spawn enhancement instance
-            if (!enh) {
-                throw new Error('Element does not have enh property. Make sure ElementMountExtension is loaded.');
-            }
-            console.log('EMCScript: Spawning enhancement instance with config:', enhancementConfig);
-            const result = await enh.get(enhancementConfig);
-            console.log('EMCScript: Enhancement spawned successfully, result:', result);
+        const enhKey = emcConfig.enhConfig.enhKey;
+        // Step 1: Check if element already has this enhancement
+        const enh = mountedElement.enh;
+        if (enh && enh[enhKey]) {
+            // Already enhanced, do nothing
+            return;
         }
-        catch (error) {
-            console.error('EMCScript: Error in handleMount:', error);
-            throw error;
+        // Step 2: Get enhancement registry from the element's custom element registry
+        const customElementRegistry = mountedElement.customElementRegistry || customElements;
+        const enhancementRegistry = customElementRegistry.enhancementRegistry;
+        if (!enhancementRegistry) {
+            throw new Error('Enhancement registry not found on custom element registry');
         }
+        // Check if enhancement is already registered using findByEnhKey method
+        let enhancementConfig = enhancementRegistry.findByEnhKey(enhKey);
+        // Step 3: If not registered, register it
+        if (!enhancementConfig) {
+            enhancementConfig = await this.registerEnhancement(emcConfig, enhancementRegistry);
+        }
+        // Step 4: Spawn enhancement instance
+        if (!enh) {
+            throw new Error('Element does not have enh property. Make sure ElementMountExtension is loaded.');
+        }
+        await enh.get(enhancementConfig);
     }
     /**
      * Register an enhancement in the enhancement registry.
@@ -168,9 +147,6 @@ export class EMCScriptHandler extends EvtRt {
             throw new Error('EMC enhConfig must have spawn property');
         }
         // Step 3.1: Import the module
-        // Resolve the spawn path relative to the document base URL
-        //const resolvedSpawn = new URL(spawn, document.baseURI).href;
-        //console.log('EMCScript: Importing from:', resolvedSpawn);
         const module = await import(spawn);
         // Get the enhancement class - it should be the default export or any exported class
         let ElementClass = module.default;
