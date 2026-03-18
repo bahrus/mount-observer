@@ -12,7 +12,6 @@ export { EMCScriptHandler } from './handlers/EMCScript.js';
 export { HoistTemplateHandler } from './handlers/HoistTemplate.js';
 export { HTMLIncludeHandler } from './handlers/HTMLInclude.js';
 export { upShadowSearch } from './upShadowSearch.js';
-export { findSuitableClass } from './findSuitableClass.js';
 export type {
     MountConfig,
     MountObserverOptions,

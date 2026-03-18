@@ -1,6 +1,5 @@
 import { EvtRt } from '../EvtRt.js';
 import { EMC, MountConfig, MountContext } from '../types/mount-observer/types.js';
-import { findSuitableClass } from '../findSuitableClass.js';
 import { MountObserver } from '../MountObserver.js';
 import '../ElementMountExtension.js';
 import 'assign-gingerly/object-extension.js';
