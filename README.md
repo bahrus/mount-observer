@@ -617,7 +617,7 @@ The `builtIns.emcScript` handler provides declarative element enhancement using 
         "spawn": "./button-enhancement.js",
         "enhKey": "fancyButton",
         "withAttrs": {
-            "variant": "primary"
+            "base": "variant"
         }
     }
 }
