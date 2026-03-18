@@ -169,9 +169,9 @@ export class EMCScriptHandler extends EvtRt {
         }
         // Step 3.1: Import the module
         // Resolve the spawn path relative to the document base URL
-        const resolvedSpawn = new URL(spawn, document.baseURI).href;
-        console.log('EMCScript: Importing from:', resolvedSpawn);
-        const module = await import(resolvedSpawn);
+        //const resolvedSpawn = new URL(spawn, document.baseURI).href;
+        //console.log('EMCScript: Importing from:', resolvedSpawn);
+        const module = await import(spawn);
         // Get the enhancement class - it should be the default export or any exported class
         let ElementClass = module.default;
         // If no default export, try to find a suitable class
@@ -190,7 +190,7 @@ export class EMCScriptHandler extends EvtRt {
         // Step 3.2: Construct enhancement config
         const enhancementConfig = {
             ...enhConfig,
-            class: ElementClass
+            spawn: ElementClass
         };
         // Step 3.3: Register in enhancement registry
         enhancementRegistry.push(enhancementConfig);
