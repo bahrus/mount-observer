@@ -666,6 +666,203 @@ export default class MyEnhancement {
 
 [Implemented as EMCScript requirement](requirements/Done/EMCScript.md)
 
+## Syndicating Mount Observers with Synthesizer
+
+The `Synthesizer` abstract base class enables automatic propagation of mount observer configurations across shadow DOM boundaries. It acts as a "syndicator-subscriber" pattern where a syndicator in the document root broadcasts script elements to subscribers in shadow roots.
+
+**Why use Synthesizer?**
+
+- Automatically share mount observer configurations across shadow roots
+- Eliminates manual observer setup in each shadow root
+- Ensures consistent behavior across component boundaries
+- Works with both MOSE and EMC script elements
+- Provides a declarative, inheritance-based approach
+
+**How it works:**
+
+1. **Syndicator** (in document root): Watches for `script[type="mountobserver"]` and `script[type="emc"]` elements and broadcasts them to subscribers
+2. **Subscriber** (in shadow roots): Receives and clones script elements from the syndicator
+3. **Automatic activation**: Both syndicator and subscriber activate 5 built-in handlers in their respective root nodes
+
+**Basic usage:**
+
+```html
+<!-- Define your Synthesizer custom element -->
+<script type="module">
+    import { Synthesizer } from 'mount-observer/Synthesizer.js';
+    
+    class AppSynthesizer extends Synthesizer {}
+    customElements.define('app-synthesizer', AppSynthesizer);
+</script>
+
+<!-- Syndicator in document root with mount observer scripts -->
+<app-synthesizer>
+    <script type="mountobserver">
+    {
+        "matching": "button.primary",
+        "import": "./primary-button.js",
+        "do": "builtIns.defineCustomElement"
+    }
+    </script>
+    
+    <script type="emc">
+    {
+        "matching": ".interactive",
+        "enhConfig": {
+            "spawn": "./interactive.js",
+            "enhKey": "interactive"
+        }
+    }
+    </script>
+</app-synthesizer>
+
+<!-- Component with shadow root -->
+<my-component>
+    #shadow
+        <!-- Subscriber automatically receives scripts from syndicator -->
+        <app-synthesizer></app-synthesizer>
+        
+        <!-- These elements will be enhanced by the syndicated observers -->
+        <button class="primary">Click me</button>
+        <div class="interactive">Interactive content</div>
+</my-component>
+```
+
+**What happens:**
+
+1. The syndicator (`<app-synthesizer>` in document root) activates 5 built-in handlers:
+   - `builtIns.mountObserverScript`
+   - `builtIns.scriptExport`
+   - `builtIns.HTMLInclude`
+   - `builtIns.hoistTemplate`
+   - `builtIns.emcScript`
+
+2. The syndicator watches for script elements being added to its light children
+
+3. When a script is added, it waits for the `resolved` event (ensuring the script is parsed)
+
+4. The syndicator dispatches an `AddedScriptElementEvent` with the script element
+
+5. Subscribers in shadow roots:
+   - Find the syndicator in the document root (matching localName)
+   - Process existing scripts from the syndicator
+   - Subscribe to `addedscriptelement` events for new scripts
+   - Clone each script element and copy its `export` property
+   - Append cloned scripts to their own light children
+   - Activate the same 5 built-in handlers in their shadow root
+
+**Syndicator vs Subscriber:**
+
+The Synthesizer automatically determines its role based on its root node:
+- **Document root** → Acts as syndicator (broadcasts scripts)
+- **Shadow root** → Acts as subscriber (receives scripts)
+
+**Activation of built-in handlers:**
+
+Both syndicator and subscriber call `element.mount()` to activate handlers in their respective scopes:
+
+```javascript
+// Activated in both syndicator and subscriber root nodes
+await this.getRootNode().mount({
+    do: 'builtIns.mountObserverScript'
+});
+await this.getRootNode().mount({
+    do: 'builtIns.scriptExport'
+});
+await this.getRootNode().mount({
+    do: 'builtIns.HTMLInclude'
+});
+await this.getRootNode().mount({
+    do: 'builtIns.hoistTemplate'
+});
+await this.getRootNode().mount({
+    do: 'builtIns.emcScript'
+});
+```
+
+This ensures that:
+- MOSE scripts are processed in each scope
+- Script exports are available
+- HTML includes work within each shadow root
+- Templates are hoisted for performance
+- EMC scripts enhance elements in each scope
+
+**Script processing:**
+
+When a subscriber receives a script element:
+
+1. Checks if the script has an `export` property (parsed configuration)
+2. If not, waits for the `resolved` event (with 5-second timeout)
+3. Clones the script element
+4. Copies the `export` property from source to clone (by reference)
+5. Appends the cloned script to the subscriber's light children
+6. The activated handlers process the cloned script in the shadow root's scope
+
+**Benefits:**
+
+- **Declarative**: Define observers once in the document root
+- **Automatic**: Scripts propagate to all shadow roots automatically
+- **Scoped**: Each shadow root gets its own observer instances
+- **Efficient**: Parsed configurations are shared (not re-parsed)
+- **Maintainable**: Update observers in one place, changes propagate everywhere
+
+**Example - Multiple components:**
+
+```html
+<!-- Syndicator with shared observers -->
+<app-synthesizer>
+    <script type="mountobserver">
+    {
+        "matching": "button",
+        "import": "./button-enhancement.js",
+        "do": "builtIns.enhanceMountedElement"
+    }
+    </script>
+</app-synthesizer>
+
+<!-- Component 1 -->
+<my-header>
+    #shadow
+        <app-synthesizer></app-synthesizer>
+        <button>Header Button</button>  <!-- Enhanced -->
+</my-header>
+
+<!-- Component 2 -->
+<my-footer>
+    #shadow
+        <app-synthesizer></app-synthesizer>
+        <button>Footer Button</button>  <!-- Enhanced -->
+</my-footer>
+```
+
+Both components receive the button enhancement observer automatically.
+
+**Error handling:**
+
+- Logs errors if handler activation fails
+- Logs errors if script processing fails
+- Continues processing other scripts even if one fails
+- Provides 5-second timeout for waiting on `resolved` events
+
+**Requirements:**
+
+- Must extend the `Synthesizer` abstract class
+- Must be defined as a custom element
+- Syndicator must be in the document root
+- Subscribers must be in shadow roots
+- All handlers must be imported and registered before use
+
+**Comparison with `mountGlobally()`:**
+
+Unlike `mountGlobally()`, which discovers shadow roots by observing custom elements, Synthesizer:
+- Uses explicit syndicator-subscriber pattern
+- Provides more control over which scripts are syndicated
+- Works with any shadow root structure
+- Doesn't rely on custom element discovery
+- Allows for selective script propagation
+
+[Implemented as Syndicating Mount Observers With Synthesizer requirement](requirements/Done/Syndicating Mount Observers With Synthesizer.md)
+
 ## Intra-Document HTML Includes with HTMLInclude
 
 The `builtIns.HTMLInclude` handler enables declarative HTML fragment reuse within a document using `<template src="#id">` syntax. Think of it as "constants for HTML" - define content once with an ID, then reference it multiple times throughout your document.
