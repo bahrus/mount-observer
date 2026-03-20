@@ -1,6 +1,16 @@
 import './ElementMountExtension.js';
 import { waitForEvent } from 'assign-gingerly/waitForEvent.js';
 import { AddedScriptElementEvent } from './Events.js';
+import 'mount-observer/handlers/MountObserverScript.js';
+import { mos } from 'mount-observer/handlers/MountObserverScript.js';
+import 'mount-observer/handlers/ScriptExport.js';
+import { scriptExport } from 'mount-observer/handlers/ScriptExport.js';
+import 'mount-observer/handlers/HTMLInclude.js';
+import { include } from 'mount-observer/handlers/HTMLInclude.js';
+import 'mount-observer/handlers/HoistTemplate.js';
+import { hoist } from 'mount-observer/handlers/HoistTemplate.js';
+import { emc } from 'mount-observer/handlers/EMCScript.js';
+import 'mount-observer/handlers/EMCScript.js';
 /**
  * Track which root nodes have already had handlers activated.
  * Uses WeakSet to avoid memory leaks when nodes are garbage collected.
@@ -43,11 +53,7 @@ export class Synthesizer extends HTMLElement {
      * List of built-in handlers to activate.
      */
     static builtInHandlers = [
-        'builtIns.mountObserverScript',
-        'builtIns.scriptExport',
-        'builtIns.HTMLInclude',
-        'builtIns.hoistTemplate',
-        'builtIns.emcScript'
+        mos, scriptExport, include, hoist, emc
     ];
     connectedCallback() {
         // Synthesizer elements are infrastructure, not UI
