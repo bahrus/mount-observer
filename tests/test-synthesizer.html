@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthesizer Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Synthesizer Test</h1>
+    
+    <!-- Syndicator in document root -->
+    <test-synthesizer id="syndicator">
+        <script type="mountobserver" id="mose1">
+        {
+            "matching": ".test-class",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+        
+        <script type="emc" id="emc1">
+        {
+            "matching": ".enh-test",
+            "enhConfig": {
+                "spawn": "mount-observer/tests/test-enh-class.js",
+                "enhKey": "testEnh"
+            }
+        }
+        </script>
+    </test-synthesizer>
+    
+    <!-- Test component with shadow root -->
+    <test-component id="comp1"></test-component>
+
+    <script type="module">
+        import { Synthesizer } from '../Synthesizer.js';
+        import '../ElementMountExtension.js';
+        import 'assign-gingerly/object-extension.js';
+        
+        // Import all the handlers that Synthesizer needs
+        import '../handlers/MountObserverScript.js';
+        import '../handlers/ScriptExport.js';
+        import '../handlers/HTMLInclude.js';
+        import '../handlers/HoistTemplate.js';
+        import '../handlers/EMCScript.js';
+        
+        // Define test synthesizer
+        class TestSynthesizer extends Synthesizer {}
+        customElements.define('test-synthesizer', TestSynthesizer);
+        
+        // Define test component with shadow root
+        class TestComponent extends HTMLElement {
+            constructor() {
+                super();
+                const shadow = this.attachShadow({ mode: 'open' });
+                shadow.innerHTML = `
+                    <test-synthesizer></test-synthesizer>
+                    <div class="test-class">Test in shadow</div>
+                    <div class="enh-test">Enhancement test</div>
+                `;
+            }
+        }
+        customElements.define('test-component', TestComponent);
+        
+        console.log('Starting Synthesizer test...');
+        
+        try {
+            // Wait for everything to initialize
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const syndicator = document.getElementById('syndicator');
+            const comp1 = document.getElementById('comp1');
+            const subscriber = comp1.shadowRoot.querySelector('test-synthesizer');
+            
+            console.log('Syndicator:', syndicator);
+            console.log('Subscriber:', subscriber);
+            console.log('Subscriber scripts:', subscriber ? subscriber.querySelectorAll('script').length : 0);
+            
+            // Check results
+            const results = {
+                syndicatorExists: !!syndicator,
+                syndicatorIsHidden: syndicator ? syndicator.hidden : false,
+                subscriberExists: !!subscriber,
+                subscriberIsHidden: subscriber ? subscriber.hidden : false,
+                subscriberHasScripts: subscriber ? subscriber.querySelectorAll('script').length > 0 : false,
+                moseScriptCount: subscriber ? subscriber.querySelectorAll('script[type="mountobserver"]').length : 0,
+                emcScriptCount: subscriber ? subscriber.querySelectorAll('script[type="emc"]').length : 0,
+                scriptsHaveExport: subscriber ? Array.from(subscriber.querySelectorAll('script')).every(s => !!s.export) : false
+            };
+            
+            console.log('Test results:', results);
+            
+            window.testResults = results;
+            window.testsReady = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testsReady = true;
+        }
+    </script>
+</body>
+</html>

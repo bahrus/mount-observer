@@ -76,3 +76,12 @@ export class ResolvedEvent extends Event {
         this.export = exportValue;
     }
 }
+export const addedScriptElementEventName = 'addedscriptelement';
+export class AddedScriptElementEvent extends Event {
+    scriptElement;
+    static eventName = addedScriptElementEventName;
+    constructor(scriptElement) {
+        super(AddedScriptElementEvent.eventName, { bubbles: false, composed: false });
+        this.scriptElement = scriptElement;
+    }
+}

@@ -73,3 +73,13 @@ export class ResolvedEvent extends Event {
         this.export = exportValue;
     }
 }
+
+export const addedScriptElementEventName = 'addedscriptelement';
+
+export class AddedScriptElementEvent extends Event {
+    static eventName: typeof addedScriptElementEventName = addedScriptElementEventName;
+    
+    constructor(public scriptElement: HTMLScriptElement) {
+        super(AddedScriptElementEvent.eventName, { bubbles: false, composed: false });
+    }
+}
