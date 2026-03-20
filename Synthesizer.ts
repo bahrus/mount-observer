@@ -3,11 +3,20 @@ import { waitForEvent } from 'assign-gingerly/waitForEvent.js';
 import { AddedScriptElementEvent } from './Events.js';
 
 /**
+ * Track which root nodes have already had handlers activated.
+ * Uses WeakSet to avoid memory leaks when nodes are garbage collected.
+ */
+const activatedRootNodes = new WeakSet<Node>();
+
+/**
  * Abstract base class for syndicating mount observer and EMC script elements across shadow roots.
  * 
  * Synthesizer instances act as either:
  * - Syndicator (in document root): Broadcasts script elements to subscribers
  * - Subscriber (in shadow roots): Receives and clones script elements from syndicator
+ * 
+ * Ensures that handlers are only activated once per root node, even if multiple
+ * Synthesizer instances exist in the same root.
  * 
  * Usage:
  * ```javascript
@@ -74,8 +83,17 @@ export abstract class Synthesizer extends HTMLElement {
 
     /**
      * Activate mount observer handlers in the specified root node.
+     * Only activates once per root node, even if multiple Synthesizer instances exist.
      */
     async #activateHandlers(rootNode: Node): Promise<void> {
+        // Check if handlers have already been activated for this root node
+        if (activatedRootNodes.has(rootNode)) {
+            return;
+        }
+        
+        // Mark this root node as activated
+        activatedRootNodes.add(rootNode);
+        
         const constructor = this.constructor as typeof Synthesizer;
         
         for (const handlerName of constructor.builtInHandlers) {
