@@ -115,6 +115,50 @@ export abstract class Synthesizer extends HTMLElement {
     }
 
     /**
+     * Check if a script element should be processed based on include/exclude attributes.
+     * 
+     * Rules:
+     * - If passthrough attribute exists, return false (don't process any scripts)
+     * - If include or exclude attributes exist and script has no id, return false (security)
+     * - If include attribute exists, only process scripts with IDs in the include list
+     * - If exclude attribute exists, don't process scripts with IDs in the exclude list
+     * - Otherwise, return true (process the script)
+     * 
+     * Made protected so subscribers can check if syndicator would allow a script.
+     */
+    protected checkIfAllowed(scriptElement: HTMLScriptElement): boolean {
+        // Passthrough mode - don't process any scripts
+        if (this.hasAttribute('passthrough')) {
+            return false;
+        }
+        
+        const scriptId = scriptElement.getAttribute('id');
+        
+        // Security: If include or exclude attributes exist, script must have an ID
+        if ((this.hasAttribute('include') || this.hasAttribute('exclude')) && !scriptId) {
+            return false;
+        }
+        
+        // Include list - only process scripts with IDs in the list
+        if (this.hasAttribute('include')) {
+            const includeList = this.getAttribute('include')!.split(' ').filter(s => s.trim());
+            if (!includeList.includes(scriptId!)) {
+                return false;
+            }
+        }
+        
+        // Exclude list - don't process scripts with IDs in the list
+        if (this.hasAttribute('exclude')) {
+            const excludeList = this.getAttribute('exclude')!.split(' ').filter(s => s.trim());
+            if (excludeList.includes(scriptId!)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
      * Initialize as syndicator (in document root).
      * Watches for script elements and broadcasts them to subscribers.
      */
@@ -122,7 +166,9 @@ export abstract class Synthesizer extends HTMLElement {
         // Process existing script elements
         const scripts = this.querySelectorAll('script[type="mountobserver"], script[type="emc"]');
         scripts.forEach(script => {
-            this.#broadcastScript(script as HTMLScriptElement);
+            if (this.checkIfAllowed(script as HTMLScriptElement)) {
+                this.#broadcastScript(script as HTMLScriptElement);
+            }
         });
         
         // Watch for new script elements
@@ -132,7 +178,9 @@ export abstract class Synthesizer extends HTMLElement {
                     if (node instanceof HTMLScriptElement) {
                         const type = node.getAttribute('type');
                         if (type === 'mountobserver' || type === 'emc') {
-                            this.#broadcastScript(node);
+                            if (this.checkIfAllowed(node)) {
+                                this.#broadcastScript(node);
+                            }
                         }
                     }
                 }
@@ -166,9 +214,12 @@ export abstract class Synthesizer extends HTMLElement {
         }
         
         // Process existing scripts from syndicator
+        // Only process scripts that pass the syndicator's filtering
         const scripts = syndicator.querySelectorAll('script[type="mountobserver"], script[type="emc"]');
         scripts.forEach(script => {
-            this.#processScript(script as HTMLScriptElement);
+            if (syndicator.checkIfAllowed(script as HTMLScriptElement)) {
+                this.#processScript(script as HTMLScriptElement);
+            }
         });
         
         // Subscribe to new scripts

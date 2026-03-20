@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthesizer Filtering Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <h1>Synthesizer Include/Exclude Filtering Test</h1>
+    
+    <!-- Test 1: Include attribute - only process script1 and script2 -->
+    <test-synth-include id="syndicator1" include="script1 script2">
+        <script type="mountobserver" id="script1">
+        {
+            "matching": ".test1",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+        
+        <script type="mountobserver" id="script2">
+        {
+            "matching": ".test2",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+        
+        <script type="mountobserver" id="script3">
+        {
+            "matching": ".test3",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+    </test-synth-include>
+    
+    <!-- Test 2: Exclude attribute - process all except script4 -->
+    <test-synth-exclude id="syndicator2" exclude="script4">
+        <script type="emc" id="script4">
+        {
+            "matching": ".test4",
+            "enhConfig": {
+                "spawn": "mount-observer/tests/test-enh-class.js",
+                "enhKey": "testEnh4"
+            }
+        }
+        </script>
+        
+        <script type="emc" id="script5">
+        {
+            "matching": ".test5",
+            "enhConfig": {
+                "spawn": "mount-observer/tests/test-enh-class.js",
+                "enhKey": "testEnh5"
+            }
+        }
+        </script>
+    </test-synth-exclude>
+    
+    <!-- Test 3: Passthrough attribute - don't process any scripts -->
+    <test-synth-passthrough id="syndicator3" passthrough>
+        <script type="mountobserver" id="script6">
+        {
+            "matching": ".test6",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+    </test-synth-passthrough>
+    
+    <!-- Test 4: Security - scripts without IDs are excluded when include/exclude present -->
+    <test-synth-security id="syndicator4" include="script7">
+        <script type="mountobserver" id="script7">
+        {
+            "matching": ".test7",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+        
+        <script type="mountobserver">
+        {
+            "matching": ".test8",
+            "do": "builtIns.logToConsole"
+        }
+        </script>
+    </test-synth-security>
+    
+    <!-- Test components with shadow roots -->
+    <test-component-include id="comp1"></test-component-include>
+    <test-component-exclude id="comp2"></test-component-exclude>
+    <test-component-passthrough id="comp3"></test-component-passthrough>
+    <test-component-security id="comp4"></test-component-security>
+
+    <script type="module">
+        import { Synthesizer } from '../Synthesizer.js';
+        import '../ElementMountExtension.js';
+        import 'assign-gingerly/object-extension.js';
+        
+        // Import all the handlers that Synthesizer needs
+        import '../handlers/MountObserverScript.js';
+        import '../handlers/ScriptExport.js';
+        import '../handlers/HTMLInclude.js';
+        import '../handlers/HoistTemplate.js';
+        import '../handlers/EMCScript.js';
+        
+        // Define test synthesizers
+        class TestSynthInclude extends Synthesizer {}
+        customElements.define('test-synth-include', TestSynthInclude);
+        
+        class TestSynthExclude extends Synthesizer {}
+        customElements.define('test-synth-exclude', TestSynthExclude);
+        
+        class TestSynthPassthrough extends Synthesizer {}
+        customElements.define('test-synth-passthrough', TestSynthPassthrough);
+        
+        class TestSynthSecurity extends Synthesizer {}
+        customElements.define('test-synth-security', TestSynthSecurity);
+        
+        // Define test components with shadow roots
+        class TestComponentInclude extends HTMLElement {
+            constructor() {
+                super();
+                const shadow = this.attachShadow({ mode: 'open' });
+                shadow.innerHTML = `<test-synth-include></test-synth-include>`;
+            }
+        }
+        customElements.define('test-component-include', TestComponentInclude);
+        
+        class TestComponentExclude extends HTMLElement {
+            constructor() {
+                super();
+                const shadow = this.attachShadow({ mode: 'open' });
+                shadow.innerHTML = `<test-synth-exclude></test-synth-exclude>`;
+            }
+        }
+        customElements.define('test-component-exclude', TestComponentExclude);
+        
+        class TestComponentPassthrough extends HTMLElement {
+            constructor() {
+                super();
+                const shadow = this.attachShadow({ mode: 'open' });
+                shadow.innerHTML = `<test-synth-passthrough></test-synth-passthrough>`;
+            }
+        }
+        customElements.define('test-component-passthrough', TestComponentPassthrough);
+        
+        class TestComponentSecurity extends HTMLElement {
+            constructor() {
+                super();
+                const shadow = this.attachShadow({ mode: 'open' });
+                shadow.innerHTML = `<test-synth-security></test-synth-security>`;
+            }
+        }
+        customElements.define('test-component-security', TestComponentSecurity);
+        
+        console.log('Starting Synthesizer filtering test...');
+        
+        try {
+            // Wait for everything to initialize
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const syndicator1 = document.getElementById('syndicator1');
+            const syndicator2 = document.getElementById('syndicator2');
+            const syndicator3 = document.getElementById('syndicator3');
+            const syndicator4 = document.getElementById('syndicator4');
+            
+            const comp1 = document.getElementById('comp1');
+            const comp2 = document.getElementById('comp2');
+            const comp3 = document.getElementById('comp3');
+            const comp4 = document.getElementById('comp4');
+            
+            const subscriber1 = comp1.shadowRoot.querySelector('test-synth-include');
+            const subscriber2 = comp2.shadowRoot.querySelector('test-synth-exclude');
+            const subscriber3 = comp3.shadowRoot.querySelector('test-synth-passthrough');
+            const subscriber4 = comp4.shadowRoot.querySelector('test-synth-security');
+            
+            console.log('Syndicator 1 (include):', syndicator1);
+            console.log('Subscriber 1 scripts:', subscriber1 ? subscriber1.querySelectorAll('script').length : 0);
+            
+            console.log('Syndicator 2 (exclude):', syndicator2);
+            console.log('Subscriber 2 scripts:', subscriber2 ? subscriber2.querySelectorAll('script').length : 0);
+            
+            console.log('Syndicator 3 (passthrough):', syndicator3);
+            console.log('Subscriber 3 scripts:', subscriber3 ? subscriber3.querySelectorAll('script').length : 0);
+            
+            console.log('Syndicator 4 (security):', syndicator4);
+            console.log('Subscriber 4 scripts:', subscriber4 ? subscriber4.querySelectorAll('script').length : 0);
+            
+            // Check results
+            const results = {
+                // Test 1: Include - should have script1 and script2 (2 scripts)
+                test1: {
+                    syndicatorExists: !!syndicator1,
+                    subscriberExists: !!subscriber1,
+                    scriptCount: subscriber1 ? subscriber1.querySelectorAll('script').length : 0,
+                    hasScript1: subscriber1 ? !!subscriber1.querySelector('#script1') : false,
+                    hasScript2: subscriber1 ? !!subscriber1.querySelector('#script2') : false,
+                    hasScript3: subscriber1 ? !!subscriber1.querySelector('#script3') : false
+                },
+                // Test 2: Exclude - should have script5 only (1 script)
+                test2: {
+                    syndicatorExists: !!syndicator2,
+                    subscriberExists: !!subscriber2,
+                    scriptCount: subscriber2 ? subscriber2.querySelectorAll('script').length : 0,
+                    hasScript4: subscriber2 ? !!subscriber2.querySelector('#script4') : false,
+                    hasScript5: subscriber2 ? !!subscriber2.querySelector('#script5') : false
+                },
+                // Test 3: Passthrough - should have no scripts (0 scripts)
+                test3: {
+                    syndicatorExists: !!syndicator3,
+                    subscriberExists: !!subscriber3,
+                    scriptCount: subscriber3 ? subscriber3.querySelectorAll('script').length : 0,
+                    hasScript6: subscriber3 ? !!subscriber3.querySelector('#script6') : false
+                },
+                // Test 4: Security - should have script7 only, not the one without ID (1 script)
+                test4: {
+                    syndicatorExists: !!syndicator4,
+                    subscriberExists: !!subscriber4,
+                    scriptCount: subscriber4 ? subscriber4.querySelectorAll('script').length : 0,
+                    hasScript7: subscriber4 ? !!subscriber4.querySelector('#script7') : false,
+                    hasScriptWithoutId: subscriber4 ? subscriber4.querySelectorAll('script:not([id])').length > 0 : false
+                }
+            };
+            
+            console.log('Test results:', results);
+            
+            window.testResults = results;
+            window.testsReady = true;
+        } catch (error) {
+            console.error('Test error:', error);
+            window.testError = error.message;
+            window.testsReady = true;
+        }
+    </script>
+</body>
+</html>
