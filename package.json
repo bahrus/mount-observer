@@ -9,7 +9,7 @@
     "id-generation": "0.0.4"
   },
   "devDependencies": {
-    "@playwright/test": "1.59.0-alpha-2026-02-28",
+    "@playwright/test": "1.59.0",
     "spa-ssi": "0.0.27"
   },
   "exports": {
