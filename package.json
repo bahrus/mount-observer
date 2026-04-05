@@ -9,7 +9,7 @@
     "id-generation": "0.0.4"
   },
   "devDependencies": {
-    "@playwright/test": "1.59.0",
+    "@playwright/test": "1.59.1",
     "spa-ssi": "0.0.27"
   },
   "exports": {
@@ -32,6 +32,10 @@
     "./arr.js": {
       "default": "./arr.js",
       "types": "./arr.ts"
+    },
+    "./nudge.js": {
+      "default": "./nudge.js",
+      "types": "./nudge.ts"
     },
     "./EvtRt.js": {
       "default": "./EvtRt.js",

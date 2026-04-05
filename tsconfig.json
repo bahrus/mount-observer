@@ -17,7 +17,8 @@
 		"upShadowSearch.ts",
 		"getRegistryRoot.ts",
 		"ElementMountExtension.ts",
-		"types/global.d.ts"
+		"types/global.d.ts",
+		"nudge.ts"
 	],
 	"exclude":[
 		"node_modules"
