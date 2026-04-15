@@ -390,6 +390,28 @@ Here's what I propose to implement:
 
 What do you think? Should I proceed with this implementation plan?
 
+## Human Response II
+
+Everything is looking quite promising.
+
+The trickiest thing is how to work on both assign-gingerly and mount-observer at the same time with Kiro.  What I'm thinking of doing is putting the two projects in a common folder, and opening kiro from the common folder and point Kiro to this document for instructions once that's done, meaning don't start anything until that is confirmed to have been done.
+
+I think part of the implementation should include removing the "Custom Element Static Method Parsers" approach that currently exists in assign-gingerly as a first step, as the parser registry system, that I strongly think should be in assign-gingerly will replace it.  There is already a global parser registry system in assign-gingerly, not scoped like we want.  I'm thinking we should keep that, especially for the built in parsers.
+
+The murkiest thing in my mind is how the deep innards of assign-gingerly, during the enhancement instantiation handshake, will know how to access the scoped registry.  Perhaps this can be scoped out by Kiro once we have the common folder so that Kiro can access the entirety of the repository.
+
+As far as the questions for clarification:
+
+1.  Parser interface.  The simplicity argument would argument for simply exporting functions that take in a function.  The strongest argument for anything fancier might be tied to caching, but I think we should first closely examine the code in assign-gingerly (which granted, can already be perused via node_modules currently) to see if the caching argument is strong enough to justify a stateful parser.
+
+2.  Timeout duration.  That's a tricky one, as network speeds may vary.  So at a minimum it should be configurable, I guess, with a fairly large default value (1 minute)?
+
+3.  Syndication.  I'm a little murky on this.  I think that by registering parsers via the container tag scoped registry, child Shadow Roots that plop a simple be-hive (for example) tag will, as is currently the case, import the emc scripts and mount observer scripts, and won't need to import the parser scripts as it will already be registered for the scoped element.  The registry should apply to all places within shadow roots, in other words.
+
+4.  Package Location.  I think assign-gingerly as much as possible.
+
+
+
 
 
 
