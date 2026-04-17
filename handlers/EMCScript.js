@@ -1,6 +1,7 @@
 import { EvtRt } from '../EvtRt.js';
 import '../ElementMountExtension.js';
 import 'assign-gingerly/object-extension.js';
+import { getParserRegistry } from 'assign-gingerly/parserRegistry.js';
 /**
  * Handler for EMC (Element Mount Configuration) Script Elements.
  * Processes script[type="emc"] elements to declaratively configure element enhancements.
@@ -18,6 +19,29 @@ export class EMCScriptHandler extends EvtRt {
     async mount(mountedElement, MountConfig, context) {
         this.abort(); // Clean up event listeners (one-time operation)
         const scriptElement = mountedElement;
+        // Find containing synthesizer element early (needed for parser waiting)
+        const synthesizerElement = this.findContainingSynthesizer(scriptElement);
+        // Check for parser waiting before processing EMC config
+        const waitForParsers = scriptElement.getAttribute('wait-for-parsers');
+        if (waitForParsers && synthesizerElement) {
+            const parserNames = waitForParsers.trim().split(/\s+/).filter(name => name.length > 0);
+            if (parserNames.length > 0) {
+                // Read timeout attribute (default: 60000ms = 1 minute)
+                const timeoutAttr = scriptElement.getAttribute('data-parser-timeout');
+                const timeout = timeoutAttr ? parseInt(timeoutAttr, 10) : 60000;
+                try {
+                    // Get scoped registry and wait for parsers
+                    const registry = getParserRegistry(synthesizerElement);
+                    await registry.waitFor(parserNames, timeout);
+                }
+                catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    console.error(`Parser waiting failed for EMC script:`, errorMessage, scriptElement);
+                    scriptElement.setAttribute('data-emc-error', errorMessage);
+                    return; // Stop processing on timeout/error
+                }
+            }
+        }
         let emcConfig = scriptElement.export;
         if (!emcConfig) {
             // Check if script has src attribute
@@ -68,14 +92,14 @@ export class EMCScriptHandler extends EvtRt {
             scriptElement.id = `${scriptElement.parentElement.localName}.${enhKey}`;
         }
         // Construct MountConfig from EMC config and mount it
-        const mountConfig = await this.buildMountConfig(emcConfig);
+        const mountConfig = await this.buildMountConfig(emcConfig, synthesizerElement);
         await scriptElement.mount(mountConfig);
     }
     /**
      * Build a MountConfig from an EMC config.
      * Combines the matching selector with withAttrs if present.
      */
-    async buildMountConfig(emcConfig) {
+    async buildMountConfig(emcConfig, synthesizerElement) {
         const { enhConfig, ...mountConfigBase } = emcConfig;
         let matching = mountConfigBase.matching || '';
         // If withAttrs is defined, use buildCSSQuery to combine with matching
@@ -96,7 +120,7 @@ export class EMCScriptHandler extends EvtRt {
             ...mountConfigBase,
             matching,
             do: (mountedElement) => {
-                return this.handleMount(mountedElement, emcConfig);
+                return this.handleMount(mountedElement, emcConfig, synthesizerElement);
             }
         };
         return mountConfig;
@@ -104,7 +128,7 @@ export class EMCScriptHandler extends EvtRt {
     /**
      * Handle when an element mounts that matches the EMC config.
      */
-    async handleMount(mountedElement, emcConfig) {
+    async handleMount(mountedElement, emcConfig, synthesizerElement) {
         const enhKey = emcConfig.enhConfig.enhKey;
         // Step 1: Check if element already has this enhancement
         const enh = mountedElement.enh;
@@ -128,7 +152,9 @@ export class EMCScriptHandler extends EvtRt {
         if (!enh) {
             throw new Error('Element does not have enh property. Make sure ElementMountExtension is loaded.');
         }
-        await enh.get(enhancementConfig);
+        // Pass synthesizerElement through SpawnContext if available
+        const spawnContext = synthesizerElement ? { synthesizerElement } : undefined;
+        await enh.get(enhancementConfig, spawnContext);
     }
     /**
      * Register an enhancement in the enhancement registry.
@@ -164,6 +190,40 @@ export class EMCScriptHandler extends EvtRt {
         // Step 3.3: Register in enhancement registry
         enhancementRegistry.push(enhancementConfig);
         return enhancementConfig;
+    }
+    /**
+     * Find the nearest ancestor synthesizer element.
+     * Traverses up through shadow root boundaries.
+     * Looks for elements with data-synthesizer attribute, be-hive tag, or __isSynthesizer property.
+     */
+    findContainingSynthesizer(element) {
+        let current = element;
+        while (current) {
+            if (current instanceof Element) {
+                // Check for synthesizer marker or known synthesizer tag names
+                if (current.hasAttribute('data-synthesizer') ||
+                    current.localName === 'be-hive' ||
+                    current.__isSynthesizer === true) {
+                    return current;
+                }
+            }
+            // Try parent element
+            if (current.parentElement) {
+                current = current.parentElement;
+            }
+            // Try shadow root host
+            else if (current instanceof ShadowRoot) {
+                current = current.host;
+            }
+            // Try parent node (for document fragments)
+            else if (current.parentNode) {
+                current = current.parentNode;
+            }
+            else {
+                break;
+            }
+        }
+        return undefined;
     }
 }
 // Register built-in handler
