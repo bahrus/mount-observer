@@ -12,6 +12,8 @@ import 'mount-observer/handlers/HoistTemplate.js';
 import {hoist} from 'mount-observer/handlers/HoistTemplate.js';
 import {emc} from 'mount-observer/handlers/EMCScript.js';
 import 'mount-observer/handlers/EMCScript.js';
+import 'mount-observer/handlers/EMCParserScript.js';
+import {emcParser} from 'mount-observer/handlers/EMCParserScript.js';
 
 /**
  * Track which root nodes have already had handlers activated.
@@ -57,7 +59,7 @@ export abstract class Synthesizer extends HTMLElement {
      * List of built-in handlers to activate.
      */
     protected static builtInHandlers = [
-        mos, scriptExport, include, hoist, emc
+        mos, scriptExport, include, hoist, emcParser, emc
     ];
 
     connectedCallback(): void {
@@ -164,7 +166,7 @@ export abstract class Synthesizer extends HTMLElement {
      */
     #initializeSyndicator(): void {
         // Process existing script elements
-        const scripts = this.querySelectorAll('script[type="mountobserver"], script[type="emc"]');
+        const scripts = this.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"]');
         scripts.forEach(script => {
             if (this.checkIfAllowed(script as HTMLScriptElement)) {
                 this.#broadcastScript(script as HTMLScriptElement);
@@ -177,7 +179,7 @@ export abstract class Synthesizer extends HTMLElement {
                 for (const node of mutation.addedNodes) {
                     if (node instanceof HTMLScriptElement) {
                         const type = node.getAttribute('type');
-                        if (type === 'mountobserver' || type === 'emc') {
+                        if (type === 'mountobserver' || type === 'emc' || type === 'emc-parser') {
                             if (this.checkIfAllowed(node)) {
                                 this.#broadcastScript(node);
                             }
@@ -215,7 +217,7 @@ export abstract class Synthesizer extends HTMLElement {
         
         // Process existing scripts from syndicator
         // Only process scripts that pass the syndicator's filtering
-        const scripts = syndicator.querySelectorAll('script[type="mountobserver"], script[type="emc"]');
+        const scripts = syndicator.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"]');
         scripts.forEach(script => {
             if (syndicator.checkIfAllowed(script as HTMLScriptElement)) {
                 this.#processScript(script as HTMLScriptElement);
