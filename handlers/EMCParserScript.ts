@@ -76,8 +76,6 @@ export class EMCParserScriptHandler extends EvtRt {
                 bubbles: true
             }));
             
-            console.log(`Registered parser "${parserName}" from ${src}`);
-            
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error(`Failed to load parser "${parserName}" from "${src}":`, errorMessage);
