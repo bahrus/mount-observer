@@ -1555,6 +1555,264 @@ The handler looks for the nearest scope container using `.closest()`:
 
 IDs are generated using a global counter (via `Symbol.for`) to ensure uniqueness across multiple module instances. Generated IDs follow the pattern `gid-0`, `gid-1`, `gid-2`, etc.
 
+## Scoped Parser Registry for EMC Scripts
+
+The scoped parser registry system enables lazy-loading of complex parsers for enhancement attributes while maintaining framework isolation. Each synthesizer element (be-hive, htmx-container, alpine-scope, etc.) maintains its own parser registry to prevent conflicts between different framework libraries.
+
+**Why use scoped parser registries?**
+
+- Lazy load complex parsers only when needed (e.g., nested-regex-groups)
+- Maintain framework isolation (HTMX, Alpine, be-hive can coexist)
+- Declarative parser loading via HTML script tags
+- Programmatic parser registration for dynamic scenarios
+- Automatic parser waiting before enhancement initialization
+- Built-in parsers remain globally available
+
+### Basic Usage - Declarative Parser Loading
+
+Load parsers declaratively using `<script type="emc-parser">` elements:
+
+```html
+<be-hive>
+    <!-- Load parser first -->
+    <script type="emc-parser" 
+            src="nested-regex-groups/parser.js" 
+            parser-name="nestedRegexGroups"></script>
+    
+    <!-- Then load enhancement that depends on it -->
+    <script type="emc" 
+            src="be-switched/emc.json" 
+            wait-for-parsers="nestedRegexGroups"></script>
+</be-hive>
+
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+    
+    // Bootstrap the handlers
+    new MountObserver({
+        do: 'builtIns.emcScript'
+    }).observe(document);
+</script>
+```
+
+**What happens:**
+
+1. The `emc-parser` script loads the parser module via dynamic import
+2. Parser is registered in the be-hive element's scoped registry
+3. `parser-registered` event is dispatched
+4. The `emc` script waits for the parser to be registered
+5. Once ready, the enhancement is processed with access to the parser
+
+### Multiple Parsers
+
+Wait for multiple parsers using space-delimited names:
+
+```html
+<be-hive>
+    <script type="emc-parser" src="parser1.js" parser-name="parser1"></script>
+    <script type="emc-parser" src="parser2.js" parser-name="parser2"></script>
+    
+    <!-- Wait for both parsers -->
+    <script type="emc" 
+            src="my-enhancement/emc.json" 
+            wait-for-parsers="parser1 parser2"></script>
+</be-hive>
+```
+
+### Custom Timeout
+
+Configure parser loading timeout (default: 60 seconds):
+
+```html
+<be-hive>
+    <script type="emc-parser" src="slow-parser.js" parser-name="slowParser"></script>
+    
+    <!-- Wait up to 2 minutes -->
+    <script type="emc" 
+            src="my-enhancement/emc.json" 
+            wait-for-parsers="slowParser"
+            data-parser-timeout="120000"></script>
+</be-hive>
+```
+
+### Programmatic Parser Registration
+
+Register parsers programmatically via JavaScript:
+
+```html
+<be-hive id="myHive">
+    <script type="emc" 
+            src="my-enhancement/emc.json" 
+            wait-for-parsers="customParser"></script>
+</be-hive>
+
+<script type="module">
+    import { registerParser } from 'assign-gingerly/parserRegistry.js';
+    
+    // Load parser programmatically
+    const parser = await import('./custom-parser.js');
+    const beHive = document.getElementById('myHive');
+    
+    registerParser(beHive, 'customParser', parser.default);
+</script>
+```
+
+### Parser Interface
+
+Parsers are simple functions that transform attribute string values:
+
+```javascript
+// my-parser.js
+export default function parse(value) {
+    // Transform the string value
+    if (value === null) return null;
+    
+    // Your parsing logic here
+    return parsedValue;
+}
+```
+
+**Requirements:**
+- Parser must be a function with signature `(v: string | null) => any`
+- Must be exported as the default export
+- Should handle `null` values appropriately
+- Should throw descriptive errors for invalid input
+
+### Scoped vs Global Parsers
+
+**Scoped parsers** (registered in be-hive elements):
+- Isolated to a specific synthesizer element and its descendants
+- Different frameworks can use the same parser names without conflicts
+- Registered via `emc-parser` scripts or `registerParser()`
+
+**Global parsers** (built-in):
+- Available everywhere without registration
+- Includes: `timestamp`, `date`, `csv`, `int`, `float`, `boolean`, `json`
+- Fallback when parser not found in scoped registry
+
+**Resolution order:**
+1. Check scoped registry (if synthesizer element exists)
+2. Fall back to global registry
+3. Throw error if not found in either
+
+### Shadow DOM Syndication
+
+Parser registries are scoped to synthesizer elements and apply to all shadow roots within that scope:
+
+```html
+<!-- Syndicator in document root -->
+<be-hive>
+    <script type="emc-parser" src="parser.js" parser-name="myParser"></script>
+    <script type="emc" src="enhancement/emc.json" wait-for-parsers="myParser"></script>
+</be-hive>
+
+<!-- Component with shadow root -->
+<my-component>
+    #shadow
+        <!-- Subscriber receives scripts from syndicator -->
+        <be-hive></be-hive>
+        
+        <!-- Elements here can use the parser -->
+        <div be-switched="...">Content</div>
+</my-component>
+```
+
+**How it works:**
+1. Parser script is syndicated to shadow root's be-hive
+2. Parser is registered in the shadow root's scoped registry
+3. EMC script is syndicated and waits for parser
+4. Enhancements in shadow root have access to the parser
+
+### Error Handling
+
+**Parser loading errors:**
+
+```html
+<!-- Parser module fails to load -->
+<script type="emc-parser" 
+        src="broken-parser.js" 
+        parser-name="broken"
+        data-parser-error="Module not found"></script>
+```
+
+**Parser waiting timeout:**
+
+```html
+<!-- EMC script times out waiting for parser -->
+<script type="emc" 
+        src="my-enhancement/emc.json" 
+        wait-for-parsers="missingParser"
+        data-emc-error="Timeout waiting for parsers: missingParser"></script>
+```
+
+**Error messages include:**
+- Which parser(s) are missing
+- Which EMC script is waiting
+- Suggestions to check parser-name and script order
+
+### Complete Example
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="module">
+        import { MountObserver } from 'mount-observer/MountObserver.js';
+        import { Synthesizer } from 'mount-observer/Synthesizer.js';
+        
+        // Define synthesizer element
+        class BeHive extends Synthesizer {}
+        customElements.define('be-hive', BeHive);
+    </script>
+</head>
+<body>
+    <!-- Syndicator with parser and enhancement -->
+    <be-hive>
+        <!-- Load complex parser -->
+        <script type="emc-parser" 
+                src="nested-regex-groups/parser.js" 
+                parser-name="nestedRegexGroups"></script>
+        
+        <!-- Enhancement that uses the parser -->
+        <script type="emc" 
+                src="be-switched/emc.json" 
+                wait-for-parsers="nestedRegexGroups"></script>
+    </be-hive>
+    
+    <!-- Component using the enhancement -->
+    <my-component>
+        #shadow
+            <be-hive></be-hive>
+            
+            <!-- This element will be enhanced -->
+            <div be-switched="case1: /pattern1/ | case2: /pattern2/">
+                Content
+            </div>
+    </my-component>
+</body>
+</html>
+```
+
+### Benefits
+
+- **Lazy loading**: Load parsers only when needed
+- **Framework isolation**: Different frameworks don't conflict
+- **Declarative**: HTML-first approach with script tags
+- **Flexible**: Supports both declarative and programmatic registration
+- **Automatic**: Parser waiting handled by the framework
+- **Scoped**: Each synthesizer has its own parser registry
+- **Efficient**: Parsers are cached and reused
+
+### Requirements
+
+- Must import `mount-observer/handlers/EMCParserScript.js` for parser loading
+- Must import `mount-observer/handlers/EMCScript.js` for EMC processing
+- Must use a synthesizer element (be-hive, etc.) for scoped registries
+- Parser modules must export a function as default export
+- EMC scripts must specify `wait-for-parsers` attribute to wait for parsers
+
+[Implemented as Scoped Parser Registry requirement](.kiro/specs/scoped-parser-registry-requirements.md)
+
 
 # Thorough Exposition Begins Here
 
