@@ -14,6 +14,8 @@ import {emc} from 'mount-observer/handlers/EMCScript.js';
 import 'mount-observer/handlers/EMCScript.js';
 import 'mount-observer/handlers/EMCParserScript.js';
 import {emcParser} from 'mount-observer/handlers/EMCParserScript.js';
+import 'mount-observer/handlers/GenIds.js';
+import {genIds} from 'mount-observer/handlers/GenIds.js';
 
 /**
  * Track which root nodes have already had handlers activated.
@@ -59,7 +61,7 @@ export abstract class Synthesizer extends HTMLElement {
      * List of built-in handlers to activate.
      */
     protected static builtInHandlers = [
-        mos, scriptExport, include, hoist, emcParser, emc
+        mos, scriptExport, include, hoist, genIds, emcParser, emc
     ];
 
     connectedCallback(): void {
