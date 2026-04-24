@@ -65,12 +65,15 @@ export abstract class Synthesizer extends HTMLElement {
         mos, scriptExport, include, hoist, genIds, emcParser, emc
     ];
 
-    connectedCallback(): void {
+    async connectedCallback(): Promise<void> {
         // Synthesizer elements are infrastructure, not UI
         this.hidden = true;
         
         // Register the Infer enhancement in the appropriate registry
         const registry = (this as any).customElementRegistry || customElements;
+        const {localName} = this;
+        //TODO:  remove three lines below
+        await registry.whenDefined(localName);
         if (registry.enhancementRegistry) {
             registry.enhancementRegistry.push(inferRegistryItem);
         }

@@ -60,11 +60,14 @@ export class Synthesizer extends HTMLElement {
     static builtInHandlers = [
         mos, scriptExport, include, hoist, genIds, emcParser, emc
     ];
-    connectedCallback() {
+    async connectedCallback() {
         // Synthesizer elements are infrastructure, not UI
         this.hidden = true;
         // Register the Infer enhancement in the appropriate registry
         const registry = this.customElementRegistry || customElements;
+        const { localName } = this;
+        //TODO:  remove three lines below
+        await registry.whenDefined(localName);
         if (registry.enhancementRegistry) {
             registry.enhancementRegistry.push(inferRegistryItem);
         }
