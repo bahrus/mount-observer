@@ -1,5 +1,6 @@
 // playwright.config.ts
 import { PlaywrightTestConfig, devices } from '@playwright/test';
+
 const config: PlaywrightTestConfig = {
   testIgnore: '**/experimentalCrossScopeRegistering/**',
   webServer: {
@@ -16,14 +17,35 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      // Tests to skip in Firefox (known failures)
+      // Note: experimentalCrossScopeRegistering is already ignored globally
+      testIgnore: [
+        '**/experimentalCrossScopeRegistering/**',
+        '**/id-generation-integration.spec.mjs',
+        '**/test-element-mount.spec.mjs',
+        '**/test-emc-script.spec.mjs',
+        '**/test-enhance-mounted-element.spec.mjs',
+        '**/test-mount-globally.spec.mjs',
+      ],
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      // Tests to skip in WebKit (known failures)
+      // Note: experimentalCrossScopeRegistering is already ignored globally
+      testIgnore: [
+        '**/experimentalCrossScopeRegistering/**',
+        '**/test-builtins.spec.mjs',
+        '**/test-element-mount.spec.mjs',
+        '**/test-emc-script.spec.mjs',
+        '**/test-enhance-mounted-element.spec.mjs',
+        '**/test-mount-globally.spec.mjs',
+      ],
+    },
   ],
 };
+
 export default config;
