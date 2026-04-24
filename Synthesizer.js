@@ -1,7 +1,6 @@
 import './ElementMountExtension.js';
 import { waitForEvent } from 'assign-gingerly/waitForEvent.js';
 import { AddedScriptElementEvent } from './Events.js';
-import { registryItem as inferRegistryItem } from 'assign-gingerly/Infer.js';
 import 'mount-observer/handlers/MountObserverScript.js';
 import { mos } from 'mount-observer/handlers/MountObserverScript.js';
 import 'mount-observer/handlers/ScriptExport.js';
@@ -60,17 +59,9 @@ export class Synthesizer extends HTMLElement {
     static builtInHandlers = [
         mos, scriptExport, include, hoist, genIds, emcParser, emc
     ];
-    async connectedCallback() {
+    connectedCallback() {
         // Synthesizer elements are infrastructure, not UI
         this.hidden = true;
-        // Register the Infer enhancement in the appropriate registry
-        const registry = this.customElementRegistry || customElements;
-        const { localName } = this;
-        //TODO:  remove three lines below
-        await registry.whenDefined(localName);
-        if (registry.enhancementRegistry) {
-            registry.enhancementRegistry.push(inferRegistryItem);
-        }
         // Identify the root node
         const rootNode = this.getRootNode();
         // Determine if this is a syndicator or subscriber
