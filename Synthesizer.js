@@ -215,16 +215,25 @@ export class Synthesizer extends HTMLElement {
             // Check if export property exists
             let exportValue = scriptElement.export;
             if (!exportValue) {
-                // Wait for resolved event with timeout
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout waiting for resolved event')), 5000));
-                const eventPromise = waitForEvent(scriptElement, 'resolved');
+                // Determine which event to wait for based on script type
+                const scriptType = scriptElement.getAttribute('type');
+                const eventName = scriptType === 'emc-parser' ? 'parser-registered' : 'resolved';
+                // Wait for appropriate event with timeout
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout waiting for ${eventName} event`)), 5000));
+                const eventPromise = waitForEvent(scriptElement, eventName);
                 const event = await Promise.race([eventPromise, timeoutPromise]);
-                exportValue = event.export;
+                // For parser scripts, we don't need an export value
+                // For other scripts, get the export from the event
+                if (scriptType !== 'emc-parser') {
+                    exportValue = event.export;
+                }
             }
             // Clone the script element
             const clonedScript = scriptElement.cloneNode(true);
-            // Copy the export property
-            clonedScript.export = exportValue;
+            // Copy the export property if it exists
+            if (exportValue !== undefined) {
+                clonedScript.export = exportValue;
+            }
             // Append to this element's children
             this.appendChild(clonedScript);
         }
