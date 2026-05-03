@@ -180,8 +180,8 @@ export class EMCScriptHandler extends EvtRt {
             throw new Error('Element does not have enh property. Make sure ElementMountExtension is loaded.');
         }
         
-        // Pass synthesizerElement through SpawnContext if available
-        const spawnContext = synthesizerElement ? { synthesizerElement } : undefined;
+        // Pass synthesizerElement and full EMC config through SpawnContext
+        const spawnContext = { synthesizerElement, emc: emcConfig };
         await enh.get(enhancementConfig, spawnContext);
     }
     
