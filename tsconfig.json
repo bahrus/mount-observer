@@ -13,6 +13,7 @@
 		"EvtRt.ts",
 		"index.ts",
 		"handlers/DefineCustomElement.ts",
+		"handlers/CedeScript.ts",
 		"handlers/HTMLInclude.ts",
 		"upShadowSearch.ts",
 		"getRegistryRoot.ts",

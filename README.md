@@ -37,6 +37,7 @@ The following features have been implemented and tested:
 - ✅ **Shared MutationObserver**: Efficient observer sharing across instances
 - ✅ **Code splitting**: Conditional features loaded on-demand
 - ✅ **Memory management**: WeakRef usage for DOM node references
+- ✅ **Cede Scripts**: Declarative custom element definition via `<script type="cede">`
 
 ### Not Yet Implemented
 - ❌ Reconnect event handling
@@ -665,6 +666,99 @@ export default class MyEnhancement {
 - Enhancement classes should be constructors that accept `(element, ctx, initVals)`
 
 [Implemented as EMCScript requirement](requirements/Done/EMCScript.md)
+
+## Custom Element Definition (Cede) Scripts
+
+The `builtIns.cedeScript` handler enables declarative custom element definition using `<script type="cede">` elements. "Cede" stands for **C**ustom **E**lement **De**finition. It creates a new class that extends an existing custom element class and defines it in the appropriate registry — all without writing any JavaScript.
+
+**Why use Cede Scripts?**
+
+- Define custom elements declaratively in HTML
+- Extend existing base classes without writing boilerplate
+- Works with scoped custom element registries
+- Enables template-based custom elements where the parent's fragment becomes the template
+- Zero JavaScript required for element definition
+
+**Basic usage:**
+
+```html
+<time-ticker>
+    <script type="cede" data-extends="xtal-element"></script>
+</time-ticker>
+```
+
+**What happens:**
+
+1. The handler finds the script element's `customElementRegistry` (falls back to global `customElements`)
+2. Awaits `registry.whenDefined('xtal-element')` to get the base class constructor
+3. Creates a new class extending the base: `class extends baseCtr {}`
+4. Sets `NewCtr.seedRef = new WeakRef(scriptEl)` — allowing the CE to access the script element
+5. If `registry.get('time-ticker')` already exists, does nothing (first definition wins)
+6. Otherwise calls `registry.define('time-ticker', NewCtr)`
+
+The tag name comes from the `localName` of the script element's parent.
+
+**Accessing the seed reference:**
+
+The `seedRef` static property gives the custom element class access to the original script element. The primary use case is extracting the parent's (Shadow) Fragment to create a cloneable template for other instances:
+
+```javascript
+class XtalElement extends HTMLElement {
+    connectedCallback() {
+        const seedScript = this.constructor.seedRef?.deref();
+        if (seedScript) {
+            const parentFragment = seedScript.parentElement.shadowRoot;
+            // Use parentFragment as a template for cloning
+        }
+    }
+}
+```
+
+**With scoped registries:**
+
+```html
+<my-app>
+    #shadow (with scoped registry)
+        <time-ticker>
+            <script type="cede" data-extends="xtal-element"></script>
+        </time-ticker>
+</my-app>
+```
+
+The handler uses the script element's `customElementRegistry` property, so it naturally works with [scoped custom element registries](https://developer.chrome.com/blog/scoped-registries) (Chrome 146+, latest WebKit/Safari). If no scoped registry is present, it falls back to the global `customElements` registry.
+
+**Bootstrapping:**
+
+```html
+<script type="module">
+    import { MountObserver } from 'mount-observer/MountObserver.js';
+
+    // Handler provides matching and whereInstanceOf via static properties
+    const observer = new MountObserver({
+        do: 'builtIns.cedeScript'
+    });
+    observer.observe(document);
+</script>
+```
+
+Or declaratively via a MOSE:
+
+```html
+<script type="mountobserver">
+{
+    "do": "builtIns.cedeScript"
+}
+</script>
+```
+
+**Key behaviors:**
+
+- If the parent element's tag is already defined in the registry, the handler silently no-ops
+- If multiple cede scripts exist under the same parent, the first one to resolve wins
+- The script element must have a `parentElement` or the handler throws
+- `whenDefined` awaits indefinitely — the base class must eventually be registered
+
+[Implemented as SupportForCedeScripts requirement](requirements/SupportForCedeScripts.md)
 
 ## Syndicating Mount Observers with Synthesizer
 
