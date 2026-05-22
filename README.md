@@ -675,11 +675,13 @@ The `builtIns.cedeScript` handler enables declarative custom element definition 
 
 - Define custom elements declaratively in HTML
 - Extend existing base classes without writing boilerplate
+- Wire up features from JSON configuration (powered by [assign-gingerly's `defineWithFeatures`](https://github.com/bahrus/assign-gingerly/blob/baseline/docs/defineWithFeatures.md))
 - Works with scoped custom element registries
 - Enables template-based custom elements where the parent's fragment becomes the template
+- Supports external JSON config via `src` attribute (with import maps)
 - Zero JavaScript required for element definition
 
-**Basic usage:**
+**Basic usage (simple extension):**
 
 ```html
 <time-ticker>
@@ -687,14 +689,47 @@ The `builtIns.cedeScript` handler enables declarative custom element definition 
 </time-ticker>
 ```
 
+**With inline feature configuration:**
+
+```html
+<time-ticker>
+    <script type="cede" data-extends="el-maker">{
+        "assignFeatures": {
+            "roundabout": {
+                "customData": {"template": "my-template"},
+                "withAttrs": {"base": "ra"},
+                "callbackForwarding": ["connectedCallback"]
+            },
+            "truthSourcer": {
+                "callbackForwarding": ["connectedCallback", "attributeChangedCallback"]
+            }
+        }
+    }</script>
+</time-ticker>
+```
+
+**With external JSON config:**
+
+```html
+<time-ticker>
+    <script type="cede" data-extends="el-maker" src="./time-ticker-config.json"></script>
+</time-ticker>
+```
+
+The `src` attribute uses JSON import assertions, so it works with import maps for bare specifiers (e.g., `src="my-configs/time-ticker.json"`).
+
 **What happens:**
 
 1. The handler finds the script element's `customElementRegistry` (falls back to global `customElements`)
-2. Awaits `registry.whenDefined('xtal-element')` to get the base class constructor
-3. Creates a new class extending the base: `class extends baseCtr {}`
-4. Sets `NewCtr.seedRef = new WeakRef(scriptEl)` — allowing the CE to access the script element
+2. Parses configuration from `src` (JSON import), inline `textContent`, or a pre-existing `export` property
+3. Stores the parsed config on `scriptElement.export` and dispatches a `resolved` event
+4. Delegates to [`defineWithFeatures`](https://github.com/bahrus/assign-gingerly/blob/baseline/docs/defineWithFeatures.md) which:
+   - Awaits `registry.whenDefined('el-maker')` to get the base class
+   - Resolves async feature spawns from the base class's `static supportedFeatures`
+   - Creates a subclass and sets `NewCtr.seedRef = new WeakRef(scriptEl)`
+   - Wires up features via `assignFeatures`
+   - Calls `registry.define('time-ticker', NewCtr)`
 5. If `registry.get('time-ticker')` already exists, does nothing (first definition wins)
-6. Otherwise calls `registry.define('time-ticker', NewCtr)`
 
 The tag name comes from the `localName` of the script element's parent.
 
@@ -757,6 +792,10 @@ Or declaratively via a MOSE:
 - If multiple cede scripts exist under the same parent, the first one to resolve wins
 - The script element must have a `parentElement` or the handler throws
 - `whenDefined` awaits indefinitely — the base class must eventually be registered
+- Empty scripts (no JSON, no `src`) work as simple class extension with no features
+- Feature spawn resolution is cached per base class — defining 10 elements extending the same base only imports each feature once
+
+For full details on the base class contract (`static supportedFeatures`, `fallbackSpawn`, spawn caching, and `assignFeatures` wiring), see the [defineWithFeatures documentation](https://github.com/bahrus/assign-gingerly/blob/baseline/docs/defineWithFeatures.md).
 
 [Implemented as SupportForCedeScripts requirement](requirements/SupportForCedeScripts.md)
 
