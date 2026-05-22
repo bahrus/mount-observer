@@ -774,9 +774,9 @@ The `Synthesizer` abstract base class enables automatic propagation of mount obs
 
 **How it works:**
 
-1. **Syndicator** (in document root): Watches for `script[type="mountobserver"]` and `script[type="emc"]` elements and broadcasts them to subscribers
+1. **Syndicator** (in document root): Watches for `script[type="mountobserver"]`, `script[type="emc"]`, and `script[type="cede"]` elements and broadcasts them to subscribers
 2. **Subscriber** (in shadow roots): Receives and clones script elements from the syndicator
-3. **Automatic activation**: Both syndicator and subscriber activate 7 built-in handlers in their respective root nodes
+3. **Automatic activation**: Both syndicator and subscriber activate 8 built-in handlers in their respective root nodes
 
 **Basic usage:**
 
@@ -824,7 +824,7 @@ The `Synthesizer` abstract base class enables automatic propagation of mount obs
 
 **What happens:**
 
-1. The syndicator (`<app-synthesizer>` in document root) activates 7 built-in handlers:
+1. The syndicator (`<app-synthesizer>` in document root) activates 8 built-in handlers:
    - `builtIns.mountObserverScript` - Process MOSE scripts
    - `builtIns.scriptExport` - Expose module exports from script elements
    - `builtIns.HTMLInclude` - Enable intra-document HTML includes
@@ -832,6 +832,7 @@ The `Synthesizer` abstract base class enables automatic propagation of mount obs
    - `builtIns.generateIds` - Auto-generate unique IDs
    - `builtIns.emcParserScript` - Load parsers for EMC scripts
    - `builtIns.emcScript` - Process EMC scripts
+   - `builtIns.cedeScript` - Declarative custom element definition
 
 <details>
 <summary>Why these handlers?</summary>
@@ -845,6 +846,7 @@ These handlers form the core infrastructure for declarative progressive enhancem
 - **generateIds**: Automates ID generation for forms and accessibility features
 - **emcParserScript**: Enables lazy-loading of complex parsers for enhancement attributes
 - **emcScript**: Processes enhancement configurations for progressive enhancement
+- **cedeScript**: Declarative custom element definition via `<script type="cede">` — extends a base class and defines the parent's tag name
 
 Together, these handlers enable a complete HTML-first development workflow where behaviors, enhancements, and configurations can be declared in HTML and automatically propagated across shadow DOM boundaries.
 
@@ -862,7 +864,7 @@ Together, these handlers enable a complete HTML-first development workflow where
    - Subscribe to `addedscriptelement` events for new scripts
    - Clone each script element and copy its `export` property
    - Append cloned scripts to their own light children
-   - Activate the same 7 built-in handlers in their shadow root
+   - Activate the same 8 built-in handlers in their shadow root
 
 **Syndicator vs Subscriber:**
 
@@ -4161,7 +4163,7 @@ The platform provides some nice help with managing forms, including IDREF depend
 
 This would be useful for other linkages as well, which the platform doesn't support currently.
 
-Again, because of the mount-observer being the "first point of contact" with the DOM, this is supported by mount-observer as well.
+Again, because of the mountWhy these handlers-observer being the "first point of contact" with the DOM, this is supported by mount-observer as well.
 
 ```html
 <section id=section>

@@ -60,3 +60,5 @@ export class CedeScriptHandler extends EvtRt {
 }
 
 MountObserver.define('builtIns.cedeScript', CedeScriptHandler);
+
+export const cedeScript = 'builtIns.cedeScript';

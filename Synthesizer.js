@@ -15,6 +15,8 @@ import 'mount-observer/handlers/EMCParserScript.js';
 import { emcParser } from 'mount-observer/handlers/EMCParserScript.js';
 import 'mount-observer/handlers/GenIds.js';
 import { genIds } from 'mount-observer/handlers/GenIds.js';
+import 'mount-observer/handlers/CedeScript.js';
+import { cedeScript } from 'mount-observer/handlers/CedeScript.js';
 /**
  * Track which root nodes have already had handlers activated.
  * Uses WeakSet to avoid memory leaks when nodes are garbage collected.
@@ -57,7 +59,7 @@ export class Synthesizer extends HTMLElement {
      * List of built-in handlers to activate.
      */
     static builtInHandlers = [
-        mos, scriptExport, include, hoist, genIds, emcParser, emc
+        mos, scriptExport, include, hoist, genIds, emcParser, emc, cedeScript
     ];
     connectedCallback() {
         // Synthesizer elements are infrastructure, not UI
@@ -149,7 +151,7 @@ export class Synthesizer extends HTMLElement {
      */
     #initializeSyndicator() {
         // Process existing script elements
-        const scripts = this.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"]');
+        const scripts = this.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"], script[type="cede"]');
         scripts.forEach(script => {
             if (this.checkIfAllowed(script)) {
                 this.#broadcastScript(script);
@@ -161,7 +163,7 @@ export class Synthesizer extends HTMLElement {
                 for (const node of mutation.addedNodes) {
                     if (node instanceof HTMLScriptElement) {
                         const type = node.getAttribute('type');
-                        if (type === 'mountobserver' || type === 'emc' || type === 'emc-parser') {
+                        if (type === 'mountobserver' || type === 'emc' || type === 'emc-parser' || type === 'cede') {
                             if (this.checkIfAllowed(node)) {
                                 this.#broadcastScript(node);
                             }
@@ -194,7 +196,7 @@ export class Synthesizer extends HTMLElement {
         }
         // Process existing scripts from syndicator
         // Only process scripts that pass the syndicator's filtering
-        const scripts = syndicator.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"]');
+        const scripts = syndicator.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"], script[type="cede"]');
         scripts.forEach(script => {
             if (syndicator.checkIfAllowed(script)) {
                 this.#processScript(script);
