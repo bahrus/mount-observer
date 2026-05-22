@@ -4,19 +4,35 @@ import { MountObserver } from '../MountObserver.js';
 
 /**
  * Handler for `<script type="cede" data-extends="...">` elements.
+ * "Cede" stands for Custom Element Definition.
  * 
- * Creates a new custom element class that extends the class specified by
- * `data-extends`, and defines it in the same registry as the script element
- * using the parent element's localName as the tag name.
+ * Delegates to assign-gingerly's `defineWithFeatures` to create a custom element
+ * class extending the base specified by `data-extends`, optionally wiring up
+ * features from JSON configuration (inline or via `src`).
  * 
  * The new class gets a static `seedRef` WeakRef pointing back to the script
  * element, allowing the custom element to extract the parent's (Shadow) Fragment
  * and create a cloneable template from it.
  * 
- * Example:
+ * Examples:
  * ```html
+ * <!-- Simple (no features) -->
  * <time-ticker>
  *     <script type="cede" data-extends="xtal-element"></script>
+ * </time-ticker>
+ * 
+ * <!-- With inline feature config -->
+ * <time-ticker>
+ *     <script type="cede" data-extends="el-maker">{
+ *         "assignFeatures": {
+ *             "roundabout": { "callbackForwarding": ["connectedCallback"] }
+ *         }
+ *     }</script>
+ * </time-ticker>
+ * 
+ * <!-- With external JSON config -->
+ * <time-ticker>
+ *     <script type="cede" data-extends="el-maker" src="./time-ticker-config.json"></script>
  * </time-ticker>
  * ```
  */
@@ -41,21 +57,48 @@ export class CedeScriptHandler extends EvtRt {
         // Already defined? Do nothing (first one prevails).
         if (registry.get(tagName)) return;
 
-        // Await the base class definition (indefinitely for now)
-        const baseCtr = await registry.whenDefined(extendsName);
+        // Parse config: from export, src, or inline JSON
+        let config: Record<string, any> = (scriptEl as any).export;
+        if (!config) {
+            const srcAttr = scriptEl.getAttribute('src');
+            if (srcAttr) {
+                try {
+                    const module = await import(srcAttr, { with: { type: 'json' } } as any);
+                    config = module.default;
+                } catch (error) {
+                    throw new Error(`Failed to import JSON from '${srcAttr}': ${error instanceof Error ? error.message : String(error)}`);
+                }
+            } else {
+                const jsonText = scriptEl.textContent?.trim();
+                if (jsonText) {
+                    try {
+                        config = JSON.parse(jsonText);
+                    } catch (error) {
+                        throw new Error(`Failed to parse JSON content: ${error instanceof Error ? error.message : String(error)}`);
+                    }
+                } else {
+                    config = {};
+                }
+            }
 
-        // Race condition guard: check again after await
+            // Store parsed config and dispatch resolved event
+            (scriptEl as any).export = config;
+            const { ResolvedEvent } = await import('../Events.js');
+            scriptEl.dispatchEvent(new ResolvedEvent(config));
+        }
+
+        // Race condition guard: check again after async operations
         if (registry.get(tagName)) return;
 
-        // Create derived class extending the base
-        const NewCtr = class extends baseCtr {};
+        // Delegate to defineWithFeatures
+        const { defineWithFeatures } = await import('assign-gingerly/defineWithFeatures.js');
+        await defineWithFeatures(tagName, extendsName, config, registry);
 
-        // Attach seedRef so the CE can access the script element
-        // (e.g., to extract the parent's fragment as a cloneable template)
-        (NewCtr as any).seedRef = new WeakRef(scriptEl);
-
-        // Define the custom element
-        registry.define(tagName, NewCtr);
+        // Attach seedRef to the newly defined class
+        const NewCtr = registry.get(tagName);
+        if (NewCtr) {
+            (NewCtr as any).seedRef = new WeakRef(scriptEl);
+        }
     }
 }
 
