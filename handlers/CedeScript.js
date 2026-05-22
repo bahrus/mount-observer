@@ -84,17 +84,16 @@ export class CedeScriptHandler extends EvtRt {
             const { ResolvedEvent } = await import('../Events.js');
             scriptEl.dispatchEvent(new ResolvedEvent(config));
         }
+        // Delegate to defineWithFeatures
+        const { defineWithFeatures } = await import('assign-gingerly/defineWithFeatures.js');
         // Race condition guard: check again after async operations
         if (registry.get(tagName))
             return;
-        // Delegate to defineWithFeatures
-        const { defineWithFeatures } = await import('assign-gingerly/defineWithFeatures.js');
-        await defineWithFeatures(tagName, extendsName, config, registry);
-        // Attach seedRef to the newly defined class
-        const NewCtr = registry.get(tagName);
-        if (NewCtr) {
-            NewCtr.seedRef = new WeakRef(scriptEl);
-        }
+        await defineWithFeatures(tagName, extendsName, config, registry, {
+            onSubclassCreated(NewCtr) {
+                NewCtr.seedRef = new WeakRef(scriptEl);
+            }
+        });
     }
 }
 MountObserver.define('builtIns.cedeScript', CedeScriptHandler);

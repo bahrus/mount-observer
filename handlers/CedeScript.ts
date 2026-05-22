@@ -87,18 +87,17 @@ export class CedeScriptHandler extends EvtRt {
             scriptEl.dispatchEvent(new ResolvedEvent(config));
         }
 
+        // Delegate to defineWithFeatures
+        const { defineWithFeatures } = await import('assign-gingerly/defineWithFeatures.js');
+
         // Race condition guard: check again after async operations
         if (registry.get(tagName)) return;
 
-        // Delegate to defineWithFeatures
-        const { defineWithFeatures } = await import('assign-gingerly/defineWithFeatures.js');
-        await defineWithFeatures(tagName, extendsName, config, registry);
-
-        // Attach seedRef to the newly defined class
-        const NewCtr = registry.get(tagName);
-        if (NewCtr) {
-            (NewCtr as any).seedRef = new WeakRef(scriptEl);
-        }
+        await defineWithFeatures(tagName, extendsName, config as any, registry, {
+            onSubclassCreated(NewCtr) {
+                (NewCtr as any).seedRef = new WeakRef(scriptEl);
+            }
+        });
     }
 }
 
