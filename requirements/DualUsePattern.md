@@ -68,3 +68,12 @@ The handler could fetch the HTML, parse it with `DOMParser`, extract a selector,
 5. **The `for` attribute on `<template>`** — Would you use this to patch named regions inside the included component after initial load (e.g., lazy sections within the include)?
 
 Want me to sketch out a handler design, or would you like to write up a requirements doc and iterate on it first?
+
+
+---
+
+# Human response I
+
+Here's what I'm thinking.
+
+Let's hold
