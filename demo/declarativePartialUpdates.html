@@ -4,27 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Declarative Partial Updates</title>
+    <!-- 
+        https://github.com/WICG/declarative-partial-updates 
+
+         https://github.com/WICG/declarative-partial-updates/blob/main/patching-explainer.md
+    -->
 </head>
 <body>
+    <div>
+        <template shadowrootmode="open">
+            <div>Section 1</div>
+            <div>
+                <?start name="gallery">Loading...<?end>
+            </div>
+
+            <div>Section 2</div>
+            <section>
+                <?start name="gallery2">Loading...<?end>
+            </section>
+
+            <template for="gallery">
+                    Actual gallery content 1
+                    <script>
+                        console.log('iah');
+                    </script>
+            </template>
+
+            <template for="gallery2">
+                Actual gallery content 2
+            </template>
+        </template>
+    </div>
 
 
-    <div>Section 1</div>
-    <section>
-        <?start name="gallery">Loading...<?end>
-    </section>
-
-    <div>Section 2</div>
-    <section>
-        <?start name="gallery">Loading...<?end>
-    </section>
-
-    <template for="gallery">
-        Actual gallery content 1
-    </template>
-
-    <template for="gallery">
-        Actual gallery content 2
-    </template>
 
 </body>
 </html>
