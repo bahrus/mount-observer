@@ -76,4 +76,49 @@ Want me to sketch out a handler design, or would you like to write up a requirem
 
 Here's what I'm thinking.
 
-Let's hold
+Let's hold off on streaming until the api's are more mature.  Right now they don't seem to be there in Chrome Canary.  Hopefully it is coming very shortly.
+
+```html
+<!-- page.html — works standalone AND as include -->
+<html>
+<head>
+    <style>/* component styles */</style>
+</head>
+<body>
+    <my-page>
+        <?marker name="content">
+    </my-page>
+    ...
+    <template for="content">
+        <script type="cede" data-extends="el-maker">{
+            "assignFeatures": {
+                "roundabout": {
+                    "customData": {"template": "my-template"},
+                    "withAttrs": {"base": "ra"},
+                    "callbackForwarding": ["connectedCallback"]
+                },
+                "truthSourcer": {
+                    "callbackForwarding": ["connectedCallback", "attributeChangedCallback"]
+                }
+            }
+        }</script>
+        <div>The actual content</div>
+    </template>
+</body>
+</html>
+```
+
+**As a web component include:**
+
+```html
+<your-page>
+    <script 
+        type="html-include"
+        src="./page.html" 
+        data-content="content"
+    ></script>
+</your-page>
+```
+
+
+
