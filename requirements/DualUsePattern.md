@@ -179,3 +179,56 @@ The only Chrome-150-specific part is the *standalone* behavior (the `<?marker>` 
 
 Want me to add this to the Synthesizer's script type list speculatively, or wait until you're ready to implement?
 
+---
+
+## Human Response II
+
+You raise good questions, and it made me rethink things.  I guess I'm doing a total 180.
+
+First, I think this feature should be forward looking, and not worry at all about backwards compatibility (too hard).
+
+Second, I think we should hold off until streaming methods are added.
+
+
+
+```html
+<!-- page.html — works standalone AND as include -->
+<html>
+    <head>
+        <?begin name="adopt">
+            <style>/* component styles */</style>
+        <?end>
+    </head>
+    <body>
+        <stand-alone>
+            <?begin name="content">
+                <div>The actual content</div>
+            <?end>
+            <?begin name="cede">
+                <script type="cede" data-extends="el-maker">{
+                    "assignFeatures": {
+                        "roundabout": {
+                            "customData": {"template": "my-template"},
+                            "withAttrs": {"base": "ra"},
+                            "callbackForwarding": ["connectedCallback"]
+                        },
+                        "truthSourcer": {
+                            "callbackForwarding": ["connectedCallback", "attributeChangedCallback"]
+                        }
+                    }
+                }</script>
+            <?end>
+        </stand-alone>
+    </body>
+</html>
+```
+
+**As a web component include:**
+
+```html
+<your-page>
+    <template shadowrootmodeonload="open" src="my-import-map-base/page.html"></template>
+</your-page>
+```
+
+
