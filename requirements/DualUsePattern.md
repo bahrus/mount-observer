@@ -120,5 +120,62 @@ Let's hold off on streaming until the api's are more mature.  Right now they don
 </your-page>
 ```
 
+---
 
+## Kiro Response II
+
+This is a cleaner approach. The `<template for="content">` + `<?marker>` pattern means the included content is already structured for declarative partial updates — and the same HTML works standalone (the browser patches the template into the marker on initial parse).
+
+Here's how I see the handler working:
+
+**Handler: `builtIns.htmlIncludeScript`**
+
+Matches: `script[type="html-include"][src]`
+
+**Steps:**
+
+1. Fetch `src` as text (not as a module — it's an HTML document)
+2. Parse with `DOMParser` → get a full `Document`
+3. Find the `<template for="[data-content value]">` in the parsed document
+4. Extract the template's content (a `DocumentFragment`)
+5. Inject into the parent element (light DOM or shadow root — TBD)
+
+**Key design questions remaining:**
+
+1. **Light DOM vs Shadow DOM injection** — Your example shows `<your-page>` receiving the content. Does the content go into:
+   - Light DOM of `<your-page>` (replacing the script element)?
+   - A shadow root on `<your-page>` (style isolation)?
+   
+   My instinct: light DOM, replacing the script element with the template fragment. This keeps it simple and lets parent CSS apply. Shadow DOM could be opt-in via an attribute like `data-shadow`.
+
+2. **The cede script inside the template** — When the content is injected into `<your-page>`, the cede script lands in the DOM. If the `builtIns.cedeScript` handler is active (via Synthesizer or a parent observer), it'll pick it up and define `your-page` in the registry. This creates a nice bootstrapping pattern: the include *defines* the element it's being included into. Is that the intent?
+
+3. **Timing / race condition** — If `<your-page>` is already defined (e.g., from a previous include or explicit registration), the cede script no-ops. But if it's *not* defined yet, the element won't have upgraded when the handler runs. The sequence would be:
+   - `<your-page>` exists as an undefined element
+   - Handler fetches page.html, injects content (including cede script)
+   - Cede script fires, defines `your-page`, element upgrades
+   
+   This is fine — `connectedCallback` fires on upgrade. Just worth confirming this bootstrapping order is intentional.
+
+4. **What about styles?** — The standalone page has `<style>` in `<head>`. When used as an include, those styles don't come along (we only extract the template content). Options:
+   - Ignore (styles are the consuming page's responsibility)
+   - A `data-styles` attribute that also extracts `<style>`/`<link>` from the source page's head
+   - The base class (e.g., `el-maker`) handles its own styling via features
+   
+   I'm guessing the third option — the `assignFeatures` system handles styling concerns.
+
+5. **`data-content` vs `data-select`** — Your example uses `data-content="content"` which maps to the template's `for` attribute value. This is cleaner than a CSS selector since it's specifically designed for the partial updates pattern. Good call.
+
+6. **Fallback when declarative partial updates aren't supported** — In the standalone page case, if the browser doesn't support `<?marker>` + `<template for>`, the template just sits in the DOM unparsed (templates are hidden). The marker becomes a comment node. The page would show `<my-page>` empty. Do we care about pre-Chrome-150 standalone behavior, or is this Chrome-150+ only?
+
+**When to implement:**
+
+You mentioned holding off on streaming until APIs mature. For the non-streaming version, all the pieces exist today:
+- `fetch()` + `DOMParser` for parsing the remote HTML
+- `template.content` for extracting the fragment
+- DOM injection (append/replace)
+
+The only Chrome-150-specific part is the *standalone* behavior (the `<?marker>` + `<template for>` patching). The *include* behavior (fetching and injecting) works everywhere.
+
+Want me to add this to the Synthesizer's script type list speculatively, or wait until you're ready to implement?
 
