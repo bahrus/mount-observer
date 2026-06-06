@@ -38,7 +38,6 @@ export class ScriptExportHandler extends EvtRt {
         
         // Optimization 3: Skip if already processed (export property exists)
         if ((scriptElement as any).export !== undefined) {
-            console.log('ScriptExport: Skipping already processed script element');
             return;
         }
         
