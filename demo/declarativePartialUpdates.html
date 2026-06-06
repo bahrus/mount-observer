@@ -13,7 +13,15 @@
 <body>
     <div>
         <template shadowrootmode="open">
-            <div>Section 1</div>
+            <style>
+                /*?start name="adopt"*/
+                .green {
+                    color: green;
+                }
+                /*?end*/
+
+            </style>
+            <div class="green">Section 1</div>
             <div>
                 <?start name="gallery">Loading...<?end>
             </div>

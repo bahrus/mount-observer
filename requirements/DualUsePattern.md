@@ -185,50 +185,112 @@ Want me to add this to the Synthesizer's script type list speculatively, or wait
 
 You raise good questions, and it made me rethink things.  I guess I'm doing a total 180.
 
-First, I think this feature should be forward looking, and not worry at all about backwards compatibility (too hard).
+First, maybe the goal of supporting one html file that can serve both as a web component and as standalone web page is a big weak.  I can instead somewhat easily imagine a single *.mjs file that can define both, and run a build process to produce a standalone *.html file, and another file in some format that is optimized for streaming.
 
-Second, I think we should hold off until streaming methods are added.
+Second, I think we should hold off doing anything until streaming methods are added.  I actually have a library package [that does the streaming](https://raw.githubusercontent.com/bahrus/stream-orator/refs/heads/baseline/StreamOrator.ts).  It's a rather hefty file, and adds a dependency I'd rather hold off on as it appears so close for the platform to add better support, obviating the need for that package.
+
+One of the trickiest things I'm afraid the platform won't add soon is the ability to elegantly add stream rewriting.  I have a [robust proposal for this](https://github.com/whatwg/dom/issues/1222) but in the absence of that, we might need to agree on one minimal processing instruction, like <?start> and <?end> to use to snip the stream into different pieces needed for the web component. What makes it particularly tricky is any processing instruction we come up with can span two chunks of the stream.
+
+But something like below might be closer to what we want.
 
 
 
 ```html
-<!-- page.html — works standalone AND as include -->
-<html>
-    <head>
-        <?begin name="adopt">
-            <style>/* component styles */</style>
-        <?end>
-    </head>
-    <body>
-        <stand-alone>
-            <?begin name="content">
-                <div>The actual content</div>
-            <?end>
-            <?begin name="cede">
-                <script type="cede" data-extends="el-maker">{
-                    "assignFeatures": {
-                        "roundabout": {
-                            "customData": {"template": "my-template"},
-                            "withAttrs": {"base": "ra"},
-                            "callbackForwarding": ["connectedCallback"]
-                        },
-                        "truthSourcer": {
-                            "callbackForwarding": ["connectedCallback", "attributeChangedCallback"]
-                        }
-                    }
-                }</script>
-            <?end>
-        </stand-alone>
-    </body>
-</html>
+<!-- web-component-stream.html -->
+
+/*?start name="adopt"*/
+.green {
+    color: green;
+}
+/*?end*/
+
+<?begin name="content">
+    <div>The actual content</div>
+<?end>
+<?begin name="cede" data-extends="el-maker">{
+        "assignFeatures": {
+            "roundabout": {
+                "customData": {"template": "my-template"},
+                "withAttrs": {"base": "ra"},
+                "callbackForwarding": ["connectedCallback"]
+            },
+            "truthSourcer": {
+                "callbackForwarding": ["connectedCallback", "attributeChangedCallback"]
+            }
+        }
+    
+}<?end>
 ```
 
-**As a web component include:**
+**As a web component include with no overrides:**
 
 ```html
 <your-page>
-    <template shadowrootmodeonload="open" src="my-import-map-base/page.html"></template>
+
+    <template rel=cede-stream shadowrootmodeonload="open" src="my-import-map-base/web-component-stream.html"></template>
 </your-page>
 ```
 
+---
 
+## Kiro Response III
+
+The 180 makes sense. Trying to make one HTML file serve both roles adds complexity that a build step eliminates cleanly. And waiting for platform streaming support is pragmatic — `StreamOrator` is solid but it's a lot of code to maintain when `streamAppendHTMLUnsafe()` is around the corner.
+
+### On the stream format
+
+Your proposed format is interesting — it's essentially a lightweight multi-part document using processing instructions as section delimiters:
+
+```
+/*?start name="adopt"*/.../*?end*/     → CSS to adopt
+<?begin name="content">...<?end>       → DOM fragment
+<?begin name="cede" ...>...<?end>      → Element definition config
+```
+
+A few observations:
+
+1. **CSS section uses comment-wrapped PIs** (`/*?start*/.../*?end*/`) — clever. This means the file is valid CSS if you only look at the `adopt` section in isolation. But in a streaming context, the parser would need to handle the `/*` wrapping specially. Is the intent that:
+   - The stream rewriter strips the `/*` and `*/` to expose the PIs?
+   - Or the handler recognizes this convention directly (CSS sections are always comment-wrapped PIs)?
+
+2. **`<?begin>` vs `<?start>`** — The WICG proposal uses `<?start>` and `<?end>`. Your example uses `<?begin>`. Is this intentional (to avoid collision with the platform's patching semantics) or just a typo?
+
+3. **The `cede` section carries attributes** — `<?begin name="cede" data-extends="el-maker">`. This relies on the proposed `getAttribute`/`setAttribute` API for `ProcessingInstruction` (whatwg/dom #1454). Until that ships, you'd need to parse the `data` string manually. Doable, but worth noting.
+
+4. **PI spanning chunk boundaries** — You flagged this as the tricky part. A `<?begin name="content">` could arrive split across two chunks (e.g., `<?beg` + `in name="content">`). The stream rewriter needs a small state machine or buffering strategy for incomplete PIs. This is solvable (buffer when you see `<?` until you hit `>`) but it's the one piece that needs careful implementation.
+
+### On the `<template>` include syntax
+
+```html
+<template rel=cede-stream shadowrootmodeonload="open" src="..."></template>
+```
+
+This is a nice evolution:
+- `rel=cede-stream` — signals the handler what kind of include this is
+- `shadowrootmodeonload="open"` — declaratively says "create a shadow root and stream into it"
+- `src` — the stream source
+
+**Questions on this:**
+
+1. **Why `<template>` instead of `<script type="...">`?** — The other handlers use script elements. Using template makes semantic sense (it *is* content that will become DOM), and avoids the script-execution-on-clone issues. But it breaks the pattern of Synthesizer broadcasting `script[type=...]` elements. Would Synthesizer need to learn about `template[rel=cede-stream]` too?
+
+2. **`shadowrootmodeonload`** — This isn't a standard attribute. Is the intent to mirror `shadowrootmode` (from declarative shadow DOM) but defer attachment until the stream loads? So:
+   - Parser sees `<template rel=cede-stream shadowrootmodeonload="open">` 
+   - Does NOT immediately create a shadow root (unlike `shadowrootmode`)
+   - Handler fetches, streams, then attaches the shadow root with the streamed content
+   
+   This makes sense — you don't want an empty shadow root blocking light DOM rendering before the stream arrives.
+
+3. **"No overrides"** — You labeled the example "with no overrides." Does this imply there'll be a way to override sections of the stream? E.g., locally providing a different `adopt` section or patching the `content`? That would tie back nicely to the declarative partial updates `<template for="...">` pattern.
+
+### Recommendation: wait, but document the format
+
+I agree we should hold off implementation. But I'd suggest:
+
+1. **Pin down the stream format** — The multi-section PI-delimited format is the core design decision. Getting that right now (section naming conventions, CSS wrapping strategy, attribute encoding in PIs) will make implementation straightforward when streaming APIs land.
+
+2. **Prototype the non-streaming path** — Once the format is agreed, a `fetch` + manual parse version could serve as the initial implementation and fallback, with streaming as a progressive enhancement when `streamAppendHTMLUnsafe()` is available.
+
+3. **The stream rewriting concern** — Your [whatwg/dom #1222 proposal](https://github.com/whatwg/dom/issues/1222) for stream transforms is the elegant long-term solution. In the interim, the handler could do the splitting in JS after fetch (parse the full response, extract sections by PI names). Not streaming, but functional.
+
+Want me to document this stream format as a separate spec/format document, or keep iterating here?
