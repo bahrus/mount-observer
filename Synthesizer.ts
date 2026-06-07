@@ -244,25 +244,31 @@ export abstract class Synthesizer extends HTMLElement {
             // Check if export property exists
             let exportValue = (scriptElement as any).export;
             
-            if (!exportValue) {
-                // Determine which event to wait for based on script type
-                const scriptType = scriptElement.getAttribute('type');
-                const eventName = scriptType === 'emc-parser' ? 'parser-registered' : 'resolved';
-                
-                // Wait for appropriate event with timeout
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error(`Timeout waiting for ${eventName} event`)), 5000)
-                );
-                
-                const eventPromise = waitForEvent(scriptElement, eventName);
-                
-                const event = await Promise.race([eventPromise, timeoutPromise]);
-                
-                // For parser scripts, we don't need an export value
-                // For other scripts, get the export from the event
-                if (scriptType !== 'emc-parser') {
-                    exportValue = (event as any).export;
-                }
+            const scriptType = scriptElement.getAttribute('type');
+            
+            if (!exportValue && scriptType !== 'emc-parser') {
+                // Wait for the export to become available via the 'resolved' event.
+                // Use a polling check as a fallback in case the event already fired.
+                exportValue = await new Promise<any>((resolve) => {
+                    // Check immediately in case it was set between our first check and now
+                    if ((scriptElement as any).export) {
+                        resolve((scriptElement as any).export);
+                        return;
+                    }
+                    const onResolved = (e: any) => {
+                        clearInterval(poll);
+                        resolve(e.export || (scriptElement as any).export);
+                    };
+                    scriptElement.addEventListener('resolved', onResolved, {once: true});
+                    // Poll as safety net in case event already fired
+                    const poll = setInterval(() => {
+                        if ((scriptElement as any).export) {
+                            scriptElement.removeEventListener('resolved', onResolved);
+                            clearInterval(poll);
+                            resolve((scriptElement as any).export);
+                        }
+                    }, 50);
+                });
             }
             
             // Clone the script element
