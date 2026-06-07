@@ -130,12 +130,19 @@ export class EMCScriptHandler extends EvtRt {
      */
     async handleMount(mountedElement, emcConfig, synthesizerElement) {
         const enhKey = emcConfig.enhConfig.enhKey;
-        // Step 1: Check if element already has this enhancement
+        // Step 1: Check if element already has this enhancement or is currently being enhanced
         const enh = mountedElement.enh;
         if (enh && enh[enhKey]) {
             // Already enhanced, do nothing
             return;
         }
+        // Check for in-flight enhancement to prevent duplicate spawns
+        // when multiple observers match the same element concurrently
+        const inflightKey = `__enhInFlight_${String(enhKey)}`;
+        if (mountedElement[inflightKey]) {
+            return;
+        }
+        mountedElement[inflightKey] = true;
         // Step 2: Get enhancement registry from the element's custom element registry
         const customElementRegistry = mountedElement.customElementRegistry || customElements;
         const enhancementRegistry = customElementRegistry.enhancementRegistry;

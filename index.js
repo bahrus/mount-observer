@@ -12,6 +12,7 @@ export { MountObserverScriptHandler } from './handlers/MountObserverScript.js';
 export { EMCScriptHandler } from './handlers/EMCScript.js';
 export { HoistTemplateHandler } from './handlers/HoistTemplate.js';
 export { HTMLIncludeHandler } from './handlers/HTMLInclude.js';
+export { CedeScriptHandler } from './handlers/CedeScript.js';
 export { upShadowSearch } from './upShadowSearch.js';
 export { mountEventName, dismountEventName, disconnectEventName, loadEventName, mediamatchEventName, mediaunmatchEventName, addedScriptElementEventName } from './Events.js';
 // Register built-in handlers
@@ -24,3 +25,4 @@ import './handlers/MountObserverScript.js';
 import './handlers/EMCScript.js';
 import './handlers/HoistTemplate.js';
 import './handlers/HTMLInclude.js';
+import './handlers/CedeScript.js';
