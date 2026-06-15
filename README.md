@@ -38,6 +38,7 @@ The following features have been implemented and tested:
 - ✅ **Code splitting**: Conditional features loaded on-demand
 - ✅ **Memory management**: WeakRef usage for DOM node references
 - ✅ **Cede Scripts**: Declarative custom element definition via `<script type="cede">`
+- ✅ **Deferred enhancement activation**: `defer-[base]` attribute blocks spawning until prior work completes
 
 ### Not Yet Implemented
 - ❌ Reconnect event handling
@@ -1716,6 +1717,72 @@ The handler looks for the nearest scope container using `.closest()`:
 **Global counter:**
 
 IDs are generated using a global counter (via `Symbol.for`) to ensure uniqueness across multiple module instances. Generated IDs follow the pattern `gid-0`, `gid-1`, `gid-2`, etc.
+
+## Deferred Enhancement Activation with `defer-[base]`
+
+When an enhancement depends on prior work (such as ID generation) before it can activate, the `defer-[base]` attribute pattern lets you block enhancement spawning until that work is complete.
+
+**The problem:**
+
+Consider an element that has both an ID-generation trigger (`-id`) and an enhancement attribute (`🎚️`). The enhancement's attribute value contains `#{{id}}` references that need to be resolved *before* the enhancement reads them:
+
+```html
+<fieldset disabled>
+    <label>
+        LHS: <input data-id={{lhs}}>
+    </label>
+    <label>
+        RHS: <input data-id={{rhs}}>
+    </label>
+    
+    <template -id defer-🎚️ 🎚️='on if isEqual, based on #{{lhs}} and #{{rhs}}.'>
+        <div>LHS === RHS</div>
+    </template>
+</fieldset>
+```
+
+Without `defer-🎚️`, the enhancement handler would spawn immediately — before `genIds` has resolved the `#{{lhs}}` and `#{{rhs}}` references in the `🎚️` attribute value.
+
+**How it works:**
+
+1. The element has `defer-🎚️` attribute present
+2. The enhancement handler (`builtIns.enhanceMountedElement` or `builtIns.emcScript`) checks for `defer-[base]` before spawning
+3. If the attribute exists, the handler awaits its removal using a lightweight `MutationObserver`
+4. Meanwhile, `genIds` processes the element — resolves `#{{id}}` references, then removes the `defer-🎚️` attribute via [`nudge`](./nudge.ts)
+5. The MutationObserver fires, the promise resolves, and the enhancement spawns with fully resolved attribute values
+
+**The `nudge` counter pattern:**
+
+`defer-[base]` supports a counter for multiple prior work steps. If multiple operations need to complete before an enhancement activates:
+
+```html
+<template defer-🎚️="2" 🎚️='...'>
+```
+
+Each call to `nudge(element, 'defer-🎚️')` decrements the counter. When it reaches `"1"` or is empty, `nudge` removes the attribute entirely — triggering enhancement activation.
+
+**Which handlers support this:**
+
+Both enhancement handlers check for `defer-[base]`:
+- `builtIns.enhanceMountedElement` — checks `registryItem.withAttrs.base`
+- `builtIns.emcScript` — checks `emcConfig.enhConfig.withAttrs.base`
+
+The check is only performed when `withAttrs` is configured with a `base` attribute. Enhancements without `withAttrs` are unaffected.
+
+**The `awaitAttrRemoval` utility:**
+
+The underlying utility is exported for direct use:
+
+```javascript
+import { awaitAttrRemoval } from 'mount-observer/awaitAttrRemoval.js';
+
+// Resolves immediately if attribute is absent, otherwise waits
+await awaitAttrRemoval(element, 'defer-🎚️');
+```
+
+This is a standalone function with no dependencies — it creates a minimal `MutationObserver` filtered to the single attribute and disconnects on resolution. It's dynamically imported (code-split) so it adds zero cost when no defer attributes are present.
+
+[Implemented as SupportForDeferBase requirement](requirements/SupportForDeferBase.md)
 
 ## Scoped Parser Registry for EMC Scripts
 
