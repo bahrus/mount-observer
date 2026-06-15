@@ -37,6 +37,10 @@
       "default": "./nudge.js",
       "types": "./nudge.ts"
     },
+    "./awaitAttrRemoval.js": {
+      "default": "./awaitAttrRemoval.js",
+      "types": "./awaitAttrRemoval.ts"
+    },
     "./EvtRt.js": {
       "default": "./EvtRt.js",
       "types": "./EvtRt.ts"

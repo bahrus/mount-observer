@@ -32,6 +32,12 @@ export class EnhanceMountedElementHandler extends EvtRt {
         //         se.id = `${parentElement?.localName}.${ enhKey}`;
         //     }
         // }
+        // Wait for defer-[base] attribute removal if applicable
+        const base = registryItem.withAttrs?.base;
+        if (base && mountedElement.hasAttribute(`defer-${base}`)) {
+            const { awaitAttrRemoval } = await import('../awaitAttrRemoval.js');
+            await awaitAttrRemoval(mountedElement, `defer-${base}`);
+        }
         // Spawn the enhancement
         this.#spawnEnhancement(mountedElement, registryItem, context);
     }

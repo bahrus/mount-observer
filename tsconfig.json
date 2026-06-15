@@ -19,7 +19,8 @@
 		"getRegistryRoot.ts",
 		"ElementMountExtension.ts",
 		"types/global.d.ts",
-		"nudge.ts"
+		"nudge.ts",
+		"awaitAttrRemoval.ts"
 	],
 	"exclude":[
 		"node_modules"
