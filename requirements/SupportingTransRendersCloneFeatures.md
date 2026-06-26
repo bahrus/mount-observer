@@ -364,3 +364,204 @@ container.appendChild(fragment);
 3. **The `Newish` class** — This seems to be the legacy precursor to what `defineWithFeatures` now does (instantiate a CE from a constructor + assign properties). Is that a fair read, or does `Newish` do something that `defineWithFeatures` doesn't cover?
 
 4. **The `via` property** (`seedEl.via[refIDProp].children`) — Is this a pattern you still want, or has it been superseded by the `refid/` utilities in the current codebase?
+
+---
+
+## Human Response I
+
+One significant correction, I think:
+
+> The legacy `waitForIdleNodes` likely uses option 2 or a combination. A simpler approach for v2
+
+No, I'm pretty sure the way this works and should work is basically a combination of an all encompassing mutation observer on the DOM fragment that looks for any DOM mutation and debouncing.  Waiting for mutations to stop for a certain configurable number of milliseconds before committing it to the live DOM.
+
+A restatement of a fundamental problem this requirement is trying to address:
+
+The synthesizer feature supported by this package is also designed to work when the shadowroot is added to the DOM tree, and could be problematic if it is added to a DOM fragment without having access to the parent shadowRoot (prior to appending the fragment).  So how do we pre-activate the (asynchronous) work in that case?
+
+You might be right that list diffing reconciliation doesn't belong here.  What name would you give it in npm that is unlikely to clash with existing package names?
+
+
+
+
+
+
+
+---
+
+## Kiro Response II
+
+### Correction accepted: "settled" = mutation debounce
+
+You're right — the pattern is:
+
+1. Observe the fragment for *any* DOM mutations (childList + subtree + attributes)
+2. Each time a mutation fires, reset a debounce timer
+3. When no mutations have occurred for N milliseconds, consider the fragment "settled"
+4. Resolve the promise → safe to append to live DOM
+
+This is fundamentally different from rAF or microtask drain. It accounts for *cascading* async work — where one mutation triggers an observer, which does async work, which causes another mutation, which triggers another observer, etc. The debounce ensures the entire chain has quiesced.
+
+```typescript
+// waitForSettled.ts
+export function waitForSettled(
+    fragment: Node,
+    idleMs: number = 100
+): Promise<void> {
+    return new Promise(resolve => {
+        let timer: ReturnType<typeof setTimeout>;
+        
+        const mo = new MutationObserver(() => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                mo.disconnect();
+                resolve();
+            }, idleMs);
+        });
+        
+        mo.observe(fragment, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            characterData: true
+        });
+        
+        // Start the initial timer — if no mutations happen at all,
+        // resolve after idleMs (the fragment was already settled)
+        timer = setTimeout(() => {
+            mo.disconnect();
+            resolve();
+        }, idleMs);
+    });
+}
+```
+
+The `idleMs` parameter is the debounce window. If mutations stop for that long, we assume all async work has cascaded through.
+
+### The Synthesizer-in-fragment problem
+
+This is the deeper issue. The Synthesizer's `connectedCallback` fires when the element connects to a *document* (or shadow root attached to a document). When you're composing in a detached `DocumentFragment`:
+
+- Elements inside the fragment are NOT connected to any document
+- `connectedCallback` won't fire
+- Synthesizer won't activate handlers
+- Mount observers that depend on Synthesizer won't start
+
+So the question becomes: **how do you pre-activate mount observers on a detached fragment?**
+
+Options:
+
+**A. Explicit `observe()` on the fragment**
+
+The caller manually creates/starts observers on the fragment before appending:
+
+```typescript
+const fragment = template.content.cloneNode(true) as DocumentFragment;
+
+// Manually activate observation on the detached fragment
+const observer = new MountObserver({ do: 'builtIns.cedeScript' });
+await observer.observe(fragment);
+
+// Wait for all async work to cascade
+await waitForSettled(fragment);
+
+// Now safe to append
+container.appendChild(fragment);
+observer.disconnect();
+```
+
+This works today — `MountObserver.observe()` accepts any `Node`, including a `DocumentFragment`. The issue is the caller needs to know which handlers to activate.
+
+**B. A `preactivate` utility that mimics Synthesizer**
+
+A function that activates the same handlers Synthesizer would, but on a detached fragment:
+
+```typescript
+// preactivate.ts
+import { Synthesizer } from './Synthesizer.js';
+
+export async function preactivate(
+    fragment: DocumentFragment,
+    idleMs?: number
+): Promise<void> {
+    // Activate all built-in handlers on the fragment
+    for (const handlerName of Synthesizer.builtInHandlers) {
+        await fragment.mount({ do: handlerName });  // Hmm, mount() is on Element...
+    }
+    
+    // Wait for cascading async work to settle
+    const { waitForSettled } = await import('./waitForSettled.js');
+    await waitForSettled(fragment, idleMs);
+}
+```
+
+Problem: `mount()` is defined on `Element.prototype` (via `ElementMountExtension`), not on `DocumentFragment`. But `MountObserver.observe()` DOES accept any `Node`. So this would use the observer directly:
+
+```typescript
+export async function preactivate(
+    fragment: DocumentFragment,
+    idleMs: number = 100
+): Promise<void> {
+    const observers: MountObserver[] = [];
+    
+    for (const handlerName of Synthesizer.builtInHandlers) {
+        const observer = new MountObserver({ do: handlerName });
+        await observer.observe(fragment);
+        observers.push(observer);
+    }
+    
+    // Wait for all async cascades to settle
+    const { waitForSettled } = await import('./waitForSettled.js');
+    await waitForSettled(fragment, idleMs);
+    
+    // Disconnect all observers (they'll be re-observed in live DOM)
+    for (const observer of observers) {
+        observer.disconnect();
+    }
+}
+```
+
+**C. Make Synthesizer fragment-aware**
+
+Synthesizer could detect when it's in a `DocumentFragment` (not a real document/shadow root) and activate in a "preactivation" mode. But this changes the semantics of Synthesizer — it currently assumes it's either a syndicator (document root) or subscriber (shadow root).
+
+### My recommendation
+
+**Option B** is cleanest:
+
+1. `waitForSettled(fragment, idleMs)` — the debounce-based mutation quiescence utility
+2. `preactivate(fragment, idleMs)` — activates all built-in handlers on a detached fragment, waits for settled, then disconnects
+
+The caller's flow becomes:
+
+```typescript
+const fragment = template.content.cloneNode(true) as DocumentFragment;
+await preactivate(fragment, 150);  // All handlers fire, all async work completes
+container.appendChild(fragment);    // Insert fully "hydrated" fragment
+```
+
+This keeps Synthesizer unchanged, works with detached fragments, and composes with the existing handler infrastructure.
+
+### Package name for the list reconciler
+
+Some options that are descriptive and unlikely to clash:
+
+- **`list-reconciler-dom`** — clear, specific, unlikely to conflict
+- **`dom-list-sync`** — short, describes the sync-data-to-DOM pattern
+- **`itemscope-repeater`** — ties to the microdata pattern but more niche
+- **`fragment-reconciler`** — emphasizes the offscreen assembly aspect
+- **`ish-list`** — short, ties to your "ish" naming convention, very unlikely to clash
+
+My pick would be **`list-reconciler-dom`** — it's immediately understandable, specific enough to avoid namespace collisions, and doesn't tie itself to any particular data pattern (microdata, ish, etc.). Consumers know what they're getting.
+
+If you want it closer to your ecosystem naming:
+- **`mount-list`** or **`mount-reconciler`** — pairs with mount-observer
+- **`be-repeated`** — follows your `be-*` enhancement naming pattern
+
+### Questions
+
+1. For `preactivate` — should it accept a custom list of handlers (in case you DON'T want all 8 Synthesizer handlers), or always use the full set?
+
+2. For `waitForSettled` — should there be a maximum timeout (safety net) that rejects the promise if mutations never quiesce? Or let it hang indefinitely like other await patterns in this project?
+
+3. When the fragment is eventually appended to live DOM, the elements connect. Handlers in the live DOM tree will see them via mutation observers and try to process them again. Is double-processing a concern, or do the existing guards (`#processedDoForElement`, `canSpawn` checks, "already defined" guards) handle it?
