@@ -20,7 +20,9 @@
 		"ElementMountExtension.ts",
 		"types/global.d.ts",
 		"nudge.ts",
-		"awaitAttrRemoval.ts"
+		"awaitAttrRemoval.ts",
+		"waitForSettled.ts",
+		"initialize.ts"
 	],
 	"exclude":[
 		"node_modules"
