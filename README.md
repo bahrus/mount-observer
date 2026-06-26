@@ -39,6 +39,7 @@ The following features have been implemented and tested:
 - ✅ **Memory management**: WeakRef usage for DOM node references
 - ✅ **Cede Scripts**: Declarative custom element definition via `<script type="cede">`
 - ✅ **Deferred enhancement activation**: `defer-[base]` attribute blocks spawning until prior work completes
+- ✅ **Offscreen fragment initialization**: `initialize()` upgrades and settles detached subtrees before live DOM insertion
 
 ### Not Yet Implemented
 - ❌ Reconnect event handling
@@ -1783,6 +1784,79 @@ await awaitAttrRemoval(element, 'defer-🎚️');
 This is a standalone function with no dependencies — it creates a minimal `MutationObserver` filtered to the single attribute and disconnects on resolution. It's dynamically imported (code-split) so it adds zero cost when no defer attributes are present.
 
 [Implemented as SupportForDeferBase requirement](requirements/SupportForDeferBase.md)
+
+## Offscreen Fragment Initialization
+
+The `initialize` utility prepares a detached DOM subtree (typically a `DocumentFragment`) so that all custom elements are upgraded, Synthesizer handlers activate, mount observers fire, and cascading async work completes — before the fragment is inserted into the live DOM.
+
+**Why initialize offscreen?**
+
+When you clone a template and need to make async adjustments (enhancement spawning, ID generation, cede script definitions), inserting the fragment into the live DOM mid-setup causes layout thrashing and flashes of incomplete content. `initialize` lets you do all the work offscreen and insert only when everything has settled.
+
+**Basic usage:**
+
+```javascript
+import { initialize } from 'mount-observer/initialize.js';
+
+const fragment = template.content.cloneNode(true);
+
+try {
+    await initialize(fragment, { idleMs: 150, timeout: 5000 });
+    container.appendChild(fragment); // Safe — all async work is done
+} catch (e) {
+    console.error('Fragment did not settle:', e);
+    // Don't insert a broken fragment
+}
+```
+
+**What happens internally:**
+
+1. Uses `CustomElementRegistry.initialize(root)` when available (Chrome 146+, Safari 26+) to associate the registry with the subtree and upgrade all custom elements — including Synthesizer elements, which then activate their handlers
+2. Falls back to `CustomElementRegistry.upgrade()` on each element for older browsers
+3. Calls `waitForSettled(root, idleMs, timeout)` to wait for mutation quiescence
+
+**Options:**
+
+```typescript
+interface InitializeOptions {
+    /** Debounce window for mutation quiescence (ms). Default: 100 */
+    idleMs?: number;
+    /** Maximum wait time before rejecting (ms). Default: none */
+    timeout?: number;
+    /** Custom element registry to use. Default: root's registry or global */
+    registry?: CustomElementRegistry;
+}
+```
+
+**How "settled" is determined:**
+
+The `waitForSettled` utility observes the subtree for *any* DOM mutations (childList, attributes, characterData) and debounces. Each mutation resets the idle timer. When no mutations have occurred for `idleMs` milliseconds, the fragment is considered settled. This accounts for cascading async work — where one mutation triggers an observer, which does async work, which causes another mutation, and so on.
+
+If `timeout` is specified and mutations never quiesce, the promise rejects with an error.
+
+**Using `waitForSettled` directly:**
+
+```javascript
+import { waitForSettled } from 'mount-observer/waitForSettled.js';
+
+// Wait for a subtree to stop mutating (200ms debounce, 10s max)
+await waitForSettled(someNode, 200, 10000);
+```
+
+**Typical flow with Synthesizer:**
+
+```javascript
+const fragment = template.content.cloneNode(true);
+// Fragment contains a <be-hive> Synthesizer element + content
+
+await initialize(fragment, { idleMs: 100, timeout: 5000 });
+// Synthesizer upgraded → handlers activated → cede scripts defined →
+// enhancements spawned → IDs generated → all settled
+
+shadowRoot.appendChild(fragment);
+```
+
+[Implemented as SupportingTransRendersCloneFeatures requirement](requirements/SupportingTransRendersCloneFeatures.md)
 
 ## Scoped Parser Registry for EMC Scripts
 
