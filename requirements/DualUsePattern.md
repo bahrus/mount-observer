@@ -294,3 +294,42 @@ I agree we should hold off implementation. But I'd suggest:
 3. **The stream rewriting concern** — Your [whatwg/dom #1222 proposal](https://github.com/whatwg/dom/issues/1222) for stream transforms is the elegant long-term solution. In the interim, the handler could do the splitting in JS after fetch (parse the full response, extract sections by PI names). Not streaming, but functional.
 
 Want me to document this stream format as a separate spec/format document, or keep iterating here?
+
+
+---
+
+## Reference: Chrome Blog Article (May 19, 2026)
+
+**Source:** [Declarative Partial Updates — developer.chrome.com](https://developer.chrome.com/blog/declarative-partial-updates)
+
+### Corrections and clarifications to our discussion above
+
+Based on the official Chrome blog article, several points in our earlier discussion were inaccurate or incomplete:
+
+1. **API naming** — The streaming method is `streamHTMLUnsafe()` (not `streamAppendHTMLUnsafe()` as I said earlier). The full suite of new APIs uses a consistent naming pattern:
+   - `setHTML` / `streamHTML` (safe, sanitized)
+   - `setHTMLUnsafe` / `streamHTMLUnsafe` (unsafe, scripts allowed with `runScripts: true`)
+   - Plus `appendHTML`, `prependHTML`, `beforeHTML`, `afterHTML`, `replaceWithHTML` — each with stream equivalents
+
+2. **Availability** — These APIs are available for testing from Chrome 148 using the `chrome://flags/#enable-experimental-web-platform-features` flag. Not yet shipping by default.
+
+3. **`<template for>` restrictions** — The article clarifies an important security constraint: `<template for>` can only update processing instructions **within the same parent element**. Adding `<template for>` directly to `<body>` gives access to the whole document. This means processing instructions need to be scoped correctly.
+
+4. **Streaming + patching work together** — `streamHTMLUnsafe` processes `<template for>` instructions as they are streamed in. So streaming new `<template for>` elements can dynamically update different parts of existing content. This is the real power for SPA-style navigation.
+
+5. **Polyfills exist NOW:**
+   - [`template-for-polyfill`](https://www.npmjs.com/package/template-for-polyfill) — for out-of-order patching
+   - [`html-setters-polyfill`](https://www.npmjs.com/package/html-setters-polyfill) — for the new insertion/streaming API shape (note: does NOT actually stream — buffers and applies when complete)
+
+6. **Future "client-side includes"** — The article mentions a potential future addition: `<template for="footer" patchsrc="/partials/footer.html">`. This would be a platform-native version of what we were discussing as a handler! Worth watching.
+
+7. **`<?end>` is optional** — If missing, the range extends to the end of the containing element. This simplifies some patterns.
+
+8. **The `safe` vs `Unsafe` distinction** — Safe methods use the HTML Sanitizer API by default. Unsafe methods switch it off but accept an optional sanitizer. Scripts only run with `runScripts: true` on the unsafe variants. For our use case (injecting cede scripts, etc.), we'd need the `Unsafe` variants with `runScripts: true`.
+
+### Impact on our design
+
+- The **polyfills** mean we could start using `<template for>` patterns today without waiting for Chrome 150 to ship.
+- The **`patchsrc` future addition** aligns almost exactly with the `<script type="html-include" src="...">` handler we discussed. If `patchsrc` ships, it could be the platform-native replacement.
+- The **streaming + patching** combination is what enables the "stream in a web component definition" pattern — you can stream `<template for="content">` elements that patch in new content as it arrives.
+- For our **cede-stream format**, we'd use `streamHTMLUnsafe({ runScripts: true })` to ensure cede scripts execute when streamed in.
