@@ -767,3 +767,9 @@ So the existing guards should handle it. The one edge case: if an observer was c
 ### Ready to implement?
 
 Shall I implement `waitForSettled.ts` and `initialize.ts` now, or do you want to iterate further on the API shape?
+
+---
+
+## Human Response III
+
+Please implement `waitForSettled.ts` and `initialize.ts` as you recommend.
