@@ -565,3 +565,19 @@ If you want it closer to your ecosystem naming:
 2. For `waitForSettled` — should there be a maximum timeout (safety net) that rejects the promise if mutations never quiesce? Or let it hang indefinitely like other await patterns in this project?
 
 3. When the fragment is eventually appended to live DOM, the elements connect. Handlers in the live DOM tree will see them via mutation observers and try to process them again. Is double-processing a concern, or do the existing guards (`#processedDoForElement`, `canSpawn` checks, "already defined" guards) handle it?
+
+---
+
+## Human response II
+
+On 1:  
+
+I like the name / concept of preactivate(fragment).
+
+I just became aware of customElements.initialize(fragment) -- actually, I'm not sure any DOM fragment will work. I think this would upgrade the synthesizer element, and maybe call connectedCallback, which would automatically pull in the inherited enhancements as well as activating the built in handlers.  Maybe for consistency we should call this new function initialize rather than preactivate?
+
+On 2:
+
+That might be a good idea to allow for a maximum timeout, and reject (avoiding adding the problematic fragment to the live DOM tree would be a good thing I think).
+
+
