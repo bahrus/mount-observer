@@ -581,3 +581,189 @@ On 2:
 That might be a good idea to allow for a maximum timeout, and reject (avoiding adding the problematic fragment to the live DOM tree would be a good thing I think).
 
 
+
+
+---
+
+## Kiro Response III
+
+### On `customElements.initialize()` — this is highly relevant
+
+Good find. `CustomElementRegistry.initialize(root)` does exactly what we need for part of the problem:
+
+1. Takes any `Node` (Document, ShadowRoot, or Element) as `root`
+2. Walks all inclusive descendants
+3. Sets `customElementRegistry` on each element that doesn't have one
+4. **Upgrades** custom elements (triggers `connectedCallback`-equivalent behavior)
+
+Available in Chrome 146+, Safari 26+, Edge 146+. No Firefox yet.
+
+**Key insight:** If the Synthesizer element is inside the fragment and has been defined in the registry you pass to `initialize()`, it WILL get upgraded. Its `connectedCallback` fires, which activates handlers and pulls in inherited enhancements. This means `initialize()` bootstraps the entire Synthesizer pipeline on a detached fragment for free.
+
+**However**, there's a subtlety: `initialize()` is synchronous. It upgrades elements immediately. But Synthesizer's `connectedCallback` triggers async work (handler activation, observer creation). So you still need `waitForSettled` after `initialize()` to wait for the cascading async effects.
+
+### Naming: `initialize` vs `preactivate`
+
+I agree `initialize` is better. It mirrors the platform API and communicates the same intent — "set up this subtree as if it were connected." The flow becomes:
+
+```typescript
+import { initialize } from 'mount-observer/initialize.js';
+
+const fragment = template.content.cloneNode(true) as DocumentFragment;
+await initialize(fragment, { idleMs: 150, timeout: 5000 });
+container.appendChild(fragment);
+```
+
+Internally, `initialize` would:
+
+1. Call `registry.initialize(fragment)` if available (Chrome 146+ path — upgrades Synthesizer + all CEs)
+2. Fall back to manual observer activation for browsers without `initialize()` support
+3. Call `waitForSettled(fragment, idleMs)` with timeout
+4. Reject if timeout exceeded
+
+### Proposed API
+
+```typescript
+// initialize.ts
+export interface InitializeOptions {
+    /** Debounce window for mutation quiescence (ms). Default: 100 */
+    idleMs?: number;
+    /** Maximum time to wait before rejecting (ms). Default: none (infinite) */
+    timeout?: number;
+    /** Custom element registry to use. Defaults to element's registry or global. */
+    registry?: CustomElementRegistry;
+}
+
+export async function initialize(
+    root: Node,
+    options?: InitializeOptions
+): Promise<void>;
+```
+
+### On timeout with rejection
+
+Agreed — rejecting on timeout is the right call here. Unlike `whenDefined` or `awaitAttrRemoval` (where the caller chose to wait indefinitely for a specific known event), `initialize` is meant to be a bounded "hydrate this fragment" operation. If something goes wrong (an observer enters an infinite mutation loop, or an import never resolves), you want to know about it rather than silently hang.
+
+```typescript
+const { waitForSettled } = await import('./waitForSettled.js');
+
+try {
+    await initialize(fragment, { idleMs: 150, timeout: 5000 });
+} catch (e) {
+    // Fragment never settled — don't add to live DOM
+    console.error('Fragment initialization timed out:', e);
+    return;
+}
+
+container.appendChild(fragment);
+```
+
+### The full implementation sketch
+
+```typescript
+// initialize.ts
+import { waitForSettled } from './waitForSettled.js';
+
+export interface InitializeOptions {
+    idleMs?: number;
+    timeout?: number;
+    registry?: CustomElementRegistry;
+}
+
+export async function initialize(
+    root: Node,
+    options: InitializeOptions = {}
+): Promise<void> {
+    const { idleMs = 100, timeout, registry } = options;
+
+    // Use platform initialize() if available (Chrome 146+)
+    const reg = registry
+        || (root as any).customElementRegistry
+        || customElements;
+
+    if (typeof reg.initialize === 'function') {
+        reg.initialize(root);
+    } else {
+        // Fallback: manually upgrade with the older API
+        if (typeof reg.upgrade === 'function' && root instanceof Element) {
+            reg.upgrade(root);
+        }
+        // Also upgrade descendants
+        if ('querySelectorAll' in root) {
+            const elements = (root as Element | DocumentFragment).querySelectorAll('*');
+            elements.forEach(el => {
+                if (typeof reg.upgrade === 'function') {
+                    reg.upgrade(el);
+                }
+            });
+        }
+    }
+
+    // Wait for async cascades to settle (with optional timeout)
+    await waitForSettled(root, idleMs, timeout);
+}
+```
+
+And `waitForSettled` with timeout support:
+
+```typescript
+// waitForSettled.ts
+export function waitForSettled(
+    root: Node,
+    idleMs: number = 100,
+    timeout?: number
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        let timer: ReturnType<typeof setTimeout>;
+        let maxTimer: ReturnType<typeof setTimeout> | undefined;
+
+        const mo = new MutationObserver(() => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                mo.disconnect();
+                if (maxTimer) clearTimeout(maxTimer);
+                resolve();
+            }, idleMs);
+        });
+
+        mo.observe(root, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            characterData: true
+        });
+
+        // Initial timer — resolves if no mutations happen at all
+        timer = setTimeout(() => {
+            mo.disconnect();
+            if (maxTimer) clearTimeout(maxTimer);
+            resolve();
+        }, idleMs);
+
+        // Maximum timeout — rejects if mutations never quiesce
+        if (timeout !== undefined) {
+            maxTimer = setTimeout(() => {
+                mo.disconnect();
+                clearTimeout(timer);
+                reject(new Error(
+                    `initialize: fragment did not settle within ${timeout}ms`
+                ));
+            }, timeout);
+        }
+    });
+}
+```
+
+### Question 3 revisited (double-processing on append)
+
+When the initialized fragment is appended to live DOM:
+- CEs are already upgraded — `connectedCallback` fires again (this is expected, CE lifecycle)
+- Synthesizer fires `connectedCallback` again — but `activatedRootNodes` WeakSet guards against double-activation
+- Mount observers in the live DOM see new elements via MutationObserver — but `#processedDoForElement` guards against double-processing of `do` callbacks
+- `registry.get(tagName)` guards prevent double-definition in cede scripts
+
+So the existing guards should handle it. The one edge case: if an observer was created during `initialize` on the fragment and NOT disconnected, it would continue observing alongside the live-DOM observer. But since `initialize` only triggers `registry.initialize()` (which just upgrades), and Synthesizer creates its own observers scoped to the root node, this shouldn't be an issue — the fragment's observers die when the fragment is emptied (all children move to live DOM).
+
+### Ready to implement?
+
+Shall I implement `waitForSettled.ts` and `initialize.ts` now, or do you want to iterate further on the API shape?
