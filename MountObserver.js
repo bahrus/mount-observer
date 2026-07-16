@@ -1,7 +1,7 @@
 import { arr } from './arr.js';
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
-import { withScopePerimeter } from './withScopePerimeter.js';
+import { withScopePerimeter } from 'assign-gingerly/inferencer/withScopePerimeter.js';
 export class MountObserver extends EventTarget {
     // Static registry for registered handlers
     static #handlerRegistry = new Map();

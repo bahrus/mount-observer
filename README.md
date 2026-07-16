@@ -4044,7 +4044,7 @@ observer.observe(oContainerNode);
 The check for "withScopePerimeter" is done via script:
 
 ```JavaScript
-import {withScopePerimeter} from 'mount-observer/withScopePerimeter.js';
+import {withScopePerimeter} from 'assign-gingerly/inferencer/withScopePerimeter.js';
 withScopePerimeter(oContainerNode: Node, matchCandidate: Element, outside: string){
     let current = matchCandidate.parentElement;
     

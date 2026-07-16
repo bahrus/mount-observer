@@ -47,13 +47,13 @@ Received: false
   13 |     expect(results.logToConsole.dismountLogged).toBe(true);
   14 |     
   15 |     // Test 2: defineCustomElement with default export
-> 16 |     expect(results.defineCustomElement.defaultExport.defined).toBe(true);
-     |                                                               ^ Error: expect(received).toBe(expected) // Object.is equality
+  16 |     expect(results.defineCustomElement.defaultExport.defined).toBe(true);
   17 |     expect(results.defineCustomElement.defaultExport.upgraded).toBe(true);
   18 |     expect(results.defineCustomElement.defaultExport.textContent).toBe('Fancy Button!');
   19 |     
   20 |     // Test 3: defineCustomElement with named export
-  21 |     expect(results.defineCustomElement.namedExport.defined).toBe(true);
+> 21 |     expect(results.defineCustomElement.namedExport.defined).toBe(true);
+     |                                                             ^ Error: expect(received).toBe(expected) // Object.is equality
   22 |     expect(results.defineCustomElement.namedExport.upgraded).toBe(true);
   23 |     expect(results.defineCustomElement.namedExport.innerHTML).toContain('Simple Card');
   24 |     

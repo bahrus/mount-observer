@@ -20,7 +20,7 @@ import {
     unregisterSharedObserver,
     type MutationCallback
 } from './SharedMutationObserver.js';
-import { withScopePerimeter } from './withScopePerimeter.js';
+import { withScopePerimeter } from 'assign-gingerly/inferencer/withScopePerimeter.js';
 import { getRegistryRoot } from './getRegistryRoot.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
 
