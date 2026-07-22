@@ -86,3 +86,13 @@ If you want to consolidate, consider **enhancing `getRootRegistryContainer`** in
 Then we could replace `getHighestCERNode` with the enhanced version.
 
 Can you see if it is possible to safely enhance getRootRegistryContainer.ts without breaking anything, and then I can retire the code above?
+
+## Implementation Notes
+
+Yes, it was done. The current `getRegistryRoot.ts` has all three enhancements mentioned in the chat:
+
+1. **Accepts `Node`** (not just `Element`) — parameter is `node: Node`
+2. **Null checking** — returns `null` if node is invalid
+3. **Shadow root traversal** — explicitly checks `root !== document` and returns shadow roots when appropriate, plus handles the document case separately
+
+The function signature and logic now match what `getHighestCERNode` provided, making it safe to retire that function in the consuming package.

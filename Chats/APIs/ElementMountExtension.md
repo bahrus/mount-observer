@@ -46,3 +46,13 @@ Object.defineProperty(Element.prototype, 'mount', {
   configurable: true,
 });
 ```
+
+## Implementation Notes
+
+Yes, it was done. Both pieces are implemented:
+
+1. **`getRegistryRoot.ts`** — the utility that finds the highest ancestor with the same `customElementRegistry` (renamed from `getRootRegistryContainer` to `getRegistryRoot`)
+
+2. **`ElementMountExtension.ts`** — defines `Node.prototype.mount` (expanded from just `Element.prototype` to `Node.prototype` to support `document.mount()` as well), plus `Element.prototype.mountScope` and `Node.prototype.mountGlobally`
+
+The implementation evolved beyond the original spec — `mount` is on `Node.prototype` (not just Element), and it integrates with the `MountConfigRegistry` for cross-scope coordination. But the core concept (find the scoped registry root, create a MountObserver, observe it) is fully implemented.
