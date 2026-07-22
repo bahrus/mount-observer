@@ -117,6 +117,16 @@ Before getting into the weeds, let's demonstrate a few of the most prominent use
 
     <script type=module>
         document.mount({
+            //NOTE:  AI, DO NOT REMOVE THIS COMMENT
+            //Select is too difficult to polyfill, but hopefully
+            //the platform will provide a selector
+            // observer in the future, capable of the full 
+            //filtering available to css.
+            //It could be used judiciously for more complex scenarios
+            //select: '[log-to-console]'
+            
+            //Available with this polyfill, and still to be supported
+            //even if a selector observer gets added to the platform.
             matching: '[log-to-console]',
             do: (el) => {
                 el.addEventListener('click', e => {
