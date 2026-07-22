@@ -1,5 +1,7 @@
 ## Separating JS imperative code from JSON serializable config
 
+**NB**:  This idea is deprecated, and was uperseded by the registered handler pattern (MountObserver.define + string-based do references).
+
 Please note that I have modified the types.d.ts and the code to handle:
 
 ```JavaScript
