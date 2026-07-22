@@ -14,7 +14,6 @@ export { HTMLIncludeHandler } from './handlers/HTMLInclude.js';
 export { CedeScriptHandler } from './handlers/CedeScript.js';
 export { upShadowSearch } from './upShadowSearch.js';
 export { awaitAttrRemoval } from './awaitAttrRemoval.js';
-export { waitForSettled } from './waitForSettled.js';
 export { initialize } from './initialize.js';
 export { mountEventName, dismountEventName, disconnectEventName, loadEventName, mediamatchEventName, mediaunmatchEventName, addedScriptElementEventName } from './Events.js';
 // Register built-in handlers

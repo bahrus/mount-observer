@@ -37,10 +37,6 @@
       "default": "./awaitAttrRemoval.js",
       "types": "./awaitAttrRemoval.ts"
     },
-    "./waitForSettled.js": {
-      "default": "./waitForSettled.js",
-      "types": "./waitForSettled.ts"
-    },
     "./initialize.js": {
       "default": "./initialize.js",
       "types": "./initialize.ts"

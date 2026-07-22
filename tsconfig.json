@@ -21,7 +21,6 @@
 		"types/global.d.ts",
 		"nudge.ts",
 		"awaitAttrRemoval.ts",
-		"waitForSettled.ts",
 		"initialize.ts"
 	],
 	"exclude":[

@@ -124,7 +124,7 @@ Before getting into the weeds, let's demonstrate a few of the most prominent use
             //filtering available to css.
             //It could be used judiciously for more complex scenarios
             //select: '[log-to-console]'
-            
+
             //Available with this polyfill, and still to be supported
             //even if a selector observer gets added to the platform.
             matching: '[log-to-console]',
@@ -1847,7 +1847,7 @@ If `timeout` is specified and mutations never quiesce, the promise rejects with 
 **Using `waitForSettled` directly:**
 
 ```javascript
-import { waitForSettled } from 'mount-observer/waitForSettled.js';
+import { waitForSettled } from 'assign-gingerly/waitForSettled.js';
 
 // Wait for a subtree to stop mutating (200ms debounce, 10s max)
 await waitForSettled(someNode, 200, 10000);
