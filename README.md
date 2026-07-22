@@ -3291,13 +3291,17 @@ A common use case is providing visual feedback for form validation:
 const observer = new MountObserver({
    matching: 'input.validated',
    assignOnMount: {
-      '?.style?.borderColor': 'green',
-      '?.style?.backgroundColor': '#f0fff0',
+      '?.style Y=': {
+        borderColor: 'green',
+        backgroundColor: '#f0fff0',
+      }, 
       '?.setAttribute': ['aria-invalid', 'false']
    },
    assignOnDismount: {
-      '?.style?.borderColor': '',
-      '?.style?.backgroundColor': '',
+      '?.style? Y=': {
+        borderColor': '',
+        backgroundColor': '',
+      },
       '?.removeAttribute': 'aria-invalid'
    }
 });
