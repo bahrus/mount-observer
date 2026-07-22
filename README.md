@@ -577,8 +577,6 @@ The handler automatically hoists templates that:
 </script>
 ```
 
-[Implemented as HoistingTemplates requirement](requirements/Done/HoistingTemplates.md)
-
 </details>
 
 ## Element Mount Configuration (EMC) Scripts
@@ -676,8 +674,6 @@ export default class MyEnhancement {
 - Must import `ElementMountExtension.js` to enable `element.enh` property
 - Must import `assign-gingerly/object-extension.js` for enhancement registry
 - Enhancement classes should be constructors that accept `(element, ctx, initVals)`
-
-[Implemented as EMCScript requirement](requirements/Done/EMCScript.md)
 
 ## Custom Element Definition (Cede) Scripts
 
@@ -808,8 +804,6 @@ Or declaratively via a MOSE:
 - Feature spawn resolution is cached per base class — defining 10 elements extending the same base only imports each feature once
 
 For full details on the base class contract (`static supportedFeatures`, `fallbackSpawn`, spawn caching, and `assignFeatures` wiring), see the [defineWithFeatures documentation](https://github.com/bahrus/assign-gingerly/blob/baseline/docs/defineWithFeatures.md).
-
-[Implemented as SupportForCedeScripts requirement](requirements/SupportForCedeScripts.md)
 
 ## Syndicating Mount Observers with Synthesizer
 
@@ -1034,8 +1028,6 @@ Unlike `mountGlobally()`, which discovers shadow roots by observing custom eleme
 - Works with any shadow root structure
 - Doesn't rely on custom element discovery
 - Allows for selective script propagation
-
-[Implemented as Syndicating Mount Observers With Synthesizer requirement](requirements/Done/Syndicating Mount Observers With Synthesizer.md)
 
 ## Intra-Document HTML Includes with HTMLInclude
 
@@ -1537,8 +1529,6 @@ When cloning live DOM elements (not templates) that contain Mount Observer Scrip
 - MOSE scripts must have `id` attributes for matching
 - Source script must be processed by `builtIns.mountObserverScript` or `builtIns.scriptExport` before cloning
 
-[Implemented as MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes requirement](requirements/Done/MatchingInsertionsAndDeletionsWithIntraDocumentHTMLIncludes.md)
-
 ## Automatic ID Generation with genIds
 
 The `builtIns.generateIds` handler automatically generates unique IDs for elements within scoped containers using the [id-generation](https://www.npmjs.com/package/id-generation) package. This is particularly useful for forms, microdata structures, and any scenario where you need unique IDs for accessibility or linking purposes.
@@ -1793,8 +1783,6 @@ await awaitAttrRemoval(element, 'defer-🎚️');
 
 This is a standalone function with no dependencies — it creates a minimal `MutationObserver` filtered to the single attribute and disconnects on resolution. It's dynamically imported (code-split) so it adds zero cost when no defer attributes are present.
 
-[Implemented as SupportForDeferBase requirement](requirements/SupportForDeferBase.md)
-
 ## Offscreen Fragment Initialization
 
 The `initialize` utility prepares a detached DOM subtree (typically a `DocumentFragment`) so that all custom elements are upgraded, Synthesizer handlers activate, mount observers fire, and cascading async work completes — before the fragment is inserted into the live DOM.
@@ -1865,8 +1853,6 @@ await initialize(fragment, { idleMs: 100, timeout: 5000 });
 
 shadowRoot.appendChild(fragment);
 ```
-
-[Implemented as SupportingTransRendersCloneFeatures requirement](requirements/SupportingTransRendersCloneFeatures.md)
 
 ## Scoped Parser Registry for EMC Scripts
 
@@ -2124,9 +2110,6 @@ Parser registries are scoped to synthesizer elements and apply to all shadow roo
 - Parser modules must export a function as default export
 - EMC scripts must specify `wait-for-parsers` attribute to wait for parsers
 
-[Implemented as Scoped Parser Registry requirement](.kiro/specs/scoped-parser-registry-requirements.md)
-
-
 # Thorough Exposition Begins Here
 
 Okay, let's get into the weeds.  First, we strongly recommend studying the core package that mount-observer extends, [assign-gingerly](https://www.npmjs.com/package/assign-gingerly).
@@ -2195,8 +2178,6 @@ and could perhaps expect faster binding as a result of the more limited supporte
 
 This polyfill in fact only supports this latter option ("matching"), and leaves "select" for such a time as when a selector observer is available in the platform.
 
-[Implemented as Requirement 1](requirements/Done/Requirement1.md).
-
 ## The observe() method
 
 The `observe()` method begins observation of elements within the provided node:
@@ -2264,8 +2245,6 @@ The do function won't be invoked until all the imports have been successfully co
 Previously, this proposal called for allowing arrow functions as well, thinking that could be a good interim way to support bundlers, as well as multiple imports.  But the valuable input provided by [doeixd](https://github.com/doeixd) makes me think that that interim support could more effectively be done by the developer in the do methods.
 
 This proposal would also include support for JSON and HTML module imports (really, all types).
-
-[Implemented as Requirement 1](requirements/Done/Requirement1.md).
 
 ## Preemptive downloading
 
@@ -2672,8 +2651,6 @@ shouldMount: (el, ctx) => {
 
 **Note:** For event-driven mounting (waiting for user clicks, etc.), use the `do` callback with event listeners rather than `shouldMount`. The `shouldMount` callback is for checking conditions, not waiting for events.
 
-[Implemented as SupportForShouldMount requirement](requirements/Done/SupportForShouldMount.md)
-
 ## InstanceOf checks in detail
 
 Carving out the special "whereInstanceOf" check is provided based on the assumption that there's a performance benefit from doing so. If not, the developer could just add that check inside the "shouldMount" callback logic (discussed later).  For built-in elements, we can alternatively provide the string name, as indicated in the comment above, which certainly makes it JSON serializable, thus making it easy as pie to include in the MOSE JSON payload.  I don't think there would be any ambiguity in doing so, which means I believe that answers the mystery in my mind whether it could be part of the low-level checklist that could be done within the c++/rust code / thread.
@@ -2747,8 +2724,6 @@ observer.observe(shadowRoot);
 
 This ensures that when we observe a shadow root with a scoped registry, we won't accidentally mount elements from the parent document or other shadow roots with different registries (unless explicitly requested with `whereDifferentCustomElementRegistry: true`). The registry check happens automatically before any other `where*` conditions are evaluated.
 
-[Implemented as [ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch](requirements/ExcludeMatchingElementsWhereCustomElementRegistriesDon'tMatch.md)]
-
 ## Element Mount Extension
 
 For even more convenience, we can use the `element.mount()` method to observe elements within their scoped custom element registry context. This is particularly useful with [scoped custom element registries](https://developer.chrome.com/blog/scoped-registries) (Chrome 146+, latest WebKit/Safari).
@@ -2810,8 +2785,6 @@ class MyComponent extends HTMLElement {
 
 Browser support: Works in all browsers, but [scoped registry features](https://developer.chrome.com/blog/scoped-registries) require Chrome 146+ or latest WebKit/Safari.
 
-[Implemented as CustomElementRegistryMounting requirement](requirements/Done/CustomElementRegistryMounting.md).
-
 ### Global Propagation with `mountGlobally()`
 
 The `mountGlobally()` method extends `mount()` to automatically propagate mount observers across [custom element registry](https://developer.chrome.com/blog/scoped-registries) boundaries and shadow DOM scopes. This is useful for bootstrapping core handlers that should work everywhere, regardless of scoped registries.  It should be used sparingly, as a last resort, probably limited to things that should arguably be built into the platform.
@@ -2848,8 +2821,6 @@ await document.mountGlobally({
 ```
 
 Both `Element.prototype.mountGlobally()` and `ShadowRoot.prototype.mountGlobally()` are available.
-
-[Implemented as goViral requirement](requirements/Done/goViral.md).
 
 ## Hierarchical Observer Composition with the `with` Property
 
@@ -3151,8 +3122,6 @@ MountObserver.define('myHandler', Handler2);  // Error: myHandler already in use
 
 The handler registry is global and shared across all MountObserver instances, similar to the global custom elements registry. Once a handler is registered, it can be used by any MountObserver instance in your application.
 
-[Implemented as [Requirement14](requirements/Done/Requirement14.md)]
-
 ### Handler defaults with static properties
 
 Registered handler classes can specify default MountConfig properties using static class properties. When we reference a handler by name, its static properties are automatically merged with your inline configuration, with inline config always taking precedence:
@@ -3228,8 +3197,6 @@ const observer2 = new MountObserver({
 });
 ```
 
-[Implemented as [SupportWhereCriteriaWithRegisteredActions](requirements/SupportWhereCriteriaWithRegisteredActions.md)]
-
 ### Built in handlers
 
 This proposal advocates having the platform provide some built in handlers, that extend EvtRt, that is included with this Polyfill.
@@ -3292,8 +3259,6 @@ observer.observe(document);
 ```
 
 This will automatically apply the specified properties to all matching input elements, both existing ones and those added dynamically.
-
-[Implemented as [Requirement2](requirements/Done/Requirement2.md) and [Requirement16](requirements/Done/Requirement16.md)]
 
 ### Assigning properties on dismount
 
@@ -3467,8 +3432,6 @@ async assignGingerly(config: Record<string, any> | undefined): Promise<void>
 
 The method is async because the assign-gingerly library is loaded dynamically when needed.
 
-[Implemented as [Requirement9](requirements/Done/Requirement9.md)]
-
 ## Reversible property assignment with stageOnMount
 
 While `assignOnMount` and `assignOnDismount` provide permanent property assignments, sometimes we need temporary changes that automatically reverse when elements dismount. The `stageOnMount` property provides this capability using the `assignTentatively` function from assign-gingerly:
@@ -3595,8 +3558,6 @@ button.classList.remove('loading');  // Dismount: disabled restored to true (the
 - The assign-gingerly library is only loaded when `stageOnMount` is specified
 - Reversal objects are stored in a WeakMap, allowing garbage collection when elements are removed
 - Each element's reversal data is cleaned up when it dismounts
-
-[Implemented as [Requirement13](requirements/Done/Requirement13.md)]
 
 ## Emitting events from mounted elements
 
@@ -3783,8 +3744,6 @@ document.addEventListener('widget-ready', (e) => {
 observer.observe(document);
 ```
 
-[Implemented as [Requirement10](requirements/Done/Requirement10.md)]
-
 ## Element-specific lifecycle notifications with getNotifier
 
 While the MountObserver dispatches lifecycle events (mount, dismount, disconnect) at the observer level, sometimes we need to listen for events specific to a single element. The `getNotifier()` method returns an EventTarget that dispatches filtered events for only that element.
@@ -3881,8 +3840,6 @@ Element-specific notifiers are useful for:
 ```TypeScript
 getNotifier(element: Element): EventTarget
 ```
-
-[Implemented as [Requirement13](requirements/Done/Requirement13.md)]
 
 
 <!-- ##  Extra lazy loading
@@ -4069,8 +4026,6 @@ withScopePerimeter(oContainerNode: Node, matchCandidate: Element, outside: strin
 }
 
 ```
-
-[Implemented as [Requirement7](requirements/Done/Requirement7.md)]
 
 ## Intra document html imports
 
