@@ -7,6 +7,7 @@ import { MountObserver } from './MountObserver.js';
 import { getRegistryRoot } from './getRegistryRoot.js';
 import { getOrInsertObserverEntry } from './RegistryMountCoordinator.js';
 import type { MountConfig, MountObserverOptions } from './types/mount-observer/types.js';
+import 'assign-gingerly/object-extension.js';
 
 declare global {
     interface Node {

@@ -5,6 +5,7 @@
 import { MountObserver } from './MountObserver.js';
 import { getRegistryRoot } from './getRegistryRoot.js';
 import { getOrInsertObserverEntry } from './RegistryMountCoordinator.js';
+import 'assign-gingerly/object-extension.js';
 /**
  * Registry for tracking MountConfig objects associated with a CustomElementRegistry.
  * This enables coordination of mount observers across multiple DOM scopes that share

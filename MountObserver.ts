@@ -23,6 +23,7 @@ import {
 import { withScopePerimeter } from 'assign-gingerly/inferencer/withScopePerimeter.js';
 import { getRegistryRoot } from './getRegistryRoot.js';
 import type { assignTentatively as AssignTentativelyType } from 'assign-gingerly/assignTentatively.js';
+import type assignGingerlyDefault from 'assign-gingerly/assignGingerly.js';
 
 export class MountObserver<TKeys extends string = string> extends EventTarget implements IMountObserver {
     // Static registry for registered handlers
@@ -66,6 +67,7 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
     #assignOptions: Record<string, any> | undefined;
     #stageReversals = new WeakMap<Element, Record<string, any>>();
     #assignTentatively: typeof AssignTentativelyType | undefined;
+    #assignGingerlyFn: typeof assignGingerlyDefault | undefined;
     #elementNotifiers = new WeakMap<Element, EventTarget>();
     #notifierMountedElements = new WeakSet<Element>();
     #subObservers: Map<string, MountObserver> | undefined;
@@ -401,7 +403,8 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
         }
         
         if(this.#assignOnMount || this.#asgDisMtSource){
-            await import('assign-gingerly/object-extension.js');
+            const mod = await import('assign-gingerly/assignGingerly.js');
+            this.#assignGingerlyFn = mod.default;
         }
         if(this.#stageMtSource){
             const { assignTentatively } = await import('assign-gingerly/assignTentatively.js');
@@ -709,8 +712,8 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
         }
 
         // Apply assignGingerly if specified
-        if (this.#assignOnMount) {
-            element.assignGingerly(this.#assignOnMount, this.#assignOptions);
+        if (this.#assignOnMount && this.#assignGingerlyFn) {
+            this.#assignGingerlyFn(element, this.#assignOnMount, this.#assignOptions);
         }
 
         // Apply assignTentatively if specified (staged assignments)
@@ -770,7 +773,7 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
             return;
         }
 
-        await import('assign-gingerly/object-extension.js');
+        const { default: assignGingerly } = await import('assign-gingerly/assignGingerly.js');
 
         // Update the source config for future mounted elements
         if (this.#assignOnMount === undefined) {
@@ -778,16 +781,14 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
             this.#assignOnMount = structuredClone(config);
         } else {
             // Merge into existing config using assignGingerly
-            this.#assignOnMount.assignGingerly(config);
-            //assignGingerly(this.#asgMtSource, config);
+            assignGingerly(this.#assignOnMount, config);
         }
 
         // Apply to already mounted elements using setWeak for iteration
         for (const ref of this.#mountedElements.setWeak) {
             const element = ref.deref();
             if (element) {
-                element.assignGingerly(config, this.#assignOptions);
-                //assignGingerly(element, config);
+                assignGingerly(element, config, this.#assignOptions);
             }
         }
     }
@@ -807,8 +808,8 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
         }
 
         // Apply assignGingerly if specified for dismount
-        if (this.#asgDisMtSource) {
-            element.assignGingerly(this.#asgDisMtSource, this.#assignOptions);
+        if (this.#asgDisMtSource && this.#assignGingerlyFn) {
+            this.#assignGingerlyFn(element, this.#asgDisMtSource, this.#assignOptions);
         }
         // Remove from both structures
         this.#mountedElements.weakSet.delete(element);
