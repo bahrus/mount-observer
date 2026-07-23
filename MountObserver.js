@@ -36,7 +36,7 @@ export class MountObserver extends EventTarget {
     #mediaMatches = true;
     #rootSizeMatches = true;
     #connectionMatches = true;
-    #asgMtSource;
+    #assignOnMount;
     #asgDisMtSource;
     #stageMtSource;
     #assignOptions;
@@ -81,7 +81,7 @@ export class MountObserver extends EventTarget {
         const { assignOnMount, assignOnDismount, stageOnMount, assignOptions, do: doValue, loadingEagerness, import: imp, configFrom } = mergedConfig;
         // Make a copy of assignOnMount config using structuredClone
         if (assignOnMount !== undefined) {
-            this.#asgMtSource = structuredClone(assignOnMount);
+            this.#assignOnMount = structuredClone(assignOnMount);
         }
         if (assignOnDismount !== undefined) {
             this.#asgDisMtSource = structuredClone(assignOnDismount);
@@ -290,7 +290,7 @@ export class MountObserver extends EventTarget {
         if (this.#configFromPromise) {
             await this.#configFromPromise;
         }
-        if (this.#asgMtSource || this.#asgDisMtSource) {
+        if (this.#assignOnMount || this.#asgDisMtSource) {
             await import('assign-gingerly/object-extension.js');
         }
         if (this.#stageMtSource) {
@@ -555,8 +555,8 @@ export class MountObserver extends EventTarget {
             }
         }
         // Apply assignGingerly if specified
-        if (this.#asgMtSource) {
-            element.assignGingerly(this.#asgMtSource, this.#assignOptions);
+        if (this.#assignOnMount) {
+            element.assignGingerly(this.#assignOnMount, this.#assignOptions);
         }
         // Apply assignTentatively if specified (staged assignments)
         if (this.#stageMtSource && this.#assignTentatively) {
@@ -605,18 +605,18 @@ export class MountObserver extends EventTarget {
     async assignGingerly(config) {
         // Handle undefined case
         if (config === undefined) {
-            this.#asgMtSource = undefined;
+            this.#assignOnMount = undefined;
             return;
         }
         await import('assign-gingerly/object-extension.js');
         // Update the source config for future mounted elements
-        if (this.#asgMtSource === undefined) {
+        if (this.#assignOnMount === undefined) {
             // No existing config, just clone the passed in object
-            this.#asgMtSource = structuredClone(config);
+            this.#assignOnMount = structuredClone(config);
         }
         else {
             // Merge into existing config using assignGingerly
-            this.#asgMtSource.assignGingerly(config);
+            this.#assignOnMount.assignGingerly(config);
             //assignGingerly(this.#asgMtSource, config);
         }
         // Apply to already mounted elements using setWeak for iteration

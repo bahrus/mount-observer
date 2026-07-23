@@ -1,5 +1,4 @@
 import './ElementMountExtension.js';
-import { waitForEvent } from 'assign-gingerly/waitForEvent.js';
 import { AddedScriptElementEvent } from './Events.js';
 import 'mount-observer/handlers/MountObserverScript.js';
 import { mos } from 'mount-observer/handlers/MountObserverScript.js';
@@ -230,7 +229,7 @@ export class Synthesizer extends HTMLElement {
                         clearInterval(poll);
                         resolve(e.export || scriptElement.export);
                     };
-                    scriptElement.addEventListener('resolved', onResolved, {once: true});
+                    scriptElement.addEventListener('resolved', onResolved, { once: true });
                     // Poll as safety net in case event already fired
                     const poll = setInterval(() => {
                         if (scriptElement.export) {
