@@ -3430,9 +3430,9 @@ Using `assignOn*` provides several benefits:
 3. **Declarative**: No need to write custom mount callbacks for simple property assignments
 4. **Consistent**: The same property values are applied uniformly across all matching elements
 
-### Dynamically updating assignGingerly configuration
+### Dynamically updating assignment configuration
 
-The `MountObserver` class provides a public `assignGingerly()` method that allows us to merge new updates into the  observer. This is useful for responding to user actions or application state changes:
+The `MountObserver` class provides a public `assign()` method that allows us to merge new updates into the observer. This is useful for responding to user actions or application state changes:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -3445,7 +3445,7 @@ const observer = new MountObserver({
 observer.observe(document);
 
 // Later, update the configuration
-await observer.assignGingerly({
+await observer.assign({
    title: 'Updated tooltip',
    placeholder: 'New placeholder'
 });
@@ -3459,7 +3459,7 @@ await observer.assignGingerly({
 
 3. **Applies to future elements**: Future elements that mount will receive the merged configuration.
 
-4. **Starting without initial config**: We can call the method even if no `assignGingerly` was specified in the constructor:
+4. **Starting without initial config**: We can call the method even if no `assignOnMount` was specified in the constructor:
 
 ```JavaScript
 const observer = new MountObserver({
@@ -3468,7 +3468,7 @@ const observer = new MountObserver({
 observer.observe(document);
 
 // Set configuration later
-await observer.assignGingerly({
+await observer.assign({
    disabled: true,
    value: 'Set via method'
 });
@@ -3477,17 +3477,25 @@ await observer.assignGingerly({
 5. **Clearing configuration**: Pass `undefined` to clear the configuration for future elements (already-mounted elements keep their properties):
 
 ```JavaScript
-await observer.assignGingerly(undefined);
+await observer.assign(undefined);
 // Future elements will not have properties applied
 // Existing elements retain their current properties
 ```
 
-**Method signature:**
-```TypeScript
-async assignGingerly(config: Record<string, any> | undefined): Promise<void>
+6. **Passing options**: A second parameter allows specifying assign-gingerly options (withMethods, aliases, etc.):
+
+```JavaScript
+await observer.assign({
+   '?.setAttribute': ['aria-label', 'Dynamic label']
+}, { withMethods: ['setAttribute'] });
 ```
 
-The method is async because the assign-gingerly library is loaded dynamically when needed.
+**Method signature:**
+```TypeScript
+async assign(config: Record<string, any> | undefined, options?: Record<string, any>): Promise<void>
+```
+
+The method is async because the assign-gingerly library is loaded dynamically when needed. Internally, it uses `assignFrom` which resolves RHS path expressions against the MountContext (giving access to imported modules, the root node, and the observer itself).
 
 ## Reversible property assignment with stageOnMount
 

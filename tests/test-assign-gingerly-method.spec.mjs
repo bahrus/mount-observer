@@ -50,7 +50,7 @@ test.describe('MountObserver - assignGingerly Method', () => {
             await observer.observe(document);
             
             // Call method to set config
-            await observer.assignGingerly({
+            await observer.assign({
                 disabled: true,
                 value: 'Set via method'
             });
@@ -90,7 +90,7 @@ test.describe('MountObserver - assignGingerly Method', () => {
             await observer.observe(document);
             
             // Clear config
-            await observer.assignGingerly(undefined);
+            await observer.assign(undefined);
             
             window.testObserver = observer;
         });

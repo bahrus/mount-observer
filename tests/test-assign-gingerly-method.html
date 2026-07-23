@@ -48,7 +48,7 @@
         // Test updating config via public method
         document.getElementById('updateBtn').addEventListener('click', async () => {
             addLog('Calling assignGingerly method...');
-            await observer.assignGingerly({
+            await observer.assign({
                 title: 'Updated via method',
                 placeholder: 'New placeholder'
             });
