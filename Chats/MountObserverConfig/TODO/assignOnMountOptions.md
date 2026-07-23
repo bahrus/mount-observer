@@ -196,3 +196,123 @@ The `element.assignGingerly()` method (from `object-extension.js`) would need to
 2. Should `assignOptions` also apply to `stageOnMount` (via `assignTentatively`)? The `assignTentatively` function may have its own options signature.
 
 3. The `signal` option in `IAssignGingerlyOptions` is interesting — should it be wired to the observer's `disconnectedSignal` automatically? That way reactive subscriptions (`@eachTime`) would auto-cleanup when the observer disconnects.
+
+---
+
+## Human Response I
+
+> Does `object-extension.js` currently support passing options to `element.assignGingerly(source, options)`? If not, that's a prerequisite change in assign-gingerly.
+
+If you look at node_modules/assign-gingerly/object-extension.ts, line 549:
+
+```TS
+/**
+ * Adds assignGingerly method to all objects via the Object prototype
+ */
+Object.defineProperty(Object.prototype, 'assignGingerly', {
+  value: function <T extends object>(
+    this: T,
+    source: Record<string | symbol, any>,
+    options?: IAssignGingerlyOptions
+  ): T {
+    // Auto-populate registry from customElementRegistry if this is an Element
+    if (this instanceof Element && (!options || !options.registry)) {
+      if (!options) options = {};
+      options.registry = (this as any).customElementRegistry?.enhancementRegistry;
+    }
+    assignGingerly(this, source, options);
+    return this;
+  },
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
+```
+
+> Should `assignOptions` also apply to `stageOnMount` (via `assignTentatively`)? The `assignTentatively` function may have its own options signature.
+
+It uses a similar signature:
+
+```JS
+/**
+ * Adds assignTentatively method to all objects via the Object prototype
+ * Returns a reversal object that can undo the changes when passed to assignGingerly.
+ */
+Object.defineProperty(Object.prototype, 'assignTentatively', {
+  value: function <T extends object>(
+    this: T,
+    source: Record<string | symbol, any>,
+    options?: IAssignTentativelyOptions
+  ): Record<string | symbol, any> {
+    const reversal = options?.reversal ?? {};
+    assignTentatively(this, source, { ...options, reversal });
+    return reversal;
+  },
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
+```
+
+There's likely to be some overlap between these options in the future. I'll be sure to avoid using the same property with conflicting types. If we go with option D, we should probably type it as IAssignTentativelyOptions & IAssignGingerlyOptions
+
+I think option D is a viable step forward.
+
+If no more ambiguity, please implement and update the documentation. 
+
+---
+
+## Implementation Notes
+
+Clear. Let me implement Option D. First let me check the current types and the MountObserver code to understand the exact changes needed:
+
+Now let me check what `IAssignGingerlyOptions` and `IAssignTentativelyOptions` look like in the local types:
+
+Good. `IAssignTentativelyOptions` has `reversal` and `aka`. Now I have everything I need. Let me implement:
+
+Now let me update `MountObserver.ts` to store and use the `assignOptions`:
+
+Now find where `assignOnMount` is destructured in the constructor and add `assignOptions`:
+
+Now find where `asgMtSource` is initialized and add `assignOptions`:
+
+Now find where `element.assignGingerly` is called and pass the options:
+
+Now the `assignGingerly` method on the observer itself (used for dynamic updates):
+
+Now handle `stageOnMount` — it uses `assignTentatively`. Let me find where that's called:
+
+Now update the corresponding `MountObserver.js` file. Let me make the same changes there:
+
+Now add the private field declaration and update the assignGingerly calls in the JS file:
+
+Now update the assignGingerly calls in the JS file:
+
+Now update the `assignTentatively` call in the JS file:
+
+Now let me verify diagnostics:
+
+Now let me update the README to document this new feature. Let me find the assign-on-mount section:
+
+I'll add the `assignOptions` documentation right after the validation example (which is the perfect place since that example needs `withMethods`):
+
+Let me also add it to the Implementation Status:
+
+And add it to the MountConfig properties list:
+
+Done. Here's what was implemented:
+
+**Types (`types/mount-observer/types.d.ts`):**
+- Added `assignOptions?: Record<string, any>` to `MountConfig`
+
+**MountObserver.ts / .js:**
+- Added `#assignOptions` private field
+- Destructure `assignOptions` from config in constructor
+- Store via `structuredClone`
+- Pass `this.#assignOptions` as second argument to `element.assignGingerly()` for mount, dismount, and dynamic updates
+- Spread `this.#assignOptions` into `assignTentatively` options (merged with `{ reversal }`)
+
+**README.md:**
+- Added "Configuring assign-gingerly options with `assignOptions`" section with examples for `withMethods` and `aka`
+- Added to Implementation Status checklist
+- Added to MountConfig properties list

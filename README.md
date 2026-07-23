@@ -31,6 +31,7 @@ The following features have been implemented and tested:
 - ✅ **assignOnMount**: Property assignment when elements mount
 - ✅ **assignOnDismount**: Property assignment when elements dismount
 - ✅ **stageOnMount**: Reversible property assignment (auto-restores on dismount)
+- ✅ **assignOptions**: Configure assign-gingerly options (withMethods, aliases, async methods)
 - ✅ **do callbacks**: Mount/dismount/disconnect/reconnect lifecycle hooks
 - ✅ **with property**: Hierarchical observer composition with sub-observers
 - ✅ **Element mount extension**: element.mount() method for scoped registry observation
@@ -2357,7 +2358,7 @@ Config modules can export any valid MountConfig property, including:
 - `whereObservedRootSizeMatches`, `whereElementIntersectsWith`
 - `whereConnectionHas`, `withScopePerimeter`
 - `import`, `do`, `loadingEagerness`
-- `assignOnMount`, `assignOnDismount`, `stageOnMount`
+- `assignOnMount`, `assignOnDismount`, `stageOnMount`, `assignOptions`
 - `mountedElemEmits`, `customData`, `getPlayByPlay`
 
 ### Functions and Class References
@@ -3309,6 +3310,56 @@ observer.observe(document);
 ```
 
 When an input gains the `validated` class, it gets green styling. When the class is removed (dismount), the styling is cleaned up.
+
+### Configuring assign-gingerly options with `assignOptions`
+
+When using method calls (like `setAttribute`, `removeAttribute`), aliases, or async methods in your `assignOnMount`/`assignOnDismount`/`stageOnMount` configurations, you need to specify assign-gingerly options. The `assignOptions` property provides this:
+
+```JavaScript
+const observer = new MountObserver({
+   matching: 'input.validated',
+   assignOnMount: {
+      '?.style Y=': {
+        borderColor: 'green',
+        backgroundColor: '#f0fff0',
+      },
+      '?.setAttribute': ['aria-invalid', 'false']
+   },
+   assignOnDismount: {
+      '?.removeAttribute': 'aria-invalid'
+   },
+   assignOptions: {
+      withMethods: ['setAttribute', 'removeAttribute']
+   }
+});
+```
+
+Without `assignOptions`, method calls like `setAttribute` would be treated as property assignments rather than function invocations.
+
+**Available options** (from [assign-gingerly](https://github.com/bahrus/assign-gingerly)):
+
+- `withMethods` — Array of property names to treat as methods to call
+- `withAsyncMethods` — Array of async methods (fire-and-forget chains)
+- `aka` — Alias mappings for shorter path expressions (e.g., `{ '$': 'querySelector', '+': 'add' }`)
+- `signal` — AbortSignal for cleaning up reactive subscriptions
+
+**Example with aliases:**
+
+```JavaScript
+const observer = new MountObserver({
+   matching: '.highlight-target',
+   assignOnMount: {
+      '?.c?.+': 'highlighted'
+   },
+   assignOptions: {
+      withMethods: ['add'],
+      aka: { 'c': 'classList', '+': 'add' }
+   }
+});
+// Equivalent to: element.classList.add('highlighted')
+```
+
+`assignOptions` is shared across `assignOnMount`, `assignOnDismount`, and `stageOnMount` — all assign operations on the same observer use the same options. This property is JSON-serializable and works in MOSE configurations.
 
 #### Remounting behavior
 

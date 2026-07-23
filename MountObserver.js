@@ -39,6 +39,7 @@ export class MountObserver extends EventTarget {
     #asgMtSource;
     #asgDisMtSource;
     #stageMtSource;
+    #assignOptions;
     #stageReversals = new WeakMap();
     #assignTentatively;
     #elementNotifiers = new WeakMap();
@@ -77,7 +78,7 @@ export class MountObserver extends EventTarget {
         this.#init = mergedConfig;
         this.#options = options;
         this.#abortController = new AbortController();
-        const { assignOnMount, assignOnDismount, stageOnMount, do: doValue, loadingEagerness, import: imp, configFrom } = mergedConfig;
+        const { assignOnMount, assignOnDismount, stageOnMount, assignOptions, do: doValue, loadingEagerness, import: imp, configFrom } = mergedConfig;
         // Make a copy of assignOnMount config using structuredClone
         if (assignOnMount !== undefined) {
             this.#asgMtSource = structuredClone(assignOnMount);
@@ -87,6 +88,9 @@ export class MountObserver extends EventTarget {
         }
         if (stageOnMount !== undefined) {
             this.#stageMtSource = structuredClone(stageOnMount);
+        }
+        if (assignOptions !== undefined) {
+            this.#assignOptions = structuredClone(assignOptions);
         }
         if (options.disconnectedSignal) {
             options.disconnectedSignal.addEventListener('abort', () => {
@@ -552,12 +556,12 @@ export class MountObserver extends EventTarget {
         }
         // Apply assignGingerly if specified
         if (this.#asgMtSource) {
-            element.assignGingerly(this.#asgMtSource);
+            element.assignGingerly(this.#asgMtSource, this.#assignOptions);
         }
         // Apply assignTentatively if specified (staged assignments)
         if (this.#stageMtSource && this.#assignTentatively) {
             const reversal = {};
-            this.#assignTentatively(element, this.#stageMtSource, { reversal });
+            this.#assignTentatively(element, this.#stageMtSource, { ...this.#assignOptions, reversal });
             this.#stageReversals.set(element, reversal);
         }
         // Check if notifier exists BEFORE calling do callback
@@ -619,7 +623,7 @@ export class MountObserver extends EventTarget {
         for (const ref of this.#mountedElements.setWeak) {
             const element = ref.deref();
             if (element) {
-                element.assignGingerly(config);
+                element.assignGingerly(config, this.#assignOptions);
                 //assignGingerly(element, config);
             }
         }
@@ -638,7 +642,7 @@ export class MountObserver extends EventTarget {
         }
         // Apply assignGingerly if specified for dismount
         if (this.#asgDisMtSource) {
-            element.assignGingerly(this.#asgDisMtSource);
+            element.assignGingerly(this.#asgDisMtSource, this.#assignOptions);
         }
         // Remove from both structures
         this.#mountedElements.weakSet.delete(element);
