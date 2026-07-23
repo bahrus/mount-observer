@@ -3332,9 +3332,11 @@ const observer = new MountObserver({
    matching: 'button',
    assignOnMount: {
       disabled: false,
-      '?.dataset?.action': 'submit',
-      '?.dataset?.trackingId': '12345',
-      '?.style': {
+      dataset: {
+        action: 'submit',
+        trackingId': '12345',
+      },
+      '?.style Y=': {
          color: 'white',
          height: '25px',
       }
