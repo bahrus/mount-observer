@@ -52,6 +52,9 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
     #processedEventsForElement = new WeakMap<Element, Set<string>>();
     #mutationCallback: MutationCallback | undefined;
     #rootNode: WeakRef<Node> | undefined;
+    get rootNode(){
+        return this.#rootNode?.deref();
+    }
     #importsLoaded = false;
     #mediaQueryCleanup?: () => void;
     #rootSizeCleanup?: () => void;
@@ -482,7 +485,7 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
     }
 
     disconnect(): void {
-        const rootNode = this.#rootNode?.deref();
+        const {rootNode} = this;
         
         // Disconnect all sub-observers first (recursive)
         if (this.#subObservers) {
@@ -584,7 +587,7 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
             }
 
             // Check that element's customElementRegistry matches root node's registry
-            const rootNode = this.#rootNode?.deref();
+            const {rootNode} = this;
             if (rootNode) {
                 const registriesMatch = (rootNode as any).customElementRegistry === (element as any).customElementRegistry;
                 
@@ -655,7 +658,7 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
             this.#mountedElements.setWeak.add(new WeakRef(element));
         }
 
-        const rootNode = this.#rootNode?.deref();
+        const {rootNode} = this;
         if (!rootNode) {
             // Root node was garbage collected
             return;
@@ -774,6 +777,10 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
         }
 
         const { default: assignGingerly } = await import('assign-gingerly/assignGingerly.js');
+        // Cache for future element mounts
+        if (!this.#assignGingerlyFn) {
+            this.#assignGingerlyFn = assignGingerly;
+        }
 
         // Update the source config for future mounted elements
         if (this.#assignOnMount === undefined) {
@@ -826,7 +833,7 @@ export class MountObserver<TKeys extends string = string> extends EventTarget im
         // Remove from notifier mounted tracking so mount event can fire again
         this.#notifierMountedElements.delete(element);
 
-        const rootNode = this.#rootNode?.deref();
+        const {rootNode} = this;
         if (!rootNode) {
             // Root node was garbage collected
             return;

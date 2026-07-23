@@ -27,6 +27,9 @@ export class MountObserver extends EventTarget {
     #processedEventsForElement = new WeakMap();
     #mutationCallback;
     #rootNode;
+    get rootNode() {
+        return this.#rootNode?.deref();
+    }
     #importsLoaded = false;
     #mediaQueryCleanup;
     #rootSizeCleanup;
@@ -357,7 +360,7 @@ export class MountObserver extends EventTarget {
         registerSharedObserver(observedNode, this.#mutationCallback, observerConfig);
     }
     disconnect() {
-        const rootNode = this.#rootNode?.deref();
+        const { rootNode } = this;
         // Disconnect all sub-observers first (recursive)
         if (this.#subObservers) {
             for (const subObserver of this.#subObservers.values()) {
@@ -444,7 +447,7 @@ export class MountObserver extends EventTarget {
             return false;
         }
         // Check that element's customElementRegistry matches root node's registry
-        const rootNode = this.#rootNode?.deref();
+        const { rootNode } = this;
         if (rootNode) {
             const registriesMatch = rootNode.customElementRegistry === element.customElementRegistry;
             // If whereDifferentCustomElementRegistry is true, exclude matching registries
@@ -503,7 +506,7 @@ export class MountObserver extends EventTarget {
             this.#mountedElements.weakSet.add(element);
             this.#mountedElements.setWeak.add(new WeakRef(element));
         }
-        const rootNode = this.#rootNode?.deref();
+        const { rootNode } = this;
         if (!rootNode) {
             // Root node was garbage collected
             return;
@@ -611,6 +614,10 @@ export class MountObserver extends EventTarget {
             return;
         }
         const { default: assignGingerly } = await import('assign-gingerly/assignGingerly.js');
+        // Cache for future element mounts
+        if (!this.#assignGingerlyFn) {
+            this.#assignGingerlyFn = assignGingerly;
+        }
         // Update the source config for future mounted elements
         if (this.#assignOnMount === undefined) {
             // No existing config, just clone the passed in object
@@ -656,7 +663,7 @@ export class MountObserver extends EventTarget {
         this.#processedDoForElement.delete(element);
         // Remove from notifier mounted tracking so mount event can fire again
         this.#notifierMountedElements.delete(element);
-        const rootNode = this.#rootNode?.deref();
+        const { rootNode } = this;
         if (!rootNode) {
             // Root node was garbage collected
             return;
