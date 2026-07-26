@@ -8,7 +8,7 @@ import {
     EventConstructor,
     Constructor
 } from './types/mount-observer/types.js';
-import { arr } from './arr.js';
+import { arr } from 'assign-gingerly/handlers/arr.js';
 import {
     MountEvent,
     DismountEvent,

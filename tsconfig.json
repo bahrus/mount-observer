@@ -19,7 +19,6 @@
 		"getRegistryRoot.ts",
 		"ElementMountExtension.ts",
 		"types/global.d.ts",
-		"nudge.ts",
 		"awaitAttrRemoval.ts",
 		"initialize.ts"
 	],

@@ -2,7 +2,7 @@
 // Only loaded when MountConfig.import is specified
 
 import { ImportSpec } from './types/mount-observer/types.js';
-import { arr } from './arr.js';
+import { arr } from 'assign-gingerly/handlers/arr.js';
 
 export async function loadImports(
     imports: string | ImportSpec | Array<string | ImportSpec | [string, any]>

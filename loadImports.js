@@ -1,6 +1,6 @@
 // Dynamic import loading utilities
 // Only loaded when MountConfig.import is specified
-import { arr } from './arr.js';
+import { arr } from 'assign-gingerly/handlers/arr.js';
 export async function loadImports(imports) {
     const importArray = arr(imports);
     const promises = importArray.map(imp => loadSingleImport(imp));

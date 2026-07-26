@@ -2,7 +2,6 @@
 export { MountObserver } from './MountObserver.js';
 export { Synthesizer } from './Synthesizer.js';
 export { emitMountedElementEvents } from './emitEvents.js';
-export { arr } from './arr.js';
 export { EvtRt } from './EvtRt.js';
 export { DefineCustomElementHandler, DefineScopedCustomElementHandler } from './handlers/DefineCustomElement.js';
 export { EnhanceMountedElementHandler } from './handlers/EnhanceMountedElement.js';

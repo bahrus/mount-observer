@@ -1,4 +1,4 @@
-import { arr } from './arr.js';
+import { arr } from 'assign-gingerly/handlers/arr.js';
 import { MountEvent, DismountEvent, DisconnectEvent, LoadEvent, } from './Events.js';
 import { registerSharedObserver, unregisterSharedObserver } from './SharedMutationObserver.js';
 import { withScopePerimeter } from 'assign-gingerly/inferencer/withScopePerimeter.js';
