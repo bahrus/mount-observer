@@ -1,6 +1,10 @@
 # Inversion of dependency
 
-The synthesizer functionality works by syndicating enhancements down through shadow DOM.  But it requires a root level element to manage the flow.  So the markup looks like:
+---
+
+## Human Ask
+
+The [synthesizer functionality](/README.md#syndicating-mount-observers-with-synthesizer) [works](/Synthesizer.ts) by syndicating enhancements down through shadow DOM.  But it requires a root level element to manage the flow.  So the markup looks like:
 
 ```html
 <be-hive>
@@ -71,3 +75,7 @@ What this does:
 3.  If data-dest=head
     1.  For each child inside the template, searches the head element for an element matching the attributes and tag name.
     2.  If not found, inserts the element.
+
+## Implementation Suggestion
+
+As far as implementing "searches the head element for an element matching the attributes and tag name", this is very similar to functionality found in [HTMLInclude](/handlers/HTMLInclude.ts).  I wonder if a reusable, exportable module function could be created and shared by both use cases.
