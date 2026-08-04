@@ -193,6 +193,13 @@ export class Synthesizer extends HTMLElement {
             console.warn(`Synthesizer: No syndicator found in document for ${this.localName}`);
             return;
         }
+        const localScripts = Array.from(this.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"], script[type="cede"]'));
+        for (const localScript of localScripts) {
+            const qry = `script[type="${localScript.getAttribute('type')}"][src="${localScript.getAttribute('src')}"]`;
+            if (!syndicator.querySelector(qry)) {
+                syndicator.appendChild(localScript);
+            }
+        }
         // Process existing scripts from syndicator
         // Only process scripts that pass the syndicator's filtering
         const scripts = syndicator.querySelectorAll('script[type="mountobserver"], script[type="emc"], script[type="emc-parser"], script[type="cede"]');
