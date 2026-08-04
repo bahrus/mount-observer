@@ -49,6 +49,10 @@ export class EMCScriptHandler extends EvtRt {
             if (srcAttr) {
                 // External JSON mode: import from src
                 try {
+                    if (!(await import('assign-gingerly/assignPermissions/isAllowedImportPath.js')).isAllowedImportPath(srcAttr)) {
+                        throw 403;
+                    }
+                    ; // Ensure import permissions are set
                     const module = await import(srcAttr, { with: { type: 'json' } });
                     emcConfig = module.default;
                 }

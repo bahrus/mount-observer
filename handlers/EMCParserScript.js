@@ -44,6 +44,10 @@ export class EMCParserScriptHandler extends EvtRt {
         }
         try {
             // Dynamic import the parser module
+            if (!(await import('assign-gingerly/assignPermissions/isAllowedImportPath.js')).isAllowedImportPath(src)) {
+                throw 403;
+            }
+            ; // Ensure import permissions are set
             const module = await import(src);
             // Get parser function from default export
             const parser = module.default;
