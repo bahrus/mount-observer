@@ -63,6 +63,7 @@ export class CedeScriptHandler extends EvtRt {
             const srcAttr = scriptEl.getAttribute('src');
             if (srcAttr) {
                 try {
+                    if(!(await import('assign-gingerly/assignPermissions/isAllowedImportPath.js')).isAllowedImportPath(srcAttr)){ throw 403}; // Ensure import permissions are set
                     const module = await import(srcAttr, { with: { type: 'json' } } as any);
                     config = module.default;
                 } catch (error) {
