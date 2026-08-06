@@ -139,3 +139,16 @@ The allowed name should be checked against the map the application installed, id
 Import maps do not apply to CSS `href`, `@import`, or `url()` values, so they cannot provide the corresponding font allowlist.  A normal `<style>` element in a shadow root may use CSS `@import`, and a `<link rel="stylesheet">` may also be placed directly in a shadow root; either route can fetch a font stylesheet and use the resulting font in that component's styles.  The latter is a better fit when the stylesheet is remote and you do not want its contents inline.  It still needs a URL/origin allowlist and an appropriate `style-src` / `font-src` CSP policy.
 
 Your adopted-stylesheet observation is correct for the common constructable-stylesheet path: `CSSStyleSheet.replaceSync()` / `replace()` do not load `@import` rules, so a font-provider stylesheet cannot reliably be pulled into an adopted sheet that way.  A shadow-root `<link>` is therefore a reasonable narrowly-scoped escape hatch.  It keeps selector application in that shadow tree; however, treat font-family naming and font fetches as potentially shared browser resources, not as a security isolation mechanism.  A tiny dedicated component API such as `<link rel="stylesheet" data-dest="shadow" data-font-provider>` would make that exceptional capability visible and auditable.
+
+---
+
+# Human Response III
+
+I went ahead and implemented this manually by:
+
+1.  Tightening the security around allowed paths with script handlers.
+2.  Defining a FontFace Custom Element Feature.
+3.  Enabling minimal passing of child script handlers into the root syndicator
+
+The logic I added is in [Synthesizer.ts](/Synthesizer.ts), lines 222-228.
+ 
