@@ -58,6 +58,8 @@ const activatedRootNodes = new WeakSet<Node>();
 export abstract class Synthesizer extends HTMLElement {
     #mutationObserver: MutationObserver | undefined;
     #isSyndicator: boolean = false;
+    #isSubscriberInitialized: boolean = false;
+    #inFlightScripts = new Set<string>();
 
     /**
      * List of built-in handlers to activate.
@@ -209,8 +211,15 @@ export abstract class Synthesizer extends HTMLElement {
     /**
      * Initialize as subscriber (in shadow root).
      * Subscribes to syndicator and processes script elements.
+     * Guarded so a reconnecting subscriber does not re-add listeners or
+     * re-process scripts that are already present.
      */
     #initializeSubscriber(): void {
+        if (this.#isSubscriberInitialized) {
+            return;
+        }
+        this.#isSubscriberInitialized = true;
+
         // Find the syndicator in document root
         const syndicator = document.querySelector(this.localName) as Synthesizer | null;
         
@@ -247,51 +256,105 @@ export abstract class Synthesizer extends HTMLElement {
     /**
      * Process a script element from the syndicator.
      * Waits for export property, then clones and appends.
+     * Skips if an equivalent script is already present in this subscriber.
      */
     async #processScript(scriptElement: HTMLScriptElement): Promise<void> {
         try {
-            // Check if export property exists
-            let exportValue = (scriptElement as any).export;
-            
-            const scriptType = scriptElement.getAttribute('type');
-            
-            if (!exportValue && scriptType !== 'emc-parser') {
-                // Wait for the export to become available via the 'resolved' event.
-                // Use a polling check as a fallback in case the event already fired.
-                exportValue = await new Promise<any>((resolve) => {
-                    // Check immediately in case it was set between our first check and now
-                    if ((scriptElement as any).export) {
-                        resolve((scriptElement as any).export);
-                        return;
-                    }
-                    const onResolved = (e: any) => {
-                        clearInterval(poll);
-                        resolve(e.export || (scriptElement as any).export);
-                    };
-                    scriptElement.addEventListener('resolved', onResolved, {once: true});
-                    // Poll as safety net in case event already fired
-                    const poll = setInterval(() => {
+            // Avoid duplicate handlers for the same resource.
+            // The same script can be seen both from the initial syndicator query
+            // and from the MutationObserver broadcast after moving local scripts
+            // up to the root synthesizer.
+            if (this.#alreadyHasEquivalentScript(scriptElement)) {
+                return;
+            }
+
+            // Guard against concurrent async processing of the same script.
+            // The DOM check above can pass for multiple overlapping calls before
+            // any of them append their clones.
+            const inFlightKey = this.#scriptKey(scriptElement);
+            if (inFlightKey && this.#inFlightScripts.has(inFlightKey)) {
+                return;
+            }
+            if (inFlightKey) {
+                this.#inFlightScripts.add(inFlightKey);
+            }
+
+            try {
+                // Check if export property exists
+                let exportValue = (scriptElement as any).export;
+                
+                const scriptType = scriptElement.getAttribute('type');
+                
+                if (!exportValue && scriptType !== 'emc-parser') {
+                    // Wait for the export to become available via the 'resolved' event.
+                    // Use a polling check as a fallback in case the event already fired.
+                    exportValue = await new Promise<any>((resolve) => {
+                        // Check immediately in case it was set between our first check and now
                         if ((scriptElement as any).export) {
-                            scriptElement.removeEventListener('resolved', onResolved);
-                            clearInterval(poll);
                             resolve((scriptElement as any).export);
+                            return;
                         }
-                    }, 50);
-                });
+                        const onResolved = (e: any) => {
+                            clearInterval(poll);
+                            resolve(e.export || (scriptElement as any).export);
+                        };
+                        scriptElement.addEventListener('resolved', onResolved, {once: true});
+                        // Poll as safety net in case event already fired
+                        const poll = setInterval(() => {
+                            if ((scriptElement as any).export) {
+                                scriptElement.removeEventListener('resolved', onResolved);
+                                clearInterval(poll);
+                                resolve((scriptElement as any).export);
+                            }
+                        }, 50);
+                    });
+                }
+                
+                // Clone the script element
+                const clonedScript = scriptElement.cloneNode(true) as HTMLScriptElement;
+                
+                // Copy the export property if it exists
+                if (exportValue !== undefined) {
+                    (clonedScript as any).export = exportValue;
+                }
+                
+                // Append to this element's children
+                this.appendChild(clonedScript);
+            } finally {
+                if (inFlightKey) {
+                    this.#inFlightScripts.delete(inFlightKey);
+                }
             }
-            
-            // Clone the script element
-            const clonedScript = scriptElement.cloneNode(true) as HTMLScriptElement;
-            
-            // Copy the export property if it exists
-            if (exportValue !== undefined) {
-                (clonedScript as any).export = exportValue;
-            }
-            
-            // Append to this element's children
-            this.appendChild(clonedScript);
         } catch (error) {
             console.error('Synthesizer: Failed to process script element:', error);
         }
+    }
+
+    /**
+     * Check whether this subscriber already contains a script that matches the
+     * given script element by type and src. Used to prevent duplicate clones.
+     */
+    #alreadyHasEquivalentScript(scriptElement: HTMLScriptElement): boolean {
+        const type = scriptElement.getAttribute('type');
+        const src = scriptElement.getAttribute('src');
+        if (type && src) {
+            const existing = this.querySelector(`script[type="${type}"][src="${src}"]`);
+            if (existing) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Compute a stable key for a script element for in-flight deduplication.
+     */
+    #scriptKey(scriptElement: HTMLScriptElement): string | undefined {
+        const type = scriptElement.getAttribute('type');
+        const src = scriptElement.getAttribute('src');
+        if (type && src) {
+            return `${type}|${src}`;
+        }
+        return undefined;
     }
 }

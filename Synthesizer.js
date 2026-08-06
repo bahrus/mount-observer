@@ -54,6 +54,8 @@ const activatedRootNodes = new WeakSet();
 export class Synthesizer extends HTMLElement {
     #mutationObserver;
     #isSyndicator = false;
+    #isSubscriberInitialized = false;
+    #inFlightScripts = new Set();
     /**
      * List of built-in handlers to activate.
      */
@@ -185,8 +187,14 @@ export class Synthesizer extends HTMLElement {
     /**
      * Initialize as subscriber (in shadow root).
      * Subscribes to syndicator and processes script elements.
+     * Guarded so a reconnecting subscriber does not re-add listeners or
+     * re-process scripts that are already present.
      */
     #initializeSubscriber() {
+        if (this.#isSubscriberInitialized) {
+            return;
+        }
+        this.#isSubscriberInitialized = true;
         // Find the syndicator in document root
         const syndicator = document.querySelector(this.localName);
         if (!syndicator) {
@@ -217,47 +225,98 @@ export class Synthesizer extends HTMLElement {
     /**
      * Process a script element from the syndicator.
      * Waits for export property, then clones and appends.
+     * Skips if an equivalent script is already present in this subscriber.
      */
     async #processScript(scriptElement) {
         try {
-            // Check if export property exists
-            let exportValue = scriptElement.export;
-            const scriptType = scriptElement.getAttribute('type');
-            if (!exportValue && scriptType !== 'emc-parser') {
-                // Wait for the export to become available via the 'resolved' event.
-                // Use a polling check as a fallback in case the event already fired.
-                exportValue = await new Promise((resolve) => {
-                    // Check immediately in case it was set between our first check and now
-                    if (scriptElement.export) {
-                        resolve(scriptElement.export);
-                        return;
-                    }
-                    const onResolved = (e) => {
-                        clearInterval(poll);
-                        resolve(e.export || scriptElement.export);
-                    };
-                    scriptElement.addEventListener('resolved', onResolved, { once: true });
-                    // Poll as safety net in case event already fired
-                    const poll = setInterval(() => {
+            // Avoid duplicate handlers for the same resource.
+            // The same script can be seen both from the initial syndicator query
+            // and from the MutationObserver broadcast after moving local scripts
+            // up to the root synthesizer.
+            if (this.#alreadyHasEquivalentScript(scriptElement)) {
+                return;
+            }
+            // Guard against concurrent async processing of the same script.
+            // The DOM check above can pass for multiple overlapping calls before
+            // any of them append their clones.
+            const inFlightKey = this.#scriptKey(scriptElement);
+            if (inFlightKey && this.#inFlightScripts.has(inFlightKey)) {
+                return;
+            }
+            if (inFlightKey) {
+                this.#inFlightScripts.add(inFlightKey);
+            }
+            try {
+                // Check if export property exists
+                let exportValue = scriptElement.export;
+                const scriptType = scriptElement.getAttribute('type');
+                if (!exportValue && scriptType !== 'emc-parser') {
+                    // Wait for the export to become available via the 'resolved' event.
+                    // Use a polling check as a fallback in case the event already fired.
+                    exportValue = await new Promise((resolve) => {
+                        // Check immediately in case it was set between our first check and now
                         if (scriptElement.export) {
-                            scriptElement.removeEventListener('resolved', onResolved);
-                            clearInterval(poll);
                             resolve(scriptElement.export);
+                            return;
                         }
-                    }, 50);
-                });
+                        const onResolved = (e) => {
+                            clearInterval(poll);
+                            resolve(e.export || scriptElement.export);
+                        };
+                        scriptElement.addEventListener('resolved', onResolved, { once: true });
+                        // Poll as safety net in case event already fired
+                        const poll = setInterval(() => {
+                            if (scriptElement.export) {
+                                scriptElement.removeEventListener('resolved', onResolved);
+                                clearInterval(poll);
+                                resolve(scriptElement.export);
+                            }
+                        }, 50);
+                    });
+                }
+                // Clone the script element
+                const clonedScript = scriptElement.cloneNode(true);
+                // Copy the export property if it exists
+                if (exportValue !== undefined) {
+                    clonedScript.export = exportValue;
+                }
+                // Append to this element's children
+                this.appendChild(clonedScript);
             }
-            // Clone the script element
-            const clonedScript = scriptElement.cloneNode(true);
-            // Copy the export property if it exists
-            if (exportValue !== undefined) {
-                clonedScript.export = exportValue;
+            finally {
+                if (inFlightKey) {
+                    this.#inFlightScripts.delete(inFlightKey);
+                }
             }
-            // Append to this element's children
-            this.appendChild(clonedScript);
         }
         catch (error) {
             console.error('Synthesizer: Failed to process script element:', error);
         }
+    }
+    /**
+     * Check whether this subscriber already contains a script that matches the
+     * given script element by type and src. Used to prevent duplicate clones.
+     */
+    #alreadyHasEquivalentScript(scriptElement) {
+        const type = scriptElement.getAttribute('type');
+        const src = scriptElement.getAttribute('src');
+        if (type && src) {
+            const existing = this.querySelector(`script[type="${type}"][src="${src}"]`);
+            if (existing) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Compute a stable key for a script element for in-flight deduplication.
+     */
+    #scriptKey(scriptElement) {
+        const type = scriptElement.getAttribute('type');
+        const src = scriptElement.getAttribute('src');
+        if (type && src) {
+            return `${type}|${src}`;
+        }
+        return undefined;
     }
 }
