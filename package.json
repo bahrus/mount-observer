@@ -5,7 +5,7 @@
   "main": "MountObserver.js",
   "module": "MountObserver.js",
   "dependencies": {
-    "assign-gingerly": "0.0.75",
+    "assign-gingerly": "0.0.76",
     "id-generation": "0.0.5"
   },
   "devDependencies": {

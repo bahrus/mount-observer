@@ -25,7 +25,7 @@ export class GenerateIdsHandler extends EvtRt {
     async mount(mountedElement, mountConfig, context) {
         this.abort();
         // Dynamically import processScope from id-generation
-        const { genIds } = await import('id-generation/genIds.js');
+        const { genIds } = await import('../id-generation/genIds.js');
         // Get the root node for fallback container
         const rootNode = context.rootNode || document;
         // Process the scope starting from this trigger element
