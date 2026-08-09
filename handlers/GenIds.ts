@@ -29,7 +29,7 @@ export class GenerateIdsHandler extends EvtRt {
         this.abort();
         
         // Dynamically import processScope from id-generation
-        const { genIds } = await import('id-generation/genIds.js');
+        const { genIds } = await import('../id-generation/genIds.js');
         
         // Get the root node for fallback container
         const rootNode = context.rootNode || document;

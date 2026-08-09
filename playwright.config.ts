@@ -2,6 +2,7 @@
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
+  testDir: './tests',
   testIgnore: '**/experimentalCrossScopeRegistering/**',
   webServer: {
     command: 'npm run serve',
@@ -24,7 +25,6 @@ const config: PlaywrightTestConfig = {
       // Note: experimentalCrossScopeRegistering is already ignored globally
       testIgnore: [
         '**/experimentalCrossScopeRegistering/**',
-        '**/id-generation-integration.spec.mjs',
         '**/test-element-mount.spec.mjs',
         '**/test-emc-script.spec.mjs',
         '**/test-enhance-mounted-element.spec.mjs',
