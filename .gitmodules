@@ -1,3 +1,6 @@
 [submodule "types"]
 	path = types
 	url = https://github.com/bahrus/types.git
+[submodule "id-generation"]
+	path = id-generation
+	url = https://github.com/bahrus/id-generation.git
