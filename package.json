@@ -58,6 +58,8 @@
     "*.ts",
     "handlers/**/*.js",
     "handlers/**/*.ts",
+    "id-generation/**/*.js",
+    "id-generation/**/*.ts",
     "types/**/*.d.ts",
     "refid/**/*.js",
     "refid/**/*.ts",
