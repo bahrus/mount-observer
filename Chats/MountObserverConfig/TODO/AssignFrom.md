@@ -4,11 +4,11 @@
 
 ## Human Ask
 
-It would be usesful for assignOnMount to use the more powerful [assignFrom](https://github.com/bahrus/assign-gingerly#assignfrom-and-assignfromasync) rather than assignGingerly, as then some dynamic properties can be set from the mount observer context, or even from other sources with the help of protocol support that assignFrom supports.  The signature is identical, except the options is now 
+It would be useful for assignOnMount to use the more powerful [assignFrom](https://github.com/bahrus/assign-gingerly#assignfrom-and-assignfromasync) rather than assignGingerly, as then some dynamic properties can be set from the mount observer context, or even from other sources with the help of protocol support that assignFrom supports.  The signature is identical, except the options is now 
 
 By far the biggest question becomes what to pass into the options for the "from" parameter.
 
-I think the most usesful thing would be for the from parameter to be the mount observer itself.
+I think the most useful thing would be for the from parameter to be the mount observer itself.
 
 
 

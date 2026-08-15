@@ -14,6 +14,10 @@ This document summarizes the conventions, technology stack, API patterns, and hi
 
 The package is published as ES modules with both JavaScript and TypeScript definitions.
 
+## Communication Conventions
+
+When working through an investigation or multi-turn task, continue the conversation in the relevant `Chats/**/*.md` file rather than the chat window. Add findings, implementation notes, and follow-up questions as new sections in that document. This keeps the thread of record persistent and reviewable without losing context in the chat transcript.
+
 ## Technology Stack
 
 - **Primary language**: TypeScript, compiled to JavaScript ES modules.

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attribute Mutation Test</title>
+    <!-- #include virtual="/imports.html" -->
+</head>
+<body>
+    <div id="log"></div>
+    <div id="target"></div>
+    <div id="subject">subject</div>
+    <script type="module">
+        import { MountObserver } from '/MountObserver.js';
+
+        const log = document.getElementById('log');
+        function addLog(msg) {
+            console.log(msg);
+            log.innerHTML += msg + '<br>';
+        }
+
+        (async () => {
+            try {
+                const observer = new MountObserver({
+                    matching: '[data-match]',
+                    do: (element) => {
+                        addLog('Mounted: ' + element.id);
+                        document.getElementById('target').setAttribute('mark', 'good');
+                    }
+                });
+
+                await observer.observe(document.body);
+                addLog('Observer started');
+
+                const subject = document.getElementById('subject');
+                // Initially subject does not match. Change the attribute to make it match.
+                setTimeout(() => {
+                    subject.setAttribute('data-match', 'true');
+                    addLog('Attribute changed');
+                }, 100);
+            } catch (e) {
+                addLog('ERROR: ' + e.message);
+                addLog('Stack: ' + e.stack);
+            }
+        })();
+    </script>
+</body>
+</html>

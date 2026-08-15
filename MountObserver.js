@@ -350,10 +350,33 @@ export class MountObserver extends EventTarget {
                         }
                     });
                 }
+                else if (mutation.type === 'attributes') {
+                    const target = mutation.target;
+                    if (target.nodeType === Node.ELEMENT_NODE) {
+                        const element = target;
+                        // Dismount any mounted elements in the changed subtree that no longer match.
+                        // Collect first to avoid mutating #mountedElements.setWeak while iterating.
+                        const toDismount = [];
+                        for (const ref of this.#mountedElements.setWeak) {
+                            const mounted = ref.deref();
+                            if (mounted && element.contains(mounted) && this.#processedDoForElement.has(mounted)) {
+                                if (!this.#matchesSelector(mounted)) {
+                                    toDismount.push(mounted);
+                                }
+                            }
+                        }
+                        for (const mounted of toDismount) {
+                            this.#handleRemoval(mounted);
+                        }
+                        // Process the changed subtree to mount any newly matching elements.
+                        this.#processNode(element);
+                    }
+                }
             }
         };
         const observerConfig = {
             childList: true,
+            attributes: true,
             subtree: true
         };
         // Register with shared mutation observer
