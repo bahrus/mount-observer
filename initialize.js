@@ -1,4 +1,4 @@
-import { waitForSettled } from 'assign-gingerly/waitForSettled.js';
+import { waitForSettled } from 'assign-gingerly/utils/waitForSettled.js';
 /**
  * Initializes a DOM subtree by upgrading custom elements and waiting for all
  * async cascading effects to settle.

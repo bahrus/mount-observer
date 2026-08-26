@@ -1,5 +1,5 @@
 import './ElementMountExtension.js';
-import { waitForEvent } from 'assign-gingerly/waitForEvent.js';
+import { waitForEvent } from 'assign-gingerly/utils/waitForEvent.js';
 import { AddedScriptElementEvent } from './Events.js';
 
 import 'mount-observer/handlers/MountObserverScript.js';

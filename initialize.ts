@@ -1,4 +1,4 @@
-import { waitForSettled } from 'assign-gingerly/waitForSettled.js';
+import { waitForSettled } from 'assign-gingerly/utils/waitForSettled.js';
 
 /**
  * Options for the `initialize` function.
